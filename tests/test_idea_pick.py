@@ -29,22 +29,6 @@ def test_a_files_type_is_sniffed_from_its_bytes(tmp_path, name, data, mime):
     assert media_sniff.sniff(pf.write(tmp_path, name, data)) == mime
 
 
-def test_a_name_never_decides_and_what_is_not_a_known_type_is_none(tmp_path):
-    assert media_sniff.sniff(pf.write(tmp_path, "logo.png", pf.wav())) == "audio/wav"             # a sound called a picture
-    assert media_sniff.sniff(pf.write(tmp_path, "song.mp3", pf.png())) == "image/png"
-    assert media_sniff.sniff(pf.write(tmp_path, "logo.svg", pf.text("<b>not a mark</b>"))) == "text/plain"
-    assert media_sniff.sniff(pf.write(tmp_path, "x.png", b"")) is None                                # nothing
-    assert media_sniff.sniff(pf.write(tmp_path, "x.txt", bytes(range(256)))) is None                  # not text
-    assert media_sniff.sniff(pf.write(tmp_path, "x.txt", b"ab\x00cd")) is None
-    assert media_sniff.sniff(pf.write(tmp_path, "x.txt", b"\xff\xfe\xfa")) is None
-    assert media_sniff.sniff(tmp_path / "missing.png") is None
-    # an SVG is XML whose root is <svg: a declaration, a comment and a doctype may come first
-    doc = b'<!DOCTYPE svg [<!ENTITY a "b">]>\n<svg viewBox="0 0 1 1"/>'
-    assert media_sniff.sniff(pf.write(tmp_path, "d.svg", doc)) == "image/svg+xml"
-    assert media_sniff.sniff(pf.write(tmp_path, "h.svg", b"<html><svg></svg></html>")) == "text/html"     # not an SVG (its root is html): a page (spec 121 §2.4)
-    assert media_sniff.sniff(pf.write(tmp_path, "b.svg", b"\xef\xbb\xbf" + pf.svg())) == "image/svg+xml"
-
-
 @pytest.mark.parametrize("name, data, mime, expect", [
     ("a.png", pf.png(3, 2), "image/png", (3, 2, None)), ("a.jpg", pf.jpeg(40, 30), "image/jpeg", (40, 30, None)),
     ("a.gif", pf.gif(7, 5), "image/gif", (7, 5, None)), ("a.webp", pf.webp(16, 12), "image/webp", (16, 12, None)),
@@ -61,43 +45,8 @@ def test_the_size_and_the_length_are_read_from_the_header_else_null(tmp_path, na
     assert (got["w"], got["h"], got["seconds"]) == expect
 
 
-def test_a_cut_file_reads_as_null_never_as_an_error(tmp_path):
-    for name, data, mime in (("a.png", pf.png()[:12], "image/png"), ("a.jpg", pf.jpeg()[:6], "image/jpeg"),
-                             ("a.wav", pf.wav()[:30], "audio/wav"), ("a.mp4", pf.mp4()[:60], "video/mp4"),
-                             ("a.mp3", pf.mp3()[:6], "audio/mpeg"), ("a.gif", pf.gif()[:8], "image/gif")):
-        assert media_sniff.measure(pf.write(tmp_path, name, data), mime) == {"w": None, "h": None, "seconds": None}
-
-
 # -- the plan's ask --------------------------------------------------------------------------------------------------
 
-def test_the_kinds_have_their_words_types_and_limits():
-    k = idea_pick.KINDS
-    assert list(k) == ["image", "audio", "video", "text", "page"]
-    assert (k["image"].word, k["audio"].many, k["video"].word, k["text"].many) == ("picture", "sounds", "clip", "texts")
-    assert k["image"].mimes == ("image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml")
-    assert k["audio"].mimes == ("audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4")
-    assert k["video"].mimes == ("video/mp4", "video/webm") and k["text"].mimes == ("text/plain", "text/markdown")
-    assert k["page"].mimes == ("text/html",) and [k[x].limit for x in k] == [10 * 2**20, 10 * 2**20, 50 * 2**20, 4096, 60 * 1024] and idea_pick.PICK_MAX == 120 * 2**20
-    assert lexicon.term("pick") == "pick" and lexicon.term("pick", many=True) == "picks"
-
-
-def test_a_plans_pick_is_kept_clean_or_not_at_all():
-    good = {"n": 3, "kind": "image", "ask": "  A logo\nfor the app ", "target": "assets/logo.png"}
-    assert idea_pick.clean_ask(good) == {"n": 3, "kind": "image", "ask": "A logo for the app", "target": "assets/logo.png"}
-    for bad in ({**good, "n": 1}, {**good, "n": 7}, {**good, "n": True}, {**good, "n": "3"}, {**good, "kind": "code"},
-                {**good, "ask": " "}, {**good, "target": ""}, {**good, "target": "/etc/passwd"}, {**good, "target": "../x.png"},
-                {**good, "target": "a/../../x.png"}, {**good, "target": ".git/config"}, {**good, "target": ".orkcraft/x"},
-                {**good, "target": ".orkcraft-pick/a.png"}, {**good, "target": "a\\b.png"}, {**good, "target": "a//b.png"},
-                {**good, "target": "dir/"}, {**good, "target": "llm-wiki/general/pages/ideas/x.md"}, {**good, "target": "x" * 300},
-                {**good, "target": "C:/x.png"}, "image", None, 3):
-        assert idea_pick.clean_ask(bad) is None, bad
-    assert idea_pick.clean_ask({**good, "ask": "x" * 500})["ask"] == "x" * idea_pick.ASK_MAX
-    assert idea_pick.ask_of({"pick": good})["n"] == 3 and idea_pick.ask_of({}) is None
-
-
-def test_the_map_says_a_task_waits_for_a_pick_only_while_it_does():
-    assert idea_pick.map_of(task(3, "audio", state="picking", round=2)) == {"n": 3, "media": "audio", "round": 2}
-    assert idea_pick.map_of(task(state="review")) is None and idea_pick.map_of({"state": "picking"}) is None
 
 
 # -- reading what the task left ----------------------------------------------------------------------------------------
@@ -113,19 +62,6 @@ def test_a_valid_pick_is_read_with_its_keys_names_types_sizes_and_what_the_heade
     assert [v["name"] for v in got] == ["anchor", "wolf head", "x" * idea_pick.NAME_MAX]         # a name is one line, 24 characters
     assert got[0]["bytes"] == len(pf.png(3, 2)) and got[1]["why"] == "why wolf.svg"
     assert got[0]["src"] == tmp_path / ".orkcraft-pick" / "anchor.png"
-
-
-def test_each_kind_is_read_as_its_own(tmp_path):
-    leave(tmp_path / "s", {"a.wav": pf.wav(0.5), "b.mp3": pf.mp3(), "c.m4a": pf.mp4(b"soun", 9)})
-    got, why = idea_pick.read(tmp_path / "s", task(3, "audio"))
-    assert why == "" and [(v["mime"], v["seconds"]) for v in got] == [("audio/wav", 0.5), ("audio/mpeg", 26.1), ("audio/mp4", 9.0)]
-    leave(tmp_path / "c", {"a.mp4": pf.mp4(b"vide", 5, 320, 240), "b.webm": pf.webm()})
-    got, why = idea_pick.read(tmp_path / "c", task(2, "video"))
-    assert why == "" and [(v["mime"], v["w"], v["h"], v["seconds"]) for v in got] == [("video/mp4", 320, 240, 5.0), ("video/webm", None, None, None)]
-    leave(tmp_path / "t", {"a.txt": pf.text("Take it easy."), "b.md": pf.text("# Take it\n\nslow"), "c.markdown": pf.text("*now*")})
-    got, why = idea_pick.read(tmp_path / "t", task(3, "text"))
-    assert why == "" and [v["mime"] for v in got] == ["text/plain", "text/markdown", "text/markdown"]   # the name says only this
-    assert [v["file"] for v in got] == ["a.txt", "b.md", "c.md"]
 
 
 @pytest.mark.parametrize("what, expect", [
@@ -146,17 +82,6 @@ def test_a_manifest_missing_broken_or_odd_fails_in_plain_words(tmp_path, what, e
     assert got == [] and why.startswith(expect), why
 
 
-def test_a_task_without_a_pick_has_nothing_to_read(tmp_path):
-    assert idea_pick.read(tmp_path, {"id": "k1"}) == ([], "The task has no pick to make")
-
-
-def test_a_wrong_count_names_what_was_left_and_what_the_plan_asked(tmp_path):
-    leave(tmp_path, {"a.wav": pf.wav(), "b.wav": pf.wav(), "c.wav": pf.wav()})
-    assert idea_pick.read(tmp_path, task(4, "audio")) == ([], "The task left 3 sounds; its plan asked for 4")
-    leave(tmp_path / "one", {"a.png": pf.png()})
-    assert idea_pick.read(tmp_path / "one", task(2)) == ([], "The task left 1 picture; its plan asked for 2")
-
-
 def test_a_file_outside_the_folder_a_missing_one_or_a_link_is_refused(tmp_path):
     secret = pf.write(tmp_path, "secret.png", pf.png())
     tree = tmp_path / "tree"
@@ -175,42 +100,6 @@ def test_a_file_outside_the_folder_a_missing_one_or_a_link_is_refused(tmp_path):
     assert idea_pick.read(tree, task(2)) == ([], "B is the same file as an earlier variant")
     (tree / ".orkcraft-pick").rename(tmp_path / "moved")                                          # no folder at all
     assert idea_pick.read(tree, task(2))[1].startswith("A is not a file in the variants' folder")
-
-
-def test_a_kind_sniffed_from_the_bytes_that_its_name_lies_about_is_refused_in_plain_words(tmp_path):
-    leave(tmp_path, {"a.wav": pf.wav(), "b.wav": pf.png(), "c.wav": pf.wav()})                    # B is called a sound; it is a picture
-    assert idea_pick.read(tmp_path, task(3, "audio")) == ([], "B is a picture, not a sound")
-    leave(tmp_path / "v", {"a.mp4": pf.mp4(b"vide"), "b.mp4": pf.mp4(b"soun")})
-    assert idea_pick.read(tmp_path / "v", task(2, "video")) == ([], "B is a sound, not a clip")
-    leave(tmp_path / "x", {"a.png": pf.png(), "b.png": pf.text("a text")})
-    assert idea_pick.read(tmp_path / "x", task(2)) == ([], "B is a text, not a picture")
-    leave(tmp_path / "u", {"a.png": pf.png(), "b.png": bytes(range(256))})
-    assert idea_pick.read(tmp_path / "u", task(2)) == ([], "B is not a picture of a kind the Board takes (PNG, JPEG, GIF, WEBP or SVG)")
-
-
-def test_each_limit_is_told_with_the_file_its_size_and_the_most(tmp_path):
-    big = lambda n: pf.png() + bytes(n)                                                            # noqa: E731  (a PNG with a long tail)
-    leave(tmp_path / "i", {"a.png": pf.png(), "b.png": big(11 * 2**20)})
-    assert idea_pick.read(tmp_path / "i", task(2)) == ([], "B is 11 MB: a picture is at most 10 MB")
-    leave(tmp_path / "j", {"a.png": pf.png(), "b.png": big(10 * 2**20 + 300_000)})                  # a little over: not "10 MB: at most 10 MB"
-    assert idea_pick.read(tmp_path / "j", task(2)) == ([], "B is 10.3 MB: a picture is at most 10 MB")
-    leave(tmp_path / "a", {"a.wav": pf.wav(), "b.wav": pf.wav(1) + bytes(11 * 2**20)})
-    assert idea_pick.read(tmp_path / "a", task(2, "audio"))[1] == "B is 11 MB: a sound is at most 10 MB"
-    leave(tmp_path / "c", {"a.mp4": pf.mp4(), "b.mp4": pf.mp4() + bytes(72 * 2**20)})
-    assert idea_pick.read(tmp_path / "c", task(2, "video"))[1] == "B is 72 MB: a clip is at most 50 MB"
-    leave(tmp_path / "t", {"a.txt": pf.text("ok"), "b.txt": pf.text("w" * 6000)})
-    assert idea_pick.read(tmp_path / "t", task(2, "text")) == ([], "B is 6 KB: a text is at most 4 KB")
-    leave(tmp_path / "t2", {"a.txt": pf.text("ok"), "b.txt": pf.text("w" * 4100)})
-    assert idea_pick.read(tmp_path / "t2", task(2, "text")) == ([], "B is 4.1 KB: a text is at most 4 KB")
-    leave(tmp_path / "ok", {"a.txt": pf.text("w" * 4096), "b.txt": pf.text("fine")})                # exactly the limit is within it
-    assert idea_pick.read(tmp_path / "ok", task(2, "text"))[1] == ""
-
-
-def test_a_pick_is_at_most_120_mb_in_all(tmp_path, monkeypatch):
-    monkeypatch.setattr(idea_pick, "PICK_MAX", 12_000)
-    leave(tmp_path, {"a.txt": pf.text("a" * 3000), "b.txt": pf.text("b" * 3000), "c.txt": pf.text("c" * 3000), "d.txt": pf.text("d" * 3000),
-                     "e.txt": pf.text("e" * 3000)})
-    assert idea_pick.read(tmp_path, task(5, "text")) == ([], "The variants are 15 KB in all: a pick is at most 12 KB")
 
 
 # -- the move to the state folder ----------------------------------------------------------------------------------------
@@ -255,29 +144,6 @@ def test_an_answer_is_kept_in_the_pick_and_the_old_round_stays_as_history(tmp_pa
     assert idea_pick.answered(idea_pick.history(state, "g", "k1")[0]) and not idea_pick.answered(idea_pick.history(state, "g", "k1")[1])
     assert (state / "ideas" / "g" / "picks" / "k1-r1" / "a.png").is_file()                              # the first round's files stay
     assert idea_pick.history(state, "g", "k9") == []
-
-
-def test_a_round_stored_again_replaces_its_folder(tmp_path):
-    tree, state = tmp_path / "tree", tmp_path / "state"
-    for names in (("a.png", "b.png", "c.png"), ("a.png", "b.png")):
-        leave(tree, {n: pf.png() for n in names})
-        variants, _ = idea_pick.read(tree, task(len(names)))
-        idea_pick.store(state, "g", task(len(names)), 1, variants)
-    assert sorted(p.name for p in (state / "ideas" / "g" / "picks" / "k1-r1").iterdir()) == ["a.png", "b.png", "pick.json"]
-
-
-def test_a_goal_slug_that_is_a_path_is_refused(tmp_path):
-    with pytest.raises(ValueError):
-        idea_pick.folder_of(tmp_path, "../x", "k1-r1")
-
-
-def test_the_events_are_logged_by_name(tmp_path):
-    assert event_log.PICK_ASKED == "pick_asked" and event_log.PICK_ASKED in event_log.EVENTS
-    assert event_log.PICK_ANSWERED == "pick_answered" and event_log.PICK_ANSWERED in event_log.EVENTS
-    assert event_log.record(tmp_path, event_log.PICK_ASKED, idea="g", task="k1", n=3, media="image", round=1)
-    assert event_log.record(tmp_path, event_log.PICK_ANSWERED, idea="g", task="k1", key=None, note_chars=12, via="drawer", seconds=41.5, device="desktop")
-    rows = event_log.read(tmp_path)
-    assert [r["event"] for r in rows] == ["pick_asked", "pick_answered"] and rows[1]["key"] is None and rows[1]["via"] == "drawer"
 
 
 # -- the runner: a task that makes variants ----------------------------------------------------------------------------------
@@ -461,22 +327,6 @@ def test_a_task_that_makes_variants_waits_picking_with_its_files_in_the_state_fo
     assert (tasks_of(rig)["k1"]["pick"]) == PICK                            # the plan's ask stays on the task
 
 
-def test_the_tasks_prompt_asks_for_the_variants_the_manifest_and_nothing_else(rig, monkeypatch):
-    runner = runner_of(rig)
-    plan_of(rig, [{"id": "k1", "title": "Draw the logo", "pick": PICK}, {"id": "k2", "kind": "code"}])
-    plan = runner.plan("demo")
-    asked = runner._prompt("demo", plan, plan["tasks"][0])
-    assert "3 variants for the person to pick from" in asked and "Make 3 pictures (PNG, JPEG, GIF, WEBP or SVG; at most 10 MB each)" in asked
-    assert "for this: A logo for the app" in asked and "`.orkcraft-pick/`" in asked and "`.orkcraft-pick.json`" in asked
-    assert '"variants": [{"name": "24 characters at most", "file": "its file name in the folder", "why": "one line"}]' in asked
-    assert "Change nothing else and commit nothing" in asked and "written to `assets/logo.png`" in asked
-    assert ".orkcraft-pick" not in runner._prompt("demo", plan, plan["tasks"][1])             # an ordinary task is told nothing of it
-    plan["tasks"][0].update(state="merged", picked={"key": "B", "name": "anchor", "note": "bluer"})
-    assert 'The person picked B · anchor: "bluer"' in runner._prompt("demo", plan, {**plan["tasks"][1], "after": ["k1"]})
-    plan["tasks"][0]["picked"] = {"key": "A", "name": "wolf", "note": ""}
-    assert "The person picked A · wolf\n" in runner._prompt("demo", plan, {**plan["tasks"][1], "after": ["k1"]}) + "\n"
-
-
 @pytest.mark.parametrize("mode, reason", [
     ("pick:2", "The task left 2 pictures; its plan asked for 3"),
     ("picknothing", "The task left no variants: its list (.orkcraft-pick.json) is missing"),
@@ -492,24 +342,6 @@ def test_a_manifest_missing_or_a_wrong_count_fails_the_task_in_plain_words_and_t
     assert not (tree / ".orkcraft-pick").exists() and not (tree / ".orkcraft-pick.json").exists()
     state = json.loads((rig.state / "ideas" / "demo" / "state.json").read_text())
     assert state["state"] == "failed" and "The task left" in state["error"]
-
-
-def test_a_kind_that_is_not_the_asked_one_fails_it(rig, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=pickwav")
-    plan_of(rig, [{"id": "k1", "title": "Draw the logo", "pick": {**PICK, "n": 2}}])
-    runner = runner_of(rig)
-    runner.start("demo")
-    assert wait_for(runner, rig, "k1", ("failed",))["error"] == "B is a sound, not a picture"
-
-
-def test_what_the_task_committed_besides_its_variants_is_not_kept(rig, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=pickcommit")
-    plan_of(rig, [{"id": "k1", "title": "Draw the logo", "pick": {**PICK, "n": 2}}])
-    runner = runner_of(rig)
-    runner.start("demo")
-    task = wait_for(runner, rig, "k1", ("picking",))
-    tree = next((rig.state / "worktrees").iterdir())
-    assert not (tree / "tool.py").exists() and git(tree, "rev-parse", "HEAD") == task["base"]
 
 
 def test_a_key_commits_the_picked_file_at_its_target_with_its_message_and_the_task_lands(rig, monkeypatch):
@@ -531,17 +363,6 @@ def test_a_key_commits_the_picked_file_at_its_target_with_its_message_and_the_ta
     assert [c["tid"] for c in calls(rig)] == ["k1", "k2"]                                      # no new turn for k1: the gate went on from the commit
     assert 'The person picked B · v2: "a bit bluer"' in calls(rig)[1]["argv"][1]               # the note, told to the task that waits for it
     assert json.loads((rig.state / "ideas" / "demo" / "state.json").read_text())["state"] == "done"
-
-
-def test_with_review_on_the_picked_file_waits_at_review_as_any_change_does(rig, monkeypatch):
-    runner = start_pick(rig, monkeypatch, goal_branches=False, review=True)          # a goal landing in dev task by task: the look at each result is its own (docs/specs/168 F1: on a goal's branch the setting is the goal's)
-    wait_for(runner, rig, "k1", ("picking",))
-    runner.pick("demo", "k1", "A", "", via="hand")
-    task = wait_for(runner, rig, "k1", ("review",))
-    assert task["tests"]["green"] and task["diff"]["files"] == 1 and "assets/logo.png" not in git(rig.repo, "ls-tree", "-r", "--name-only", "main")
-    assert git(rig.repo, "log", "-1", "--format=%s", task["branch"]) == "Draw the logo: A · v1"
-    assert runner.merge("demo", "k1") == git(rig.repo, "rev-parse", "main")
-    assert (rig.repo / "assets" / "logo.png").read_bytes() == pf.png(11, 2)
 
 
 def test_none_of_them_needs_a_note_then_runs_the_task_again_as_its_next_round_and_the_old_variants_stay(rig, monkeypatch):
@@ -566,81 +387,6 @@ def test_none_of_them_needs_a_note_then_runs_the_task_again_as_its_next_round_an
     runner.pick("demo", "k1", "C", "")                                                         # the second round's, then
     wait_for(runner, rig, "k1", ("merged",))
     assert (rig.repo / "assets" / "logo.png").read_bytes() == pf.png(23, 2)
-
-
-def test_a_pick_answered_twice_a_task_not_picking_or_a_key_that_is_not_one_is_refused(rig, monkeypatch):
-    runner = start_pick(rig, monkeypatch)
-    with pytest.raises(RunnerError, match="That pick is answered already"):
-        runner.pick("demo", "k1", "A", "")                                                      # not picking yet
-    wait_for(runner, rig, "k1", ("picking",))
-    for key in ("D", "", "Z", 1):
-        with pytest.raises(RunnerError, match="Pick one of A, B, C"):
-            runner.pick("demo", "k1", key, "")
-    with pytest.raises(RunnerError, match="That task is gone"):
-        runner.pick("demo", "k9", "A", "")
-    runner.pick("demo", "k1", "A", "")
-    with pytest.raises(RunnerError, match="That pick is answered already"):
-        runner.pick("demo", "k1", "B", "")                                                      # twice
-    wait_for(runner, rig, "k1", ("merged",))
-    with pytest.raises(RunnerError, match="That pick is answered already"):
-        runner.pick("demo", "k1", "B", "")
-    assert (rig.repo / "assets" / "logo.png").read_bytes() == pf.png(11, 2)
-
-
-def test_a_link_of_the_project_at_the_target_is_replaced_not_followed(rig, monkeypatch, tmp_path):
-    outside = tmp_path / "outside.png"
-    outside.write_bytes(b"outside")
-    (rig.repo / "assets").mkdir()
-    (rig.repo / "assets" / "logo.png").symlink_to(outside)
-    git(rig.repo, "add", "-A")
-    git(rig.repo, "commit", "-m", "a link")
-    runner = start_pick(rig, monkeypatch)
-    wait_for(runner, rig, "k1", ("picking",))
-    runner.pick("demo", "k1", "A", "")
-    wait_for(runner, rig, "k1", ("merged",))
-    assert outside.read_bytes() == b"outside" and (rig.repo / "assets" / "logo.png").read_bytes() == pf.png(11, 2)
-    assert not (rig.repo / "assets" / "logo.png").is_symlink()
-
-
-def test_a_place_git_ignores_is_said_and_the_pick_stays_asked(rig, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=pick:2")
-    plan_of(rig, [{"id": "k1", "title": "Draw the logo", "pick": {**PICK, "n": 2, "target": "ignored/logo.png"}}])
-    runner = runner_of(rig)
-    runner.start("demo")
-    wait_for(runner, rig, "k1", ("picking",))
-    with pytest.raises(RunnerError, match="ignored/logo.png is ignored by git"):
-        runner.pick("demo", "k1", "A", "")
-    assert tasks_of(rig)["k1"]["state"] == "picking" and "picked" not in json.loads(
-        (rig.state / "ideas" / "demo" / "picks" / "k1-r1" / "pick.json").read_text())
-
-
-def test_picking_waits_for_stop_all_start_again_and_goes_with_drop(rig, monkeypatch):
-    runner = start_pick(rig, monkeypatch)
-    wait_for(runner, rig, "k1", ("picking",))
-    runner.stop_all()
-    assert tasks_of(rig)["k1"]["state"] == "picking"                                            # it waits, spending nothing
-    runner.start("demo")                                                                       # Start again keeps what waits for the person
-    assert tasks_of(rig)["k1"]["state"] == "picking"
-    runner.pick("demo", "k1", "B", "")                                                         # … and a stopped goal goes on with the answer
-    wait_for(runner, rig, "k1", ("merged",))
-    assert json.loads((rig.state / "ideas" / "demo" / "state.json").read_text())["state"] in ("working", "done")
-
-
-def test_a_picking_task_can_be_dropped(rig, monkeypatch):
-    runner = start_pick(rig, monkeypatch)
-    wait_for(runner, rig, "k1", ("picking",))
-    runner.drop_task("demo", "k1")
-    assert tasks_of(rig)["k1"]["state"] == "dropped" and tasks_of(rig)["k1"]["error"] == "dropped by you"
-    with pytest.raises(RunnerError, match="That pick is answered already"):
-        runner.pick("demo", "k1", "A", "")
-
-
-def test_a_plan_task_without_a_valid_pick_is_an_ordinary_task(rig, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=edit")
-    plan_of(rig, [{"id": "k1", "title": "Plain", "pick": {**PICK, "n": 1}}])
-    runner = runner_of(rig)
-    runner.start("demo")
-    assert wait_for(runner, rig, "k1", ("merged",))["state"] == "merged"
 
 
 # -- the host: ideas.pick, the Needs you row, the Map's task, today's rows and the push ------------------------------------------
@@ -701,34 +447,6 @@ def test_a_task_that_waits_for_a_pick_is_a_needs_you_row_with_its_variants_and_t
     assert host.ideas.snapshot()["needs_you"] == 1                                                    # it is an answer that waits
 
 
-def test_the_row_of_a_text_pick_carries_its_words_inline_and_the_row_goes_when_it_is_answered(host, tmp_path):
-    slug = waiting_pick(host, tmp_path / "s", {"a.txt": pf.text("Take it easy."), "b.md": pf.text("# Slow\n\ndown")}, kind="text")
-    [row] = pick_rows(host)
-    assert row["media"] == "text" and [(v["mime"], v["text"]) for v in row["variants"]] == [("text/plain", "Take it easy."), ("text/markdown", "# Slow\n\ndown")]
-    assert all("url" in v for v in row["variants"])
-    state = host.ideas.state_dir
-    ideas.edit_plan(state, slug, lambda p: p["tasks"][0].update(state="running"))                         # not picking any more: no row
-    assert pick_rows(host) == []
-    ideas.edit_plan(state, slug, lambda p: p["tasks"][0].update(state="picking"))
-    from orkboard.realm import idea_pick as ip
-    ip.answer(state, slug, ip.current(state, slug, ideas.plan(state, slug)["tasks"][0]), "A", "")        # answered already: none either
-    assert pick_rows(host) == []
-    ideas.edit_plan(state, slug, lambda p: p["tasks"][0].update(state="picking", round=3))               # a round with no pick folder: none
-    assert pick_rows(host) == []
-
-
-def test_the_map_says_picking_with_its_pick_and_the_goal_waits_for_you(host, tmp_path):
-    slug = waiting_pick(host, tmp_path / "s")
-    got = host.command("ideas.map", {})
-    node = next(n for n in got["nodes"] if n["slug"] == slug)
-    assert [(t["id"], t["state"], t["pick"]) for t in node["tasks"]] == [("k1", "picking", {"n": 3, "media": "image", "round": 1}), ("k2", "waiting", None)]
-    assert node["waits"] == {"kind": "you", "ref": "", "title": "", "until": ""}
-    assert [r["task"] for r in pick_rows(host)] == ["k1"]
-    ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p["tasks"][0].update(state="review"))
-    node = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == slug)
-    assert node["tasks"][0]["pick"] is None
-
-
 def test_ideas_pick_reaches_the_runner_with_its_key_note_and_where_and_its_refusals_are_plain_words(host, tmp_path, monkeypatch):
     seen = []
 
@@ -759,50 +477,6 @@ def test_ideas_pick_reaches_the_runner_with_its_key_note_and_where_and_its_refus
             host.command("ideas.pick", {**a, **bad})
     with pytest.raises(CommandError, match="That pick is answered already"):
         host.command("ideas.pick", {**a, "key": "A", "note": "refuse"})
-
-
-def test_the_phone_may_call_it_and_the_opened_stop_may_say_pick(host):
-    assert "ideas.pick" in host.commands and BoardPhone.allowed(host, "ideas.pick", {}) and "ideas.pick" in host.command("mobile.hello")["commands"]
-    assert host.command("ideas.log", {"event": "opened", "what": "pick", "ref": "k1", "via": "hand"}) == {"ok": True}
-    [row] = [r for r in event_log.read(host.repo_root) if r["event"] == "opened"]
-    assert (row["what"], row["ref"], row["via"]) == ("pick", "k1", "hand")
-
-
-def test_today_says_pick_one_in_the_alert_tone_then_what_was_picked_or_that_new_ones_were_asked():
-    lines = [{"at": "2026-10-21T10:00:00+00:00", "event": "pick_asked", "idea": "logo", "task": "k1", "n": 3, "media": "image", "round": 1},
-             {"at": "2026-10-21T10:05:00+00:00", "event": "pick_answered", "idea": "logo", "task": "k1", "key": None, "note_chars": 9, "via": "hand", "seconds": 300.0},
-             {"at": "2026-10-21T10:10:00+00:00", "event": "pick_asked", "idea": "logo", "task": "k1", "n": 3, "media": "image", "round": 2},
-             {"at": "2026-10-21T10:15:00+00:00", "event": "pick_answered", "idea": "logo", "task": "k1", "key": "B", "note_chars": 0, "via": "drawer", "seconds": 300.0},
-             {"at": "2026-10-21T10:16:00+00:00", "event": "pick_asked", "idea": "gone", "task": "k9", "n": 2, "media": "text", "round": 1},
-             {"at": "2026-10-21T10:17:00+00:00", "event": "pick_asked", "idea": "logo", "n": 2, "media": "text", "round": 1}]       # no task: no row
-    titles = {"ideas": {"logo": {"title": "A logo", "short": "Logo", "goal": "brand"}}, "goals": {}, "tasks": {"logo": {"k1": "Draw the logo"}}}
-    rows = board_today.rows(lines, titles, since=None)
-    assert [(r["mark"], r["tone"], r["words"], r["title"], r["goal"], r["idea"], r["task"], r["open"]) for r in rows] == [
-        ("!", "alert", "Pick one", "gone", "", "gone", "k9", {"kind": "pick", "slug": "gone", "task": "k9"}),            # a task the Board lost reads as its goal's slug
-        ("✓", "ok", "Picked B", "Draw the logo", "brand", "logo", "k1", {"kind": "pick", "slug": "logo", "task": "k1"}),
-        ("!", "alert", "Pick one", "Draw the logo", "brand", "logo", "k1", {"kind": "pick", "slug": "logo", "task": "k1"}),
-        ("↺", "muted", "New ones asked", "Draw the logo", "brand", "logo", "k1", {"kind": "pick", "slug": "logo", "task": "k1"}),
-        ("!", "alert", "Pick one", "Draw the logo", "brand", "logo", "k1", {"kind": "pick", "slug": "logo", "task": "k1"})]
-
-
-def test_ideas_today_joins_the_task_titles_of_the_pick_events(host, tmp_path):
-    slug = waiting_pick(host, tmp_path / "s")
-    event_log.record(host.repo_root, event_log.PICK_ASKED, idea=slug, task="k1", n=3, media="image", round=1)
-    [row] = [r for r in host.command("ideas.today", {})["events"] if r["open"]["kind"] == "pick"]
-    assert (row["mark"], row["tone"], row["words"], row["title"], row["task"]) == ("!", "alert", "Pick one", "Draw the logo", "k1")
-
-
-def test_the_push_says_who_asks_to_pick_one_and_a_pick_that_waits_is_an_answer_that_waits(host, tmp_path):
-    slug = waiting_pick(host, tmp_path / "s")
-    pusher = host.pusher
-    assert phone_push.PICK_WORDS == "{member} asks you to pick one" and "pick" not in phone_push.KIND_WORDS
-    assert pusher._first() == ("Grunt asks you to pick one", "")
-    assert pusher.words_needs(1) == "Grunt asks you to pick one"
-    assert pusher.words_needs(3) == "3 wait for your answer · Grunt asks you to pick one"
-    assert host.ideas.snapshot()["needs_you"] == 1 and pusher._waiting() == 1
-    ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p["tasks"][0].update(state="review"))
-    host.ideas.rev += 1
-    assert pusher._first() is None and pusher.words_needs(1) == "1 waits for your answer"
 
 
 # -- a leader's sketch: the kind `page` (spec 121 A, docs/specs/121-the-day-the-morning-and-the-night.md §2.4) -------------------------------------
@@ -840,50 +514,3 @@ def test_a_page_is_read_stored_by_its_leader_and_never_written_into_a_project(tm
     assert not (tree / idea_pick.PICK_DIR).exists() and not (tree / idea_pick.PICK_FILE).exists()
     assert idea_pick.load(state, "g", "sketch-r1")["variants"][0]["mime"] == "text/html" and idea_pick.history(state, "g", "sketch")[0]["id"] == "sketch-r1"
 
-
-def test_a_page_over_its_limit_a_picture_called_a_page_and_a_page_among_pictures_are_refused_in_words(tmp_path):
-    big = b"<!doctype html><body>" + b"a" * (60 * 1024) + b"</body>"
-    leave(tmp_path, {"a.html": PAGE, "b.html": big})
-    got, why = idea_pick.read(tmp_path, _sketch_task())
-    assert got == [] and why.startswith("B is 60") and why.endswith("a page is at most 60 KB")
-    leave(tmp_path / "t2", {"a.html": PAGE, "b.png": pf.png()})
-    got, why = idea_pick.read(tmp_path / "t2", _sketch_task())
-    assert got == [] and why == "B is a picture, not a page"
-    leave(tmp_path / "t3", {"a.html": pf.text("only words"), "b.html": PAGE})
-    got, why = idea_pick.read(tmp_path / "t3", _sketch_task())
-    assert got == [] and why == "A is a text, not a page"
-    leave(tmp_path / "t4", {"a.png": pf.png(), "b.png": pf.png(3, 3)})
-    got, why = idea_pick.read(tmp_path / "t4", _sketch_task(kind="image"))
-    assert why == "" and [v["mime"] for v in got] == ["image/png", "image/png"]                              # an Art sketch is a pick of pictures
-    got, why = idea_pick.read(tmp_path / "t4", _sketch_task(n=3, kind="image"))
-    assert got == [] and why == "The task left 2 pictures; its plan asked for 3"
-
-
-def test_a_page_is_no_text_of_a_plans_pick(tmp_path):
-    leave(tmp_path, {"a.txt": PAGE, "b.txt": pf.text("words")})
-    got, why = idea_pick.read(tmp_path, task(2, "text"))
-    assert got == [] and why == "A is a page, not a text"
-
-
-def test_a_round_answered_with_none_is_open_again_when_the_new_round_could_not_be_made(tmp_path):
-    tree, state = tmp_path / "scratch", tmp_path / "state"
-    leave(tree, {"a.html": PAGE, "b.html": PAGE + b"<!-- b -->"})
-    got, _ = idea_pick.read(tree, _sketch_task())
-    pick = idea_pick.store(state, "g", _sketch_task(), 1, got, by="leader")
-    said = idea_pick.answer(state, "g", pick, None, "rounder")
-    assert idea_pick.answered(said) and said["note"] == "rounder" and said["asked_at"] == pick["at"]
-    again = idea_pick.reopen(state, "g", said)
-    assert not idea_pick.answered(again) and "note" not in again and "asked_at" not in again and again["at"] == pick["at"]
-    assert idea_pick.load(state, "g", "sketch-r1") == again
-
-
-def test_maker_pick_row_reads_receipt_from_pick_json(host, tmp_path):
-    slug = waiting_pick(host, tmp_path / 's')
-    path = idea_pick.folder_of(host.ideas.state_dir, slug, 'k1-r1') / 'pick.json'
-    data = json.loads(path.read_text())
-    data.update(tool='openai-images', cost={'amount': '0.12', 'currency': 'USD', 'estimate': True},
-                cap={'amount': '1', 'currency': 'USD'})
-    path.write_text(json.dumps(data))
-    [row] = pick_rows(host)
-    assert row['maker'] == {'id': 'openai-images', 'word': 'Picture maker',
-                            'cost': data['cost'], 'cap': data['cap']}

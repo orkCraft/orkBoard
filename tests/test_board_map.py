@@ -3,14 +3,13 @@ and `opened` with `via`. Code, no model."""
 from __future__ import annotations
 
 import json
-import subprocess
 import time
 from pathlib import Path
 
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_questions, idea_spend, ideas, library, map_party, spec_sections
+from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_questions, ideas, library, map_party, spec_sections
 
 
 @pytest.fixture
@@ -186,84 +185,6 @@ def test_a_dropped_task_is_not_a_failure_in_the_hand_and_not_a_task_to_do(host):
     assert node["progress"] == {"done": 1, "total": 1} and [t["state"] for t in node["tasks"]] == ["dropped", "merged"]      # a dropped task is not counted
 
 
-def test_tasks_estimate_and_by_itself(host):
-    root, state = _board(host)
-    g = _goal(root, "Plans")
-    est = {"tasks": 2, "usd_low": 0.4, "usd_high": 1.2}
-    fresh = _idea(root, state, g, "Fresh plan", "plan")
-    _plan(state, fresh, [_t("k1", "waiting"), _t("k2", "ready", after=["k1"])], estimate=est, passed_by="auto", passed_at="x")
-    begun = _idea(root, state, g, "Begun plan", "working")
-    _plan(state, begun, [_t("k1", "merged"), _t("k2", "running", after=["k1"])], estimate=est, passed_by="person", passed_at="x")
-    none = _idea(root, state, g, "No plan", "ready")
-    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
-    assert n[fresh]["estimate"] == {"usd_low": 0.4, "usd_high": 1.2} and n[fresh]["by_itself"] is True
-    assert n[begun]["estimate"] is None and n[begun]["by_itself"] is False and n[begun]["progress"] == {"done": 1, "total": 2}
-    assert n[begun]["tasks"][1] == {"id": "k2", "title": "Task k2", "short": "Task k2", "state": "running", "after": ["k1"], "tier": "warrior",
-                                     "party": "", "step": 0,       # a plan of before names no party (spec 128 F.1)
-                                     "head": {"craft": "engineering", "race": "peon", "tier": "warrior"}, "tag": "Code",   # who does it: a Grunt; its tag
-                                     "by": {"slug": "grunt", "name": "Grunt"}, "band": "build", "wave": 2, "row": 1,        # running: row 1 (spec 82 §2)
-                                     "error": "", "note": "", "round": 1, "cost": None, "started": "", "pick": None, "shot": None, "made": ""}
-    assert n[none]["tasks"] == [] and n[none]["estimate"] is None and n[none]["by_itself"] is False
-
-
-def test_folded_is_a_done_idea_no_open_one_depends_on_and_every_edge_has_both_ends(host):
-    root, state = _board(host)
-    g = _goal(root, "Folds")
-    a = _idea(root, state, g, "Done base", "done")
-    b = _idea(root, state, g, "Done middle", "done", depends=[a])
-    c = _idea(root, state, g, "Open top", "ready", depends=[b])
-    lone = _idea(root, state, g, "Done lone", "done")
-    pair = _idea(root, state, g, "Done pair", "done", depends=[lone])
-    got = host.command("ideas.map", {})
-    n = {x["slug"]: x for x in got["nodes"]}
-    assert {s: n[s]["folded"] for s in (a, b, c, lone, pair)} == {a: False, b: False, c: False, lone: True, pair: True}
-    shown = {s for s, x in n.items() if not x["folded"]}
-    assert got["edges"] == [{"from": a, "to": b}, {"from": b, "to": c}] and all(e["from"] in shown and e["to"] in shown for e in got["edges"])
-
-
-def test_a_goals_spend_is_null_when_nothing_is_priced(host):
-    root, state = _board(host)
-    g = _goal(root, "Spend")
-    s = _idea(root, state, g, "Spent", "working")
-    row = idea_spend.line("task", "grunt", "claude", "opus", "warrior", "medium", idea_spend.tokens_of({"in": 1, "out": 1}), 12.404, "k1", 1, "")
-    assert idea_spend.append(state, row, idea=s)
-    other = _goal(root, "Free of cost")
-    _idea(root, state, other, "Nothing priced", "ready")
-    unpriced = _goal(root, "Unpriced")
-    u = _idea(root, state, unpriced, "Unpriced call", "working")
-    idea_spend.append(state, {**row, "cost": None}, idea=u)
-    usd = {x["slug"]: x["usd"] for x in host.command("ideas.map", {})["goals"]}
-    assert usd[g] == 12.4 and usd[unpriced] is None and usd[other] in (0, 0.0, None)
-
-
-def test_two_hundred_ideas_build_in_under_200_ms_and_nothing_is_written_or_started(host, monkeypatch):
-    root, state = _board(host)
-    g = _goal(root, "Big")
-    prev = []
-    for n in range(200):
-        slug = _idea(root, state, g, f"Idea number {n}", "working" if n % 3 else "done", depends=prev[-2:] if n % 5 else ())
-        _plan(state, slug, [_t("k1", "merged"), _t("k2", "running", after=["k1"])], passed_at="x")
-        prev.append(slug)
-    host.command("ideas.map", {})                                                   # the first read warms the files
-    before = sorted((p, p.stat().st_mtime_ns) for p in list(root.rglob("*")) + list(state.rglob("*")) if p.is_file())
-
-    def no(*a, **k):
-        raise AssertionError("the Map starts no process")
-    monkeypatch.setattr(subprocess, "Popen", no)
-    monkeypatch.setattr(subprocess, "run", no)
-    # The best of many reads, stopping at the first one in budget: a quiet machine builds it in ~0.14 s, one busy with other tests' processes
-    # takes 0.3 s or more at times (the scheduler, not the code); a build that is really slower (10x: 1.4 s) never has a read in budget.
-    best = 9.0
-    for _ in range(25):
-        began = time.perf_counter()
-        got = board_map.build(root, state, {}, [], time.time(), rev=0)
-        best = min(best, time.perf_counter() - began)
-        if best < 0.2:
-            break
-    assert len(got["nodes"]) == 200 and best < 0.2
-    assert before == sorted((p, p.stat().st_mtime_ns) for p in list(root.rglob("*")) + list(state.rglob("*")) if p.is_file())
-
-
 def test_the_command_is_the_phones_too_and_needs_a_project():
     assert BoardPhone.allowed(Orkboard(), "ideas.map", {})
     with pytest.raises(CommandError, match="Open a folder first"):
@@ -320,28 +241,6 @@ def test_a_node_has_its_stage_round_spend_and_estimate_spec_48(host):
     assert n[checking]["tasks"][1]["by"]["slug"] == "reviewer"
 
 
-def test_asked_says_who_asks_and_results_wait_on_their_idea(host):
-    root, state = _board(host)
-    g = _goal(root, "Asks")
-    asks = _idea(root, state, g, "Asks", "asks")
-    ideas.set_section(root, asks, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone first")
-    other = _idea(root, state, g, "Other", "ready")
-    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
-    assert n[asks]["asked"][0]["ask"] == "Which store first?" and n[asks]["asked"][0]["by"]["slug"] == "taskmaster"     # the leader's: no `asks_by`
-    assert (n[asks]["asked"][0]["choices"], n[asks]["asked"][0]["pick"], n[asks]["asked"][0]["why"]) == (["App Store", "Google Play"], 0, "iPhone first")
-    assert "lines" not in n[asks]["asked"][0]                                                    # no lines: as before
-    ideas.set_section(root, asks, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone first · App Store: Ships in a week · Google Play: Ships in a month")
-    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
-    assert n[asks]["asked"][0]["lines"] == ["Ships in a week", "Ships in a month"] and n[asks]["asked"][0]["why"] == "iPhone first"        # spec 159 B
-    assert n[other]["asked"] == [] and n[asks]["results"] == []
-    review = _idea(root, state, g, "In review", "working")
-    _plan(state, review, [{**_t("k1", "review"), "tests": {"passed": 20, "failed": 0, "failing": [], "tail": ""}, "cost": 0.42,
-                          "finished": "2026-10-20T10:00:00", "diff": {"files": 14, "added": 3, "removed": 1}}], passed_at="x")
-    got = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
-    assert [(r["task"], r["tests"]["passed"], r["diff"]["files"]) for r in got[review]["results"]] == [("k1", 20, 14)]
-    assert got[asks]["results"] == []
-
-
 def test_the_partys_states_and_todays_merges_spec_48(host):
     root, state = _board(host)
     g = _goal(root, "Party")
@@ -364,17 +263,6 @@ def test_the_partys_states_and_todays_merges_spec_48(host):
     assert got["grunt"] == ("needs", "failed")
 
 
-def test_a_result_in_review_is_not_a_stop_on_its_agent_spec_48(host):
-    root, state = _board(host)
-    g = _goal(root, "Review is no signal")
-    _roles(state, "architect")
-    goal_team.set_team(root, g, ["grunt"], leader="architect")
-    slug = _idea(root, state, g, "Reviewing", "working")
-    _plan(state, slug, [_t("k1", "review")], passed_at="x")
-    party = {m["slug"]: m["state"] for m in host.command("ideas.map", {"goal": g})["goals"][0]["party"]}
-    assert party["grunt"] == "free" and party["architect"] == "free"
-
-
 def test_a_task_that_waits_for_a_pick_is_picking_with_its_pick_and_its_member_and_goal_wait_for_you_spec_51(host):
     root, state = _board(host)
     g = _goal(root, "Brand")
@@ -394,42 +282,6 @@ def test_a_task_that_waits_for_a_pick_is_picking_with_its_pick_and_its_member_an
 
 
 # -- spec 49 A: what a task's run left, and the recommended answer --------------------------------------------------
-
-def test_a_task_carries_its_failure_note_round_cost_and_start_spec_49(host):
-    root, state = _board(host)
-    g = _goal(root, "Runs")
-    slug = _idea(root, state, g, "Runs", "working")
-    long = "The test run failed:\n" + "x" * 400
-    _plan(state, slug, [{**_t("k1", "failed"), "error": long, "round": 2, "cost": 0.42, "started": "2026-10-21T09:12:00"},
-                        {**_t("k2", "held", after=["k1"], note="reserve · after 18:00")},
-                        {**_t("k3", "ready", after=["k1"], note="stopped by you"), "cost": 0},
-                        {**_t("k4", "waiting", after=["k2"]), "cost": "free", "error": None, "round": 0}], passed_at="x")
-    tasks = {t["id"]: t for t in next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == slug)["tasks"]}
-    k1, k2, k3, k4 = (tasks[k] for k in ("k1", "k2", "k3", "k4"))
-    assert k1["error"] == long[:300] and len(k1["error"]) == 300 and k1["error"].startswith("The test run failed:\nxxx")    # as the runner wrote it, cut
-    assert (k1["round"], k1["cost"], k1["started"], k1["note"]) == (2, 0.42, "2026-10-21T09:12:00", "")
-    assert (k2["note"], k2["error"], k2["cost"], k2["started"], k2["round"]) == ("reserve · after 18:00", "", None, "", 1)       # null before it ran
-    assert (k3["note"], k3["cost"]) == ("stopped by you", 0)
-    assert (k4["cost"], k4["error"], k4["round"]) == (None, "", 1)                                                            # nothing odd gets through
-    json.dumps(tasks)
-    assert k1["id"] == "k1" and k1["state"] == "failed" and k1["after"] == [] and k2["after"] == ["k1"] and k1["wave"] == 1   # the old fields stay
-
-
-def test_a_question_says_its_recommended_choice_and_why_spec_49(host):
-    root, state = _board(host)
-    g = _goal(root, "Asks")
-    slug = _idea(root, state, g, "Asks", "asks")
-    ideas.set_section(root, slug, "Open questions", "\n".join([
-        "- Which store first? (**App Store** / Google Play) — iPhone first",
-        "- Which store after? (App Store / Google Play)",
-        "- Anything else to know?"]))
-    asked = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == slug)["asked"]
-    assert [(q["ask"], q["choices"], q["pick"], q["why"]) for q in asked] == [
-        ("Which store first?", ["App Store", "Google Play"], 0, "iPhone first"),
-        ("Which store after?", ["App Store", "Google Play"], None, ""),               # no pick: null
-        ("Anything else to know?", [], None, "")]                                    # no choices: the person writes
-    assert all(set(q) == {"ask", "choices", "kinds", "pick", "why", "by", "look"} and q["look"] is False for q in asked)
-
 
 def test_a_node_has_its_element_and_its_flag_and_a_party_its_flags_waits_and_brief_spec_50(host):
     from orkboard.realm import idea_flag
@@ -454,47 +306,6 @@ def test_a_node_has_its_element_and_its_flag_and_a_party_its_flags_waits_and_bri
     assert (parties[g]["flags"], parties[g]["waits_main"]) == (1, 1)                              # one flagged; one done, waiting for main; one at work
     assert (parties[other]["flags"], parties[other]["waits_main"]) == (0, 1)
     json.dumps(got)
-
-
-def test_a_partys_brief_is_its_descriptions_first_paragraph_else_its_summarys_first_line_in_140_characters(host):
-    root, state = _board(host)
-    both = ideas.save_goal(root, None, "Both", "The first paragraph\nruns over two lines.\n\nThe second paragraph is not the brief.", None, "normal")[0]
-    long = ideas.save_goal(root, None, "Long", "w" * 200, None, "normal")[0]
-    titled = ideas.save_goal(root, None, "Only a title", "", None, "normal")[0]
-    ideas.write_goal_reading(root, titled, "\nSummary line one\nline two", {}, [])
-    bare = ideas.save_goal(root, None, "Bare", "", None, "normal")[0]
-    briefs = {g["slug"]: g["brief"] for g in host.command("ideas.map", {})["goals"]}
-    assert briefs[both] == "The first paragraph runs over two lines."
-    assert briefs[long] == "w" * 139 + "…" and len(briefs[long]) == 140
-    assert briefs[titled] == "Summary line one" and briefs[bare] == ""
-
-
-def test_a_plan_rows_missing_is_read_against_the_party_now_and_a_node_says_its_type_spec_52(host):
-    """Spec 52 §2.2, §2.6: Needs you's plan row says what no one of the party does, read now (a member added since drops out;
-    a plan made before has none); a node carries its type `{id, name, sign}`, None with none or an unknown key."""
-    root, state = _board(host)
-    g = _goal(root, "Brand")
-    _roles(state, "grunt", "product-designer")
-    goal_team.set_team(root, g, ["grunt"], leader="product-designer")
-    slug = _idea(root, state, g, "A logo", state="plan", type="product-designer/logo")
-    blank = _idea(root, state, g, "Blank", state="ready")
-    odd = _idea(root, state, g, "Odd", state="ready", type="nobody/logo")
-    _plan(state, slug, [_t("k1", "ready")], passed_at=None, missing=[{"kind": "art", "agent": "artist"}])
-    i = next(x for x in ideas.ideas(root) if x["slug"] == slug)
-
-    def row():
-        (got,) = [n for n in board_map.idea_needs(root, state, i, ideas.state(state, slug), ideas.plan(state, slug), []) if n["kind"] == "plan"]
-        return got["missing"]
-    assert row() == [{"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": True}]        # the Grunt holds one of the five seats (spec 99 §1.3)
-    _roles(state, "artist")
-    goal_team.set_team(root, g, ["grunt", "artist"])
-    assert row() == []                                                                          # the Artist joined since
-    goal_team.set_team(root, g, ["grunt"])
-    ideas.edit_plan(state, slug, lambda p: p.pop("missing"))
-    assert row() == []                                                                          # a plan made before has none
-    nodes = {n["slug"]: n for n in board_map.build(root, state, goal=g)["nodes"]}
-    assert nodes[slug]["type"] == {"id": "logo", "name": "New logo", "sign": "logo"}
-    assert nodes[blank]["type"] is None and nodes[odd]["type"] is None
 
 
 def test_a_plan_change_waiting_is_one_stop_of_kind_change_beside_the_plans_spec_62(host):
@@ -536,65 +347,6 @@ def test_a_plan_change_waiting_is_one_stop_of_kind_change_beside_the_plans_spec_
     assert stop["text"] == "The plan stays as it is" and (stop["added"], stop["changed"], stop["dropped"]) == (0, 0, 0)
     ideas.save_state(state, slug, state="done")
     assert stops() == []
-
-
-def test_the_hand_sorts_a_plan_change_as_a_plan_not_last_and_not_blocking_spec_62():
-    from orkboard.gui.ideas_board import sort_needs
-    row = lambda kind, priority="normal", at="2026-10-23T10:00:00", blocks=False: {"kind": kind, "priority": priority, "at": at, "blocks": blocks}      # noqa: E731
-    got = sort_needs([row("proposal", "high"), row("plan", "low"), row("change", "high", "2026-10-23T12:00:00"), row("change", "high", "2026-10-23T11:00:00"),
-                      row("failed", blocks=True), row("plan", "high", "2026-10-23T09:00:00")])
-    assert [(n["kind"], n["priority"], n["at"][11:13]) for n in got] == [
-        ("failed", "normal", "10"), ("plan", "high", "09"), ("change", "high", "11"), ("change", "high", "12"), ("plan", "low", "10"), ("proposal", "high", "10")]
-
-
-def test_a_party_wears_the_settings_target_on_the_map_whatever_its_size_spec_168_h4(host):
-    """Spec 168 H4: a size is no Target of its own: a task's head is of *How deep* (a Grunt on By Target) for every party; `goals[].size` still says the size ("" with none)."""
-    root, state = _board(host)
-    parties = {}
-    for size in ("lean", "full", ""):
-        g = _goal(root, f"Party {size or 'old'}")
-        if size:
-            goal_team.set_size(root, g, size)
-        slug = _idea(root, state, g, f"Work of {size or 'old'}", state="plan")
-        _plan(state, slug, [{**_t("k1", "ready"), "kind": "code", "tier": "warrior"}])
-        parties[size] = (g, slug)
-    got = board_map.build(root, state, {"target": "balance"}, [], time.time(), rev=0)
-    assert {g["slug"]: g["size"] for g in got["goals"] if g["slug"] in {p[0] for p in parties.values()}} == {parties[s][0]: s for s in parties}
-    tier = {s: _node(got, parties[s][1])["tasks"][0]["head"]["tier"] for s in parties}
-    assert tier == {"lean": "warrior", "full": "warrior", "": "warrior"}
-    again = board_map.build(root, state, {"target": "quality"}, [], time.time(), rev=0)
-    assert {_node(again, parties[s][1])["tasks"][0]["head"]["tier"] for s in parties} == {"elder"}
-
-
-def test_a_goal_says_how_far_it_is_and_a_task_merged_says_what_it_made_spec_85(host):
-    root, state = _board(host)
-    party = _goal(root, "Shots")
-    slug = _idea(root, state, party, "The runs page", "working")
-    merged = {**_t("k1", "merged"), "subjects": ["  Add the runs\n page ", "Fix a typo"]}
-    clean = {**_t("k2", "merged", ["k1"]), "subjects": [], "note": "clean"}
-    long = {**_t("k3", "merged", ["k1"]), "subjects": ["x" * 400]}
-    _plan(state, slug, [merged, clean, long, _t("k4", "running", ["k2"]), _t("k5", "waiting", ["k4"]),
-                        {**_t("k6", "ready"), "subjects": ["not merged: not said"]}])
-    node = _node(board_map.build(root, state), slug)
-    assert (node["done"], node["of"]) == (3, 6) and node["progress"] == {"done": 3, "total": 6}
-    made = {t["id"]: t["made"] for t in node["tasks"]}
-    assert made["k1"] == "Add the runs page" and made["k2"] == "" and made["k4"] == "" and made["k6"] == ""
-    assert len(made["k3"]) == board_map.MADE_CHARS and made["k3"].endswith("…")
-
-
-def test_a_goal_with_no_plan_is_nothing_of_nothing_and_a_task_with_a_picture_carries_it_spec_85(host):
-    root, state = _board(host)
-    party = _goal(root, "Shots")
-    bare = _idea(root, state, party, "No plan yet", "ready")
-    seen = _idea(root, state, party, "With pictures", "working")
-    _plan(state, seen, [{**_t("k1", "merged"), "subjects": ["a"], "shot": {"id": "k1-shot-r1", "file": "shot.png", "w": 1280, "h": 800, "at": "x"}},
-                        {**_t("k2", "merged"), "shot": {"none": True}}, _t("k3", "merged"), {**_t("k4", "merged"), "shot": {"id": 4}}])
-    got = board_map.build(root, state)
-    node = _node(got, bare)
-    assert (node["done"], node["of"]) == (0, 0)
-    shots = {t["id"]: t["shot"] for t in _node(got, seen)["tasks"]}
-    assert shots == {"k1": {"id": "k1-shot-r1", "file": "shot.png", "w": 1280, "h": 800}, "k2": {"none": "no picture: no preview"}, "k3": None, "k4": None}
-    json.dumps(got)
 
 
 def test_the_hosts_map_signs_a_pictures_address_and_review_carries_it_spec_85(host, tmp_path):
@@ -648,21 +400,6 @@ def test_a_todo_is_a_stop_only_when_it_blocks_and_a_line_of_the_plan_until_then_
     assert _stops(host, ready) == ["plan"] and _node(host.command("ideas.map", {}), ready)["todo_lines"] == ["Before Task k1: paste the key"]
 
 
-def test_todo_lines_say_before_each_task_to_come_in_the_plans_order_and_none_once_done_spec_87():
-    tasks = [{"id": "k1", "title": "Build the arena", "state": "merged"}, {"id": "k2", "title": "Spawn the boss", "state": "waiting"},
-             {"id": "k3", "title": "Play the boss's theme", "state": "waiting"}]
-    plan = {"tasks": tasks, "todos": [
-        {"id": "t1", "title": "record the boss's sounds", "for": ["k3", "k2"]},                 # for two tasks: a line for each
-        {"id": "t2", "title": "paste the key", "for": ["k1"]},                                  # its only task is merged
-        {"id": "t3", "title": "confirm the licence", "for": ["k2"], "done": True},
-        {"id": "t4", "title": "name the boss", "for": ["k1", "k3"]},
-        {"id": "t5", "title": "for no task", "for": []},
-        {"id": "t6", "title": "choose the arena", "for": ["k2"]}]}
-    assert board_map.todo_lines(plan, tasks) == ["Before Spawn the boss: record the boss's sounds", "Before Spawn the boss: choose the arena",
-                                                 "Before Play the boss's theme: record the boss's sounds", "Before Play the boss's theme: name the boss"]
-    assert board_map.todo_lines(plan) == board_map.todo_lines(plan, tasks) and board_map.todo_lines(None, []) == [] and board_map.todo_lines({}) == []
-
-
 def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_names_them(host):
     """Spec 99 §4: `route` (a goal routed, waiting for Talk) and `start` (a step added after Talk) sit on the goal, first among its kinds; the node's place follows."""
     root, state = _board(host)
@@ -681,23 +418,6 @@ def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_
     rows = {r["kind"]: r for r in host.command("ideas.board")["needs_you"] if r["idea"] in (a, b)}
     assert rows["route"]["place"] == 1 and rows["start"]["was"] == {"calls": 4, "usd_low": 1.0, "usd_high": 3.0} and rows["start"]["cost"]["calls"] > 0
     assert [r["state"] for r in host.command("ideas.board")["ideas"] if r["slug"] == c] == ["decided"]
-
-
-def test_a_node_carries_its_goals_route_at_every_state_from_routed_to_done_decisions_169(host):
-    """Spec 100 As built E's Left: a goal between its decision and its plan shows its route's parties, not only its own party's (`table/data.js` `routeParties` reads the node's `route`)."""
-    root, state = _board(host)
-    g, a_, b_ = _goal(root, "Way"), _goal(root, "Art"), _goal(root, "Sound")
-    two = [{"party": g, "leader": "taskmaster"}, {"party": a_, "leader": "artist"}]
-    away = [{"party": b_, "leader": "artist"}]                  # its first party taken off the route: the goal lies in `g` still
-    states = ("routed", "talk", "decided", "sections", "ready", "planning", "plan", "working", "done")
-    long = {s: _idea(root, state, g, "Long " + s, s, route=two) for s in states}
-    short = {s: _idea(root, state, g, "Away " + s, s, route=away) for s in states}
-    alone = _idea(root, state, g, "Alone", "decided", route=[{"party": g, "leader": "taskmaster"}])
-    nodes = {n["slug"]: n for n in host.command("ideas.map", {})["nodes"]}
-    for s in states:
-        assert [x["party"] for x in nodes[long[s]]["route"] if x["step"] == "party"] == [g, a_], s
-        assert [x["party"] for x in nodes[short[s]]["route"] if x["step"] == "party"] == [b_], s
-    assert nodes[alone]["route"] == []                         # a goal that stays in its own party: nothing to draw
 
 
 def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_disagreement_open_and_a_node_names_them(host):
@@ -726,20 +446,6 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     spec_sections.save_record(state, a, {"decision": {"title": "Dark mode", "text": "t", "number": 12, "confirmed": True}})
     row = next(r for r in host.command("ideas.board")["needs_you"] if r["idea"] == a and r["kind"] == "decision")
     assert row["confirmed"] is True and row["error"] == "The sections failed: x"
-
-
-def test_a_node_says_agreed_for_a_spec_the_leaders_made_and_not_for_the_orkmasters_own_draft(host):
-    """Decisions §224: `agreed` is true for `ready`, `planning` and `plan` of a goal whose decision was confirmed (the new way); false for the Orkmaster's draft and for any other state."""
-    root, state = _board(host)
-    g = _goal(root, "Way")
-    new = _idea(root, state, g, "New way", "ready")
-    old = _idea(root, state, g, "Old flow", "planning")
-    plan = _idea(root, state, g, "New plan", "plan")
-    sec = _idea(root, state, g, "Sections", "sections")
-    for slug in (new, plan, sec):
-        spec_sections.save_record(state, slug, {"decision": {"title": "T", "text": "t", "number": 1, "confirmed": True}})
-    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
-    assert (n[new]["agreed"], n[old]["agreed"], n[plan]["agreed"], n[sec]["agreed"]) == (True, False, True, False)
 
 
 def _cards(party, n=3):

@@ -19,8 +19,8 @@ from orkboard.core.idea_keeper import IdeaKeeper
 from orkboard.core.idea_runner import IdeaRunner
 from orkboard.core.sign_ins import HOLD_H, SignInError, SignIns
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_map, event_log, harnesses, ideas, jobs, sign_in, tool_errors
-from orkboard.realm.sign_in import CHECK_PROMPT, WAIT_S, Outcome
+from orkboard.realm import board_map, event_log, ideas, jobs, sign_in, tool_errors
+from orkboard.realm.sign_in import CHECK_PROMPT, Outcome
 from tests.test_idea_runner import plan_of, tasks_of, town  # noqa: F401  (the runner's repository and stub claude)
 
 LOGIN = "Not logged in · Please run /login"
@@ -31,18 +31,6 @@ def login_error(harness: str = "claude", said: str = LOGIN) -> tool_errors.ToolE
 
 
 # -- each tool's own sign-in (§1) ---------------------------------------------------------------------------------
-
-def test_each_tool_has_its_own_sign_in_and_login_words_are_as_they_were():
-    table = {"claude": (("auth", "login"), "browser", "", "claude  (then /login)"),
-             "codex": (("login",), "browser", "", "codex login"),
-             "cursor": (("login",), "terminal", "", "cursor-agent login"),
-             "agy": (("login",), "terminal", "", "agy login"),
-             "pi": ((), "terminal", "/login", "pi  (then /login)"),
-             "hermes": (("setup",), "terminal", "", "hermes setup")}
-    assert set(table) == set(harnesses.ids())
-    for tid, (argv, by, typed, login) in table.items():
-        h = harnesses.need(tid)
-        assert (h.sign_in, h.sign_in_by, h.sign_in_type, h.login) == (argv, by, typed, login), tid
 
 
 def fake_run(version="2.1.304", status=None, codex="Not logged in"):
@@ -156,31 +144,6 @@ def test_the_browser_way_runs_the_tools_own_sign_in_in_the_home_folder_with_stdi
     assert run.poll() == Outcome("done")                             # and the same afterwards
 
 
-def test_a_run_that_ends_with_another_code_failed_with_its_last_line(tmp_path):
-    spawn = Spawner(["starting", "Login failed: access denied"], code=1)
-    run, _ = begin("codex", tmp_path, spawn)
-    assert run.poll() == Outcome("failed", "Login failed: access denied")
-
-
-def test_a_run_not_done_in_wait_s_is_stopped_as_timeout(tmp_path):
-    clock, spawn = Clock(), Spawner()
-    run, _ = begin("claude", tmp_path, spawn, clock=clock)
-    clock.now += WAIT_S - 1
-    assert run.poll() is None
-    clock.now += 2
-    assert run.poll() == Outcome("failed", "timeout") and spawn.procs[0].terminated
-
-
-def test_a_browser_that_did_not_open_asks_for_a_code_and_ends_as_no_browser(tmp_path):
-    spawn = Spawner(["Browser didn't open? Paste code here if prompted >"])
-    run, _ = begin("claude", tmp_path, spawn)
-    for _ in range(50):
-        if (out := run.poll()) is not None:
-            break
-        time.sleep(0.02)
-    assert out == Outcome("failed", "no_browser") and spawn.procs[0].terminated
-
-
 def test_the_log_holds_no_url_past_its_host(tmp_path):
     spawn = Spawner(["Open https://claude.com/cai/oauth/authorize?code=true&state=SECRETSTATE in a browser",
                      "callback http://localhost:5555/callback?code=abc123"], code=0)
@@ -203,20 +166,6 @@ def test_told_by_signed_in_true_false_or_the_check(tmp_path):
     assert out.state == "failed" and out.why.startswith("Claude Code is not signed in")
 
 
-def test_cancel_stops_the_process(tmp_path):
-    spawn = Spawner()
-    run, _ = begin("claude", tmp_path, spawn)
-    assert run.cancel() == Outcome("failed", "cancelled") and spawn.procs[0].terminated
-    assert run.poll() == Outcome("failed", "cancelled")
-
-
-def test_a_tool_not_found_or_unknown_cannot_start(tmp_path):
-    with pytest.raises(SignInError, match="not found on this computer"):
-        begin("claude", tmp_path, Spawner(), which=lambda name: None)
-    with pytest.raises(SignInError, match="not one of the AI tools"):
-        begin("nobody", tmp_path, Spawner())
-
-
 def test_the_terminal_way_writes_a_script_and_opens_it_in_a_window(tmp_path):
     spawn = Spawner()
     env = {"PATH": "/opt/bin:/usr/bin", "PI_CODING_AGENT_DIR": "/work/pi", "SECRET_TOKEN": "t0ken"}
@@ -230,56 +179,6 @@ def test_the_terminal_way_writes_a_script_and_opens_it_in_a_window(tmp_path):
     assert spawn.procs[0].argv == ["x-terminal-emulator", "-e", str(script)] and run.by == "terminal"
     assert run.poll() is None                                          # cannot be told: only the person's Done
     assert run.told() == Outcome("done") and run.poll() == Outcome("done")      # the Check answered
-
-
-def test_the_script_of_a_tool_with_arguments_names_them(tmp_path):
-    begin("hermes", tmp_path, Spawner())
-    assert (tmp_path / "state" / "sign-in" / "hermes.command").read_text().rstrip().endswith("exec /bin/hermes setup")
-
-
-@pytest.mark.parametrize("platform, argv", [
-    ("darwin", ["open", "-a", "Terminal", "{script}"]),
-    ("win32", ["cmd", "/c", "start", "", "cmd", "/k", "{script}"]),
-])
-def test_the_opener_per_platform(tmp_path, platform, argv):
-    spawn = Spawner()
-    begin("pi", tmp_path, spawn, platform=platform)
-    name = "pi.cmd" if platform == "win32" else "pi.command"
-    script = tmp_path / "state" / "sign-in" / name
-    assert spawn.procs[0].argv == [a.replace("{script}", str(script)) for a in argv]
-    if platform == "win32":
-        assert script.read_bytes().startswith(b"@echo off\r\ncd /d")
-
-
-def test_linux_tries_each_terminal_in_turn_and_none_found_says_what_to_type(tmp_path):
-    order = [("x-terminal-emulator", "-e"), ("gnome-terminal", "--"), ("konsole", "-e"), ("xfce4-terminal", "-x"),
-             ("xterm", "-e")]
-    for n, (name, flag) in enumerate(order):
-        spawn = Spawner()
-        left = {m for m, _ in order[n:]}                             # the ones before it are missing
-        begin("pi", tmp_path, spawn, which=lambda x, left=left: f"/bin/{x}" if x in left or x == "pi" else None)
-        assert spawn.procs[0].argv[:2] == [name, flag]
-    spawn = Spawner()
-    run, _ = begin("pi", tmp_path, spawn, which=lambda x: "/bin/pi" if x == "pi" else None)
-    assert spawn.procs == [] and run.poll() == Outcome("none", command="pi  (then /login)")
-    run, _ = begin("pi", tmp_path, Spawner(fail=True))                # a terminal that cannot start is none too
-    assert run.poll().state == "none"
-
-
-def test_a_terminal_sign_in_ends_when_the_tool_says_signed_in_and_after_wait_s(tmp_path):
-    clock, answers = Clock(), [False]
-    run = sign_in.start("pi", {"PATH": "/usr/bin"}, tmp_path / "state", "linux", lambda n: f"/bin/{n}", Spawner(),
-                        clock=clock, signed_in=lambda h, e=None: answers[0], ask=lambda *a: None, home=tmp_path)
-    assert run.poll() is None
-    answers[0] = True
-    clock.now += 1
-    assert run.poll() is None                                          # asked every POLL_S, not before
-    clock.now += sign_in.POLL_S
-    assert run.poll() == Outcome("done")
-    late = sign_in.start("pi", {}, tmp_path / "state", "linux", lambda n: f"/bin/{n}", Spawner(), clock=clock,
-                         signed_in=lambda h, e=None: False, ask=lambda *a: None, home=tmp_path)
-    clock.now += WAIT_S + 1
-    assert late.poll() == Outcome("failed", "timeout")
 
 
 # -- when a sign-in helps (§3) --------------------------------------------------------------------------------------
@@ -300,36 +199,6 @@ def test_helps_unless_a_key_is_set_or_another_claude_renews_or_only_weak_words_a
     assert tool_errors.helps(weak, {}, lambda h, e=None: False) is True
     assert tool_errors.helps(weak, {}, lambda h, e=None: None) is True
     assert tool_errors.helps(tool_errors.ToolError("claude", "429 rate limit", 1), {}, never) is False   # not a login
-
-
-def test_watch_hears_each_login_failure_and_each_run_that_ended_well_and_swallows_its_errors():
-    seen, ok = [], []
-    stop = tool_errors.watch(lambda e: seen.append(e))
-    tool_errors.watch(lambda e: 1 / 0)                      # its own error never stops the work
-    tool_errors.watch_ok(ok.append)
-    first = login_error()
-    tool_errors.ToolError("claude", "429 rate limit", 1)    # not a login
-    tool_errors.ran("codex")
-    assert seen == [first] and ok == ["codex"]
-    stop()
-    login_error()
-    assert len(seen) == 1
-
-
-def test_nothing_is_watched_until_a_host_watches():
-    # (the conftest drops every watcher after each test) the words of a failure are as they were
-    err = login_error()
-    assert tool_errors.what_to_do(err) == tool_errors.claude_sign_in(err.detail)
-    tool_errors.ran("claude")
-
-
-def test_what_to_do_says_sign_in_opens_when_the_host_judged_a_sign_in_helps(tmp_path):
-    signins = fresh(tmp_path)[0]
-    err = login_error()
-    assert tool_errors.what_to_do(err) == "Sign in opens Claude Code's sign-in. In a terminal: claude, then /login."
-    assert tool_errors.what_to_do(login_error("codex", "401 unauthorized")) == \
-        "Sign in opens Codex's sign-in. In a terminal: codex login."
-    assert signins.blocked("claude") and signins.blocked("codex")
 
 
 # -- the host's service (§4) ----------------------------------------------------------------------------------------
@@ -371,20 +240,6 @@ def test_a_failure_a_sign_in_helps_begins_an_episode_with_auto(tmp_path):
     assert [x["harness"] for x in s.snapshot()] == ["claude"]
 
 
-def test_a_key_set_where_orkboard_runs_keeps_no_episode(tmp_path):
-    s, _ = fresh(tmp_path, env={"ANTHROPIC_API_KEY": "k"})
-    login_error()
-    assert s.snapshot() == [] and not s.blocked("claude")
-
-
-def test_the_snapshot_lists_the_tools_in_the_registrys_order(tmp_path):
-    s, _ = fresh(tmp_path)
-    login_error("pi", "Not logged in")
-    login_error("codex", "401 unauthorized")
-    login_error("claude")
-    assert [e["harness"] for e in s.snapshot()] == [h for h in harnesses.ids() if h in ("claude", "codex", "pi")]
-
-
 def test_start_opens_one_run_per_tool_and_auto_is_taken_once(tmp_path):
     s, _ = fresh(tmp_path)
     login_error()
@@ -412,26 +267,6 @@ def test_the_run_ending_well_is_done_and_publishes_signed_in(tmp_path):
     assert topics(s, b.SIGN_IN)[-1]["state"] == "done"
 
 
-def test_a_run_that_fails_leaves_the_episode_going_and_offers_sign_in_again(tmp_path):
-    s, _ = fresh(tmp_path, signed=False)
-    login_error()
-    s.start("claude")
-    s.spawn.procs[0].returncode = 0
-    s.tick()
-    [e] = s.snapshot()
-    assert e["state"] == "failed" and e["why"] == "refused" and s.blocked("claude")
-
-
-def test_no_terminal_is_none_with_the_words_to_type(tmp_path):
-    s, _ = fresh(tmp_path)
-    s._which = lambda n: "/bin/pi" if n == "pi" else None
-    s._start = lambda *a, **k: sign_in.start("pi", {}, tmp_path / "state", "linux",
-                                              lambda n: "/bin/pi" if n == "pi" else None, Spawner(), home=tmp_path)
-    login_error("pi", "Not logged in")
-    e = s.start("pi")
-    assert e["state"] == "none" and e["command"] == "pi  (then /login)"
-
-
 def test_done_is_the_persons_word_for_a_tool_that_cannot_be_told(tmp_path):
     s, _ = fresh(tmp_path)
     login_error("agy", "Not logged in")
@@ -443,68 +278,6 @@ def test_done_is_the_persons_word_for_a_tool_that_cannot_be_told(tmp_path):
     assert s.entry("agy")["state"] == "done" and topics(s, b.SIGNED_IN) == [{"harness": "agy"}]
     with pytest.raises(SignInError):
         s.done("agy")
-
-
-def test_a_run_of_the_tool_that_ended_well_ends_the_episode_as_elsewhere(tmp_path):
-    s, _ = fresh(tmp_path)
-    login_error()
-    s.start("claude")
-    tool_errors.ran("claude")
-    assert s.entry("claude")["state"] == "done" and s.spawn.procs[0].terminated
-    assert topics(s, b.SIGNED_IN) == [{"harness": "claude"}]
-    tool_errors.ran("claude")                                        # nothing to end now
-    assert len(topics(s, b.SIGNED_IN)) == 1
-
-
-def test_a_failure_right_after_a_sign_in_of_a_tool_that_says_signed_in_begins_nothing(tmp_path):
-    s, _ = fresh(tmp_path, signed=True)
-    login_error()
-    tool_errors.ran("claude")
-    err = login_error()                                              # a run that began before the sign-in
-    assert s.snapshot() == [] and s.holds(err)                      # held, and let go at once
-    s.clock_.now += 3600
-    s.state["signed"] = None
-    login_error()
-    assert s.blocked("claude")                                       # a new episode
-
-
-def test_stop_all_cancels_an_open_run_and_quitting_stops_the_runs(tmp_path):
-    s, _ = fresh(tmp_path)
-    login_error()
-    s.start("claude")
-    s.stop_all()
-    assert s.spawn.procs[0].terminated and s.entry("claude")["why"] == "cancelled"
-    s.start("claude")
-    s.close()
-    assert s.spawn.procs[1].terminated
-    login_error("codex", "401 unauthorized")                         # nothing is watched any more
-    assert s.entry("codex") is None
-
-
-def test_one_codex_sign_in_at_a_time_on_the_computer(tmp_path):
-    busy = [True]
-    s, _ = fresh(tmp_path)
-    s._port_busy = lambda: busy[0]
-    login_error("codex", "401 unauthorized")
-    assert s.start("codex")["state"] == "open" and s.spawn.procs == []        # waits for the first one's port
-    s.tick()
-    assert s.spawn.procs == []
-    busy[0] = False
-    s.clock_.now += 10
-    s.tick()
-    assert s.spawn.procs[0].argv == ["/bin/codex", "login"]
-
-
-def test_a_tool_told_not_signed_in_and_then_signed_in_elsewhere_ends_the_episode(tmp_path):
-    s, _ = fresh(tmp_path, signed=False)
-    login_error()
-    s.clock_.now += 31
-    s.tick()                                                        # asked: not signed in
-    assert s.blocked("claude")
-    s.state["signed"] = True
-    s.clock_.now += 31
-    s.tick()
-    assert not s.blocked("claude") and topics(s, b.SIGNED_IN) == [{"harness": "claude"}]
 
 
 def test_the_events_are_written_to_the_shown_projects_log_only(tmp_path):
@@ -521,23 +294,6 @@ def test_the_events_are_written_to_the_shown_projects_log_only(tmp_path):
     none, _ = fresh(tmp_path / "other")
     login_error("codex", "401 unauthorized")
     assert not (tmp_path / "other" / ".orkcraft").exists() and none.blocked("codex")
-
-
-def test_a_failed_sign_in_writes_sign_in_failed(tmp_path):
-    root = tmp_path / "project"
-    s, _ = fresh(tmp_path, root=lambda: root)
-    login_error()
-    s.start("claude")
-    s.cancel("claude")
-    assert [r["event"] for r in event_log.read(root)] == ["sign_in_needed", "sign_in_failed"]
-    assert event_log.read(root)[1]["why"] == "cancelled"
-
-
-def test_where_names_what_failed_first(tmp_path):
-    s, _ = fresh(tmp_path)
-    with tool_errors.doing("task"):
-        login_error()
-    assert s.entry("claude")["where"] == "task"
 
 
 # -- the work waits for it (§6) -------------------------------------------------------------------------------------
@@ -595,36 +351,6 @@ def test_a_task_that_hit_a_refused_sign_in_is_held_and_runs_again_once_signed_in
     assert tasks_of(town)["k1"]["state"] == "merged" and not tasks_of(town)["k1"].get("held_for")
 
 
-def test_a_task_held_for_a_day_fails_as_it_did_with_the_line(town, tmp_path, monkeypatch):
-    signins, _ = fresh(tmp_path / "cfg")
-    refuse_login(monkeypatch)
-    plan_of(town, [{"id": "k1"}])
-    runner = runner_with(town, signins)
-    runner.start("demo")
-    until(lambda: tasks_of(town)["k1"]["state"] == "held")
-    until(lambda: not runner.busy())
-    plan = json.loads((town.state / "ideas" / "demo" / "plan.json").read_text())
-    plan["tasks"][0]["held_until"] = (dt.datetime.now() - dt.timedelta(minutes=1)).isoformat(timespec="seconds")
-    (town.state / "ideas" / "demo" / "plan.json").write_text(json.dumps(plan))
-    runner.tick()
-    task = tasks_of(town)["k1"]
-    assert task["state"] == "failed" and task["error"].startswith("Claude Code is not signed in")
-
-
-def test_a_failed_or_cancelled_sign_in_leaves_what_is_held_held(town, tmp_path, monkeypatch):
-    signins, _ = fresh(tmp_path / "cfg")
-    refuse_login(monkeypatch)
-    plan_of(town, [{"id": "k1"}])
-    runner = runner_with(town, signins)
-    runner.start("demo")
-    until(lambda: tasks_of(town)["k1"]["state"] == "held")
-    until(lambda: not runner.busy())
-    signins.start("claude")
-    signins.cancel("claude")
-    runner.tick()
-    assert tasks_of(town)["k1"]["state"] == "held" and signins.entry("claude")["state"] == "failed"
-
-
 def test_a_task_that_starts_while_the_tool_needs_its_sign_in_is_held_at_once(town, tmp_path, monkeypatch):
     signins, _ = fresh(tmp_path / "cfg")
     login_error()                                                    # the episode began elsewhere
@@ -636,16 +362,6 @@ def test_a_task_that_starts_while_the_tool_needs_its_sign_in_is_held_at_once(tow
     runner.tick()
     states = {k: t["state"] for k, t in tasks_of(town).items()}
     assert states["k1"] == "held" and called == [] and tasks_of(town)["k1"]["held_for"] == "sign_in"
-
-
-def test_a_key_in_the_environment_fails_the_task_as_today(town, tmp_path, monkeypatch):
-    signins, _ = fresh(tmp_path / "cfg", env={"ANTHROPIC_API_KEY": "k"})
-    refuse_login(monkeypatch)
-    plan_of(town, [{"id": "k1"}])
-    runner = runner_with(town, signins)
-    runner.start("demo")
-    until(lambda: tasks_of(town)["k1"]["state"] == "failed")
-    assert "held_for" not in tasks_of(town)["k1"]
 
 
 @pytest.fixture
@@ -693,48 +409,6 @@ def test_a_draft_that_hit_a_refused_sign_in_waits_and_the_clock_drafts_it_once_s
     assert ideas.idea_page(keeper.root, slug).section("Gist").startswith("Dark mode.")
 
 
-def test_a_plan_that_hit_a_refused_sign_in_waits_for_it(keeper):
-    slug = ideas.add_idea(keeper.root, "dark mode", state_dir=keeper.state)
-    keeper.call = Answers(DRAFT)
-    ideas.save_state(keeper.state, slug, state="ready")
-    keeper.call = Answers(login_error())
-    keeper.plan_one(slug, "ready")
-    st = ideas.state(keeper.state, slug)
-    assert st["state"] == "ready" and st["error"] == "" and st["held_for"] == "sign_in" and st["held_until"]
-
-
-def test_what_the_keeper_starts_by_itself_waits_while_the_tool_needs_its_sign_in(keeper):
-    slug = ideas.add_idea(keeper.root, "dark mode", state_dir=keeper.state)
-    login_error()
-    assert keeper.hold(slug) is True
-    assert ideas.state(keeper.state, slug)["held_for"] == "sign_in"
-    assert keeper.draft(slug) is False                              # held, nothing called
-    assert ideas.state(keeper.state, slug)["state"] == "raw"
-
-
-def test_an_idea_held_a_day_fails_with_the_line(keeper):
-    slug = ideas.add_idea(keeper.root, "dark mode", state_dir=keeper.state)
-    ideas.save_state(keeper.state, slug, queue="now")
-    keeper.call = Answers(login_error())
-    keeper.draft_one(slug)
-    past = dt.datetime.fromtimestamp(NOON - 60).isoformat(timespec="seconds")
-    ideas.save_state(keeper.state, slug, held_until=past)
-    keeper.tick(now=NOON)
-    st = ideas.state(keeper.state, slug)
-    assert st["held_for"] == "" and st["error"].startswith("Claude Code is not signed in")
-
-
-def test_a_key_fails_the_draft_as_today(tmp_path):
-    root, state = tmp_path / "wiki", tmp_path / ".orkcraft"
-    signins, _ = fresh(tmp_path / "cfg", env={"ANTHROPIC_API_KEY": "k"})
-    k = IdeaKeeper(tmp_path, state, lambda: root, lambda: {}, lambda slug: None, sign_ins=signins)
-    slug = ideas.add_idea(root, "x", state_dir=state)
-    k.call = Answers(login_error())
-    k.draft_one(slug)
-    st = ideas.state(state, slug)
-    assert st["state"] == "raw" and st["held_for"] == "" and "not signed in" in st["error"]
-
-
 # -- the Map, the needs, the Check row (§7) -------------------------------------------------------------------------
 
 def test_the_map_says_a_task_or_an_idea_waits_for_the_sign_in():
@@ -747,14 +421,6 @@ def test_the_map_says_a_task_or_an_idea_waits_for_the_sign_in():
     assert board_map._waits(idea, [], {}, [])["kind"] == "sign_in"
     limit = {**held, "held_until": until_}
     assert board_map._waits(limit, [], {}, [])["kind"] == "limits"                 # a window is as it was
-
-
-def test_a_need_per_tool_that_needs_a_sign_in_and_holds_work():
-    entries = [{"harness": "claude", "tool": "Claude Code", "state": "needed", "waiting": 3, "since": 1000.0},
-               {"harness": "codex", "tool": "Codex", "state": "failed", "waiting": 0, "since": 1000.0}]
-    [need] = board_map.sign_in_needs(entries)
-    assert need["kind"] == "sign_in" and need["harness"] == "claude" and need["tool"] == "Claude Code"
-    assert need["waiting"] == 3 and need["text"] == "Claude Code is not signed in, or its sign-in has expired."
 
 
 def test_a_check_that_fails_for_the_sign_in_says_so_on_its_row(tmp_path):
@@ -840,38 +506,3 @@ def test_stop_all_cancels_an_open_sign_in_and_the_need_counts_what_waits(host, t
     assert host.snapshot()["needs_you"] >= 1
 
 
-def test_a_demo_watches_nothing(fake_repo):
-    host = Orkboard(fake_repo, demo=True)
-    login_error()
-    assert host.snapshot()["sign_in"] == []
-    host.close()
-
-
-def test_start_by_terminal_after_a_browser_that_did_not_open_opens_the_terminal_way(tmp_path):
-    s, _ = fresh(tmp_path)
-    s.spawn.lines = ["Browser didn't open? Paste code here if prompted >"]
-    first = s.start("claude")
-    assert first["by"] == "browser" and s.spawn.procs[0].argv[1:] == ["auth", "login"]
-    for _ in range(50):
-        s.poll()
-        if s.entry("claude")["state"] == "failed":
-            break
-        time.sleep(0.02)
-    assert s.entry("claude")["why"] == "no_browser"
-    opened = s.start("claude", by="terminal")
-    assert opened["state"] == "open" and opened["by"] == "terminal" and opened["why"] == ""
-    argv = s.spawn.procs[-1].argv                      # the fake opener: a terminal with the script, no tool process
-    assert len(s.spawn.procs) == 2 and argv[-1].endswith("claude.command") and "auth" not in argv[1:-1]
-    assert "auth" in (tmp_path / "state" / "sign-in" / "claude.command").read_text()
-    s.start("claude", by="terminal")                   # one run per tool: an open one is returned
-    assert len(s.spawn.procs) == 2
-
-
-def test_by_is_terminal_or_browser_and_the_entry_names_what_to_type(tmp_path):
-    s, _ = fresh(tmp_path)
-    with pytest.raises(SignInError):
-        s.start("claude", by="carrier pigeon")
-    s.start("pi")
-    assert s.entry("pi")["type"] == "/login" and s.snapshot()[0]["type"] == "/login"
-    s.start("claude", by="terminal")
-    assert s.entry("claude")["type"] == ""

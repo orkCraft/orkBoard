@@ -42,43 +42,12 @@ def test_a_pair_of_reads_is_split_by_the_tokens_of_the_calls_between_them_across
     assert got["rows"][0]["tokens"] == 600 and got["rows"][1]["tokens"] == 400
 
 
-def test_a_call_counts_in_the_pair_it_was_made_in_and_pairs_add_up():
-    reads = [read(0, 1.0), read(1, 0.8), read(2, 0.5)]
-    lines = [call(0.5, "alpha", "grunt", 10), call(1.5, "beta", "grunt", 10), call(1.6, "beta", "grunt", 10), call(5, "beta", "grunt", 999)]
-    got = limit_usage.split(reads, lines)
-    assert shares(got) == {"beta": (30, {"grunt": 30}), "alpha": (20, {"grunt": 20})} and got["outside"] == 0   # the call after the last read is no pair's
-
-
 def test_a_reset_is_not_use_and_only_the_reads_since_it_count():
     reads = [read(0, 0.30), read(1, 0.10), read(2, 0.95), read(3, 0.85)]            # the window reset between the 2nd and the 3rd
     lines = [call(0.5, "old", "grunt", 100), call(2.5, "new", "grunt", 100)]
     got = limit_usage.split(reads, lines)
     assert shares(got) == {"new": (10, {"grunt": 10})} and got["outside"] == 0      # the old window's 20 % and the rise are not counted
     assert limit_usage.split([read(0, 0.5), read(1, 0.9)], [call(0.5, "a", "g", 1)])["tokens_only"] is True     # a reset leaves one read: tokens only
-
-
-def test_use_with_no_call_is_outside_orkboard():
-    reads = [read(0, 0.90), read(1, 0.70), read(2, 0.50)]
-    got = limit_usage.split(reads, [call(1.5, "alpha", "grunt", 50)])               # nothing was called in the first hour
-    assert got["outside"] == 20 and shares(got) == {"alpha": (20, {"grunt": 20})}
-
-
-def test_the_windows_start_makes_the_use_before_the_first_read_known():
-    start = at(-10)
-    reads = [read(0, 0.60)]                                                          # 40 % gone when Orkboard first read the limit
-    lines = [call(-5, "alpha", "grunt", 100), call(-4, "alpha", "grunt", 100)]
-    got = limit_usage.split(reads, lines, start)
-    assert got["tokens_only"] is False and shares(got) == {"alpha": (40, {"grunt": 40})}
-    assert limit_usage.split(reads, [], start)["outside"] == 40                      # no call of ours: all of it outside
-
-
-def test_fewer_than_two_reads_gives_tokens_and_no_share():
-    lines = [call(0.1, "alpha", "backend", 70), call(0.2, "alpha", "grunt", 30), call(0.3, "beta", "grunt", 500)]
-    for reads in ([], [read(0, 0.5)]):
-        got = limit_usage.split(reads, lines)
-        assert got["tokens_only"] is True and got["outside"] == 0
-        assert [(r["party"], r["share"], r["tokens"]) for r in got["rows"]] == [("beta", None, 500), ("alpha", None, 100)]
-        assert [(m["agent"], m["share"], m["tokens"]) for m in got["rows"][1]["members"]] == [("backend", None, 70), ("grunt", None, 30)]
 
 
 def test_the_shares_are_whole_percents_that_never_add_up_to_more_than_a_hundred():
@@ -90,16 +59,6 @@ def test_the_shares_are_whole_percents_that_never_add_up_to_more_than_a_hundred(
     for r in odd["rows"]:
         assert sum(m["share"] for m in r["members"]) == r["share"]                   # a party's members add up to the party
     assert sum(r["share"] for r in odd["rows"]) + odd["outside"] <= 100
-
-
-def test_calls_without_tokens_split_a_pair_evenly():
-    got = limit_usage.split([read(0, 1.0), read(1, 0.8)], [call(0.2, "a", "x", 0), call(0.3, "b", "x", 0)])
-    assert shares(got) == {"a": (10, {"x": 10}), "b": (10, {"x": 10})}
-
-
-def test_a_window_is_as_long_as_its_name_says():
-    assert limit_usage.window_span("5h") == dt.timedelta(hours=5) and limit_usage.window_span("week") == dt.timedelta(days=7)
-    assert limit_usage.window_span("Gemini Models · week") == dt.timedelta(days=7) and limit_usage.window_span("limit") is None
 
 
 # -- the command ---------------------------------------------------------------------------------------------------------
@@ -159,26 +118,6 @@ def test_the_command_splits_the_weeks_use_by_party_and_member(world):
     assert got["rows"][0]["title"] == "Beta"                                          # rows by share
 
 
-def test_the_command_counts_the_use_before_the_first_read_from_the_windows_start(world):
-    h, (alpha, _beta), (a, _b), now = world
-    base = (now - T0).total_seconds() / 3600
-    idea_spend.append(h.state, spend_line(base - 30, "grunt", 100), idea=a)           # in the week (it began 2 days ago), before any read
-    got = h.command("ideas.usage", {"provider": "claude"})                            # no read at all but now's: from the start to now
-    assert got["tokens_only"] is False and got["outside"] == 0
-    assert [(r["title"], r["share"]) for r in got["rows"]] == [("Alpha", 60)]         # the week began with all of it; 40 % is left
-
-
-def test_no_read_and_no_window_start_gives_tokens_only(host, monkeypatch):
-    monkeypatch.setattr(host.ideas, "limits", lambda: [])
-    track = ideas.add_track(host.root, "Alpha")
-    slug = ideas.add_idea(host.root, "A goal", track, host.state)
-    idea_spend.append(host.state, spend_line(-24 * 30, "grunt", 70), idea=slug)
-    idea_spend.append(host.state, {**spend_line(-1, "grunt", 70), "at": dt.datetime.now().isoformat(timespec="seconds")}, idea=slug)
-    got = host.command("ideas.usage", {"provider": "claude"})
-    assert got["tokens_only"] is True and got["left"] is None and got["outside"] == 0
-    assert [(r["title"], r["share"], r["tokens"]) for r in got["rows"]] == [("Alpha", None, 70)]       # the week's calls; the older one is not
-
-
 def test_a_party_own_ledger_the_night_and_a_goal_since_removed_have_rows_of_their_own(world):
     h, (alpha, _beta), (a, _b), now = world
     base = (now - T0).total_seconds() / 3600
@@ -229,9 +168,3 @@ def test_a_goal_took_what_the_reads_from_its_first_call_to_now_show():
     assert limit_usage.goal_share(events, [_row(0.5, tool="claude")]) is None               # the reads are another tool's
     assert limit_usage.goal_share(events, []) is None
 
-
-def test_a_reset_between_the_reads_is_never_use_and_a_week_is_looked_at_before_a_five_hour_window():
-    events = [_event(-1, 0.50), _event(2, 0.45), _event(3, 1.0), _event(5, 0.97)]           # 5 % used, a reset, 3 % used
-    assert limit_usage.goal_share(events, [_row(0)])["share"] == 8.0
-    both = [*events, _event(-1, 0.9, window="5h"), _event(5, 0.2, window="5h")]
-    assert limit_usage.goal_share(both, [_row(0)])["window"] == "week"

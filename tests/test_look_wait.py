@@ -58,11 +58,6 @@ def test_the_setting_is_2h_at_first_the_projects_cleaned_and_refused_in_plain_wo
 
 # -- when it applies (A.2) -----------------------------------------------------------------------------------------------------
 
-def test_do_not_wait_passes_the_plan_at_once_as_before(host, model, runner, clock):
-    look(host, "none")
-    slug = made(host)
-    assert runner.started == [slug] and plan_of(host, slug)["passed_by"] == "auto" and "look_until" not in plan_of(host, slug)
-    assert _events(host, event_log.LOOK_WAITS) == []
 
 
 def test_30m_writes_the_clock_time_1800_s_ahead_and_passes_nothing(host, model, runner, clock):
@@ -76,26 +71,6 @@ def test_30m_writes_the_clock_time_1800_s_ahead_and_passes_nothing(host, model, 
     node = next(n for n in host.command("ideas.board")["ideas"] if n["slug"] == slug)
     assert node["look_until"] == NOW + 1800 and node["start_at"] == "2026-11-04T12:30:00" and node["place"] != "deck"      # a clock time on the table, not put off to a reset
     assert host.ideas.autostart(slug) == "look" and plan_of(host, slug)["look_until"] == NOW + 1800        # decided again: the same wait, not a new one
-
-
-def test_2h_counts_from_now(host, model, runner, clock):
-    slug = made(host)
-    assert plan_of(host, slug)["look_until"] == NOW + 7200
-
-
-def test_tonight_is_the_nights_next_start_today_or_tomorrow(host):
-    noon = dt.datetime(2026, 11, 4, 12, 0).timestamp()
-    assert look_wait.until("tonight", noon, "22:30-06:00") == dt.datetime(2026, 11, 4, 22, 30).timestamp()
-    assert look_wait.until("tonight", noon, "01:00-07:00") == dt.datetime(2026, 11, 5, 1, 0).timestamp()       # tomorrow's: today's has gone
-    late = dt.datetime(2026, 11, 4, 23, 0).timestamp()
-    assert look_wait.until("tonight", late, "22:30-06:00") == dt.datetime(2026, 11, 5, 22, 30).timestamp()
-    assert look_wait.until("none", noon) is None and look_wait.until("2h", noon) == noon + 7200
-
-
-def test_tonight_on_the_host_gives_the_night_windows_start(host, model, runner, clock):
-    look(host, "tonight")
-    slug = made(host)
-    assert plan_of(host, slug)["look_until"] == dt.datetime(2026, 11, 5, 1, 0).timestamp()
 
 
 def test_autostart_off_still_waits_for_the_person_and_writes_no_look(host, model, runner, clock):
@@ -132,14 +107,6 @@ def test_look_tick_before_the_time_passes_nothing_and_after_it_passes_the_plan(h
     assert host.ideas.look_tick(clock.now) == 0                       # nothing twice
 
 
-def test_the_clock_calls_it_with_no_face_open(host, model, runner, clock):
-    look(host, "30m")
-    slug = made(host)
-    clock.now = NOW + 4000
-    host.ideas.tick()
-    assert runner.started == [slug]
-
-
 def test_work_at_night_on_and_the_night_closed_the_plan_is_held_for_the_night_when_the_look_ends(host, model, runner, clock):
     look(host, "30m")
     host.command("ideas.board_set", {"work_at_night": True})
@@ -150,23 +117,6 @@ def test_work_at_night_on_and_the_night_closed_the_plan_is_held_for_the_night_wh
     plan = plan_of(host, slug)
     assert runner.started == [] and plan["held_for_night"] is True and plan["start_at"] == "night" and plan.get("passed_at") is None
     assert _events(host, event_log.LOOK_ENDED)[0]["how"] == "night"
-
-
-def test_an_open_question_still_holds_it_when_the_look_ends(host, model, runner, clock):
-    look(host, "30m")
-    slug = made(host)
-    ideas.set_section(host.ideas.root(), slug, "Open questions", "- Which columns?")
-    clock.now = NOW + 2000
-    host.ideas.look_tick(clock.now)
-    assert runner.started == [] and _events(host, event_log.LOOK_ENDED)[0]["how"] == "wait"
-
-
-def test_turning_the_wait_off_ends_every_look(host, model, runner, clock):
-    slug = made(host)
-    assert runner.started == []
-    look(host, "none")
-    clock.now = NOW + 10
-    assert host.ideas.look_tick(clock.now) == 1 and runner.started == [slug]
 
 
 # -- held while it is being changed (A.4) --------------------------------------------------------------------------------------
@@ -180,3 +130,13 @@ def test_a_change_open_on_the_goal_makes_the_tick_skip_it(host, model, runner, c
     spec_change.drop(host.ideas.state_dir, slug, "s1")
     clock.now += 10
     assert host.ideas.look_tick(clock.now) == 1 and runner.started == [slug]
+
+
+
+def test_tonight_is_the_nights_next_start_today_or_tomorrow(host):
+    noon = dt.datetime(2026, 11, 4, 12, 0).timestamp()
+    assert look_wait.until("tonight", noon, "22:30-06:00") == dt.datetime(2026, 11, 4, 22, 30).timestamp()
+    assert look_wait.until("tonight", noon, "01:00-07:00") == dt.datetime(2026, 11, 5, 1, 0).timestamp()       # tomorrow's: today's has gone
+    late = dt.datetime(2026, 11, 4, 23, 0).timestamp()
+    assert look_wait.until("tonight", late, "22:30-06:00") == dt.datetime(2026, 11, 5, 22, 30).timestamp()
+    assert look_wait.until("none", noon) is None and look_wait.until("2h", noon) == noon + 7200

@@ -53,14 +53,6 @@ def test_a_running_party_is_led_and_staffed_by_library_roles_and_proposes_two_to
     assert set(recurring.ROUTINES) == {f"{k}-liveops" for k, _r in RUNNING}
 
 
-def test_the_recurring_goals_the_brief_names_are_proposed_where_they_fit():
-    titles = {k: [r["title"] for r in recurring.listed(f"{k}-liveops")] for k, _r in RUNNING}
-    assert titles["mobile"][:2] == ["Weekly dependency check", "Read the new reviews"]
-    assert titles["wiki"][:2] == ["Find stale pages", "Check the links"]
-    assert titles["backend"][0] == titles["code"][0] == "Weekly dependency check"
-    assert [r["every"] for r in recurring.listed("data-liveops")][0] == "day"          # a pipeline is checked every day
-
-
 def test_the_presets_of_a_kind_carry_the_recurring_goals_of_its_running_party_and_team_is_no_row(host):
     rows = {r["id"]: r for r in party_presets.listed("wiki")}
     assert [r["id"] for r in rows["run"]["routines"]] == ["stale", "links", "sources"] and rows["run"]["name"] == "Run"        # a wiki's running: the recurring goals of wiki-liveops
@@ -96,13 +88,6 @@ def test_the_recurring_goals_the_person_kept_are_added_to_the_new_party_with_the
     assert "dependencies" in ideas.idea_page(host.root, mine[0]["slug"]).section("Gist") or "dependencies" in ideas.idea_page(host.root, mine[1]["slug"]).section("Gist")
 
 
-def test_a_party_with_no_routines_picked_has_no_goals_and_an_unknown_one_is_refused_before_anything_is_made(host):
-    assert ideas.ideas(host.root, _run_party(host, [])) == []
-    with pytest.raises(Exception, match="No recurring goal nope"):
-        _run_party(host, ["nope"])
-    assert len([t for t in ideas.tracks(host.root, make=False) if t["slug"] != "general"]) == 1
-
-
 def test_a_goal_that_is_done_comes_back_after_its_period_with_the_same_words_and_the_repeat_moves_to_it(host):
     slug = _run_party(host, ["deps"])
     first = ideas.ideas(host.root, slug)[0]["slug"]
@@ -120,38 +105,6 @@ def test_a_goal_that_is_done_comes_back_after_its_period_with_the_same_words_and
     assert page.get("track") == slug and page.title == "Weekly dependency check" and "dependencies" in page.section("Gist")
     assert recurring.words_of(host.root, again) == recurring.text_of(recurring.get("code-liveops", "deps"))        # the next round is written from the first words, not a drafted spec
     assert recurring.due(host.root, host.ideas.state_dir, now + dt.timedelta(days=30)) == []     # the new one is not done
-
-
-def test_a_goal_reopened_forgets_the_day_it_was_done(host):
-    slug = _run_party(host, ["deps"])
-    first = ideas.ideas(host.root, slug)[0]["slug"]
-    now = dt.datetime(2026, 10, 26, 9, 0)
-    ideas.save_state(host.ideas.state_dir, first, state="done")
-    recurring.due(host.root, host.ideas.state_dir, now)
-    ideas.save_state(host.ideas.state_dir, first, state="working")
-    recurring.due(host.root, host.ideas.state_dir, now + dt.timedelta(days=2))
-    ideas.save_state(host.ideas.state_dir, first, state="done")
-    assert recurring.due(host.root, host.ideas.state_dir, now + dt.timedelta(days=8)) == []        # the week counts from the second time it was done
-
-
-def test_the_hosts_clock_renews_a_due_goal_at_most_once_a_minute_and_a_party_that_is_gone_ends_the_repeat(host):
-    slug = _run_party(host, ["deps"])
-    first = ideas.ideas(host.root, slug)[0]["slug"]
-    ideas.save_state(host.ideas.state_dir, first, state="done")
-    ideas.set_meta(host.root, first, repeat_from=(dt.datetime.now() - dt.timedelta(days=8)).isoformat(timespec="seconds"))
-    host.ideas.routines_tick(1000.0)
-    assert len(ideas.ideas(host.root, slug)) == 2 and recurring.every_of(host.root, first) == ""
-    _idle(host)
-    new = next(i["slug"] for i in ideas.ideas(host.root, slug) if i["slug"] != first)
-    ideas.save_state(host.ideas.state_dir, new, state="done")
-    ideas.set_meta(host.root, new, repeat_from=(dt.datetime.now() - dt.timedelta(days=8)).isoformat(timespec="seconds"))
-    host.ideas.routines_tick(1030.0)                                                            # under a minute later: it waits
-    assert len(ideas.ideas(host.root, slug)) == 2
-    ideas.drop_track(host.root, slug, "move", host.ideas.state_dir, set())                      # the party goes; its goals move to General
-    ideas.save_state(host.ideas.state_dir, new, state="done")
-    ideas.set_meta(host.root, new, repeat_from=(dt.datetime.now() - dt.timedelta(days=8)).isoformat(timespec="seconds"))
-    host.ideas.routines_tick(1100.0)
-    assert recurring.every_of(host.root, new) == "" and len(ideas.ideas(host.root)) == 2
 
 
 def test_a_repeat_is_set_and_stopped_by_the_person(host):

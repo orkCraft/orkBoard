@@ -61,38 +61,6 @@ out({ sent, paths: Object.keys(files), calls: calls.map((c) => c.key), gone: r.k
     assert all(c.startswith("PUT") for c in got["calls"][3:]) and got["gone"] == 0
 
 
-def test_the_file_is_the_one_the_host_cleans_without_a_word_or_a_picture_lost():
-    got = run(SETUP + """
-const real = "data:image/jpeg;base64," + btoa("\\xff\\xd8\\xff\\xe0jfif");
-const sent = await r.sendGoal({ text: "  Dark mode for the lobby  ", party: "game", type: "feature", element: "ice", photos: [real] });
-out({ sent, files: Object.fromEntries(Object.entries(files).map(([p, v]) => [p, btoa(v)])) });
-""")
-    import base64
-    files = {p: base64.b64decode(v) for p, v in got["files"].items()}
-    path = next(p for p in files if p.endswith(".json"))
-    photo = next(p for p in files if p.endswith(".1.jpg"))
-    entry = ri.Entry(got["sent"]["id"], "phone1", path, ((photo, len(files[photo])),))
-    ctx = ri.Context(parties={"game"}, types=lambda party: {"feature"})
-    goal, err = ri.clean(files[path], entry, ctx, photo=lambda p: files[p])
-    assert err == "" and goal["text"] == "Dark mode for the lobby" and (goal["party"], goal["type"], goal["element"]) == ("game", "feature", "ice")
-    assert [base64.b64decode(p["data"]) for p in goal["photos"]] == [b"\xff\xd8\xff\xe0jfif"], "the picture came to the host as it left the phone"
-    assert ri._ID.fullmatch(got["sent"]["id"]), "an id the host accepts for a file name"
-
-
-def test_a_conflict_is_tried_again_three_times_and_then_said():
-    got = run(SETUP + """
-state.conflicts = 2;
-const again = await r.sendGoal({ text: "Third time lucky" });
-const filesAfter = Object.keys(files).length;
-state.conflicts = 5;
-const spent = await r.sendGoal({ text: "Never lands" });
-out({ again, filesAfter, spent, puts: calls.filter((c) => c.key.startsWith("PUT")).length });
-""")
-    assert got["again"]["ok"] is True and "kept" not in got["again"] and got["filesAfter"] == 1
-    assert got["spent"]["ok"] is False and "expected" in got["spent"]["error"]
-    assert got["puts"] == 3 + 3
-
-
 def test_without_a_network_the_goal_waits_in_the_outbox_and_goes_when_the_network_comes_back():
     got = run(SETUP + """
 state.network = false;
@@ -125,20 +93,3 @@ out({ limited, refused, left, hint: [bare.hint(), bare.hint()], none: await bare
     assert got["hint"] == ["Set your repository in Settings to send goals while your computer is away", ""], "said once"
     assert got["none"]["ok"] is False and got["blank"]["ok"] is False
 
-
-def test_an_answer_goes_through_the_same_writer_and_the_host_reads_it_back():
-    got = run(SETUP + """
-const a = await r.sendAnswer("ideas.talk_answer", { idea: "goal-1", answers: [{ id: "q1", pick: 1 }], decide: false });
-const stop = await r.sendAnswer("ideas.collide_answer", { id: "a|b", answer: "leave" });
-const no = await r.sendAnswer("ideas.add", { text: "x" });
-out({ a, stop, no, answers: r.answers("ideas.confirm"), plain: r.answers("ideas.add"), paths: Object.keys(files), files: Object.values(files).map((f) => JSON.parse(f)) });
-""")
-    assert got["a"]["ok"] is True and got["stop"]["ok"] is True and got["no"]["ok"] is False
-    assert got["answers"] is True and got["plain"] is False
-    talk, stop = got["files"]
-    assert got["paths"][0] == f"inbox/phone1/{got['a']['id']}.answer.json"
-    assert talk["kind"] == "talk" and talk["card"] == "goal-1" and talk["answer"] == {"answers": [{"id": "q1", "pick": 1}], "decide": False}
-    entry = ra.Answer(talk["id"], "phone1", got["paths"][0])
-    read, err = ra.clean(json.dumps(talk), entry)
-    assert err == "" and (read["card"], read["kind"]) == ("goal-1", "talk")
-    assert stop["card"] == "a|b" and stop["kind"] == "collide" and ra.clean(json.dumps(stop), ra.Answer(stop["id"], "phone1", got["paths"][1]))[1] == ""

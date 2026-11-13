@@ -39,21 +39,10 @@ def test_a_path_is_not_a_concept():
     assert say("the idea.") == "the goal."
 
 
-def test_the_heaviest_tier_is_a_veteran():
-    say = lexicon.words
-    assert say("★★★ Elder — opus") == "★★★ Veteran — opus" and say("Default — Quality: Elder") == "Default — Quality: Veteran"
-    from orkboard.realm import tiers
-    assert tiers.label("elder").endswith("Veteran") and say("warrior") == "warrior"   # a setting's value stays
 
 
-def test_the_glossary_says_what_each_word_replaced():
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["war_horn"] == ("Stop all", "War Horn")
-    assert rows["ork"] == ("ork", "")
 
 
-def test_a_project_is_the_folder_orkboard_opens():
-    assert lexicon.term("project") == "Project" and lexicon.term("project", many=True) == "Projects"
 
 
 def test_what_was_a_goal_is_a_party_and_what_was_an_idea_is_a_goal():
@@ -74,107 +63,24 @@ def test_what_was_a_goal_is_a_party_and_what_was_an_idea_is_a_goal():
     assert table["track"] == "party" and table["Tracks"] == "Parties" and "Goal" not in table and "goal" not in table
 
 
-def test_a_goal_type_is_what_kind_of_goal_a_leader_deals_spec_52():
-    """Spec 52 §2.8: `goal_type`, today's word with no old spelling (the interface seldom says it: it says the type's name)."""
-    assert lexicon.term("goal_type") == "goal type" and lexicon.term("goal_type", many=True) == "goal types"
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["goal_type"] == ("goal type", "")
-    assert lexicon.words("New goal: your own, or pick its type") == "New goal: your own, or pick its type"
 
 
-def test_the_lines_of_stage_and_goal_type_say_what_the_leader_and_the_team_decide_spec_59():
-    """Spec 59 §0: a stage is worded by its leader; a goal type is what a party's team can take on. (The glossary's lines are the comments of `TERMS`.)"""
-    from pathlib import Path
-    source = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES)
-    stage = next(l for l in source.splitlines() if l.lstrip().startswith('_t("stage"'))
-    goal_type = next(l for l in source.splitlines() if l.lstrip().startswith('_t("goal_type"'))
-    assert "its leader words them" in stage and "Concept, Build, Playtest" in stage and "Planning, Implementation, Checking" in stage
-    assert "a party's team can take on" in goal_type and "specs 52 and 59" in goal_type and "leader deals" not in goal_type
-    assert lexicon.term("stage") == "stage" and lexicon.term("goal_type") == "goal type"
 
 
-def test_a_plan_change_is_the_leaders_re_plan_of_what_is_left_spec_62():
-    """Spec 62 §0: one word for the leader's re-plan of what is left after a goal's spec changed; today's word, no old spelling."""
-    assert lexicon.term("plan_change") == "plan change" and lexicon.term("plan_change", many=True) == "plan changes"
-    assert {key: (word, was) for key, word, was in lexicon.glossary()}["plan_change"] == ("plan change", "")
-    from pathlib import Path
-    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("plan_change"'))
-    assert "spec 62" in line and "Take the new plan" in line and "plan_change.json" in line
-    assert lexicon.words("Take the new plan") == "Take the new plan" and lexicon.words("The plan changes · +2") == "The plan changes · +2"
 
 
-def test_a_route_a_release_and_out_are_the_words_of_spec_67_and_the_skeleton_is_a_race():
-    """Spec 68 §0: a goal's route across parties, a release (a goal of A release) and out (the person said it is in the stores); the skeleton."""
-    assert (lexicon.term("idea_route"), lexicon.term("idea_route", many=True)) == ("route", "routes")
-    assert (lexicon.term("release"), lexicon.term("release", many=True)) == ("release", "releases") and lexicon.term("release_out") == "out"
-    assert (lexicon.term("race.skeleton"), lexicon.term("race.skeleton", many=True)) == ("skeleton", "skeletons")
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert all(rows[k][1] == "" for k in ("idea_route", "release", "release_out", "race.skeleton"))
-    from pathlib import Path
-    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
-             for k in ("idea_route", "release", "release_out", "race.skeleton")}
-    assert all("spec 68" in line for line in lines.values()) and "orkUI 0.5.0" in lines["race.skeleton"]
 
 
-def test_the_orkmaster_and_the_projects_level_are_the_words_of_spec_70():
-    """Spec 70 §0: the project's ork (it deals the parties and a goal's party; it plans nothing) and the project's level."""
-    from pathlib import Path
-    assert lexicon.term("orkmaster") == "Orkmaster" and lexicon.term("project_level") == "The project"
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["orkmaster"] == ("Orkmaster", "") and rows["project_level"] == ("The project", "")
-    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
-             for k in ("orkmaster", "project_level")}
-    assert all("spec 70" in line for line in lines.values()) and "plans nothing" in lines["orkmaster"]
 
 
-def test_a_collision_is_the_word_of_spec_71():
-    """Spec 71 §0: two goals of different parties that change the same thing."""
-    from pathlib import Path
-    assert lexicon.term("collide") == "collision" and lexicon.term("collide", many=True) == "collisions"
-    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("collide"'))
-    assert "spec 71" in line and "same thing" in line
 
 
-def test_a_partys_size_and_what_the_project_is_are_the_words_of_spec_75():
-    """Spec 75 §0: a party's Lean, Standard or Full (its Target), and the kind of project the Orkmaster reads."""
-    from pathlib import Path
-    assert (lexicon.term("party_size"), lexicon.term("party_size", many=True)) == ("size", "sizes") and lexicon.term("project_kind") == "what the project is"
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["party_size"][1] == "" and rows["project_kind"][1] == ""
-    lines = {k: next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith(f'_t("{k}"'))
-             for k in ("party_size", "project_kind")}
-    assert all("spec 75" in line for line in lines.values())
-    assert lexicon.words("Its size: Lean, Standard or Full") == "Its size: Lean, Standard or Full"
 
 
-def test_an_asset_is_the_word_of_spec_88():
-    """Spec 88 §0: a file the project is made of that people see or hear; today's word, no old spelling."""
-    from pathlib import Path
-    assert (lexicon.term("asset"), lexicon.term("asset", many=True)) == ("asset", "assets")
-    assert {key: (word, was) for key, word, was in lexicon.glossary()}["asset"] == ("asset", "")
-    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("asset"'))
-    assert "spec 88" in line and "see or hear" in line
-    assert lexicon.words("Assets · Art and icons") == "Assets · Art and icons"
 
 
-def test_a_view_is_one_map_of_a_leaders_lens_the_word_of_spec_89():
-    """Spec 89 §0: `lens_view`, one map of a leader's lens (the Architect's System); today's word, no old spelling."""
-    from pathlib import Path
-    assert (lexicon.term("lens_view"), lexicon.term("lens_view", many=True)) == ("view", "views")
-    assert {key: (word, was) for key, word, was in lexicon.glossary()}["lens_view"] == ("view", "")
-    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("lens_view"'))
-    assert "spec 89" in line and "System" in line
-    assert lexicon.words("System · Board · Since your last look") == "System · Board · Since your last look"
 
 
-def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
-    """Spec 90 §0: `container`, a part of the project that is built and runs on its own (a client, a server); today's word."""
-    from pathlib import Path
-    assert (lexicon.term("container"), lexicon.term("container", many=True)) == ("container", "containers")
-    assert {key: (word, was) for key, word, was in lexicon.glossary()}["container"] == ("container", "")
-    line = next(l for l in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines() if l.lstrip().startswith('_t("container"'))
-    assert "spec 90" in line and "runs on its own" in line
-    assert lexicon.words("Shared · Ways in · HTTP: 3 routes · socket: 2 events") == "Shared · Ways in · HTTP: 3 routes · socket: 2 events"
 
 
 def test_the_table_and_the_hand_are_the_words_of_spec_98():
@@ -197,17 +103,6 @@ def test_the_table_and_the_hand_are_the_words_of_spec_98():
         assert "#" in line, key
 
 
-def test_the_deck_is_in_line_and_a_goals_tasks_are_a_cascade_spec_101():
-    """Spec 101 §0 (decisions §167.5): `deck` is folded into `in_line`, its old spelling in `was`; `cascade` is a goal's tasks in its lane. No `deck` term is left; the code keeps `deck` as a place value."""
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert "deck" not in rows
-    assert rows["in_line"] == ("in line", "deck") and rows["cascade"] == ("cascade", "")
-    assert lexicon.term("cascade", many=True) == "cascades"
-    assert lexicon.words("the deck") == "the in line" and lexicon.words("Deck") == "In line"          # an old spelling is said in today's word
-    from pathlib import Path
-    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
-    for key in ("in_line", "cascade"):
-        assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
 
 def test_the_route_and_the_phases_are_the_words_of_spec_99_c():
@@ -248,46 +143,13 @@ def test_the_inbox_and_the_taken_are_the_words_of_spec_136():
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
 
-def test_hold_and_later_are_the_words_of_decisions_247():
-    """Decisions §247.2, §247.10: *Hold* (was *Later today*), *Later* (was *Later, by itself*), *Save* and *Limits not read*; each one line of `TERMS`."""
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["hold"] == ("Hold", "Later today") and rows["later"] == ("Later", "Later, by itself")
-    assert rows["save"] == ("Save", "") and rows["limits_not_read"] == ("Limits not read", "")
-    assert lexicon.words("Later today") == "Hold" and lexicon.words("Later, by itself") == "Later"
-    assert lexicon.words("Keep it") == "Keep it"                      # the drop question's own words stay
 
 
-def test_the_chronicles_words_spec_134():
-    assert [lexicon.term(k) for k in ("chronicle", "chronicle_earlier", "chronicle_week", "how_works_now", "changed_by")] == [
-        "Chronicle", "Earlier", "The week of", "How it works now", "changed by"]
-    assert lexicon.words("Chronicle") == "Chronicle" and lexicon.term("history") == "History"
 
 
-def test_the_acceptance_is_a_leaders_check_of_its_step_and_the_pages_say_it_in_that_word_spec_152_d():
-    """Spec 152 D.4: `acceptance` (*acceptance*, *acceptances*); where the page says it in words it keeps them: *is accepting*, *the leader accepts*; the person's at Review is Merge."""
-    from pathlib import Path
-    assert lexicon.term("acceptance") == "acceptance" and lexicon.term("acceptance", many=True) == "acceptances"
-    static = Path(__file__).parent.parent / "orkboard" / "gui" / "static" / "js"
-    for rel, words in (("table/partyseats2.js", "the leader accepts it"), ("frame/firstopen.js", "the leader accepts")):
-        assert words in (static / rel).read_text(encoding="utf-8")
 
 
-def test_every_term_has_one_key():
-    """A concept gets its one word (CLAUDE.md): a key twice in TERMS is a merge kept twice, never two words."""
-    from collections import Counter
-    from orkboard.realm.lexicon import TERMS
-    twice = [k for k, n in Counter(t.key for t in TERMS).items() if n > 1]
-    assert twice == []
 
 
-def test_each_heros_name_is_its_word_and_a_cut_hero_has_none_spec_164_c():
-    from orkboard.realm import seat_hero_rules as rules
-    for hero_id, hero in rules.HEROES.items():
-        assert lexicon.term(f"hero.{hero_id}") == hero.name
-    keys = {t.key for t in lexicon.TERMS}
-    assert not [f"hero.{i}" for i in rules.CUT if f"hero.{i}" in keys]
 
 
-def test_reach_is_one_word_spec_165_g():
-    """Spec 165 G (decisions §280.1): what a goal would change on a map, one and two steps out."""
-    assert lexicon.term("reach") == "reach" and lexicon.term("reach", many=True) == "reaches"

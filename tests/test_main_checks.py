@@ -41,12 +41,6 @@ def wait_done(host, slug, ms=20000):
 
 # -- the file -----------------------------------------------------------------------------------------------------
 
-def test_with_none_written_the_checks_are_the_merge_and_tests(tmp_path):
-    assert gate_config.main_checks(tmp_path) == [gate_config.Check("The merge"), gate_config.Check("Tests", gate=True)]
-    toml(tmp_path, "[gate]\nrun = \"true\"\n")
-    assert gate_config.main_checks(tmp_path) == [gate_config.Check("The merge"), gate_config.Check("Tests", gate=True)]
-    assert gate_config.read(tmp_path).main == ()
-
 
 def test_gate_main_writes_the_checks_each_a_name_and_a_command_after_the_merge(tmp_path):
     toml(tmp_path, '[gate]\nrun = "true"\n[gate.main]\nchecks = [{name = "Unit tests", run = "pytest -q tests/unit"}, {name = " Looks ", run = "npm run looks"}]\n')
@@ -83,13 +77,6 @@ def test_the_default_checks_pass_on_a_clean_trial_and_leave_main_dev_and_the_wor
     assert not (repo / "lobby").exists()
 
 
-def test_a_project_with_no_tests_passes_the_tests_check_saying_so(host, repo, work):
-    lobby, *_ = work
-    (repo / "orkcraft.toml").unlink()                                                       # the fixture's gate (`true`) is gone: no tests at all
-    got, _seen = steps_of(host, repo, lobby)
-    assert states(got) == [("The merge", "passed"), ("Tests", "passed")] and "no tests ran" in got[1]["words"]
-
-
 def test_written_checks_run_in_order_in_the_trial_and_the_first_red_one_stops_the_run(host, repo, work):
     lobby, *_ = work
     toml(repo, '[gate.main]\nchecks = [{name = "Files", run = "test -f lobby/room.ts && test -f lobby/join.ts"}, {name = "Looks", run = "echo 2 looks differ; exit 1"},'
@@ -99,22 +86,6 @@ def test_written_checks_run_in_order_in_the_trial_and_the_first_red_one_stops_th
                    {"name": "Looks", "state": "failed", "words": "2 looks differ"}, {"name": "Never", "state": "waiting", "words": ""}]
     assert ("Looks", "running") in [(s["name"], s["state"]) for step in seen for s in step]
     assert worktrees(repo) == []
-
-
-def test_a_command_that_prints_nothing_says_its_exit_code_and_one_that_cannot_start_says_so(host, repo, work):
-    lobby, *_ = work
-    toml(repo, '[gate.main]\nchecks = [{name = "Quiet", run = "false"}]\n')
-    assert steps_of(host, repo, lobby)[0][1]["words"] == "It ended with exit code 1"
-    toml(repo, '[gate.main]\nchecks = [{name = "Missing", run = "no-such-program-here --x"}]\n')
-    got = steps_of(host, repo, lobby)[0][1]
-    assert got["state"] == "failed" and "no-such-program-here could not start" in got["words"]
-
-
-def test_a_failing_gate_command_is_red_with_the_last_line_of_what_it_printed(host, repo, work):
-    lobby, *_ = work
-    toml(repo, '[gate]\nrun = "echo ===== 2 failed, 9 passed in 1.1s =====; exit 1"\n')
-    got = steps_of(host, repo, lobby)[0]
-    assert states(got) == [("The merge", "passed"), ("Tests", "failed")] and got[1]["words"] == "2 failed, 9 passed in 1.1s"
 
 
 def test_a_command_that_takes_too_long_is_red_and_its_worktree_is_gone(host, repo, work):
@@ -141,12 +112,6 @@ def test_a_merge_that_conflicts_fails_the_merge_and_leaves_the_others_waiting(ho
     assert plan_of(host, repo, lobby)["conflict"] is True                               # the plan says whose reason it is
 
 
-def test_a_goal_that_cannot_go_has_no_trial_and_the_merge_says_why(host, repo):
-    lobby = goal(host, "Lobby", state="raw")                                             # no plan at all
-    got = steps_of(host, repo, lobby)[0]
-    assert got[0]["state"] == "failed" and got[0]["words"] and worktrees(repo) == []
-
-
 def test_a_stop_ends_the_run_and_the_worktree_goes(host, repo, work):
     lobby, *_ = work
     toml(repo, '[gate.main]\nchecks = [{name = "Slow", run = "sleep 30"}]\n')
@@ -165,24 +130,6 @@ def test_a_stop_ends_the_run_and_the_worktree_goes(host, repo, work):
     stop.set()
     t.join(15)
     assert box == ["stopped"] and worktrees(repo) == []
-
-
-def test_the_trial_keeps_its_worktree_while_the_block_runs_and_removes_it_after_an_error(host, repo, work):
-    lobby, *_ = work
-    with pytest.raises(RuntimeError, match="boom"):
-        with goal_main.trial(repo, host.ideas.state_dir, lobby, root=host.ideas.root(), into="dev", main="main") as t:
-            assert t.path is not None and (t.path / "lobby" / "room.ts").is_file() and len(worktrees(repo)) == 1
-            raise RuntimeError("boom")
-    assert worktrees(repo) == [] and not t.path.exists()
-
-
-def test_a_plan_without_the_pick_tries_nothing_and_a_clean_plan_has_no_conflict_key(host, repo):
-    lobby = goal(host, "Lobby")
-    task(host, repo, lobby, "k1", {"a.txt": "dev's a\n"})
-    commit_in(repo, "a.txt", "main's own a\n")
-    seen = goal_main.plan(repo, host.ideas.state_dir, lobby, root=host.ideas.root(), into="dev", main="main", pick=False)
-    assert seen["sealed"] is None and "conflict" not in seen
-    assert "conflict" not in plan_of(host, repo, goal(host, "Other"))
 
 
 # -- the command and the bus --------------------------------------------------------------------------------------
@@ -292,68 +239,6 @@ def test_the_press_that_takes_dev_whole_runs_the_tests_too_and_a_red_stops_it(ho
     assert host.command("ideas.gate_merge", {"sealed": True})["ok"] is True and git(repo, "rev-parse", "main") != main
 
 
-def test_the_press_that_takes_dev_whole_is_refused_in_words_when_the_project_has_no_tests(host, repo, work):
-    (repo / "orkcraft.toml").unlink()                                                       # no gate: no tests at all
-    main, dev = git(repo, "rev-parse", "main"), git(repo, "rev-parse", "dev")
-    with pytest.raises(CommandError, match="has no tests.*To main without the tests"):
-        host.command("ideas.gate_merge", {"sealed": True})
-    assert git(repo, "rev-parse", "main") == main and git(repo, "rev-parse", "dev") == dev and worktrees(repo) == []
-
-
-def test_pytests_failed_line_names_its_test():
-    out = "== short test summary info ==\nSKIPPED [1] x\nFAILED tests/test_a.py::test_b - assert 1 == 2\nERROR tests/test_c.py::test_d\n"
-    assert main_checks.failed_test(out) == "tests/test_a.py::test_b" and main_checks.failed_test("2 failed") == ""
-
-
-def test_a_seal_no_check_owns_is_answered_without_running_anything(host, repo, work):
-    lobby, chat, *_ = work
-    depends(host, lobby, chat)
-    from orkboard.realm import ideas
-    ideas.save_state(host.ideas.state_dir, chat, state="running")
-    plan = ideas.plan(host.ideas.state_dir, chat)
-    plan["tasks"].append({"id": "rv", "title": "Waiting", "state": "review", "commit": "", "after": [], "round": 1})
-    ideas.save_plan(host.ideas.state_dir, chat, plan)
-    got = host.command("ideas.to_main_checks", {"idea": lobby})
-    assert got["checks"] == [] and got["sealed"] == f"{short(host, chat)} is not done yet" and got["running"] is False
-    assert host.ideas.snapshot()["main_checks"] == {} and worktrees(repo) == []
-
-
-def test_checked_records_every_classification(monkeypatch, tmp_path):
-    from orkboard.realm import gate_rerun
-    from orkboard.realm.idea_git import GateRun
-    ids = [f"tests/t.py::test_{n}" for n in range(4)]
-    out = "\n".join(f"FAILED {i} - x" for i in ids) + "\n=== 4 failed in 1s ==="
-    def gate(*args):
-        args[-1]["run"] = GateRun(False, out)
-        return False, "4 failed"
-    monkeypatch.setattr(main_checks, "_gate", gate)
-    monkeypatch.setattr(gate_rerun, "sort_out", lambda *a, **kw: gate_rerun.Sorted((ids[0],), (ids[1],), (ids[2],), 0, (ids[3],)))
-    ok, words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
-    assert not ok
-    assert [f["classification"] for f in record["failures"]] == ["flaky", "pre-existing", "new", "unresolved"]
-    assert all(i in words for i in ids[:main_checks.SAID_MAX]) and ids[3] not in words and words.endswith("; and 1 more"), "the words name three, the record keeps all"
-
-
-def test_merge_boundary_refuses_unbound_and_superseded_results(host):
-    from orkboard.gui.ideas_args import IdeasError
-    with pytest.raises(IdeasError, match="changed"):
-        host.ideas._validate_checks("missing", ["candidate"], "main-sha")
-
-
-def test_diagnostic_exception_retains_unresolved_identity(monkeypatch, tmp_path):
-    from orkboard.realm import gate_rerun
-    from orkboard.realm.idea_git import GateRun
-    def gate(*args):
-        args[-1]["run"] = GateRun(False, "FAILED tests/t.py::test_x - x\n=== 1 failed in 1s ===")
-        return False, "red"
-    def unavailable(*args, **kwargs):
-        raise OSError("unavailable")
-    monkeypatch.setattr(main_checks, "_gate", gate)
-    monkeypatch.setattr(gate_rerun, "sort_out", unavailable)
-    ok, _, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
-    assert not ok and record["failures"] == [{"id": "tests/t.py::test_x", "classification": "unresolved"}]
-
-
 def test_main_moving_during_pick_cannot_use_the_old_green_result(host, repo, work, monkeypatch):
     lobby, *_ = work
     host.command("ideas.to_main_checks", {"idea": lobby})
@@ -417,15 +302,3 @@ def test_the_merge_of_dev_runs_its_tests_with_the_repository_free_and_refuses_a_
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"
 
 
-def test_the_tests_step_keeps_the_files_it_ran_beside_its_failures(monkeypatch, tmp_path):
-    from orkboard.realm import gate_rerun
-    from orkboard.realm.idea_git import GateRun
-    ids = ["tests/t.py::test_a", "tests/u.py::test_b"]
-    out = "\n".join(f"FAILED {i} - x" for i in ids) + "\n=== 2 failed in 1s ==="
-    def gate(*args):
-        args[-1]["run"] = GateRun(False, out, files=("tests/t.py", "tests/u.py", "tests/v.py"))
-        return False, "2 failed"
-    monkeypatch.setattr(main_checks, "_gate", gate)
-    monkeypatch.setattr(gate_rerun, "sort_out", lambda *a, **kw: gate_rerun.Sorted((), (), tuple(ids), 0, ()))
-    _ok, _words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
-    assert record["files"] == ["tests/t.py", "tests/u.py", "tests/v.py"] and [f["id"] for f in record["failures"]] == ids

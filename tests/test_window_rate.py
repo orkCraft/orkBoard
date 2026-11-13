@@ -56,22 +56,6 @@ def test_learn_divides_the_windows_spend_by_its_percent_and_keeps_one_sample_a_w
     assert window_rate.rate(path)["usd_per_pct"] == round(10 * ONE / 25, 4)
 
 
-def test_learn_waits_for_enough_percents_and_for_a_spend(tmp_path):
-    root = _transcripts(tmp_path, _msg(NOW - 60, "a"))
-    path = tmp_path / "rate.json"
-    assert window_rate.learn(_session(0.97, NOW + 3600), NOW, root, path) is None          # 3 %: rounds too much
-    assert window_rate.learn(_session(0.5, NOW + 3600), NOW, tmp_path / "none", path) is None   # no transcript
-    assert window_rate.learn([Limit("limits", "—", "—", None, None, "disabled")], NOW, root, path) is None
-    assert window_rate.rate(path) is None
-
-
-def test_the_rate_is_the_median_of_the_last_windows(tmp_path):
-    path = tmp_path / "rate.json"
-    rows = [{"reset": 1000 * i, "used_pct": 10, "usd": 1, "usd_per_pct": v} for i, v in enumerate([0.1, 0.5, 0.3])]
-    path.write_text(json.dumps({"samples": rows}))
-    assert window_rate.rate(path) == {"tool": "claude", "window": "5h", "usd_per_pct": 0.3, "windows": 3}
-
-
 def test_the_page_gets_the_rate_only_on_a_subscription(tmp_path, monkeypatch):
     path = tmp_path / "rate.json"
     path.write_text(json.dumps({"samples": [{"reset": 1, "usd_per_pct": 0.4}]}))

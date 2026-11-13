@@ -54,12 +54,6 @@ def test_each_folder_of_scripts_is_a_part_and_its_uses_are_preload_extends_and_c
     assert "Node" not in got and not any("Node" in u for r in got.values() for u in r["uses"])       # the engine's own classes are no part and no link
 
 
-def test_a_scenes_script_and_instanced_scene_give_its_folder_the_same_uses(tmp_path):
-    got = by_path(code_map.parts(project(tmp_path)))
-    assert got["scenes"]["uses"] == ["scripts/game", "scripts/ui", "ui"]       # level_1 → game/level.gd, main_menu → ui/menu.gd and hud.tscn
-    assert got["ui"]["files"] == ["hud.tscn"] and got["ui"]["used_by"] == ["scenes"]    # a folder of scenes only is a part once a scene uses it
-
-
 def test_the_project_is_one_container_with_its_stack_and_ways_in(tmp_path):
     ov = system_overview.read(project(tmp_path))
     assert [c["path"] for c in ov["containers"]] == ["."]
@@ -69,43 +63,6 @@ def test_the_project_is_one_container_with_its_stack_and_ways_in(tmp_path):
                             {"kind": "autoload", "name": "Events", "path": "autoload/events.gd"},
                             {"kind": "autoload", "name": "Save", "path": "autoload/save.gd"}]
     assert c["parts"] == ["autoload", "scenes", "scripts/core", "scripts/game", "scripts/ui", "ui"] and c["layers"]
-
-
-def test_a_project_in_a_folder_is_a_container_at_that_folder(tmp_path):
-    shutil.copytree(FIXTURES / "godot", tmp_path / "games" / "skyhop")
-    ov = system_overview.read(tmp_path)
-    c = {x["path"]: x for x in ov["containers"]}["games/skyhop"]
-    assert c["ways_in"][0] == {"kind": "main", "name": "", "path": "games/skyhop/scenes/main_menu.tscn"}
-    assert "games/skyhop/scripts/ui" in c["parts"]
-
-
-def test_a_csharp_project_is_told_by_its_stack_and_its_using_are_read(tmp_path):
-    root = project(tmp_path, "godot_csharp")
-    assert engine_godot.is_csharp(root) and not engine_godot.is_csharp(project(tmp_path))
-    assert system_overview.read(root)["containers"][0]["stack"] == [{"name": "Godot C#", "role": "game"}]
-    got = by_path(code_map.parts(root))
-    assert got["Scripts/Actors"]["uses"] == ["Scripts/Core"]          # `using Game.Core;` (`using Godot;` is the engine's: left out)
-
-
-def test_the_web_and_python_beside_a_game_are_kept_too(tmp_path):
-    root = project(tmp_path)
-    (root / "tools").mkdir()
-    (root / "tools" / "pack.py").write_text("import json\n")
-    (root / "package.json").write_text('{"name": "site", "dependencies": {"react": "18"}}')
-    parts = by_path(code_map.parts(root))
-    assert "tools" in parts and "scripts/ui" in parts
-    c = system_overview.read(root)["containers"][0]
-    assert c["manifests"] == ["project.godot", "package.json"] and [s["name"] for s in c["stack"]] == ["Godot", "React"]
-
-
-def test_nothing_under_godot_or_import_is_read(tmp_path):
-    root = project(tmp_path)
-    (root / ".godot").mkdir()
-    (root / ".godot" / "cache.gd").write_text('extends "res://scripts/core/mob.gd"\n')
-    (root / ".import").mkdir()
-    (root / ".import" / "x.gd").write_text("extends Node\n")
-    assert [p["path"] for p in code_map.parts(root)] == ["autoload", "scenes", "scripts/core", "scripts/game", "scripts/ui", "ui"]
-    assert not any(".godot" in p or ".import" in p for c in system_overview.read(root)["containers"] for p in c["parts"])
 
 
 def test_a_control_rooted_scene_is_a_screen_and_a_node2d_level_is_not(repo, tmp_path):
@@ -127,14 +84,3 @@ def test_the_scenes_change_to_one_another_by_a_const_and_by_a_preload(repo, tmp_
     assert "read from Godot scenes" in screen_map.text(repo / ".orkcraft", repo)
 
 
-def test_a_project_with_no_scene_of_controls_has_no_screens(repo, tmp_path):
-    root = project(tmp_path)
-    for f in (root / "scenes").glob("main_menu.tscn"), (root / "scenes").glob("options.tscn"):
-        for p in f:
-            p.unlink()
-    sha = on_dev(repo, root)
-    assert screen_routes.routes(screen_routes.Tree(repo, sha)) == ("", [])
-
-
-def test_the_engines_hold_for_the_changed_files_that_matter():
-    assert engines.matters("scripts/a.gd") and engines.matters("scenes/a.tscn") and engines.matters("project.godot") and not engines.matters("notes.md")

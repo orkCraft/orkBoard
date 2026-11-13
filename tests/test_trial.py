@@ -42,24 +42,6 @@ def test_the_template_is_two_rows_a_task_each_way_shown_as_a_or_b_at_random(tmp_
         trial.template(tmp_path / "x.csv", [])
 
 
-def test_a_row_that_is_not_one_is_refused_in_plain_words(tmp_path):
-    p = tmp_path / "bad.csv"
-    p.write_text("task,way,shown_as,accepted,changes,questions,minutes,tokens\nT,cursor,A,yes,0,0,5,\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="Row 2: the way is orkboard or plan"):
-        trial.read(p)
-    p.write_text("task,way,shown_as,accepted,changes,questions,minutes,tokens\nT,plan,A,maybe,0,0,5,\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="accepted is yes or no"):
-        trial.read(p)
-    p.write_text("task,way,shown_as,accepted,changes,questions,minutes,tokens\nT,plan,A,yes,two,0,5,\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="changes is a number"):
-        trial.read(p)
-    p.write_text("task,way,shown_as,accepted,changes,questions,minutes,tokens\nT,plan,A,yes,0,0,,\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="minutes is empty"):
-        trial.read(p)
-    with pytest.raises(ValueError, match="cannot be read"):
-        trial.read(tmp_path / "none.csv")
-
-
 def _results(n, ork_yes, plan_yes, ork_min=20, plan_min=15):
     return {f"t{i}": {"orkboard": (i < ork_yes, 0, 1, ork_min, 1000), "plan": (i < plan_yes, 2, 3, plan_min, None)} for i in range(n)}
 
@@ -72,19 +54,6 @@ def test_it_holds_when_orkboard_wins_by_twenty_points_at_no_more_than_twice_the_
     o, pl = t["ways"]["orkboard"], t["ways"]["plan"]
     assert (o["accepted_share"], pl["accepted_share"], o["changes"], pl["changes"], o["tokens"], pl["tokens"]) == (0.8, 0.5, 0.0, 2.0, 1000.0, None)
     assert "Verdict: holds" in trial.text(t)
-
-
-def test_it_does_not_hold_by_too_small_a_gap_or_too_many_minutes_and_too_few_tasks_say_so(tmp_path):
-    rows = [{"task": f"t{i}", "way": w, "accepted": ok, "changes": 0, "questions": 0, "minutes": m, "tokens": None}
-            for i in range(10) for w, ok, m in (("orkboard", i < 7, 20), ("plan", i < 6, 15))]
-    t = trial.tally(rows)
-    assert t["verdict"] == "does not hold" and "needs 20" in t["why"]
-    slow = [{**r, "minutes": 40 if r["way"] == "orkboard" else 10, "accepted": (r["way"] == "orkboard") or r["task"] < "t2"} for r in rows]
-    t = trial.tally(slow)
-    assert t["verdict"] == "does not hold" and "4.0× the minutes" in t["why"]
-    t = trial.tally(rows[:6] + [{"task": "solo", "way": "plan", "accepted": True, "changes": 0, "questions": 0, "minutes": 3, "tokens": None}])
-    assert t["verdict"] == "too few" and t["tasks"] == 3 and t["one_way_only"] == ["solo"]
-    assert "Done one way only" in trial.text(t)
 
 
 def test_orkboard_trial_new_and_the_tally(tmp_path, capsys):

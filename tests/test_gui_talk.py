@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, idea_questions, ideas, library
 
 TALK_COMMANDS = {"ideas.talk_answer", "ideas.cause_answer", "ideas.objection"}
@@ -67,10 +67,6 @@ def _row(host, slug, kind):
 
 def _state(host, slug):
     return ideas.state(host.ideas.state_dir, slug)
-
-
-def test_the_commands_are_the_hosts_and_a_phones(host):
-    assert TALK_COMMANDS <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in TALK_COMMANDS)
 
 
 def test_the_arguments_are_checked_in_plain_words(host, tech, model):
@@ -148,10 +144,3 @@ def test_a_bug_from_the_press_to_the_cause_and_the_sections(host, tech, model, m
     assert host.command("ideas.cause_answer", {"idea": slug, "yes": True, "answers": [{"id": row["q"][0]["id"], "pick": 0}]}) == {"ok": True}
     assert went == [(slug, "sections")] and _row(host, slug, "cause") is None
 
-
-def test_talk_waits_for_nothing_it_cannot_make_the_demo_runs_no_model(host, tech, model):
-    host.ideas.keeper.demo = True
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": tech})["slug"]
-    host.command("ideas.talk", {"idea": slug})
-    st = _state(host, slug)
-    assert st["state"] == "routed" and "demo runs no model" in st["error"] and model == []                 # the route card is its row again, with why

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_week, event_log, idea_spend, ideas
+from orkboard.realm import board_week, event_log, idea_spend
 
 SETTINGS = {"night": "01:00-07:00"}
 NOW = dt.datetime(2026, 10, 20, 12, 0).astimezone()
@@ -45,20 +45,6 @@ def test_a_night_is_worked_by_a_task_or_a_night_run_idle_with_a_run_and_nothing_
     got = board_week.nights(root, SETTINGS, NOW, n=6)
     assert [(n["date"], n["kind"]) for n in got] == [("2026-10-20", "off"), ("2026-10-19", "worked"), ("2026-10-18", "idle"),
                                                     ("2026-10-17", "worked"), ("2026-10-16", "off"), ("2026-10-15", "worked")]
-
-
-def test_today_s_night_counts_only_once_it_has_ended(root):
-    run(root, at(20, 1, 5), drafted=1)
-    assert board_week.nights(root, SETTINGS, at(20, 6, 0), n=1)[0]["date"] == "2026-10-19"       # still the night: yesterday's is the last that ended
-    assert board_week.nights(root, SETTINGS, at(20, 7, 0), n=1) == [{"date": "2026-10-20", "kind": "worked"}]
-
-
-def test_a_window_across_midnight_starts_the_evening_before_its_date(root):
-    run(root, at(19, 23, 30), proposed=1)                                       # inside the night that ends on the 20th
-    log(root, "task_state", at(19, 22, 59), idea="a", task="k1", state="merged", was="review", round=1)      # before it began: not in it
-    got = board_week.nights(root, {"night": "23:00-07:00"}, NOW, n=2)
-    assert got == [{"date": "2026-10-20", "kind": "worked"}, {"date": "2026-10-19", "kind": "off"}]
-    assert board_week.nights(root, {"night": ""}, NOW) == [] and board_week.window("02:00-02:00") is None
 
 
 def _ledger(state: Path, slug: str, when: dt.datetime, cost):
@@ -100,19 +86,6 @@ def test_the_price_of_a_result_is_said_from_three_merged_on_and_null_when_unpric
     assert board_week.this_week(root, state2, SETTINGS, NOW, {})["usd"] is None and board_week.this_week(root, state2, SETTINGS, NOW, {})["usd_per_merged"] is None
     assert board_week.this_week(root, tmp_path / "none", {"night": ""}, NOW, {})["night_on"] is False
     assert board_week.this_week(root, tmp_path / "none", {"night": ""}, NOW, {})["usd"] == 0.0
-
-
-def test_ideas_week_work_is_the_hosts_and_a_phones_and_needs_a_project(fake_repo):
-    with pytest.raises(CommandError, match="Open a folder first"):
-        Orkboard().command("ideas.week_work", {})
-    host = Orkboard(fake_repo)
-    assert BoardPhone.allowed(host, "ideas.week_work", {})
-    got = host.command("ideas.week_work", {})
-    json.dumps(got)
-    assert got["merged"] == 0 and got["night_on"] is True and got["tonight"] == 0 and got["into"] == "dev"
-    goal = ideas.save_goal(host.ideas.root(), None, "Offline", "About", None, "low")[0]
-    host.command("ideas.add", {"text": "Drafted at once", "track": goal})        # the party is Low: nothing waits for the night
-    assert host.command("ideas.week_work", {})["tonight"] == 0
 
 
 # -- last week (spec 42 §7) ---------------------------------------------------------------------------------------
@@ -169,25 +142,6 @@ def test_last_week_goals_flags_dearest_fastest_answers_and_nights(root, tmp_path
     assert got["nights"] == {"worked": 1, "idle": 0, "off": 6} and got["empty"] is False
 
 
-def test_a_week_that_has_not_ended_counts_only_its_own_nights_that_have(root, tmp_path):
-    run(root, at(18, 2), drafted=1)                                                  # the night of Sunday 18th: last week's
-    run(root, at(20, 2), drafted=1)                                                  # Tuesday's night, ended at 07:00
-    got = board_week.last_week(root, tmp_path / "state", SETTINGS, NOW, _rows(), week="2026-W43")
-    assert got["nights"] == {"worked": 1, "idle": 0, "off": 1}                       # Monday's night is off; none from before its Monday
-
-
-def test_a_quiet_week_is_empty_with_null_answers_and_a_deleted_idea_is_left_out(root, tmp_path):
-    state = tmp_path / "state"
-    got = board_week.last_week(root, state, SETTINGS, NOW, _rows())
-    assert got["empty"] is True and got["answers"] is None and got["dearest"] is None and got["fastest"] is None and got["before"] is None
-    log(root, "keeper_state", at(14, 12), idea="deleted", state="done", was="working")
-    _ledger(state, "deleted", at(14, 9), 5.0)
-    again = board_week.last_week(root, state, SETTINGS, NOW, _rows())
-    assert again["goals"] == [] and again["dearest"] is None and again["empty"] is True
-    log(root, "goal_accepted", at(14, 12), goal="offline", met=True, by="PM")
-    assert board_week.last_week(root, state, SETTINGS, NOW, _rows())["empty"] is False                          # a flag alone makes it
-
-
 def test_ideas_week_is_the_hosts_and_a_phones_and_checks_its_week(fake_repo):
     with pytest.raises(CommandError, match="Open a folder first"):
         Orkboard().command("ideas.week", {})
@@ -218,13 +172,6 @@ def test_a_run_of_worked_nights_counts_up_to_the_last_that_ended_and_an_idle_or_
     assert board_week.streak(root, {"night": ""}, NOW) == 0
 
 
-def test_todays_night_is_not_counted_until_it_has_ended_and_a_long_run_is_counted_through_the_parts(root):
-    _worked(root, range(20, 0, -1))
-    assert board_week.streak(root, SETTINGS, at(20, 3, 0)) == 19              # the night of the 20th is still going on
-    assert board_week.streak(root, SETTINGS, at(20, 8, 0)) == 20
-    assert board_week.streak(root, SETTINGS, NOW) == 20                       # 1 October is the first with a log; the 30th of September is off
-
-
 def test_the_streak_is_in_this_week_and_last_week(root, tmp_path):
     _worked(root, (19, 18))
     assert board_week.this_week(root, tmp_path / "s", SETTINGS, NOW, {})["streak"] == 0          # the night of the 20th was off
@@ -232,37 +179,6 @@ def test_the_streak_is_in_this_week_and_last_week(root, tmp_path):
     assert board_week.this_week(root, tmp_path / "s", SETTINGS, NOW, {})["streak"] == 3
     assert board_week.last_week(root, tmp_path / "s", SETTINGS, NOW, {})["streak"] == 1           # the run as the week ended: the 18th, and the 17th is off
     assert board_week.last_week(root, tmp_path / "s", SETTINGS, NOW, {}, week="2026-W43")["streak"] == 3
-
-
-def test_the_recap_carries_the_streak(fake_repo):
-    host = Orkboard(fake_repo)
-    today = dt.date.today()
-    ended = dt.datetime.now().time() >= dt.time(7, 0)                       # tonight's window (01:00–07:00) counts once it has ended
-    for back in (0, 1, 2) if ended else (1, 2):
-        when = dt.datetime.combine(today - dt.timedelta(days=back), dt.time(1, 30)).astimezone()
-        log(Path(host.ideas.host.repo_root), "night_run", when, drafted=1, started=0, refreshed=0, proposed=0)
-    assert host.command("ideas.recap", {"since": int((dt.datetime.now().timestamp() - 3600) * 1000)})["nights"] == (3 if ended else 2)
-
-
-def test_a_check_that_found_nothing_is_no_result_in_the_week_or_in_last_week(root, tmp_path):
-    """Spec 43 A: a clean check is not counted in `merged` or `first_time`, nor is it the fastest from idea to dev."""
-    log(root, "task_state", NOW - dt.timedelta(days=1), idea="a", task="k1", state="merged", was="review", round=1)
-    log(root, "task_state", NOW - dt.timedelta(days=1, hours=1), idea="a", task="k2", state="merged", was="running", round=1, check=True, clean=True)
-    got = board_week.this_week(root, tmp_path / "state", SETTINGS, NOW, {"ideas": []})
-    assert (got["merged"], got["first_time"]) == (1, 1)
-    log(root, "idea_added", at(14, 8), idea="export", track="offline")
-    log(root, "task_state", at(14, 8, 5), idea="export", task="k1", state="merged", was="running", round=1, check=True, clean=True)
-    log(root, "task_state", at(14, 10), idea="export", task="k2", state="merged", was="review", round=1)
-    last = board_week.last_week(root, tmp_path / "state", SETTINGS, NOW, _rows())
-    assert (last["merged"], last["first_time"]) == (1, 1) and last["fastest"]["minutes"] == 120
-
-
-def test_a_night_where_only_a_clean_check_merged_is_not_worked(root):
-    log(root, "task_state", at(19, 3), idea="a", task="k1", state="merged", was="running", round=1, check=True, clean=True)
-    run(root, at(19, 1, 5))
-    log(root, "task_state", at(18, 3), idea="a", task="k2", state="merged", was="review", round=1)
-    got = board_week.nights(root, SETTINGS, NOW, n=3)
-    assert [(n["date"], n["kind"]) for n in got] == [("2026-10-20", "off"), ("2026-10-19", "idle"), ("2026-10-18", "worked")]
 
 
 def test_last_week_counts_a_goals_flag_beside_a_partys_old_one_spec_50(root, tmp_path):

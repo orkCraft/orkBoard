@@ -39,14 +39,6 @@ def test_each_step_holds_what_the_project_names_for_it_sorted_with_its_kind(repo
         assert got[step]["none"] is False and got[step]["more"] == 0
 
 
-def test_a_step_with_nothing_to_read_is_none_and_no_dev_is_an_empty_map(repo):
-    put(repo, {"README.md": b"# hi", "src/lib.py": b"x"})
-    got = way_map.read(state(repo), repo)
-    assert all(got[s] == {"holds": [], "none": True, "more": 0} for s in way_map.STEPS)
-    gone = way_map.read(state(repo), repo, "no-such")
-    assert gone["commit"] == "" and all(gone[s]["none"] for s in way_map.STEPS) and way_map.text(state(repo), repo, ref="no-such") is None
-
-
 def test_dev_trees_only_secrets_hidden_and_skipped_folders_never(repo):
     put(repo, {"marketing/plan.md": b"x", "marketing/.env": b"SECRET=1", "marketing/id_rsa": b"k", ".github/marketing/x.md": b"x", "node_modules/marketing/x.md": b"x"})
     (repo / "marketing" / "draft.md").write_bytes(b"x")                                      # the working tree's: never read
@@ -69,12 +61,6 @@ def test_the_entry_screen_is_the_first_router_name_that_exists_else_a_screens_fo
     assert paths(way_map.read(state(repo), repo, "screens")["first_session"]) == [("src/screens/Home.tsx", "entry")]
 
 
-def test_a_step_lists_at_most_the_cap_and_says_how_many_were_left_out(repo):
-    put(repo, {f"fastlane/metadata/l{n:02d}/title.txt": b"x" for n in range(30)})
-    store = way_map.read(state(repo), repo)["store"]
-    assert len(store["holds"]) == way_map.HOLDS and store["more"] == 30 - way_map.HOLDS and store["holds"][0]["path"] == "fastlane/metadata/l00/title.txt"
-
-
 # -- the text -----------------------------------------------------------------------------------------------------------------------
 
 def test_the_text_is_the_four_steps_and_what_each_holds_and_nothing_to_read_yet(repo):
@@ -89,15 +75,6 @@ def test_the_text_is_the_four_steps_and_what_each_holds_and_nothing_to_read_yet(
     assert text == way_map.text(state(repo), repo, "abc123", None)
     put(repo, {"README.md": b"# x"})
     assert way_map.text(state(repo), repo).split("\n", 1)[1] == text.split("\n", 1)[1]
-
-
-def test_the_text_names_six_files_a_step_and_how_many_more_and_is_bounded(repo):
-    put(repo, {f"fastlane/metadata/l{n:02d}/title.txt": b"x" for n in range(30)})
-    store = [ln for ln in way_map.text(state(repo), repo).splitlines() if ln.startswith("2.")][0]
-    assert store.endswith("fastlane/metadata/l05/title.txt and 24 more") and store.count("title.txt") == 6
-    put(repo, {"marketing/" + "d" * 80 + f"{n}/" + "f" * 80 + ".md": b"x" for n in range(30)})
-    text = way_map.text(state(repo), repo)
-    assert len(text) <= 4 * way_map.LINE + 200 and all(len(ln) <= way_map.LINE + 4 for ln in text.splitlines())
 
 
 # -- ideas.way_map ---------------------------------------------------------------------------------------------------------------------

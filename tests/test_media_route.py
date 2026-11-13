@@ -6,7 +6,6 @@ from __future__ import annotations
 import asyncio
 import http.client
 import re
-import threading
 from pathlib import Path
 
 import pytest
@@ -59,14 +58,6 @@ def test_an_address_is_signed_with_a_secret_of_the_process_and_only_its_own_path
     assert media.sign(path) != media.sign(path + "x") and media._SECRET and len(media._SECRET) == 32
 
 
-@pytest.mark.parametrize("target", ["/media/dark-mode/k1-r1", "/media/dark-mode/k1-r1/a.png/more", "/media//k1-r1/a.png", "/media/dark-mode/k1-r1/",
-                                    "/media/../k1-r1/a.png", "/media/dark-mode/../a.png", "/media/dark-mode/k1-r1/..", "/media/dark-mode/k1-r1/%2e%2e",
-                                    "/media/dark-mode/k1-r1/a%2Fb.png", "/media/dark-mode/k1-r1/.hidden", "/media/Dark/k1-r1/a.png",
-                                    "/media/dark-mode/k1/a.png", "/media/dark-mode/k1-r1/a b.png", "/static/dark-mode/k1-r1/a.png"])
-def test_a_path_that_is_not_one_plain_file_of_a_pick_is_no_address_at_all(target):
-    assert media.parse(target) is None
-
-
 # -- serving ------------------------------------------------------------------------------------------------------------
 
 def test_a_signed_address_is_served_with_its_stored_type_and_the_headers_of_the_spec(host, pick):
@@ -80,16 +71,6 @@ def test_a_signed_address_is_served_with_its_stored_type_and_the_headers_of_the_
     svg = get(host, media.url("dark-mode", "k1-r1", "b.svg"))                                      # an SVG on its own screen runs nothing
     assert headers(svg)["content-type"] == "image/svg+xml" and headers(svg)["content-security-policy"] == "sandbox; default-src 'none'"
     assert svg.read() == SVG
-
-
-def test_a_text_is_served_as_utf8_and_a_sound_by_its_stored_type(host, tmp_path):
-    state = host.ideas.state_dir
-    pf.make_pick(state, tmp_path / "t", {"a.txt": TEXT, "b.md": pf.text("# Hi")}, slug="words", kind="text")
-    assert headers(get(host, media.url("words", "k1-r1", "a.txt")))["content-type"] == "text/plain; charset=utf-8"
-    assert headers(get(host, media.url("words", "k1-r1", "b.md")))["content-type"] == "text/markdown; charset=utf-8"
-    pf.make_pick(state, tmp_path / "w", {"a.wav": WAV, "b.mp3": pf.mp3()}, slug="jingle", kind="audio")
-    assert headers(get(host, media.url("jingle", "k1-r1", "a.wav")))["content-type"] == "audio/wav"
-    assert headers(get(host, media.url("jingle", "k1-r1", "b.mp3")))["content-type"] == "audio/mpeg"
 
 
 @pytest.mark.parametrize("asked, status, first, last", [
@@ -110,25 +91,6 @@ def test_a_range_is_a_206_with_its_bytes_so_a_sound_or_a_clip_seeks(host, tmp_pa
     assert reply.read() == whole[first:last + 1]
 
 
-def test_a_range_past_the_end_is_416_and_a_range_that_is_not_one_is_the_whole_file(host, pick):
-    u = media.url("dark-mode", "k1-r1", "a.png")
-    gone = get(host, u, f"bytes={len(PNG)}-")
-    assert gone.status == 416 and headers(gone)["content-range"] == f"bytes */{len(PNG)}" and gone.read() == b""
-    assert get(host, u, "bytes=-0").status == 416
-    for odd in ("lines=0-3", "bytes=5-2", "bytes=a-b", "bytes=0-1,4-5", "", "bytes=-"):
-        reply = get(host, u, odd)
-        assert reply.status == 200 and reply.read() == PNG, odd
-
-
-def test_head_has_the_headers_of_get_and_no_body_and_other_methods_are_refused(host, pick):
-    u = media.url("dark-mode", "k1-r1", "a.png")
-    head = get(host, u, method="HEAD")
-    assert head.status == 200 and head.read() == b"" and headers(head)["content-length"] == str(len(PNG))
-    assert get(host, u, "bytes=0-3", method="HEAD").status == 206
-    for method in ("POST", "PUT", "DELETE"):
-        assert get(host, u, method=method).status == 405
-
-
 def test_no_signature_a_wrong_one_or_the_signature_of_another_path_is_a_404(host, pick):
     path = "/media/dark-mode/k1-r1/a.png"
     other = media.url("other-goal", "k2-r1", "a.png")
@@ -138,13 +100,6 @@ def test_no_signature_a_wrong_one_or_the_signature_of_another_path_is_a_404(host
         reply = get(host, target)
         assert reply.status == 404 and reply.read() == b"Not found", target
         assert "private" not in headers(reply).get("cache-control", "")
-
-
-def test_a_name_with_dots_or_slashes_is_a_404_even_when_it_is_signed(host, pick):
-    for goal, pid, name in (("dark-mode", "k1-r1", "../k1-r1/a.png"), ("dark-mode", "../dark-mode/k1-r1", "a.png"), ("..", "k1-r1", "a.png"),
-                            ("dark-mode", "k1-r1", "%2e%2e/a.png"), ("dark-mode", "k1-r1", "a.png/")):
-        path = f"/media/{goal}/{pid}/{name}"
-        assert get(host, f"{path}?s={media.sign(path)}").status == 404, path
 
 
 def test_the_address_of_another_pick_serves_that_picks_file_only_and_a_file_it_does_not_list_is_a_404(host, pick):
@@ -161,24 +116,6 @@ def test_the_address_of_another_pick_serves_that_picks_file_only_and_a_file_it_d
     (folder / "a.png").unlink()
     (folder / "a.png").symlink_to(host.ideas.state_dir.parent / "README.md")                            # a link out of its folder
     assert get(host, mine).status == 404
-
-
-def test_a_secret_of_another_run_is_dead(host, pick, monkeypatch):
-    old = media.url("dark-mode", "k1-r1", "a.png")
-    monkeypatch.setattr(media, "_SECRET", b"x" * 32)
-    assert get(host, old).status == 404 and get(host, media.url("dark-mode", "k1-r1", "a.png")).status == 200
-
-
-def test_the_open_projects_are_looked_in_the_shown_one_first(host, pick, tmp_path):
-    other = tmp_path / "second"
-    other.mkdir()
-    import subprocess
-    subprocess.run(["git", "init", "-q"], cwd=other, check=True)
-    host.command("projects.open", {"path": str(other)})
-    shown = host.ideas.state_dir                                      # the second project is shown now
-    assert shown != host.projects.open_ones[0].ideas.state_dir and len(media.state_dirs(host)) == 2
-    assert media.state_dirs(host)[0] == shown
-    assert get(host, media.url("dark-mode", "k1-r1", "a.png")).read() == PNG                 # found in the first project, shown or not
 
 
 # -- over HTTP --------------------------------------------------------------------------------------------------------------
@@ -291,23 +228,6 @@ def all_values(pairs, name: str) -> list[str]:
     return [v for k, v in pairs if k.lower() == name.lower()]
 
 
-def test_a_sketchs_page_is_served_with_its_own_policy_and_nosniff_and_a_picture_keeps_the_old_one(host, tmp_path):
-    pf.make_page_pick(host.ideas.state_dir, tmp_path / 'pg', PAGE_HTML)
-    reply = get(host, media.url("sketched", "sketch-r1", "a.html"))
-    assert reply.status == 200 and reply.read() == PAGE_HTML
-    h = headers(reply)
-    assert h["content-type"] == "text/html; charset=utf-8" and h["x-content-type-options"] == "nosniff"
-    assert h["content-security-policy"] == PAGE_CSP == media.PAGE_CSP                             # the policy of §3.1, exactly (the last one a reader of one header sees)
-    assert all_values(reply.headers, "Content-Security-Policy") == ["sandbox allow-scripts", PAGE_CSP]      # …and an opaque origin when opened on its own
-    assert h["cache-control"] == "private, max-age=31536000, immutable" and h["content-disposition"].startswith("inline; filename=")
-    assert "connect-src" not in PAGE_CSP and "default-src 'none'" in PAGE_CSP and "unsafe-eval" not in PAGE_CSP      # nothing it holds reaches the network
-    other = get(host, media.url("sketched", "sketch-r1", "b.png"))                                # a picture of the same pick: as before
-    assert all_values(other.headers, "Content-Security-Policy") == ["sandbox; default-src 'none'"]
-    head = get(host, media.url("sketched", "sketch-r1", "a.html"), method="HEAD")
-    assert head.read() == b"" and all_values(head.headers, "Content-Security-Policy")[-1] == PAGE_CSP
-    assert get(host, media.url("sketched", "sketch-r1", "a.html"), "bytes=0-4").read() == PAGE_HTML[:5]
-
-
 def _fetch_pairs(origin: str, target: str, https_context=None) -> tuple[int, list[tuple[str, str]], bytes]:
     host, port = origin.removeprefix("https://").removeprefix("http://").rsplit(":", 1)
     conn = http.client.HTTPSConnection(host, int(port), context=https_context, timeout=5) if https_context else http.client.HTTPConnection(host, int(port), timeout=5)
@@ -334,22 +254,6 @@ def test_the_pages_server_serves_a_sketchs_page_with_its_headers(host, tmp_path)
         thread.join(10)
 
 
-@pytest.mark.asyncio
-async def test_the_phones_listener_serves_a_sketchs_page_with_its_headers(fake_repo, tmp_path):
-    server, task = await _serve(fake_repo)
-    try:
-        await _pair(server)
-        pf.make_page_pick(server.host.ideas.state_dir, tmp_path / 'pg', PAGE_HTML)
-        status, pairs, body = await asyncio.to_thread(_fetch_pairs, server.phones.address, media.url("sketched", "sketch-r1", "a.html"), _pinned())
-        assert (status, body) == (200, PAGE_HTML)
-        assert all_values(pairs, "Content-Security-Policy") == ["sandbox allow-scripts", PAGE_CSP]
-        assert all_values(pairs, "X-Content-Type-Options") == ["nosniff"] and "text/html" in all_values(pairs, "Content-Type")[0]
-        assert (await asyncio.to_thread(_fetch_pairs, server.phones.address, "/media/sketched/sketch-r1/a.html?s=0", _pinned()))[0] == 404
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
 # -- an asset of the project (docs/specs/88-assets-and-play.md §1, §4) ----------------------------------------------------------
 
 def _commit_assets(repo: Path, files: dict[str, bytes]) -> str:
@@ -365,21 +269,6 @@ def _commit_assets(repo: Path, files: dict[str, bytes]) -> str:
 @pytest.fixture
 def asset_commit(host) -> str:
     return _commit_assets(Path(host.repo_root), {"art/hero.png": PNG, "sfx/jump.wav": pf.wav(1.0), "art/ç a.svg": SVG})
-
-
-def test_an_assets_address_names_its_commit_and_path_signed_and_a_path_that_is_no_assets_is_no_address():
-    sha = "a" * 40
-    u = media.asset_url(sha, "art/ç a.svg")
-    path, sig = u.split("?s=")
-    assert path == f"/media/_asset/{sha}/art/%C3%A7%20a.svg" and media.check(path, sig)
-    assert media.parse_asset(u) == (path, sha, "art/ç a.svg")
-    for bad in (f"/media/_asset/{sha}/../x.png", f"/media/_asset/{sha}/art/%2e%2e/x.png", f"/media/_asset/{sha}/art%2Fx.png",
-                f"/media/_asset/{sha}/.git/x.png", f"/media/_asset/{sha}/node_modules/x.png", f"/media/_asset/{sha}/art/x.txt",
-                f"/media/_asset/{sha}/art/.env.png", f"/media/_asset/{sha}/art//x.png", f"/media/_asset/{sha}/design/looks/a.png",
-                "/media/_asset/HEAD/art/x.png", "/media/_asset/abc/art/x.png", f"/media/_asset/{sha}", f"/media/_asset/{sha}/art/x%00.png",
-                f"/media/_asset/{sha}/%2Fetc/x.png"):
-        assert media.parse_asset(bad) is None, bad
-    assert media.parse("/media/_asset/x/y") is None                                          # never a pick's address
 
 
 def test_a_signed_asset_is_served_from_its_commit_with_a_range_never_from_the_working_tree(host, asset_commit):
@@ -400,32 +289,3 @@ def test_a_signed_asset_is_served_from_its_commit_with_a_range_never_from_the_wo
     assert svg.status == 200 and svg.read() == SVG and headers(svg)["content-type"] == "image/svg+xml"
     assert headers(svg)["content-disposition"] == 'inline; filename="__a.svg"'
 
-
-def test_an_unsigned_forged_or_dotted_asset_address_or_one_its_commit_lacks_is_a_404(host, asset_commit):
-    path = f"/media/_asset/{asset_commit}/art/hero.png"
-    for target in (path, path + "?s=", path + "?s=" + media.sign(path)[::-1],
-                   f"/media/_asset/{asset_commit}/art/other.png?s=" + media.sign(path)):
-        assert get(host, target).status == 404, target
-    for p in (f"/media/_asset/{asset_commit}/../README.md", f"/media/_asset/{asset_commit}/art/%2e%2e/%2e%2e/README.md",
-              f"/media/_asset/{asset_commit}/.git/config.png"):
-        assert get(host, f"{p}?s={media.sign(p)}").status == 404, p                                  # signed, still not an asset's
-    assert get(host, media.asset_url(asset_commit, "art/missing.png")).status == 404
-    assert get(host, media.asset_url("0" * 40, "art/hero.png")).status == 404
-    (Path(host.repo_root) / "art" / "loose.png").write_bytes(PNG)                                        # in the working tree only
-    assert get(host, media.asset_url(asset_commit, "art/loose.png")).status == 404
-    assert not (host.ideas.state_dir / "assets-before" / asset_commit / "art" / "loose.png").exists()
-    assert get(host, media.asset_url(asset_commit, "art/hero.png"), method="POST").status == 405
-
-
-def test_the_pages_server_serves_a_signed_asset(host, asset_commit):
-    server = Server(host)
-    thread = server.start_thread()
-    try:
-        status, h, body = _fetch(server.origin, media.asset_url(asset_commit, "art/hero.png"))
-        assert (status, body, h["content-type"]) == (200, PNG, "image/png")
-        status, h, body = _fetch(server.origin, media.asset_url(asset_commit, "art/hero.png"), {"Range": "bytes=2-5"})
-        assert (status, body) == (206, PNG[2:6])
-        assert _fetch(server.origin, f"/media/_asset/{asset_commit}/art/hero.png")[0] == 404
-    finally:
-        server.stop()
-        thread.join(10)

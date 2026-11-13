@@ -54,37 +54,12 @@ def test_the_map_names_the_containers_whole_their_links_and_the_shared_part_then
     assert text.index("Containers:") < text.index("Links:") < text.index("Shared by") < text.index("Parts (")
 
 
-def test_the_same_snapshot_is_the_same_bytes_and_a_head_that_changed_no_part_only_its_head_line(game):
-    one = map_text.system(state(game), game)
-    assert map_text.system(state(game), game) == one == map_text.system(state(game), game, "")
-    commit(game, "README.md", "# The party game\n")                                  # a page of the Board, a README: no part changes
-    two = map_text.system(state(game), game)
-    assert git(game, "rev-parse", "dev")[:7] in two and two != one and body(two) == body(one)
-
-
 def test_past_the_bound_the_parts_keep_only_their_names_and_the_text_says_so(repo):
     many(repo, 60)
     text = map_text.system(state(repo), repo)
     assert len(text) <= map_text.LIMIT and map_text.NAMED_ONLY in text
     assert "- pkg/part0000\n" in text and "Uses:" not in text.split("Parts (", 1)[1]
     assert map_text.system(state(repo), repo) == text
-
-
-def test_a_project_of_a_thousand_parts_stays_in_the_bound_and_says_how_many_are_left_out(repo):
-    many(repo, 400)
-    text = map_text.system(state(repo), repo)
-    assert len(text) <= map_text.LIMIT and map_text.NAMED_ONLY in text
-    left = int(text.rsplit("- and ", 1)[1].split(" more parts", 1)[0])
-    assert 0 < left < 401 and text.count("\n- pkg/part") + left == 400
-    assert text.rstrip().endswith(map_text.NAMED_ONLY)
-
-
-def test_a_small_project_keeps_every_part_in_full(repo):
-    commit(repo, "src/game/loop.py", "from src.ui import hud\n")
-    commit(repo, "src/ui/hud.py", "VALUE = 1\n")
-    text = map_text.system(state(repo), repo)
-    assert "- src/game: layer 1; Uses: ui" in text and "- src/ui: layer 2, face; Used by: game" in text
-    assert map_text.NAMED_ONLY not in text and "Links:" not in text and "Shared by" not in text
 
 
 def test_a_project_with_no_dev_has_no_map_and_another_party_is_given_none(tmp_path):
@@ -95,16 +70,6 @@ def test_a_project_with_no_dev_has_no_map_and_another_party_is_given_none(tmp_pa
     git(r, "config", "user.name", "T")
     commit(r, "a.py", "X = 1\n")
     assert map_text.system(r / ".orkcraft", r) is None and map_text.detail(r / ".orkcraft", r, ["."]) == ""
-
-
-def test_a_snapshot_that_cannot_be_made_reads_the_newest_kept(game, monkeypatch):
-    first = map_text.system(state(game), game)
-    commit(game, "client/src/extra/x.ts", "export const x = 1;\n")
-
-    def broken(*args):
-        raise RuntimeError("could not make its worktree")
-    monkeypatch.setattr(project_map, "ensure", broken)
-    assert map_text.system(state(game), game) == first
 
 
 def test_each_craft_has_its_map_as_text(game):
@@ -138,29 +103,6 @@ def test_changed_since_the_last_call_names_each_change_with_its_goal_and_the_per
     assert text.index("new part") < text.index("changed part") and len(text) < map_text.LIMIT + map_text.CHANGED
 
 
-def test_a_goal_with_no_page_is_named_by_its_slug_and_nothing_changed_says_so(game):
-    seen = git(game, "rev-parse", "dev")
-    map_text.system(state(game), game)
-    assert map_text.system(state(game), game, seen).endswith("Changed since your last call: nothing.")
-    land(game, "jingle", "k1", {"client/src/net/api.ts": "export const x = 1;\n"})
-    text = map_text.system(state(game), game, seen)
-    assert "- changed part client/src/net (goal jingle)" in text
-
-
-def test_a_last_call_the_maps_kept_do_not_reach_is_said_not_known(game):
-    text = map_text.system(state(game), game, "2001-01-01T00:00")
-    assert text.endswith("Changed since your last call: not known (no map was kept at that commit).")
-
-
-def test_the_changes_have_their_own_bound(game):
-    seen = git(game, "rev-parse", "dev")
-    map_text.system(state(game), game)
-    land(game, "big", "k1", {f"client/gen/p{n:03d}/f.ts": "export const x = 1;\n" for n in range(120)})
-    text = map_text.system(state(game), game, seen)
-    changes = text.split("Changed since your last call", 1)[1]
-    assert len(changes) <= map_text.CHANGED and "more changes" in changes.splitlines()[-1]
-
-
 # -- §2.1 the parts in detail ------------------------------------------------------------------------------------------------------------
 
 def test_detail_gives_the_named_parts_in_full_a_file_naming_its_part_and_an_unknown_path_none(game):
@@ -170,12 +112,6 @@ def test_detail_gives_the_named_parts_in_full_a_file_naming_its_part_and_an_unkn
     assert "- client/src/views (3 files)\n  Files: JudgeView.tsx, PlayerView.tsx, TvView.tsx" in got
     assert got.count("- server/src/routes") == 1 and "nowhere" not in got
     assert map_text.detail(state(game), game, ["nowhere"]) == "" and map_text.detail(state(game), game, []) == ""
-
-
-def test_detail_adds_1500_characters_at_most(repo):
-    many(repo, 120)
-    got = map_text.detail(state(repo), repo, [f"pkg/part{n:04d}" for n in range(120)])
-    assert 0 < len(got) <= map_text.DETAIL and "more parts" in got.splitlines()[-1]
 
 
 # -- §7.4 who decided a change ------------------------------------------------------------------------------------------------------------

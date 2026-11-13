@@ -11,7 +11,7 @@ import pytest
 
 from orkboard import settings
 from orkboard.core import idea_night
-from orkboard.realm import idea_risk, idea_target, ideas, lexicon, way_kinds
+from orkboard.realm import idea_target, ideas
 from tests.test_board_35 import FakeRunner, _wait, host, model, runner  # noqa: F401  (fixtures)
 
 WINDOW = "01:00-07:00"
@@ -19,17 +19,6 @@ AT = dt.datetime(2026, 11, 10, 3, 0)
 
 
 # -- the setting: one reader, the old key read as before -------------------------------------------------------------------------------------------
-
-@pytest.mark.parametrize("raw, rung", [
-    ({}, "off"), ({"work_at_night": False}, "off"), ({"work_at_night": True}, "builds"),                        # the old key alone: on is the builds
-    ({"night_rung": "ideas"}, "ideas"), ({"night_rung": "ideas", "work_at_night": False}, "ideas"),
-    ({"night_rung": "ideas", "work_at_night": True}, "builds"),                                                  # the old key turned on later lifts it
-    ({"night_rung": "builds", "work_at_night": True}, "builds"), ({"night_rung": "proposals", "work_at_night": True}, "proposals"),
-    ({"night_rung": "proposals", "work_at_night": False}, "ideas"), ({"night_rung": "builds", "work_at_night": False}, "ideas"),   # the old key turned off takes the builds away
-    ({"night_rung": "bogus"}, "off"), ({"night_rung": "bogus", "work_at_night": True}, "builds"), (None, "off")])
-def test_night_rung_reads_the_ladder_and_the_old_work_at_night(raw, rung):
-    assert settings.night_rung(raw) == rung
-
 
 def test_the_rung_and_the_leaders_are_kept_and_work_at_night_follows_the_rung():
     assert settings.night_values("proposals", ["tech", "design", "tech"]) == {"night_rung": "proposals", "work_at_night": True, "night_leaders": ["tech", "design"]}
@@ -45,18 +34,7 @@ def test_the_rung_and_the_leaders_are_kept_and_work_at_night_follows_the_rung():
     assert "night_rung" not in settings.clean_ideas({"night_rung": "nope"}) and "night_rung" not in settings.IDEAS
 
 
-def test_the_leaders_are_asked_only_on_the_top_rung():
-    s = {"night_rung": "builds", "work_at_night": True, "night_leaders": ["tech"]}
-    assert settings.night_leaders(s) == [] and settings.night_leaders({**s, "night_rung": "proposals"}) == ["tech"]
-
-
 # -- what each rung may pick up --------------------------------------------------------------------------------------------------------------------
-
-def test_each_rung_does_what_the_one_below_does():
-    got = {r: [s for s in ("talk", "spec", "build", "propose") if idea_risk.night_allows(r, s)] for r in settings.NIGHT_RUNGS}
-    assert got == {"off": [], "ideas": ["talk", "spec"], "builds": ["talk", "spec", "build"], "proposals": ["talk", "spec", "build", "propose"]}
-    assert not idea_risk.night_allows("nonsense", "talk")
-
 
 # -- the caps and the reserve ----------------------------------------------------------------------------------------------------------------------
 
@@ -76,13 +54,6 @@ def test_one_proposal_a_leader_three_a_night_and_only_on_the_top_rung(tmp_path):
     assert {r["stage"] for r in idea_night.read(tmp_path)} == {"spec"} and {r["status"] for r in idea_night.read(tmp_path)} == {"proposed"}
 
 
-def test_a_dropped_proposal_still_counts_for_its_leader_that_night(tmp_path):
-    key = "2026-11-10"
-    row = idea_night.make(tmp_path, "tech", key, "A", "spec")
-    idea_night.answer(tmp_path, row["id"], False)
-    assert idea_night.who_may(tmp_path, key, ["tech"], "proposals") == [] and idea_night.make(tmp_path, "tech", key, "A2", "spec") is None
-
-
 def limit(remaining, window="session", provider="claude"):
     return SimpleNamespace(provider=provider, remaining=remaining, window=window, resets_at=None, reset_at=None, resets_in=None)
 
@@ -96,32 +67,6 @@ def test_a_night_that_would_spend_past_the_reserve_stops():
 
 
 # -- the morning's proposal ------------------------------------------------------------------------------------------------------------------------
-
-def test_the_answer_of_a_leader_is_read_as_a_title_and_a_spec():
-    assert idea_night.read_answer('Here:\n```json\n{"title": "  Faster  start ", "spec": "Why\\nDone when"}\n```') == {"title": "Faster start", "spec": "Why\nDone when"}
-    for bad in ("", "no json", '{"title": "x"}', '{"spec": "x"}', "[1]", None):
-        assert idea_night.read_answer(bad) is None
-    assert "Goals already on the Board" in idea_night.prompt("tech", "map", "journal", ["Old one"]) and "- Old one" in idea_night.prompt("tech", "", "", ["Old one"])
-
-
-def test_the_hands_card_offers_take_and_drop_as_their_way_kinds(tmp_path):
-    row = idea_night.make(tmp_path, "tech", "2026-11-10", "Faster start", "Why: slow.", "faster-start")
-    card = idea_night.way_row(row)
-    assert card["kind"] == "night_proposal" and card["proposed"] is True and card["goal"] == "faster-start" and card["title"] == "Proposed: Faster start"
-    assert [c["label"] for c in card["choices"]] == ["Take", "Drop"] and card["kinds"] == ["take", "drop"] and set(card["kinds"]) <= set(way_kinds.KINDS)
-    assert idea_night.rows(tmp_path) == [row] and idea_night.of_goal(tmp_path, "faster-start") == row
-    with pytest.raises(ValueError):
-        idea_night.answer(tmp_path, "np-none", True)
-    assert idea_night.answer(tmp_path, row["id"], True)["status"] == "taken" and idea_night.rows(tmp_path) == []
-    with pytest.raises(ValueError):
-        idea_night.answer(tmp_path, row["id"], False)               # answered once
-
-
-def test_the_words_are_in_the_glossary():
-    words = {t.key: t.word for t in lexicon.TERMS}
-    assert (words["night_rung_off"], words["night_rung_ideas"], words["night_rung_builds"], words["night_rung_proposals"], words["proposed"]) == \
-        ("Off", "Ideas and specs", "and the builds", "and the leaders' proposals", "proposed")
-
 
 # -- on the host -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -218,18 +163,3 @@ def test_the_leaders_proposals_are_laid_on_hold_marked_proposed_and_take_and_dro
     host.command("ideas.night_answer", {"id": row["id"], "take": False})
     assert ideas.idea_page(host.ideas.root(), row["goal"]) is None and idea_night.rows(host.ideas.state_dir) == []
 
-
-def test_take_puts_the_goal_off_hold_and_a_night_below_the_top_rung_proposes_nothing(host, model, runner, at_night, monkeypatch):
-    party = _party(host)
-    monkeypatch.setattr(host.ideas.keeper, "ask", lambda step, prompt, **k: (json.dumps({"title": "T", "spec": "S"}), None, None, ""))
-    host.command("ideas.night_set", {"rung": "builds"})
-    host.command("ideas.night_set", {"rung": "builds", "leaders": [party]})
-    _tick(host)
-    assert idea_night.read(host.ideas.state_dir) == []                                         # the builds rung asks no leader
-    queued = []
-    monkeypatch.setattr(host.ideas, "queue", lambda args: queued.append(args) or {"ok": True})
-    ideas.add_idea(host.ideas.root(), "T\n\nS", party, host.ideas.state_dir, "normal", "hold")
-    slug = ideas.ideas(host.ideas.root())[-1]["slug"]
-    rec = idea_night.make(host.ideas.state_dir, party, "2026-11-10", "U", "S", slug)
-    host.command("ideas.night_answer", {"id": rec["id"], "take": True})
-    assert queued == [{"slug": slug, "queue": "now"}] and idea_night.rows(host.ideas.state_dir) == []

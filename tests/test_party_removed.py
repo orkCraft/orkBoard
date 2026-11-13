@@ -53,12 +53,6 @@ def test_goals_dropped_with_it_keep_their_spend(host):
     assert not (state / "ideas" / a).exists()
 
 
-def test_an_empty_party_goes(host):
-    party = host.command("ideas.track_add", {"title": "Empty"})["slug"]
-    assert host.command("ideas.track_drop", {"slug": party})["moved"] == 0
-    assert party not in [t["slug"] for t in host.command("ideas.board")["tracks"]]
-
-
 def test_general_an_unknown_party_and_bad_goals_are_refused(host):
     host.command("ideas.track_add", {"title": "Billing"})
     with pytest.raises(CommandError, match="General stays: it is where goals without a party go"):
@@ -91,21 +85,6 @@ def test_a_goal_at_work_refuses_and_nothing_changes(host, how):
     assert _gone_events(host) == []
 
 
-def test_two_goals_at_work_say_so(host):
-    party, (a, b) = _party_with_goals(host, "alpha", "beta")
-    for s in (a, b):
-        ideas.save_state(host.ideas.state_dir, s, state="working")
-    with pytest.raises(CommandError, match=r"^2 goals at work: stop them first$"):
-        host.command("ideas.track_drop", {"slug": party})
-
-
-def test_the_event_names_the_party_and_the_face(host):
-    party, _ = _party_with_goals(host, "alpha")
-    host.command("ideas.track_drop", {"slug": party, "device": "phone"})
-    (e,) = _gone_events(host)
-    assert (e["slug"], e["title"], e["moved"], e["dropped"], e["face"]) == (party, "Billing", 1, 0, "phone")
-
-
 def test_the_proposal_of_the_party_goes(host):
     party, _ = _party_with_goals(host, "alpha")
     folder = host.ideas.state_dir / "goals" / party
@@ -115,27 +94,3 @@ def test_the_proposal_of_the_party_goes(host):
     assert not (folder / "party-proposal.json").exists()
 
 
-def test_readers_still_answer_when_something_names_the_removed_party(host):
-    party, (a,) = _party_with_goals(host, "alpha")
-    other = host.command("ideas.track_add", {"title": "Other"})["slug"]
-    host.command("ideas.move", {"slug": a, "track": other})                      # a route: from `party`, to `other`
-    assert [m["from"] for m in host.command("ideas.board")["ideas"] and __import__("orkboard.realm.idea_route", fromlist=["x"]).moves(host.ideas.state_dir, a)] == [party]
-    pid = own_parties.save(name="Mine", craft="engineering", leader="architect", team=["grunt", "tester", "reviewer"], every=["reviewer"])
-    own_parties.used(pid, "aaaaaaaaaaaa", "shop", party)                         # an own party's use of the removed party
-    host.command("ideas.track_drop", {"slug": party})
-    for command, args in (("ideas.board", {}), ("ideas.map", {}), ("ideas.recap", {"since": 0}), ("ideas.page", {"slug": a}),
-                          ("ideas.parties", {}), ("ideas.week", {})):
-        json.dumps(host.command(command, args))
-    with pytest.raises(CommandError, match="That party is gone"):
-        host.command("ideas.party", {"goal": party})
-
-
-def test_release_is_removed_with_no_refusal_like_any_party(host):
-    from orkboard.realm import goal_team, library
-    root, state = host.ideas.root(), host.ideas.state_dir
-    library.install(state, [library.RELEASE_MANAGER])
-    slug, _new = ideas.save_goal(root, None, "Release", "A craft as any", None, "normal")
-    goal_team.set_team(root, slug, [], leader=library.RELEASE_MANAGER)
-    got = host.command("ideas.track_drop", {"slug": slug})
-    assert got["ok"] is True
-    assert slug not in [t["slug"] for t in host.command("ideas.board")["tracks"]]

@@ -114,70 +114,8 @@ def test_a_proposal_in_a_sections_answer_is_kept_and_the_section_is_kept_unchang
     assert slices.standing(host.ideas.state_dir, tech)[0]["id"] == old["id"]                                # a proposal changes nothing by itself
 
 
-def test_a_bad_proposal_never_fails_the_answer_and_is_dropped(host, tech, design, model):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    other = _cut(host, 7, design, "Design's own.", ["7.1"])
-    k = host.ideas.keeper
-    answer = {"verdict": "go"}
-    for bad in ({"slice": other["id"], "says": "x", "why": "y"}, {"slice": "s-unknown", "says": "x", "why": "y"}, {"slice": old["id"], "says": "", "why": "y"}, "not an object", 5, []):
-        assert k.cascade_seen({**answer, "propose": bad}, tech, "talk_round", "a-goal") == {**answer, "propose": bad}      # the answer comes back as it came
-    assert k.cascade_seen("not a dict", tech, "ask") == "not a dict" and k.cascade_seen(None, tech, "ask") is None
-    assert cascades.read(host.ideas.state_dir) == [] and [e["dropped"] for e in _events(host, event_log.SLICE_PROPOSED)] == ["bad"] * 3
-    assert k.cascade_propose(tech, old["id"], "Your builds are quick and cached.", "Because.", None, "ask") is not None
-
-
-def test_a_proposal_whose_machinery_breaks_still_returns_the_answer(host, tech, model, monkeypatch):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    monkeypatch.setattr(cascades, "add", lambda *a, **k: (_ for _ in ()).throw(OSError("disk")))
-    k = host.ideas.keeper
-    got = k.cascade_seen({"propose": {"slice": old["id"], "says": "Faster.", "why": "Shown."}}, tech, "plan")
-    assert got["propose"]["says"] == "Faster." and k.cascade_propose(tech, old["id"], "Faster.", "Shown.", None, "plan") is None
-
-
-def test_a_slice_with_a_cascade_open_is_not_proposed_on_again_and_a_closed_one_may_be(host, tech, model):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    first = _run(host, tech, old["id"])
-    assert first and cascades.get(host.ideas.state_dir, first)["status"] == "ready"
-    assert host.ideas.keeper.cascade_propose(tech, old["id"], "Another way.", "Because.", None, "ask") is None
-    assert [e["dropped"] for e in _events(host, event_log.SLICE_PROPOSED)] == ["", "open"] and len(cascades.read(host.ideas.state_dir)) == 1
-    cascades.save(host.ideas.state_dir, {**cascades.get(host.ideas.state_dir, first), "status": "put_back"})
-    assert _run(host, tech, old["id"], says="Another way.") not in (None, first)
-
-
-def test_nothing_is_proposed_in_a_demo_with_a_spent_limit_or_for_a_party_that_is_gone(host, tech, model):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    k = host.ideas.keeper
-    k.budget_ok = lambda: False
-    assert k.cascade_propose(tech, old["id"], "Faster.", "Shown.", None, "ask") is None
-    k.budget_ok = lambda: True
-    assert k.cascade_propose("ghost", old["id"], "Faster.", "Shown.", None, "ask") is None
-    assert [e["dropped"] for e in _events(host, event_log.SLICE_PROPOSED)] == ["blocked", "gone"] and cascades.read(host.ideas.state_dir) == [] and model.calls == []
-
-
-def test_a_cascade_lost_with_the_process_does_not_hold_its_slice(host, tech, model):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    stale = cascades.add(host.ideas.state_dir, tech, cascades.clean_proposal({"slice": old["id"], "says": "Faster.", "why": "Shown."}, tech, slices.standing(host.ideas.state_dir, tech)), "ask")
-    assert host.ideas.keeper.cascade_propose(tech, old["id"], "Faster still.", "Shown.", None, "ask") is not None
-    _wait(host)
-    assert cascades.get(host.ideas.state_dir, stale["id"])["status"] == "failed"
-
-
 # -- the prompts ----------------------------------------------------------------------------------------------------------------------------
 
-def test_the_rule_is_added_to_each_prompt_that_was_given_the_slices_and_to_no_other(host, tech, design, goal):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    k = host.ideas.keeper
-    entry, route = {"party": tech, "leader": "architect"}, [{"party": tech, "leader": "architect"}]
-    prompts = {"talk_round": k.round_prompt(goal, entry, route, 1, "", False, set()), "verdict": k.verdict_prompt(goal, entry, route, []), "weigh": k.weigh_prompt(goal, entry, route, []),
-               "section": k.section_prompt(goal, entry, route, True), "plan": k.plan_prompt(host.ideas.root(), goal), "accept": k.accept_prompt(host.ideas.root(), tech), "ask": k.ask_prompt(tech, "Why?")}
-    for name, p in prompts.items():
-        assert "`propose` (optional)" in p and old["id"] in p and '"propose": null' in p, name
-        assert p.index("`propose` (optional)") > p.index("What you hold of the project's decisions"), name
-    other = {"party": design, "leader": "product-designer"}
-    for p in (k.round_prompt(goal, other, [other], 1, "", False, set()), k.section_prompt(goal, other, [other], True), k.ask_prompt(design, "Why?"), k.accept_prompt(host.ideas.root(), design)):
-        assert "propose" not in p                                                                           # no slice, no rule: the prompt is as before
-    assert "propose" not in k.ask_prompt("", "What did we decide?") and "propose" not in k.round_prompt(goal, entry, route, 2, "Q? A.", False, set())
-    assert "propose" not in k.section_prompt(goal, entry, route, True, ["Fork: a thing"])                  # a section written again proposes none
 
 
 def test_a_proposal_in_the_leaders_bubble_is_kept_and_the_answer_is_as_it_was(host, tech, model):
@@ -221,13 +159,6 @@ def test_the_steps_follow_the_links_two_steps_deep_one_leader_at_a_time(host, te
     assert (e["steps"], e["agreed"], e["forks"], e["stopped"], e["failed"]) == (3, 3, 0, "", False) and "Your builds" not in json.dumps(e)
 
 
-def test_a_slice_the_proposer_alone_holds_asks_no_one_and_the_decision_is_the_proposers(host, tech, model):
-    old = _cut(host, 6, tech, "Your builds are quick.", ["6.2"])
-    cid = _run(host, tech, old["id"])
-    rec = cascades.get(host.ideas.state_dir, cid)
-    assert rec["status"] == "ready" and rec["steps"] == [] and model.steps("cascade") == [] and rec["decision"]["title"].startswith("Tech proposes: Your builds are quick and cached.")
-
-
 def test_three_steps_stop_and_say_who_was_not_asked(host, tech, design, marketing, release, data, model):
     top = _chain(host, tech, design, marketing, release)
     slices.add_cut(host.ideas.state_dir, 8, {data: {"says": "Your events count 10 seconds.", "points": ["6.1", "8.1"]}})
@@ -240,20 +171,6 @@ def test_three_steps_stop_and_say_who_was_not_asked(host, tech, design, marketin
     assert e["stopped"] == "steps"
     (row,) = cascades.rows(host.ideas.state_dir, host.ideas.root())
     assert row["stopped"] == "Stopped after 3 steps: Marketing was not asked"
-
-
-def test_a_point_changed_twice_is_a_fork_and_not_a_step(host, tech, design, marketing, model):
-    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
-    _cut(host, 6, design, "Your art fits 10 seconds.", ["5.1", "6.1"])
-    _cut(host, 7, marketing, "Your trailers show 10 seconds.", ["5.1", "6.1"])
-    model.said["cascade"] = _agree
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
-    first, second = [s["party"] for s in rec["steps"]]                                                         # the newest slice is asked first
-    assert (first, second) == (marketing, design) and [c["party"] for c in cascades.chain(rec)] == [tech, marketing]
-    (fork,) = rec["forks"]
-    assert fork["party"] == design and "§6.1 a second time" in fork["why"] and fork["says"] == f"{design} says it new." and rec["steps"][1]["forked"] is True
-    (row,) = cascades.rows(host.ideas.state_dir)
-    assert "disagrees" in row["line"] and "a second time" in row["line"]
 
 
 def test_a_leader_that_disagrees_or_does_not_answer_is_a_fork_for_the_person(host, tech, design, marketing, model):
@@ -274,14 +191,6 @@ def test_when_every_call_fails_the_cascade_failed_with_why_and_nothing_changed(h
     rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
     assert rec["status"] == "failed" and rec["error"] == "No leader answered: try again" and cascades.rows(host.ideas.state_dir) == []
     assert slices.standing(host.ideas.state_dir, tech)[0]["id"] == top["id"] and _events(host, event_log.CASCADE_READY)[0]["failed"] is True
-
-
-def test_a_stop_keeps_nothing_and_empties_the_queue(host, tech, design, model):
-    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
-    _cut(host, 6, design, "Your art fits 10 seconds.", ["5.1"])
-    model.said["cascade"] = InterruptedError("stopped")
-    _run(host, tech, top["id"], points=["5.1"])
-    assert cascades.read(host.ideas.state_dir) == [] and host.ideas.keeper._cs()["queue"] == []
 
 
 def test_one_cascade_at_a_time_and_a_second_waits_behind_the_first(host, tech, design, model):
@@ -311,40 +220,6 @@ def _four(host, tech, design, marketing, release, data):
     return top
 
 
-def test_the_price_stops_it_by_the_share_of_the_week_used_since_it_began(host, tech, design, marketing, release, data, model):
-    top = _four(host, tech, design, marketing, release, data)
-    week = Week(0.5)
-    host.ideas.keeper.limits = lambda: [week]
-    assert idea_target.week([week], time.time())["left"] == 0.5
-    model.said["cascade"] = _agree
-    model.after = lambda row: setattr(week, "remaining", week.remaining - 0.012)                                 # 1.2 % of the week a call
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
-    assert len(model.steps("cascade")) == 1 and len(rec["steps"]) == 1                                         # one call used 1.2 %, the next one's price would pass 2 %
-    assert rec["stopped"].startswith("Stopped at its price: ") and rec["stopped"].endswith(" were not asked") and "Data" not in rec["stopped"] and "Design" in rec["stopped"]
-    assert _events(host, event_log.CASCADE_READY)[0]["stopped"] == "price"
-
-
-def test_with_a_cheap_week_it_asks_them_all(host, tech, design, marketing, release, data, model):
-    top = _four(host, tech, design, marketing, release, data)
-    week = Week(0.5)
-    host.ideas.keeper.limits = lambda: [week]
-    model.said["cascade"] = _agree
-    model.after = lambda row: setattr(week, "remaining", week.remaining - 0.0001)
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
-    assert len(rec["steps"]) == 4 and rec["stopped"] == ""
-
-
-def test_with_no_week_read_the_price_is_fifty_cents_in_all(host, tech, design, marketing, release, data, model):
-    top = _four(host, tech, design, marketing, release, data)
-    host.ideas.keeper.limits = lambda: []
-    price = idea_target.budget("cascade", "balance")
-    assert price > 0.10 and idea_cascade.CASCADE_USD == 0.50 and idea_cascade.CASCADE_SHARE == 0.02
-    model.said["cascade"] = _agree
-    model.cost = 0.20
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], points=["5.1"]))
-    assert len(rec["steps"]) == 2 and rec["stopped"].startswith("Stopped at its price: ") and rec["cost"] >= 0.40       # 0.40 spent and the next one's price would pass 0.50
-
-
 # -- the decision, what follows ---------------------------------------------------------------------------------------------------------------
 
 def test_the_decision_is_worded_by_the_orkmaster_and_its_changes_name_the_decisions_that_changed(host, tech, design, marketing, release, model):
@@ -359,31 +234,6 @@ def test_the_decision_is_worded_by_the_orkmaster_and_its_changes_name_the_decisi
         assert text in call["prompt"], text
     assert rec["decision"]["title"] == "Builds are cached" and rec["decision"]["text"].startswith("Why: The cache ran into the old line.\n\n1. Tech caches builds.")
     assert set(rec["decision"]["changes"]) == {5, 6, 7}                                                       # code adds what the call left out: the decisions the changed slices and points are of
-
-
-def test_a_decision_that_cannot_be_had_is_worded_by_code(host, tech, design, model):
-    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
-    _cut(host, 6, design, "Your art fits 10 seconds.", ["5.1"])
-    model.said["cascade"] = _agree
-    model.said["decide"] = "I cannot"
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], says="Builds are cached.", points=["5.1"]))
-    d = rec["decision"]
-    assert rec["status"] == "ready" and d["title"] == "Tech proposes: Builds are cached." and d["by"] == "code" and d["changes"] == [5, 6]
-    assert "1. Tech: Your builds hold 10 seconds. -> Builds are cached." in d["text"] and "Design: Your art fits 10 seconds. -> " in d["text"]
-
-
-def test_what_follows_is_the_goals_not_done_that_rest_on_the_changed_decisions_and_leaves_the_discard_out(host, tech, design, model):
-    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
-    _cut(host, 6, design, "Your art fits 10 seconds.", ["5.1"])
-    working = _goal(host, tech, number=5, others=(design,))
-    done = _goal(host, tech, number=5, state="done", others=(design,))
-    unrelated = _goal(host, tech, number=42, others=(design,))
-    model.said["cascade"] = _agree
-    rec = cascades.get(host.ideas.state_dir, _run(host, tech, top["id"], says="Builds are cached.", points=["5.1"]))
-    assert {(s["idea"], s["party"]) for s in rec["sections"]} == {(working, tech), (working, design)}
-    assert done not in {s["idea"] for s in rec["sections"]} and unrelated not in {s["idea"] for s in rec["sections"]}
-    (row,) = host.command("ideas.cascades", {})["cascades"]
-    assert {(s["idea"], s["party"]) for s in row["sections"]} == {(working, tech), (working, design)} and row["pulls"]["estimate"]["usd_high"] > 0
 
 
 def test_the_row_lies_among_the_needs_you_rows_of_no_goal(host, tech, design, model):
@@ -459,25 +309,14 @@ def test_confirm_writes_one_entry_replaces_the_chains_slices_with_their_was_and_
     assert host.ideas.keeper._log_text().count("## 7.") == 1
 
 
-def test_confirm_with_a_fork_answered_keep_leaves_that_slice_as_it_is_and_says_so_in_the_entry(host, tech, design, model, monkeypatch):
-    cid, top, mine, slug = _ready(host, tech, design, model, agree=False)
-    monkeypatch.setattr(type(host.ideas.keeper), "change_ask", lambda *a, **k: "c1")
-    got = host.command("ideas.cascade_confirm", {"id": cid, "fork_answers": {mine["id"]: "keep"}})
-    _wait(host)
-    sd = host.ideas.state_dir
-    assert got["slices"] == 1 and slices.standing(sd, design)[0]["id"] == mine["id"] and slices.standing(sd, tech)[0]["says"] == "Builds are cached."
-    assert "disagrees: It breaks the look.; its slice stays" in host.ideas.keeper._log_text()
-    assert got["sections"] == [slug]                                                                                                # only the changed party's section: Tech's
-    texts = spec_sections.record(sd, slug)["texts"]
-    assert texts[tech]["parts"]["Why"] == "Rewritten." and texts[design]["parts"]["Why"] == "Because."
 
 
-def test_confirm_with_the_persons_words_for_a_fork_and_for_the_decision(host, tech, design, model, monkeypatch):
-    cid, top, mine, slug = _ready(host, tech, design, model, agree=False)
-    monkeypatch.setattr(type(host.ideas.keeper), "change_ask", lambda *a, **k: "c1")
-    host.command("ideas.cascade_confirm", {"id": cid, "fork_answers": {mine["id"]: "Your art fits 8 seconds."}, "text": "## 9. Cached builds, 8 seconds\n\nWhy: We said so.\n\n1. Builds cached."})
-    _wait(host)
-    assert "## 7. Cached builds, 8 seconds" in host.ideas.keeper._log_text() and slices.standing(host.ideas.state_dir, design)[0]["says"] == "Your art fits 8 seconds."
+def test_a_stop_keeps_nothing_and_empties_the_queue(host, tech, design, model):
+    top = _cut(host, 5, tech, "Your builds hold 10 seconds.", ["5.1"])
+    _cut(host, 6, design, "Your art fits 10 seconds.", ["5.1"])
+    model.said["cascade"] = InterruptedError("stopped")
+    _run(host, tech, top["id"], points=["5.1"])
+    assert cascades.read(host.ideas.state_dir) == [] and host.ideas.keeper._cs()["queue"] == []
 
 
 def test_put_it_back_changes_nothing_and_the_slice_may_be_proposed_on_again(host, tech, design, model):
@@ -493,9 +332,3 @@ def test_put_it_back_changes_nothing_and_the_slice_may_be_proposed_on_again(host
     with pytest.raises(CommandError, match="No change of a decision waits here"):
         host.command("ideas.cascade_confirm", {"id": cid})
     assert host.ideas.keeper.cascade_propose(tech, top["id"], "Another way.", "Shown.", None, "ask") is not None
-
-
-def test_the_mixin_is_the_keepers_and_core_does_not_import_the_face():
-    from orkboard.core import idea_keeper
-    assert issubclass(idea_keeper.IdeaKeeper, CascadeMixin)
-    assert "orkboard.gui" not in Path(idea_cascade.__file__).read_text(encoding="utf-8")

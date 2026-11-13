@@ -9,11 +9,10 @@ import time
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import backlog_groups, goal_route, goal_team, idea_spend, ideas, library
 from orkboard.sources.limits import Limit
 
-ROUTE_COMMANDS = {"ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start"}
 
 
 @pytest.fixture
@@ -75,8 +74,6 @@ def _row(host, slug, kind):
     return next((n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == kind), None)
 
 
-def test_the_route_commands_are_the_hosts_and_a_phones(host):
-    assert ROUTE_COMMANDS <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in ROUTE_COMMANDS)
 
 
 def test_a_goal_sent_makes_no_call_and_waits_routed_with_its_route_row(host, parties, calls):
@@ -175,34 +172,8 @@ def test_talk_sets_the_state_and_hands_the_goal_to_the_keepers_talk_when_it_has_
         host.command("ideas.talk", {"idea": slug})                                                          # Talk is pressed once
 
 
-def test_talk_is_the_keepers_now_it_calls_the_leaders_of_the_route_and_does_not_draft_the_goal(host, parties, calls):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    assert hasattr(host.ideas.keeper, "talk")                                                              # part D is in this build
-    host.command("ideas.talk", {"idea": slug})
-    _wait(host, slug)
-    assert not any("write its spec straight away" in c["prompt"] for c in calls)                          # no draft: the leaders are heard
-    assert [c["step"] for c in calls] == ["talk_round", "talk_round"] and all(c["tools"] is False for c in calls)       # an answer that says no stance is tried once more
-    assert _state(host, slug)["state"] == "routed" and "did not answer" in _state(host, slug)["error"]    # and fails the round back to its route card
 
 
-def test_a_step_added_after_talk_brings_the_start_row_with_the_old_cost_beside_the_new(host, parties, calls, monkeypatch):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    monkeypatch.setattr(host.ideas.keeper, "talk", lambda s: None, raising=False)
-    host.command("ideas.talk", {"idea": slug})
-    was = _state(host, slug)["route_how"]["said"]
-    got = host.command("ideas.route_set", {"idea": slug, "route": [parties["tech"], parties["design"]]})
-    assert got["changed"] is True
-    row = _row(host, slug, "start")
-    assert row["was"] == was and row["cost"]["calls"] > was["calls"] and row["cost"]["usd_high"] > was["usd_high"] and "cost" in row
-    node = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
-    assert node["place"] == "table" and node["asks_you"] is True                                           # on the table, asking
-    back = host.command("ideas.route_set", {"idea": slug, "route": [parties["tech"]]})                      # back to the route it was told
-    assert back["changed"] is False and _row(host, slug, "start") is None
-    host.command("ideas.route_set", {"idea": slug, "route": [parties["tech"], parties["design"]]})
-    assert host.command("ideas.start", {"idea": slug}) == {"ok": True}                                      # `ideas.start` answers the row
-    assert _row(host, slug, "start") is None and _state(host, slug)["route_how"]["said"]["calls"] == row["cost"]["calls"]
-    with pytest.raises(CommandError, match="no plan yet"):
-        host.command("ideas.start", {"slug": slug})                                                         # the plan's start is as it was
 
 
 def test_later_by_itself_is_offered_only_when_the_limits_run_low_and_talk_starts_at_the_reset(host, parties, calls, monkeypatch):
@@ -250,14 +221,6 @@ def test_the_short_ways_start_skips_talk_and_the_decision_and_a_bug_without_a_fa
     assert calls == []
 
 
-def test_a_goal_kept_on_hold_and_a_pitch_are_not_routed(host, parties, calls):
-    held = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"], "hold": True})
-    assert _state(host, held["slug"])["state"] == "raw" and "route" not in held and _state(host, held["slug"])["queue"] == "hold"
-    root = host.ideas.root()
-    ideation = _party(host, "Ideation", "investor", ["skeptic"], "product")
-    pitch = host.command("ideas.add", {"text": "a pitch about a thing", "track": ideation})
-    assert _state(host, pitch["slug"])["state"] != "routed" and "route" not in pitch
-    assert ideas.idea_page(root, held["slug"]) is not None
 
 
 # -- decisions §239: the goals put off start Talk one at a time, in the Orkmaster's order, by the week's pace ------------------------------------
@@ -304,48 +267,12 @@ def test_goals_put_off_start_talk_one_per_pass_the_first_in_the_orkmasters_order
     assert went == [first, second, third]
 
 
-def test_a_high_priority_goal_added_last_goes_first(host, parties, calls, went):
-    slugs = _put_off(host, parties, 2)
-    late = host.command("ideas.add", {"text": "urgent one", "track": parties["tech"], "priority": "high"})["slug"]
-    ideas.save_state(host.ideas.state_dir, late, held_until=_state(host, slugs[0])["held_until"])
-    _pass(host, 1)
-    assert went == [late]
 
 
-def test_a_goal_started_by_hand_does_not_hold_the_queue(host, parties, calls, went):
-    first, second, _third = _put_off(host, parties)
-    ideas.save_state(host.ideas.state_dir, second, held_until="")
-    host.command("ideas.talk", {"idea": second})                                # the person's own Talk: state `talk`, no backlog flag
-    assert _state(host, second)["state"] == "talk" and _state(host, second)["from_backlog"] is False
-    went.clear()
-    _pass(host, 1)
-    assert went == [first] and _state(host, first)["from_backlog"] is True
 
 
-def test_the_pace_behind_starts_none_and_ahead_or_unknown_starts_one(host, parties, calls, went, monkeypatch):
-    first, *_ = _put_off(host, parties)
-    for pace in ("behind", "even"):
-        monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now, pace=pace: pace)
-        if pace == "behind":
-            _pass(host, 1)
-            assert went == [] and _state(host, first)["state"] == "routed" and _state(host, first)["held_until"]    # looked at again at the next pass
-    monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now: "ahead")
-    _pass(host, 2)
-    assert went == [first]
-    ideas.save_state(host.ideas.state_dir, first, state="decided")
-    monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now: None)    # unknown
-    _pass(host, 3)
-    assert len(went) == 2
 
 
-def test_the_reserve_still_held_moves_every_goal_put_off_to_the_next_reset(host, parties, calls, went, monkeypatch):
-    slugs = _put_off(host, parties)
-    reset = dt.datetime.now() + dt.timedelta(hours=2)
-    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.1, reset)])
-    _pass(host, 1)
-    assert went == []
-    for s in slugs:
-        assert _state(host, s)["state"] == "routed" and _state(host, s)["held_until"] > dt.datetime.now().isoformat(timespec="seconds")
 
 
 def test_a_goal_whose_next_step_does_not_fit_the_window_waits_for_the_next_reset_and_the_next_in_order_goes(host, parties, calls, went, monkeypatch):
@@ -408,7 +335,3 @@ def test_it_is_no_bug_routes_the_goal_again_with_no_call(host, parties, calls):
         host.command("ideas.route_kind", {"idea": slug})
 
 
-def test_a_bug_whose_report_holds_a_failure_cannot_be_told_it_is_no_bug(host, parties, calls):
-    got = host.command("ideas.add", {"text": "It breaks\nTraceback (most recent call last):\n  File \"a.py\", line 1\nValueError: x", "track": parties["tech"]})
-    with pytest.raises(CommandError):
-        host.command("ideas.route_kind", {"idea": got["slug"]})

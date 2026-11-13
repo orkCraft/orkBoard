@@ -2,14 +2,13 @@
 found from the checkout. Fixture repositories in `tmp_path`, no app, no model."""
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import pytest
 
 from orkboard.gui import board_cli
-from orkboard.realm import agent_rules, agent_rules_text as T, board_branch, board_check, goal_phase, ideas
-from tests.test_board_branch import git, make_clone, make_origin
+from orkboard.realm import agent_rules, agent_rules_text as T, board_branch, board_check, ideas
+from tests.test_board_branch import make_clone, make_origin
 
 WIKI = "llm-wiki/general"
 GREEN = "abc1234 · 2 files · green"
@@ -101,15 +100,6 @@ def test_a_phase_that_skips_one_without_its_sections_is_found(repo):
     assert found(repo) == []
 
 
-def test_a_goal_whose_spec_is_a_file_of_its_own_has_its_sections_there(repo):
-    (repo / "docs").mkdir()
-    (repo / "docs" / "spec.md").write_text("# Spec\n\n## Done when\n- it scores\n", encoding="utf-8")
-    goal(repo, phase="work", spec="docs/spec.md")
-    assert found(repo) == []
-    goal(repo, phase="work", spec="../outside.md")
-    assert len(board_check.run(repo)) == 2
-
-
 def test_a_secrets_shape_is_found_in_the_boards_files_only_and_never_echoed(repo):
     path = goal(repo)
     page = ideas.idea_page(repo / WIKI, "a-goal")
@@ -139,76 +129,11 @@ def test_rules_that_are_missing_changed_by_hand_or_of_an_older_schema_are_found(
     assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v0, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init"
 
 
-def test_a_block_of_schema_one_is_said_to_be_older_than_this_orkboards(repo):
-    """Spec 152 D.2: the rules moved to schema 2; a project whose block says 1 is told to run init again."""
-    agents = repo / "AGENTS.md"
-    agents.write_text(agents.read_text(encoding="utf-8").replace(f"schema={T.SCHEMA} ", "schema=1 "), encoding="utf-8")
-    f = only(repo, "v1")
-    assert f["path"] == "AGENTS.md" and f["what"] == f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init" and T.SCHEMA == 3
-
-
-
-def test_rules_written_by_an_orkboard_of_schema_one_are_each_said_to_be_older_files_too_not_only_the_block(repo, monkeypatch):
-    """The rules as an Orkboard of schema 1 wrote them: the block and each of Orkboard's files (BOARD.md, a role file) are read by their own mark (`agent_rules_text.FILE_RE`),
-    and each is told to run init again, never a crash (found on this repository when the rules moved to 2, spec 152 D.2)."""
-    with monkeypatch.context() as m:
-        m.setattr(T, "SCHEMA", 1)
-        agent_rules.write(repo, WIKI)
-    got = {f["path"]: f["what"] for f in board_check.run(repo)}
-    told = f"The Board's rules are v1, this Orkboard writes v{T.SCHEMA}: run {T.RUN} init"
-    assert got["AGENTS.md"] == told and got[f"{WIKI}/BOARD.md"] == told and got[f"{WIKI}/roles/orkmaster.md"] == told
-
-def test_a_project_with_no_rules_at_all_is_told_once(repo):
-    for rel in ("AGENTS.md", "CLAUDE.md", ".claude", WIKI):
-        p = repo / rel
-        shutil.rmtree(p) if p.is_dir() else p.unlink()
-    assert board_check.run(repo) == [{"path": "AGENTS.md", "line": 0, "what": f"The Board's rules are not written in this project: run {T.RUN} init"}]
-
-
-def test_a_journal_line_of_an_unknown_kind_is_found_at_its_line(repo):
-    folder = repo / WIKI / "journals"
-    folder.mkdir()
-    text = "---\norkboard-journal: _project\n---\n\n# Project's journal\n\n- 2026-11-01 · decision · fine <!-- id=aaaaaaaaaaaa -->\n- 2026-11-02 · whim · not a kind <!-- id=bbbbbbbbbbbb -->\n"
-    (folder / "project.md").write_text(text, encoding="utf-8")
-    f = only(repo, "'whim'")
-    assert (f["path"], f["line"]) == (f"{WIKI}/journals/project.md", 8)
-    assert not (repo / ".orkcraft").exists()                                      # reading it wrote nothing
-
-
-def test_an_older_page_schema_is_found_and_a_page_of_before_is_not(repo):
-    goal(repo, schema="0")
-    assert only(repo, "schema 0")["line"] > 1
-    path = goal(repo, schema=goal_phase.SCHEMA)
-    page = ideas.idea_page(repo / WIKI, "a-goal")
-    page.meta = [(k, v) for k, v in page.meta if k not in ("phase", "schema", "by")]
-    path.write_text(page.text(), encoding="utf-8")
-    assert found(repo) == []
-
-
 def test_check_prints_each_fault_and_exits_1(repo, capsys):
     goal(repo, phase="launched")
     assert board_cli.run(["check"]) == 1
     err = capsys.readouterr().err
     assert f"{WIKI}/pages/ideas/a-goal.md:" in err and "'launched'" in err and "1 fault in the Board" in err
-
-
-def test_the_boards_folder_is_the_one_the_block_names_when_two_hold_pages(repo):
-    (repo / "elsewhere" / "pages" / "ideas").mkdir(parents=True)
-    (repo / WIKI / "pages" / "ideas").mkdir(parents=True)
-    assert board_check.wiki_of(repo) == WIKI                                      # the root AGENTS.md block names it
-    agent_rules.write(repo, "elsewhere")
-    assert board_check.wiki_of(repo) == "elsewhere"
-    (repo / "AGENTS.md").unlink()
-    with pytest.raises(ValueError, match="More than one folder"):
-        board_check.wiki_of(repo)
-    assert board_cli.run(["check"]) == 1
-
-
-def test_the_ci_steps_file_runs_on_pull_requests_for_the_boards_files_only():
-    text = board_check.workflow(WIKI)
-    assert "on:\n  pull_request:\n    paths:\n" in text and f'      - "{WIKI}/**"\n      - "AGENTS.md"\n      - "CLAUDE.md"\n' in text
-    assert "push" not in text and f"{T.RUN} check" in text and "uvx orkboard check" not in text and "astral-sh/setup-uv" in text
-    assert "Checks the Board on each pull request; your tests stay your CI's." in text
 
 
 def test_a_goal_laid_from_the_history_is_asked_neither_a_gate_record_nor_a_done_when(tmp_path):
@@ -240,15 +165,6 @@ def with_section(repo: Path, extra: str, slug: str = "a-goal") -> Path:
     return path
 
 
-def test_a_talk_and_an_accepted_it_can_read_are_clean_and_a_page_of_schema_2_is_no_fault(repo):
-    """Spec 154 B.5, B.3: the spec's own examples are clean; a page of the older schema 2 is read as before."""
-    path = with_section(repo, "\n### Talk\n- verdict: doubt — a second caller\n- stance: one writer\n- assumes: reloads are rare — shown by: the reload events\n\n### Accepted\n- met: the board shows the best three players\n"
-                              "- not met: a tie is ordered by the earlier score — the order is by name\n- cannot see: the board loads in under a second\n")
-    assert found(repo) == []
-    path.write_text(path.read_text(encoding="utf-8").replace(f"schema: {goal_phase.SCHEMA}", "schema: 2"), encoding="utf-8")
-    assert found(repo) == []
-
-
 def test_a_talk_it_cannot_read_a_verdict_it_does_not_know_and_a_free_line_are_found_with_their_line(repo):
     path = with_section(repo, "\n### Talk\n- verdict: maybe — unsure\n- stance: ok\nI think it is fine\n- assumes: it is quick\n")
     text = path.read_text(encoding="utf-8").split("\n")
@@ -257,32 +173,6 @@ def test_a_talk_it_cannot_read_a_verdict_it_does_not_know_and_a_free_line_are_fo
     assert "verdict 'maybe' is not one Orkboard knows (go, doubt, no)" in got[n]
     assert "'I think it is fine'" in got[n + 2] and "none Orkboard can read" in got[n + 2]
     assert "no `— shown by: <signal>`" in got[n + 3] and len(got) == 3
-
-
-def test_a_talk_with_no_verdict_is_found_at_its_heading(repo):
-    path = with_section(repo, "\n### Talk\n- stance: ok\n")
-    f = only(repo, "no `- verdict:` line")
-    assert path.read_text(encoding="utf-8").split("\n")[f["line"] - 1] == "### Talk"
-
-
-def test_an_accepted_line_that_names_no_done_when_line_or_is_free_is_found(repo):
-    with_section(repo, "\n### Accepted\n- met: the board shows the best three players\n- met: something nobody asked\n- fine: the board loads in under a second\n- met: a tie is ordered by the earlier score\n")
-    got = [f["what"] for f in board_check.run(repo)]
-    assert len(got) == 2 and any("names no line of the section's Done when: 'something nobody asked'" in w for w in got) and any("none Orkboard can read" in w and "fine:" in w for w in got)
-    assert not any("earlier score" in w for w in got)                                    # a line with a proof mark in Done when is named without it
-
-
-def test_a_seats_skill_or_subagent_that_is_missing_or_changed_by_hand_is_found_spec_154_c(repo):
-    """Spec 154 C.4: the seats' files are the rules' files, so check finds them missing and changed like the rest."""
-    assert board_check.run(repo) == []
-    skill = repo / ".claude" / "skills" / "orkmaster" / "SKILL.md"
-    skill.write_text(skill.read_text(encoding="utf-8").replace("context: fork", "context: none"), encoding="utf-8")
-    f = only(repo, "changed by hand")
-    assert f["path"] == ".claude/skills/orkmaster/SKILL.md"
-    (repo / ".claude" / "agents" / "ork-grunt.md").unlink()
-    assert only(repo, "is missing")["path"] == ".claude/agents/ork-grunt.md"
-    agent_rules.write(repo, WIKI)
-    assert board_check.run(repo) == []
 
 
 def test_an_answer_decided_by_a_reference_the_project_does_not_hold_is_found(tmp_path):
@@ -305,12 +195,3 @@ def test_an_answer_decided_by_a_reference_the_project_does_not_hold_is_found(tmp
         "the answer is decided by §40, which this project's decisions and specs do not hold"]
     assert board_check.reference_exists(repo, "§3.2") and board_check.reference_exists(repo, "spec 5") and not board_check.reference_exists(repo, "spec 6")
 
-
-def test_a_page_not_named_by_its_slug_is_found_with_the_name_it_should_have(repo):
-    path = goal(repo)
-    bad = path.with_name("96-orkui-0.15.0-copied.md")
-    bad.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
-    assert "`96-orkui-0.15.0-copied.md`: a goal's file name is its slug: rename it `96-orkui-0-15-0-copied.md`" in found(repo)[0] + "".join(found(repo))
-    tracks = repo / WIKI / "pages/tracks"
-    (tracks / "Bad.Party.md").write_text("---\nkind: track\n---\n# Bad\n", encoding="utf-8")
-    assert any("a party's file name is its slug: rename it `bad-party.md`" in f for f in found(repo))

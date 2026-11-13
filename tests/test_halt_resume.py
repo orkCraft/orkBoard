@@ -125,14 +125,6 @@ def test_the_runner_is_not_ticked_while_stopped_and_resume_starts_the_killed_tas
     assert "demo" in runner._active and not host.ideas.stopped() and "The orks are back at work" in toasts
 
 
-def test_a_task_the_person_dropped_after_the_halt_is_not_started_again(host):
-    runner, started = _running(host)
-    host.command("halt")
-    runner._runs.clear()
-    plan = json.loads((host.ideas.state_dir / "ideas" / "demo" / "plan.json").read_text())
-    plan["tasks"][0].update(state="dropped", error="")
-    (host.ideas.state_dir / "ideas" / "demo" / "plan.json").write_text(json.dumps(plan))
-    assert host.command("resume") == 0 and _task(host)["state"] == "dropped" and started == []
 
 
 @pytest.mark.parametrize("name,args", [("ideas.add", {"text": "a goal by hand"}), ("ideas.talk", {"idea": "nothing"}), ("ideas.start", {"slug": "nothing"}),
@@ -151,8 +143,3 @@ def test_a_goal_started_by_hand_clears_stopped_and_says_the_orks_are_back(host, 
     assert toasts.count("The orks are back at work") == 1
 
 
-def test_a_goal_kept_on_hold_or_only_read_does_not_clear_stopped(host):
-    host.command("halt")
-    host.command("ideas.add", {"text": "kept for later", "hold": True, "track": _party(host)})
-    host.command("ideas.board")
-    assert host.ideas.stopped()

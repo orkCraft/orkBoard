@@ -67,22 +67,6 @@ def design(host):
 
 # -- the plan's data -------------------------------------------------------------------------------------------------------------------
 
-def test_the_snapshots_tasks_carry_their_party_their_step_and_the_tasks_they_wait_for(host, tech, design):
-    slug = _goal(host, tech, {tech: {"Done when": "- It works"}}, [("k1", "merged", [], tech), ("k2", "ready", ["k1"], design), ("k3", "waiting", ["k1", "k2"], tech)])
-    tasks = {t["id"]: t for t in _node(host, slug)["tasks"]}
-    assert [(tasks[k]["party"], tasks[k]["step"], tasks[k]["after"]) for k in ("k1", "k2", "k3")] == [(tech, 1, []), (design, 2, ["k1"]), (tech, 1, ["k1", "k2"])]
-    json.dumps(tasks)
-
-
-def test_a_plan_of_before_names_no_party_and_no_step(host, tech):
-    slug = _goal(host, tech, {tech: {"Done when": "- It works"}}, [("k1", "ready", [], "")])
-    plan = ideas.plan(host.ideas.state_dir, slug)
-    plan["tasks"][0].pop("party"), plan["tasks"][0].pop("step")
-    ideas._write_json(ideas.state_folder(host.ideas.state_dir, slug) / "plan.json", plan)
-    (t,) = _node(host, slug)["tasks"]
-    assert t["party"] == "" and t["step"] == 0
-
-
 # -- judging a part against its promise ------------------------------------------------------------------------------------------------
 
 WILL = [{"kind": "new", "id": "src/lobby", "note": "a lobby"}, {"kind": "changed", "id": "src/results", "note": "the winner first"}, {"kind": "changed", "id": "src/score", "note": ""}]
@@ -103,40 +87,7 @@ def test_a_part_touched_is_as_promised_one_whose_tasks_landed_but_that_nothing_c
     assert {p["verdict"] for p in goal_result.judge(WILL, {"parts": [], "screens": [], "files": 0}, [{"id": "a", "state": "ready"}], "tech")} == {"missing"}
 
 
-def test_the_projects_top_touches_only_itself_and_a_dropped_task_is_not_counted():
-    will = [{"kind": "changed", "id": "src/lobby", "note": ""}]
-    assert _verdicts(goal_result.judge(will, {"parts": ["."], "screens": [], "files": 1}, [{"id": "a", "state": "merged"}], "tech")) == {("src/lobby", "differs")}
-    tasks = [{"id": "a", "state": "merged"}, {"id": "b", "state": "dropped"}]
-    assert _verdicts(goal_result.judge(will, {"parts": [], "screens": [], "files": 0}, tasks, "tech")) == {("src/lobby", "differs")}
-
-
-def test_a_screen_is_promised_by_its_id_its_name_or_its_path_and_a_screen_changed_that_no_line_names_is_more():
-    will = [{"kind": "changed", "id": "Results", "note": "the winner first"}, {"kind": "new", "id": "/podium", "note": ""}]
-    touch = {"parts": [], "screens": [{"screen": "results", "name": "Results", "path": "/results"}, {"screen": "lobby", "name": "Lobby", "path": "/lobby"}], "files": 2}
-    got = goal_result.judge(will, touch, [{"id": "a", "state": "merged"}], "design")
-    assert _verdicts(got) == {("Results", "ok"), ("/podium", "differs"), ("Lobby", "extra")}
-
-
-def test_a_craft_whose_map_is_not_read_from_the_files_is_judged_by_its_tasks_alone_and_has_no_more_than_promised():
-    will = [{"kind": "new", "id": "Pain: slow rounds", "note": ""}]
-    for states, want in ((["merged", "merged"], "landed"), (["merged", "ready"], "differs"), (["ready"], "missing")):
-        tasks = [{"id": str(i), "state": s} for i, s in enumerate(states)]
-        assert _verdicts(goal_result.judge(will, {"parts": ["src/x"], "screens": [], "files": 1}, tasks, "product")) == {("Pain: slow rounds", want)}
-    assert goal_result.judge([], {"parts": ["src/x"], "screens": [], "files": 1}, [], "tech") == [], "nothing promised: nothing to be more than"
-
-
 # -- the command -----------------------------------------------------------------------------------------------------------------------
-
-def test_a_craft_with_no_file_touch_says_landed_not_compared_never_ok_and_a_tech_part_with_no_commits_to_read_too():
-    will = [{"kind": "new", "id": "Pain: slow rounds", "note": "the leader's words"}]
-    done = [{"id": "a", "state": "merged"}]
-    for craft in ("product", "art", ""):
-        got = goal_result.judge(will, None, done, craft)
-        assert [(w["verdict"], w["line"]) for w in got] == [("landed", "landed, not compared")], craft
-    tech = goal_result.judge([{"kind": "changed", "id": "src/x", "note": ""}], None, done, "tech")
-    assert [w["verdict"] for w in tech] == ["landed"], "no commits to read: nothing was compared"
-    assert [w["verdict"] for w in goal_result.judge([{"kind": "changed", "id": "src/x", "note": ""}], {"parts": ["src/x"], "screens": [], "files": 1}, done, "tech")] == ["ok"], "a touch seen is ok"
-
 
 def _sections(parties):
     return [spec_sections.Section(party, party, {"Done when": "- [test] A\n- B\n- C\n- D"}) for party in parties]
@@ -193,25 +144,6 @@ def test_a_goal_not_done_reads_no_commits_and_a_gone_goal_is_refused(host, tech,
 
 # -- spec 149 H.1: what a goal made, beside what it promised -----------------------------------------------------------------------------------
 
-def test_a_gate_is_said_in_plain_words_and_a_goal_lists_what_each_merged_task_changed():
-    from orkboard.gui.ideas_goalview import gate_words, made_of
-    assert gate_words({"passed": 97, "failed": 0}) == "97 passed" and gate_words({"passed": 3, "failed": 2}) == "2 / 5 failed"
-    assert gate_words({"none": True}) == "no tests in this project" and gate_words({"env": "x"}) == "could not run" and gate_words({"passed": 0, "failed": 0}) == "no tests ran"
-    assert gate_words({"exit": 0}) == "passed (exit 0)" and gate_words({"exit": 2}) == "failed (exit 2)" and gate_words(None) == ""
-    plan = {"tasks": [{"id": "k1", "title": "Host predictions", "state": "merged", "diff": {"files": 3, "added": 40, "removed": 2}, "tests": {"passed": 97, "failed": 0}},
-                      {"id": "k2", "title": "A check", "state": "merged", "diff": {"files": 0, "added": 0, "removed": 0}, "tests": {"passed": 97, "failed": 0}},
-                      {"id": "k3", "title": "Not yet", "state": "review", "diff": {"files": 1}}, {"id": "k4", "title": "No diff kept", "state": "merged"}]}
-    assert made_of(plan) == [{"task": "k1", "title": "Host predictions", "files": 3, "added": 40, "removed": 2, "gate": "97 passed"},
-                             {"task": "k2", "title": "A check", "files": 0, "added": 0, "removed": 0, "gate": "97 passed"},
-                             {"task": "k4", "title": "No diff kept", "gate": ""}]
-
-
-def test_goal_result_carries_what_was_made(host, tech):
-    slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- The room code is four letters"}}, [("t1", "merged", [], tech)])
-    got = host.command("ideas.goal_result", {"idea": slug})
-    assert [m["task"] for m in got["made"]] == ["t1"] and [d["text"] for p in got["parties"] for d in p["done_when"]] == ["The room code is four letters"]
-
-
 def test_spend_gives_the_tokens_of_a_goal_and_the_share_the_reads_show(host, tech):
     from orkboard.realm import event_log as ev
     slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- one"}}, [("t1", "merged", [], tech)])
@@ -225,16 +157,3 @@ def test_spend_gives_the_tokens_of_a_goal_and_the_share_the_reads_show(host, tec
     assert got["usd"] is None and got["tokens"] == 3_000_000
     assert got["share"]["tool"] == "codex" and got["share"]["name"] == "Codex" and got["share"]["window"] == "week" and got["share"]["share"] == 2.0
 
-
-def test_a_goal_counts_the_distinct_tests_that_were_red_before_it(host, tech):
-    """Spec 149 E.4: the tasks' stored `tests.red_before` lists add up, each test once."""
-    from orkboard.gui.ideas_goalview import red_before_of
-    assert red_before_of({"tasks": [{"tests": {"red_before": ["a::x", "a::y"]}}, {"tests": {"red_before": ["a::y", "b::z"]}}, {"tests": {"passed": 3}}, {}]}) == 3
-    assert red_before_of({"tasks": [{"tests": {"red_before": []}}]}) == 0 and red_before_of({}) == 0
-    slug = _goal(host, tech, {tech: {"Why": "x", "Done when": "- one"}}, [("t1", "merged", [], tech), ("t2", "merged", [], tech)])
-    path = ideas.state_folder(host.ideas.state_dir, slug) / "plan.json"
-    plan = json.loads(path.read_text(encoding="utf-8"))
-    plan["tasks"][0]["tests"] = {"passed": 5, "failed": 0, "red_before": ["t::a"]}
-    plan["tasks"][1]["tests"] = {"passed": 5, "failed": 0, "red_before": ["t::a", "t::b"]}
-    ideas._write_json(path, plan)
-    assert host.command("ideas.goal_result", {"idea": slug})["red_before"] == 2

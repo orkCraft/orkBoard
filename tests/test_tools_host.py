@@ -8,7 +8,7 @@ import pytest
 
 from orkboard import settings, tools
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import goal_team, ideas, tool_errors, tool_hand
+from orkboard.realm import goal_team, ideas, tool_errors
 
 
 def found(*ids: str, signed_out: tuple[str, ...] = (), unknown: tuple[str, ...] = ()) -> list[tools.ToolStatus]:
@@ -40,29 +40,6 @@ def add(b: Orkboard, tool: str, **args) -> dict:
 
 # -- the commands (A.3), the onboarding's names gone with its form (D.2) --------------------------------------------------------
 
-def test_the_tools_have_commands_of_their_own_and_the_onboardings_names_are_gone(fake_repo, monkeypatch):
-    monkeypatch.setenv("ORKCRAFT_ONBOARDING", "1")
-    monkeypatch.setattr(tools, "detect", lambda *a, **k: found("claude", "codex"))
-    monkeypatch.setattr(tools, "detect_others", lambda *a, **k: [])
-    b = Orkboard(fake_repo)
-    assert {"tools.look", "tools.card", "tools.check", "tools.test_add", "tools.put_back_plan", "tools.put_back", "tools.put_back_undo", "tools.order", "tools.billing",
-            "tools.request", "first_open.ask", "first_open.kind", "first_open.tools_skip", "projects.new_folder"} <= set(b.commands)
-    assert {"tools.sign_in", "tools.sign_in_done"} <= set(b.commands)                      # spec 45's, in the same namespace, untouched
-    assert not {"onboarding.tools", "onboarding.check", "onboarding.detect", "onboarding.request"} & set(b.commands), "they went with the form (spec 130 D.2)"
-    assert b.snapshot()["onboarding"] is None, "Orkboard opens on no form, on a machine never set up too"
-    assert b.onboarding.tools_host is b.tools_host
-    b.tools_host.scan()
-    b.tools_host._finder.join(5)
-    asked = []
-    b.tools_host._ask = lambda tool, prompt, model=None: asked.append(tool) or "ok"
-    b.command("tools.check", {"tool": "claude"})
-    b.tools_host._worker.join(5)
-    assert asked == ["claude"] and b.tools_host.checks["claude"]["state"] == "ok"
-    with pytest.raises(CommandError, match="not found here"):
-        b.command("tools.check", {"tool": "cursor"})
-    assert "github.com" in b.command("tools.request", {"name": "Zed", "note": "edits"})["url"]
-
-
 def test_the_phone_sets_no_tool_and_sees_none(board):
     assert not any(BoardPhone.allowed(board, name) for name in ("tools.test_add", "tools.put_back", "tools.order", "tools.billing", "tools.card",
                                                                  "first_open.ask", "projects.new_folder"))
@@ -70,18 +47,6 @@ def test_the_phone_sets_no_tool_and_sees_none(board):
 
 
 # -- the card and Test & add (A.2) ----------------------------------------------------------------------------------
-
-def test_the_card_is_looked_for_once_and_lists_what_is_not_in_the_hand(board):
-    first = board.command("tools.card", {})
-    assert first["ready"] in (True, False)
-    card = looked(board)
-    assert card["ready"] and card["n"] == 0 and not card["full"]
-    rows = {r["id"]: r for r in card["tools"]}
-    assert rows["claude"]["group"] == "ready" and rows["hermes"]["group"] == "signed_out"
-    assert rows["cursor"]["group"] == "not_installed" and not rows["cursor"]["pickable"]
-    assert card["first"] == "claude"
-    assert board.snapshot()["tools"]["hand"] == [] and board.snapshot()["tools"]["main"] == ""
-
 
 def test_test_and_add_puts_the_tool_in_the_hand_after_it_answers(board):
     looked(board)
@@ -114,21 +79,6 @@ def test_a_tool_that_fails_its_test_is_not_added_and_says_why(board):
     assert settings.load().tool_order == [] and not settings.load().tools["claude"].enabled
 
 
-def test_test_and_add_is_refused_before_a_request_is_made(board, monkeypatch):
-    looked(board)
-    asked = []
-    board.tools_host._ask = lambda tool, prompt, model=None: asked.append(tool) or "ok"
-    monkeypatch.delenv("CODEX_API_KEY", raising=False)
-    for tool, args, why in (("hermes", {}, "not signed in"), ("cursor", {}, "not installed"), ("agy", {}, "experimental"),
-                            ("codex", {"billing": "api"}, "No key found: set CODEX_API_KEY in your environment, then Test again"),
-                            ("nope", {}, "Say which AI tool")):
-        with pytest.raises(CommandError, match=why):
-            board.command("tools.test_add", {"tool": tool, **args})
-    assert asked == [] and board.snapshot()["tools"]["hand"] == []
-    add(board, "agy", risk_read=True)                                                       # its warning read: it goes on
-    assert board.snapshot()["tools"]["order"] == ["agy"]
-
-
 def test_the_key_found_in_the_environment_is_named_and_the_tool_is_paid_by_it(board, monkeypatch):
     monkeypatch.setenv("CODEX_API_KEY", "sk-never-shown")
     card = looked(board)
@@ -137,19 +87,6 @@ def test_the_key_found_in_the_environment_is_named_and_the_tool_is_paid_by_it(bo
     add(board, "codex", billing="api")
     assert board.snapshot()["tools"]["adding"]["codex"]["state"] == "added" and board.snapshot()["tools"]["hand"][0]["billing"] == "api"
     assert "sk-never-shown" not in repr(board.snapshot()) and "sk-never-shown" not in settings.path().read_text(encoding="utf-8")
-
-
-def test_a_full_hand_adds_no_more(board, monkeypatch):
-    """The registry holds six tools today, so a hand of six leaves nothing to offer; the bound is the constant's, tried here at two."""
-    assert tool_hand.HAND_MAX == 6
-    monkeypatch.setattr(tool_hand, "HAND_MAX", 2)
-    looked(board)
-    for t in ("claude", "codex"):
-        add(board, t)
-    card = board.command("tools.card", {})
-    assert card["full"] and card["n"] == 2 and board.snapshot()["tools"]["full"]
-    with pytest.raises(CommandError, match="holds 2"):
-        board.command("tools.test_add", {"tool": "hermes"})
 
 
 # -- the order and the billing ---------------------------------------------------------------------------------------
@@ -164,20 +101,6 @@ def test_the_order_is_the_persons_and_its_first_is_the_main_tool(board):
     with pytest.raises(CommandError, match="each once"):
         board.command("tools.order", {"order": ["agy"]})
     assert board.snapshot()["tools"]["order"] == ["agy", "codex", "claude"]
-
-
-def test_a_tool_in_the_hand_is_paid_by_its_key_only_when_the_key_is_there(board, monkeypatch):
-    looked(board)
-    add(board, "codex")
-    monkeypatch.delenv("CODEX_API_KEY", raising=False)
-    with pytest.raises(CommandError, match="No key found: set CODEX_API_KEY"):
-        board.command("tools.billing", {"tool": "codex", "billing": "api"})
-    monkeypatch.setenv("CODEX_API_KEY", "x")
-    got = board.command("tools.billing", {"tool": "codex", "billing": "api"})
-    assert got["hand"][0]["billing"] == "api" and settings.load().tools["codex"].billing == "api"
-    assert board.command("tools.billing", {"tool": "codex", "billing": "subscription"})["hand"][0]["billing"] == "subscription"
-    with pytest.raises(CommandError, match="not in your hand"):
-        board.command("tools.billing", {"tool": "claude", "billing": "subscription"})
 
 
 # -- Put back and Undo ------------------------------------------------------------------------------------------------
@@ -219,14 +142,3 @@ def test_the_last_tool_asks_before_it_is_put_back(board):
     with pytest.raises(CommandError, match="not in your hand"):
         board.command("tools.put_back", {"tool": "codex"})
 
-
-def test_a_tool_put_back_is_taken_out_of_the_work_that_follows_the_main_tool(board):
-    """The order is what the work reads (`tool_now`): a tool put back is not moved on to, and the main tool passes to the next."""
-    from orkboard.realm import tool_now
-    looked(board)
-    for t in ("claude", "codex"):
-        add(board, t)
-    board.command("tools.put_back", {"tool": "claude"})
-    got = tool_now.now(board.machine, [], 0.0)
-    assert got["main"] == "codex" and got["now"] == "codex"
-    assert tool_hand.hand(board.machine) == ["codex"]

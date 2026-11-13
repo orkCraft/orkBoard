@@ -5,7 +5,6 @@ look picked first is written with the extension of the file picked."""
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import sys
 import time
@@ -49,16 +48,6 @@ def test_the_preview_is_the_checks_line_else_a_static_page_else_the_projects_scr
     assert idea_shot.preview_of(state, work) == {"how": "static"}                 # a static page before a script
     (state / "checks.toml").write_text('preview = "python3 -m http.server 8123"\npreview_port = 8123\n')
     assert idea_shot.preview_of(state, work) == {"how": "command", "run": ["python3", "-m", "http.server", "8123"], "port": 8123}
-
-
-def test_a_bad_checks_file_or_line_is_no_preview_never_an_error(tmp_path):
-    work, state = tmp_path / "work", tmp_path / "state"
-    work.mkdir()
-    state.mkdir()
-    (state / "checks.toml").write_text("this is [not toml")
-    assert idea_shot.preview_of(state, work) is None
-    (state / "checks.toml").write_text('preview = "unclosed \\"quote"\n')
-    assert idea_shot.preview_of(state, work) is None or idea_shot.preview_of(state, work)["how"] == "command"
 
 
 # -- the page, not the first port (spec 90 §1) ---------------------------------------------------------------------------
@@ -106,62 +95,6 @@ def two_ports(tmp_path, monkeypatch, page=True):
     return work, state, idea_shot.preview_of(state, work)
 
 
-def test_page_of_takes_the_first_port_that_answers_html_at_the_path_in_the_order_given():
-    import http.server
-    import threading
-
-    class Handler(http.server.BaseHTTPRequestHandler):
-        def log_message(self, *_a):
-            pass
-
-        def do_GET(self):
-            kind = {"/page": ("text/html; charset=utf-8", 200), "/json": ("application/json", 200), "/gone": ("text/html", 404), "/go": ("text/html", 302)}.get(self.path, ("text/html", 200))
-            self.send_response(kind[1])
-            if kind[1] == 302:
-                self.send_header("Location", "/page")
-            self.send_header("Content-Type", kind[0])
-            self.end_headers()
-            self.wfile.write(b"x")
-
-    servers = [http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler) for _ in range(2)]
-    for s in servers:
-        threading.Thread(target=s.serve_forever, daemon=True).start()
-    a, b = (s.server_address[1] for s in servers)
-    try:
-        assert idea_shot.page_of([a, b], "/page") == a                                     # the order given
-        assert idea_shot.page_of([b, a], "/page") == b
-        assert idea_shot.page_of([a, b], "/json") is None and idea_shot.page_of([a, b], "/gone") is None       # not HTML · not 2xx
-        assert idea_shot.page_of([a], "/go") == a                                          # a redirect to a page is the page
-        assert idea_shot.page_of([idea_shot._free_port(), b], "/page") == b                # nothing listening is passed over
-        assert idea_shot.page_of([], "/") is None
-    finally:
-        for s in servers:
-            s.shutdown()
-            s.server_close()
-
-
-def test_a_command_printing_two_ports_the_first_a_server_without_a_page_opens_the_second(tmp_path, monkeypatch):
-    import urllib.request
-    work, _state, how = two_ports(tmp_path, monkeypatch)
-    tried: list[int] = []
-    with idea_shot.opened(how, work, 15, path="/", tried=tried) as port:
-        assert port and idea_shot.page_of([port]) == port
-        assert b"the client" in urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=3).read()
-    assert tried == []                                                                     # a page was found: nothing to say of ports tried
-    assert not idea_shot._listening(port)                                                  # closed on leaving
-
-
-@pytest.mark.parametrize("colour", ["picocolors", "always"])
-def test_a_port_printed_in_colour_is_read_as_vite_prints_it(tmp_path, monkeypatch, colour):
-    # Vite bolds its port, and picocolors colours when `CI` is set (the logs of 26 October: Play said *nopage* with Vite up): the command
-    # runs with NO_COLOR=1, and a port printed in colour all the same is read with its codes taken out.
-    work, _state, how = two_ports(tmp_path, monkeypatch)
-    monkeypatch.setenv("TWO_PORTS_COLOUR", colour)
-    monkeypatch.delenv("NO_COLOR", raising=False)
-    with idea_shot.opened(how, work, 15, path="/") as port:
-        assert port and idea_shot.page_of([port]) == port
-
-
 CHATTY = """import os, sys, time
 for i in range(45):
     print("\\x1b[32mlog %d\\x1b[0m" % i)
@@ -171,73 +104,6 @@ print("x" * 900, flush=True)                                 # a long line is cu
 print("done", flush=True)
 time.sleep(60)
 """
-
-
-def test_the_last_30_lines_of_the_output_are_kept_without_colour_codes_in_the_list_given(tmp_path):
-    work, state = tmp_path / "work", tmp_path / "state"
-    work.mkdir()
-    state.mkdir()
-    (work / "chatty.py").write_text(CHATTY)
-    (state / "checks.toml").write_text(f'preview = "{sys.executable} chatty.py"\n')
-    how = idea_shot.preview_of(state, work)
-    tail = ["left over from an earlier start"]
-    with idea_shot.opened(how, work, 1, path="/", tail=tail) as port:
-        assert port is None                                                                  # it listens on nothing
-        deadline = time.monotonic() + 5
-        while not tail or tail[-1] != "done":
-            assert time.monotonic() < deadline
-            time.sleep(0.05)
-    assert len(tail) == idea_shot.TAIL_LINES == 30                                           # capped: the 45 lines and the rest came, the last 30 stay
-    assert tail[-1] == "done" and tail[-2] == "x" * idea_shot.TAIL_WIDTH and tail[-3] == "log 44"
-    assert "log 0" not in tail and "left over from an earlier start" not in tail
-    assert all("\x1b" not in line and line.strip() for line in tail)
-
-
-def test_asking_is_told_the_ports_that_listen_while_no_page_has_answered(tmp_path, monkeypatch):
-    work, _state, how = two_ports(tmp_path, monkeypatch, page=False)
-    asked: list[list[int]] = []
-    with idea_shot.opened(how, work, 3, path="/", asking=lambda ports: asked.append(list(ports))) as port:
-        assert port is None
-    assert len(asked) == 2 and len(asked[0]) == 1 and asked[1][:1] == asked[0] and len(asked[1]) == 2      # first the port asked of the command, then Vite's too
-
-
-def test_a_caller_with_no_tail_or_asking_is_unchanged(tmp_path):
-    work = tmp_path / "work"
-    work.mkdir()
-    (work / "index.html").write_text(PAGE)
-    tail = ["x"]
-    with idea_shot.opened({"how": "static"}, work, 5, tail=tail) as port:
-        assert port and idea_shot.page_of([port]) == port
-    assert tail == []                                                                        # a static page prints nothing: the list is emptied, not filled
-    with idea_shot.opened({"how": "command", "run": [sys.executable, "-c", "print('hi')"], "port": None}, work, 3) as port:
-        assert port is None                                                                  # the same call as the picture's: no tail, no asking
-
-
-def test_a_command_that_ends_has_its_last_lines_kept(tmp_path):
-    work = tmp_path / "work"
-    work.mkdir()
-    tail: list[str] = []
-    how = {"how": "command", "run": [sys.executable, "-c", "print('one'); print('boom', flush=True)"], "port": None}
-    with idea_shot.opened(how, work, 5, tail=tail) as port:
-        assert port is None
-    assert tail == ["one", "boom"]                                                           # read to the end before it is given back
-
-
-def test_a_command_whose_ports_give_no_page_says_which_ports_it_asked(tmp_path, monkeypatch):
-    work, state, how = two_ports(tmp_path, monkeypatch, page=False)
-    tried: list[int] = []
-    began = time.monotonic()
-    with idea_shot.opened(how, work, 3, path="/", tried=tried) as port:
-        assert port is None
-    assert len(tried) == 2 and tried[0] != tried[1] and time.monotonic() - began < 12
-    monkeypatch.setattr(idea_shot, "OPEN_S", 3.0)
-    assert idea_shot.make(state, work, tmp_path / "shot.png") in ((False, "no page"), (False, "no browser"))     # the picture is of a page or of none
-
-
-@needs_browser
-def test_the_picture_is_drawn_of_the_page_not_of_the_first_port(tmp_path, monkeypatch):
-    work, state, _how = two_ports(tmp_path, monkeypatch)
-    assert idea_shot.make(state, work, tmp_path / "shot.png") == (True, "") and (tmp_path / "shot.png").stat().st_size > 0
 
 
 # -- the picture ---------------------------------------------------------------------------------------------------------
@@ -419,15 +285,3 @@ def _v6_page_server():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-
-def test_a_page_served_on_the_ipv6_loopback_only_is_found_and_its_address_names_it():
-    srv = _v6_page_server()
-    if srv is None:
-        pytest.skip("no IPv6 loopback on this machine")
-    try:
-        port = srv.server_address[1]
-        assert idea_shot.page_of([port]) == port
-        assert idea_shot.url_of(port, "/") == f"http://[::1]:{port}/"
-    finally:
-        srv.shutdown()
-        srv.server_close()

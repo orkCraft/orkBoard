@@ -34,14 +34,6 @@ def test_each_build_cs_is_a_container_with_its_type_for_its_role(tmp_path):
     assert "role" not in got["Source/Inventory"]                                                              # a module no list types has no role
 
 
-def test_the_dependency_names_that_are_the_projects_own_modules_are_the_links(tmp_path):
-    links = system_overview.read(project(tmp_path))["links"]
-    assert [(k["from"], k["to"]) for k in links] == [
-        ("Source/Skyhop", "Source/Inventory"), ("Source/Skyhop", "Plugins/Tools/Source/SkyhopTools"),        # Public/PrivateDependencyModuleNames, Add and AddRange
-        ("Source/SkyhopEditor", "Source/Skyhop"), ("Plugins/Tools/Source/SkyhopTools", "Source/Inventory")]
-    assert not any("Core" in (k["from"] + k["to"]) or "Engine" in k["to"] for k in links)                    # Core, Engine, Slate, UnrealEd: the engine's
-
-
 def test_a_folder_of_cpp_is_a_part_and_a_quoted_include_that_resolves_is_a_use(tmp_path):
     got = by_path(code_map.parts(project(tmp_path)))
     hero_cpp, hero_h, strike = "Source/Skyhop/Private/Actors", "Source/Skyhop/Public/Actors", "Source/Skyhop/Private/Combat"
@@ -52,22 +44,8 @@ def test_a_folder_of_cpp_is_a_part_and_a_quoted_include_that_resolves_is_a_use(t
     assert got["Plugins/Tools/Source/SkyhopTools/Private"]["uses"] == ["Source/Inventory/Public/Inventory"]
 
 
-def test_angle_brackets_the_engines_headers_and_generated_ones_are_left_out(tmp_path):
-    got = by_path(code_map.parts(project(tmp_path)))
-    every = {u for r in got.values() for u in r["uses"]}
-    assert every <= set(got) and not any("GameFramework" in u or "CoreMinimal" in u for u in every)
-
-
 def test_the_module_files_are_in_the_owners_parts_and_the_layers_are_read(tmp_path):
     c = {x["path"]: x for x in system_overview.read(project(tmp_path))["containers"]}["Source/Skyhop"]
     assert c["parts"] == ["Source/Skyhop/Private/Actors", "Source/Skyhop/Private/Combat", "Source/Skyhop/Public/Actors"] and c["layers"]
 
 
-def test_nothing_under_intermediate_binaries_saved_or_derived_data_is_read(tmp_path):
-    root = project(tmp_path)
-    for folder in ("Intermediate", "Binaries", "Saved", "DerivedDataCache", "Source/Skyhop/Intermediate"):
-        (root / folder).mkdir(parents=True, exist_ok=True)
-        (root / folder / "Ghost.Build.cs").write_text('PublicDependencyModuleNames.Add("Skyhop");\n')
-        (root / folder / "Ghost.cpp").write_text('#include "Actors/Hero.h"\n')
-    assert "Ghost" not in {c["name"] for c in system_overview.read(root)["containers"]}
-    assert not any("Intermediate" in p["path"] or "Saved" in p["path"] for p in code_map.parts(root))

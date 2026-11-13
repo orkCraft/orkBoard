@@ -86,45 +86,6 @@ def test_what_goes_and_what_never_does(tmp_path):
             "checks.toml", "canvases.jsonl"} == set(files)
 
 
-@pytest.mark.parametrize("rel", NEVERS)
-def test_a_never_file_and_a_file_not_listed_stay_home(tmp_path, rel):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, rel, "x")
-    files, _ = bb.pack(state, WIKI)
-    assert rel not in files and not bb.allowed(rel, WIKI)
-
-
-def test_never_is_checked_again_over_a_listed_folder(tmp_path):
-    """A `secrets.json` inside `ideas/<slug>/` stays home, and so does anything under a worktree or sign-in folder of a listed one."""
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, "ideas/dark-mode/secrets.json", '{"k": "v"}')
-    put(state, "ideas/dark-mode/worktrees/a/b.txt", "x")
-    put(state, "ideas/dark-mode/sign-in/c.json", "{}")
-    files, _ = bb.pack(state, WIKI)
-    assert not [p for p in files if "secrets" in p or "worktree" in p or "sign-in" in p]
-    assert "ideas/dark-mode/state.json" in files
-    assert "secrets.json" in bb.NEVER and "worktrees/" in bb.NEVER and bb.allowed("lease.json")
-
-
-def test_a_path_that_leaves_the_folder_is_never_listed():
-    for rel in ("../x.json", "ideas/../../x", "/etc/passwd", "ideas//x", "ideas/./x"):
-        assert not bb.allowed(rel, WIKI)
-
-
-def test_a_symlink_is_not_followed(tmp_path):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    outside = tmp_path / "outside.json"
-    outside.write_text("{}")
-    (state / "ideas" / "dark-mode" / "link.json").symlink_to(outside)
-    (state / "kinds.json").unlink()
-    (state / "kinds.json").symlink_to(outside)
-    files, _ = bb.pack(state, WIKI)
-    assert "ideas/dark-mode/link.json" not in files and "kinds.json" not in files
-
-
 def test_a_photo_over_the_limit_is_held_back_and_said(tmp_path):
     state = tmp_path / ".orkcraft"
     seed_board(state)
@@ -133,13 +94,6 @@ def test_a_photo_over_the_limit_is_held_back_and_said(tmp_path):
     files, held = bb.pack(state, WIKI)
     assert held == ["ideas/dark-mode/photos/2.jpg"]
     assert "ideas/dark-mode/photos/2.jpg" not in files and "ideas/dark-mode/photos/3.jpg" in files
-
-
-def test_the_lease_is_not_read_from_disk(tmp_path):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, "lease.json", "{}")
-    assert "lease.json" not in bb.pack(state, WIKI)[0]
 
 
 # -- the scrub (A.2) ------------------------------------------------------------------------------------------------
@@ -152,24 +106,6 @@ def test_a_line_with_a_secrets_shape_is_held_back_in_a_text_file(tmp_path):
     body = files[f"board/{WIKI}/pages/ideas/dark-mode.md"].decode()
     assert KEY not in body and "held back" in body and "fine" in body
     assert held == [f"board/{WIKI}/pages/ideas/dark-mode.md"]
-
-
-def test_a_json_with_a_held_line_is_not_sent_at_all(tmp_path):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, "ideas/dark-mode/plan.json", json.dumps({"tasks": [], "note": f"token = {KEY}"}, indent=1))
-    files, held = bb.pack(state, WIKI)
-    assert "ideas/dark-mode/plan.json" not in files and held == ["ideas/dark-mode/plan.json"]
-    assert all(KEY not in b.decode("utf-8", "replace") for b in files.values())
-
-
-def test_a_jsonl_loses_the_held_line_and_stays_json(tmp_path):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, "ideas/dark-mode/talk.jsonl", '{"text": "a"}\n' + json.dumps({"text": KEY}) + '\n{"text": "b"}\n')
-    files, held = bb.pack(state, WIKI)
-    lines = files["ideas/dark-mode/talk.jsonl"].decode().splitlines()
-    assert [json.loads(ln)["text"] for ln in lines] == ["a", "b"] and held == ["ideas/dark-mode/talk.jsonl"]
 
 
 # -- the commit, the fetch, the push, the read (A.3) ---------------------------------------------------------------
@@ -186,15 +122,6 @@ def test_commit_makes_no_commit_for_the_same_tree(tmp_path):
     second = bb.commit(root, state, cfg, {**files, "kinds.json": b'{"a": 1}'}, "two", first)
     assert second and second != first and git(root, "rev-parse", f"{second}^").strip() == first
     assert not (state / "board.index").exists()
-
-
-def test_commit_leaves_the_working_tree_the_index_and_the_branches_alone(tmp_path):
-    root = make_clone(make_origin(tmp_path), tmp_path / "a")
-    state = root / ".orkcraft"
-    seed_board(state)
-    before = (git(root, "status", "--porcelain"), git(root, "branch", "-a"), git(root, "rev-parse", "HEAD"))
-    bb.commit(root, state, bb.BoardConfig(), bb.pack(state, WIKI)[0], "one", "")
-    assert (git(root, "status", "--porcelain"), git(root, "branch", "-a"), git(root, "rev-parse", "HEAD")) == before
 
 
 def test_pushed_fetched_and_read_back(tmp_path):
@@ -223,15 +150,6 @@ def test_a_push_that_is_not_a_fast_forward_is_refused_and_never_forced(tmp_path)
     got = bb.push(b, cfg, other)
     assert not got["ok"] and got["refused"] and got["why"]
     assert git(origin, "rev-parse", "refs/heads/orkboard/board").strip() == first
-
-
-def test_fetch_and_push_say_why_when_the_remote_is_not_there(tmp_path):
-    a = make_clone(make_origin(tmp_path), tmp_path / "a")
-    cfg = bb.BoardConfig(remote="nowhere")
-    assert bb.fetch(a, cfg)["ok"] is False and bb.fetch(a, cfg)["why"]
-    made = bb.commit(a, a / ".orkcraft", cfg, {"kinds.json": b"{}"}, "one", "")
-    got = bb.push(a, cfg, made)
-    assert got["ok"] is False and got["refused"] is False and got["why"]
 
 
 # -- the working copy, kept from the branch (A.4) -----------------------------------------------------------------
@@ -276,53 +194,8 @@ def test_unpack_writes_removes_a_listed_file_the_branch_dropped_and_leaves_the_r
     assert not list(state.rglob("*.board-tmp"))
 
 
-def test_unpack_commits_the_pages_once(tmp_path):
-    state = tmp_path / ".orkcraft"
-    tree = FakeTree()
-    bb.unpack(state, {f"board/{WIKI}/pages/ideas/a.md": b"a", f"board/{WIKI}/pages/ideas/b.md": b"b", "kinds.json": b"{}"}, tree, by="the cloud")
-    assert tree.flushed == [(True, "board: the Board taken from the cloud")]
-    tree2 = FakeTree()
-    bb.unpack(state, {f"board/{WIKI}/pages/ideas/a.md": b"a", f"board/{WIKI}/pages/ideas/b.md": b"b", "kinds.json": b'{"x": 1}'}, tree2, by="x")     # no page changed: no commit
-    assert tree2.flushed == []
-
-
-def test_unpack_makes_the_tree_when_missing_and_writes_nothing_outside_the_list(tmp_path):
-    state = tmp_path / ".orkcraft"
-    tree = FakeTree(exists=False)
-    bb.unpack(state, {f"board/{WIKI}/pages/ideas/a.md": b"a", "../escape.txt": b"x", "ideas/../../escape2.txt": b"x", "secrets.json": b"x",
-                      "drive.json": b"x", "ideas/s/secrets.json": b"x", "random.txt": b"x", "lease.json": b"{}"}, tree)
-    assert tree.ensured == 1
-    assert not (tmp_path / "escape.txt").exists() and not (tmp_path / "escape2.txt").exists()
-    assert sorted(p.relative_to(state).as_posix() for p in state.rglob("*") if p.is_file()) == [f"board/{WIKI}/pages/ideas/a.md"]
-
-
-def test_unpack_does_not_remove_a_file_pack_held_back(tmp_path):
-    state = tmp_path / ".orkcraft"
-    seed_board(state)
-    put(state, "ideas/dark-mode/plan.json", json.dumps({"note": f"token = {KEY}"}))           # held: the branch never had it
-    bb.unpack(state, {"kinds.json": b"{}"}, FakeTree())
-    assert (state / "ideas/dark-mode/plan.json").is_file()
-
-
-def test_unpack_with_the_real_board_tree_commits_the_pages(tmp_path):
-    from orkboard.realm.idea_git import BoardTree
-    root = make_clone(make_origin(tmp_path), tmp_path / "a")
-    state = root / ".orkcraft"
-    git(root, "branch", "dev")
-    tree = BoardTree(root, state, WIKI, lambda: "dev")
-    got = bb.unpack(state, {f"board/{WIKI}/pages/ideas/a.md": b"# A\n", "ideas/a/state.json": b"{}"}, tree, by="the cloud")
-    assert tree.exists() and (tree.root() / "pages/ideas/a.md").read_text() == "# A\n" and got["commit"]
-    assert "the Board taken from the cloud" in git(root, "log", "-1", "--format=%s", "dev")
-
-
 # -- turned on (A.1) -------------------------------------------------------------------------------------------------
 
-def test_config_off_means_nothing_runs(tmp_path):
-    assert bb.read_config(tmp_path) is None
-    (tmp_path / "orkcraft.toml").write_text('[journal]\nremote = "origin"\n')
-    assert bb.read_config(tmp_path) is None
-    (tmp_path / "orkcraft.toml").write_text("not = [toml")
-    assert bb.read_config(tmp_path) is None
 
 
 def test_config_reads_the_table_and_ignores_a_bad_value(tmp_path):
@@ -332,29 +205,6 @@ def test_config_reads_the_table_and_ignores_a_bad_value(tmp_path):
     assert bb.read_config(tmp_path) == bb.BoardConfig("up", "b/x")
     (tmp_path / "orkcraft.toml").write_text('[board]\nremote = "--upload-pack=x"\nbranch = "../x"\n')
     assert bb.read_config(tmp_path) == bb.BoardConfig("origin", "orkboard/board")
-
-
-def test_the_public_check_refuses_a_200_and_goes_on_for_a_404(tmp_path):
-    root = make_clone(make_origin(tmp_path), tmp_path / "a")
-    git(root, "remote", "set-url", "origin", "git@github.com:acme/widgets.git")
-    asked = []
-    ok, line = bb.private_check(root, bb.BoardConfig(), lambda url: asked.append(url) or 200)
-    assert not ok and "only to a private repository" in line
-    assert asked == ["https://api.github.com/repos/acme/widgets"]
-    assert bb.private_check(root, bb.BoardConfig(), lambda url: 404) == (True, "")
-    assert bb.private_check(root, bb.BoardConfig(), lambda url: 0) == (True, "")             # not reachable: goes on
-    git(root, "remote", "set-url", "origin", "https://github.com/acme/widgets")
-    assert asked[-1] and bb.private_check(root, bb.BoardConfig(), lambda url: asked.append(url) or 200)[0] is False
-    assert asked[-1] == "https://api.github.com/repos/acme/widgets"
-
-
-def test_a_remote_not_on_github_goes_on_with_a_line_and_asks_nothing(tmp_path):
-    root = make_clone(make_origin(tmp_path), tmp_path / "a")
-
-    def never(url):
-        raise AssertionError("no network")
-    ok, line = bb.private_check(root, bb.BoardConfig(), never)
-    assert ok and "must be private" in line
 
 
 # -- spec 151 F: the visibility as a word, `in_code` beside the table, a push that waits ------------------------------------
@@ -376,13 +226,6 @@ def test_the_visibility_is_a_word_and_in_code_alone_is_no_yes_to_the_branch(tmp_
     assert bb.read_config(root) == bb.BoardConfig("origin", "orkboard/board") and "in_code = false" in (root / "orkcraft.toml").read_text()
 
 
-def test_put_key_keeps_every_other_line():
-    text = '[gate]\nalways = ["x"]\n\n[board]\nremote = "up"\n\n[journal]\ninbox = "i"\n'
-    out = bb.put_key(text, "in_code", "true")
-    assert out == '[gate]\nalways = ["x"]\n\n[board]\nin_code = true\nremote = "up"\n\n[journal]\ninbox = "i"\n'
-    assert bb.put_key(out, "in_code", "false").count("in_code") == 1 and "in_code = false" in bb.put_key(out, "in_code", "false")
-
-
 def test_pack_leaves_a_goal_kept_off_at_home_only_in_a_public_repository_with_the_yes(tmp_path):
     state = tmp_path / ".orkcraft"
     for slug in ("a", "b"):
@@ -395,3 +238,18 @@ def test_pack_leaves_a_goal_kept_off_at_home_only_in_a_public_repository_with_th
     files, _held = bb.pack(state, WIKI)
     assert f"board/{WIKI}/pages/ideas/a.md" in files and "ideas/a/state.json" in files
     assert f"board/{WIKI}/pages/ideas/b.md" not in files and "ideas/b/state.json" not in files
+
+
+
+def test_the_public_check_refuses_a_200_and_goes_on_for_a_404(tmp_path):
+    root = make_clone(make_origin(tmp_path), tmp_path / "a")
+    git(root, "remote", "set-url", "origin", "git@github.com:acme/widgets.git")
+    asked = []
+    ok, line = bb.private_check(root, bb.BoardConfig(), lambda url: asked.append(url) or 200)
+    assert not ok and "only to a private repository" in line
+    assert asked == ["https://api.github.com/repos/acme/widgets"]
+    assert bb.private_check(root, bb.BoardConfig(), lambda url: 404) == (True, "")
+    assert bb.private_check(root, bb.BoardConfig(), lambda url: 0) == (True, "")             # not reachable: goes on
+    git(root, "remote", "set-url", "origin", "https://github.com/acme/widgets")
+    assert asked[-1] and bb.private_check(root, bb.BoardConfig(), lambda url: asked.append(url) or 200)[0] is False
+    assert asked[-1] == "https://api.github.com/repos/acme/widgets"

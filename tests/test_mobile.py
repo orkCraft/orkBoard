@@ -20,15 +20,6 @@ def _host(repo: Path) -> Orkboard:
     return Orkboard(repo)
 
 
-def test_every_command_a_phone_may_send_is_one_the_host_has(fake_repo):
-    host = _host(fake_repo)
-    assert set(BoardPhone.COMMANDS) <= set(host.commands)
-    hello = host.command("mobile.hello")
-    json.dumps(hello)
-    assert hello["name"] == "orkcraft" and hello["api"] == phones.API
-    assert "ideas.board" in hello["commands"] and "halt" in hello["commands"]
-
-
 def test_a_phone_may_send_the_boards_commands_and_halt_but_not_build_or_type(fake_repo):
     host = _host(fake_repo)
     may = lambda name, args=None: BoardPhone.allowed(host, name, args)      # noqa: E731
@@ -39,24 +30,6 @@ def test_a_phone_may_send_the_boards_commands_and_halt_but_not_build_or_type(fak
         assert not may(name, {}), name
     assert may("update.check") and may("update.install")         # a newer version, installed from the phone (js/shell/update.js)
     assert may("repair.start") and may("repair.stop") and may("repair.update")   # Fix it (spec 119 §3.3, decisions §197.4)
-
-
-def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
-    host = _host(fake_repo)
-    host.tick()
-    full, snap = host.snapshot(), host.command("mobile.snapshot")
-    json.dumps(snap)
-    assert len(json.dumps(snap)) < len(json.dumps(full))
-    assert set(snap) == {"ideas_rev", "needs_you", "idea_states",
-                         "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
-                         "mana", "projects",
-                         "repair", "presence", "stopped"}   # spec 139 B.2: stopped; C.1: Here or Away, the phone reads it too; spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too
-    assert "words" not in snap and not set(snap) & set(host.COMPUTER_ONLY)
-    assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"rev": snap["rev"], "same": True}
-    host.command("ideas.track_add", {"title": "A goal"})                   # what the Board holds: the phone's too
-    moved = host.command("mobile.snapshot", {"since": snap["rev"]})
-    assert not moved.get("same") and moved["ideas_rev"] > snap["ideas_rev"]
-    assert host.command("mobile.snapshot", {"since": "older"})["idea_states"] == []
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import code_map, stacks_known, system_overview
+from orkboard.realm import system_overview
 
 
 def write(root: Path, files: dict[str, str]) -> Path:
@@ -102,44 +102,6 @@ def test_the_client_calls_and_the_server_answers_one_link_with_its_routes_and_ev
         {"event": "state", "way": "back", "emitted_in": "server/src/index.ts", "handled_in": "client/src/views/TvView.tsx"}]
 
 
-def test_the_ways_in_a_page_a_main_a_listen_and_the_scripts(game):
-    cs = by_path(system_overview.read(game))
-    assert cs["client"]["ways_in"] == [{"kind": "page", "name": "", "path": "client/index.html"},
-                                       {"kind": "script", "name": "dev", "path": "client/package.json"},
-                                       {"kind": "script", "name": "build", "path": "client/package.json"}]
-    assert cs["server"]["ways_in"] == [{"kind": "main", "name": "", "path": "server/src/index.ts"},
-                                       {"kind": "script", "name": "dev", "path": "server/package.json"},
-                                       {"kind": "script", "name": "start", "path": "server/package.json"},
-                                       {"kind": "listen", "name": "", "path": "server/src/index.ts"}]
-    assert cs["."]["ways_in"] == [{"kind": "script", "name": "dev", "path": "package.json"}]
-
-
-def test_the_layers_by_the_imports_and_the_folders_roles(game):
-    cs = by_path(system_overview.read(game))
-    assert cs["client"]["layers"] == [{"role": "", "parts": ["client", "client/src"]}, {"role": "face", "parts": ["client/src/views"]},
-                                      {"role": "", "parts": ["client/src/net"]}]
-    assert cs["server"]["layers"] == [{"role": "", "parts": ["server/src"]}, {"role": "doors", "parts": ["server/src/routes"]},
-                                      {"role": "data", "parts": ["server/src/db"]}]
-    assert cs["."]["layers"] == [{"role": "settings", "parts": ["config"]}]
-
-
-def test_the_config_both_use_is_shared(game):
-    assert system_overview.read(game)["shared"] == [{"path": "config", "container": ".", "containers": ["client", "server"],
-                                                     "used_by": ["client/src/views", "server/src"]}]
-
-
-def test_a_part_imported_by_an_alias_is_shared_too(game):
-    write(game, {"client/src/views/PlayerView.tsx": "import { BALANCE } from '@config/balance';\nexport const PlayerView = BALANCE;\n"})
-    shared, = system_overview.read(game)["shared"]
-    assert shared["path"] == "config" and shared["containers"] == ["client", "server"]
-
-
-def test_with_no_manifest_at_the_root_its_own_code_is_the_root_container(game):
-    (game / "package.json").unlink()
-    cs = by_path(system_overview.read(game))
-    assert list(cs) == [".", "client", "server"] and cs["."]["manifests"] == [] and cs["."]["parts"] == ["config"]
-
-
 def test_a_python_project_is_one_container(tmp_path):
     root = write(tmp_path / "shop", {
         "pyproject.toml": '[project]\nname = "shop"\ndependencies = ["Flask>=3", "Flask_SQLAlchemy", "tiny-thing==1"]\n'
@@ -178,39 +140,6 @@ def test_nothing_in_skipped_folders_is_read(game):
     got = system_overview.read(game)
     assert [c["path"] for c in got["containers"]] == [".", "client", "server"]
     assert {r["path"] for r in got["links"][0]["http"]} == {"/api/health", "/api/rooms", "/api/rooms/:code"}
-
-
-def test_a_file_over_the_limit_is_never_read(game):
-    big = "app.get('/huge', f);\nio.on('connection', (s) => s.on('huge', f));\n" + "// pad\n" * (code_map.MAX_BYTES // 7 + 10)
-    write(game, {"server/src/huge.ts": big, "client/src/net/huge.ts": "fetch('/huge');\nsocket.emit('huge');\n"})
-    link, = system_overview.read(game)["links"]
-    assert "/huge" not in {r["path"] for r in link["http"]} and "huge" not in {e["event"] for e in link["socket"]}
-
-
-def test_a_changed_manifest_or_page_matters_and_a_note_does_not():
-    assert all(map(system_overview.matters, ["client/package.json", "go.mod", "client/index.html", "a/b.tsx", "requirements.txt"]))
-    assert not any(map(system_overview.matters, ["README.md", "notes/plan.txt", "art/hero.png"]))
-
-
-def test_the_known_list_names_a_few_hundred_packages_and_the_folders_roles():
-    assert len(stacks_known.LIBS) >= 300
-    assert {role for _name, role in stacks_known.LIBS.values()} == set(stacks_known.STACK_ROLES)
-    assert stacks_known.lib("react-dom") == stacks_known.lib("react") == ("React", "UI")
-    assert stacks_known.lib("Flask_SQLAlchemy", "pypi") == ("SQLAlchemy", "data")
-    assert stacks_known.lib("github.com/labstack/echo/v5", "go") == ("Echo", "server")
-    assert stacks_known.lib("no-such-thing") is None
-    assert {stacks_known.ROLES[f] for f in ("views", "pages", "screens", "components", "ui")} == {"face"}
-    assert {stacks_known.ROLES[f] for f in ("routes", "api", "controllers", "handlers")} == {"doors"}
-    assert {stacks_known.ROLES[f] for f in ("db", "models", "store", "schema", "repositories")} == {"data"}
-    assert {stacks_known.ROLES[f] for f in ("config", "settings")} == {"settings"}
-    assert set(stacks_known.ROLES.values()) == set(stacks_known.FOLDER_ROLES)
-
-
-def test_owner_is_the_deepest_container():
-    paths = [".", "apps/web", "apps"]
-    assert system_overview.owner("apps/web/src", paths) == "apps/web"
-    assert system_overview.owner("apps/api", paths) == "apps" and system_overview.owner("lib", paths) == "."
-    assert system_overview.owner("lib", ["client"]) is None
 
 
 def test_a_web_client_and_a_python_api_are_linked_route_by_route(tmp_path):

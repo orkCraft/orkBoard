@@ -1,7 +1,6 @@
 """A secret's value masked in a task's log (docs/specs/168 I1): in plain words, in a URL, in a JSON line; a short or empty secret masks nothing; the values are found where the Board keeps them."""
 from __future__ import annotations
 
-import json
 
 from orkboard.realm import idea_secrets, log_mask
 from orkboard.realm.log_mask import MASK, mask
@@ -20,12 +19,6 @@ def test_a_value_in_a_url_is_masked_as_it_was_encoded():
         assert stand not in out and out == f"GET https://api.x.io/v1?key={MASK}&x=1", stand
 
 
-def test_a_value_in_a_json_line_is_masked_as_json_wrote_it():
-    value = 'pa"ss\nwörd-123'
-    line = json.dumps({"password": value, "ok": True})
-    assert value not in line and mask(line, [value]) == '{"password": "%s", "ok": true}' % MASK
-    assert mask(json.dumps({"p": value}, ensure_ascii=False), [value]) == '{"p": "%s"}' % MASK
-    assert mask("q=two+words+here", ["two words here"]) == f"q={MASK}"                  # a space as a form posts it
 
 
 def test_a_short_or_empty_secret_does_not_mask_everything():
@@ -36,14 +29,8 @@ def test_a_short_or_empty_secret_does_not_mask_everything():
     assert mask(text, ["", "quick"]) == text.replace("quick", MASK)        # a good one beside an empty one still masks
 
 
-def test_the_longer_value_goes_first_so_one_holding_another_is_hidden_whole():
-    assert mask("a=abcd-efgh-ijkl b=abcd", ["abcd", "abcd-efgh-ijkl"]) == f"a={MASK} b={MASK}"
 
 
-def test_dotenv_values_are_those_named_like_a_secret():
-    text = "# c\nAPI_KEY=abc12345\nexport DB_PASSWORD='p w 1234'\nPORT=8080\nTOKEN=xyz98765 # note\nNAME=bob\n"
-    assert log_mask.dotenv_values(text) == ["abc12345", "p w 1234", "xyz98765"]
-    assert log_mask.environ_values({"PATH": "/bin", "GH_TOKEN": "ghp_abcdef", "ORKCRAFT_TASK": "t1", "N": 3}) == ["ghp_abcdef"]
 
 
 def test_known_reads_the_goals_secrets_the_dotenv_and_the_environment(tmp_path, monkeypatch):

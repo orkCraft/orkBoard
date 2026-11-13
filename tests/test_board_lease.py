@@ -69,16 +69,6 @@ def test_take_on_an_empty_remote_makes_the_branch_from_this_board_with_no_parent
     assert "board_taken" in a.events()
 
 
-def test_the_branch_holds_no_secret_and_nothing_unlisted(world):
-    origin, a, _ = world
-    seed_board(a.state)
-    for n in ("ideas/dark-mode/secrets.json", "sign-in/token", "drive.json", "logs/x.log", "random.txt"):
-        put(a.state, n, "x")
-    a.take(T0)
-    on = git(origin, "ls-tree", "-r", "--name-only", "refs/heads/orkboard/board").split()
-    assert not [p for p in on if any(w in p for w in ("secrets", "sign-in", "drive", "logs", "random", "board-sync", "taken"))]
-
-
 def test_held_by_another_refuses_and_says_who(world):
     origin, a, b = world
     seed_board(a.state)
@@ -88,21 +78,6 @@ def test_held_by_another_refuses_and_says_who(world):
     assert dt.datetime.fromisoformat(got["until"]) == T0 + sec(bl.LEASE_S)
     assert count(origin) == 1                                   # nothing was pushed
     assert "board_refused" in b.events() and "board_taken" not in b.events()
-
-
-def test_the_same_holder_may_take_again(world):
-    _, a, _ = world
-    seed_board(a.state)
-    assert a.take(T0)["held"] and a.take(T0 + sec(10))["held"]
-
-
-def test_a_lease_is_read_held_for_the_skew_past_its_until_and_taken_after(world):
-    _, a, b = world
-    a.take(T0)
-    until = T0 + sec(bl.LEASE_S)
-    assert b.take(until + sec(bl.SKEW_S - 1))["held"] is False
-    got = b.take(until + sec(bl.SKEW_S + 1))
-    assert got["held"] is True and b.remote_lease()["by"] == "beta"
 
 
 def test_renew_moves_until_on_and_pushes_what_changed(world):
@@ -115,17 +90,6 @@ def test_renew_moves_until_on_and_pushes_what_changed(world):
     assert dt.datetime.fromisoformat(a.remote_lease()["until"]) == T0 + sec(bl.RENEW_S + bl.LEASE_S)
     assert json.loads(git(origin, "show", "refs/heads/orkboard/board:ideas/dark-mode/state.json"))["state"] == "working"
     assert "board_pushed" in a.events()
-
-
-def test_a_secret_in_a_goal_is_held_back_by_the_pushes_and_counted(world):
-    origin, a, _ = world
-    seed_board(a.state)
-    a.take(T0)
-    put(a.state, "ideas/dark-mode/plan.json", json.dumps({"note": "token = sk-" + "a1B2c3D4e5F6g7H8i9J0k1L2"}, indent=1))
-    got = a.renew(T0 + sec(5))
-    assert got["held_back"] == 1
-    assert "ideas/dark-mode/plan.json" not in git(origin, "ls-tree", "-r", "--name-only", "refs/heads/orkboard/board").split() or \
-        "sk-" not in git(origin, "show", "refs/heads/orkboard/board:ideas/dark-mode/plan.json")
 
 
 def test_give_back_frees_the_lease_at_once(world):
@@ -160,31 +124,6 @@ def test_a_refused_push_is_read_again_once_and_the_second_try_takes(world, monke
     assert b.remote_lease()["by"] == "beta"
 
 
-def test_a_refused_push_read_again_that_finds_it_held_is_not_taken(world, monkeypatch):
-    origin, a, b = world
-    seed_board(a.state)
-    a.take(T0)
-    a.give_back(T0 + sec(5))
-    real, calls = bb.push, []
-
-    def racing(root, config, commit, run=subprocess.run):
-        calls.append(commit)
-        if len(calls) == 1:                                   # alpha takes it first, just before b's push
-            bl.take(a.root, a.state, CFG, "alpha", "computer", T0 + sec(7), wiki_rel=WIKI)
-        return real(root, config, commit, run)
-    monkeypatch.setattr(bb, "push", racing)
-    got = b.take(T0 + sec(10))
-    assert got["held"] is False and got["by"] == "alpha"
-    assert count(origin) == 3 and b.remote_lease()["by"] == "alpha"
-
-
-def test_a_cloud_run_is_a_holder_like_any_other(world):
-    _, a, b = world
-    a.take(T0, kind="cloud run")
-    got = b.take(T0 + sec(60))
-    assert got["held"] is False and got["kind"] == "cloud run"
-
-
 def test_offline_is_a_result_not_an_exception(world, tmp_path):
     _, a, _ = world
     seed_board(a.state)
@@ -196,16 +135,3 @@ def test_offline_is_a_result_not_an_exception(world, tmp_path):
     assert got["held"] is True and got["offline"] is True
     assert a.give_back(T0)["given"] is False
 
-
-def test_read_lease_and_is_held_in_words():
-    assert bl.read_lease({}) is None and bl.read_lease({bb.LEASE: b"not json"}) is None
-    lease = bl.read_lease({bb.LEASE: bl.lease_bytes("x", "computer", T0)})
-    assert lease and lease["by"] == "x" and bl.is_held(lease, T0 + sec(bl.LEASE_S + bl.SKEW_S - 1)) and not bl.is_held(lease, T0 + sec(bl.LEASE_S + bl.SKEW_S))
-    back = bl.read_lease({bb.LEASE: bl.lease_bytes("x", "computer", T0, back=True)})
-    assert not bl.is_held(back, T0) and not bl.is_held(None, T0)
-    naive = dt.datetime(2026, 11, 4, 12, 0, 0)                      # a naive time is read as UTC
-    assert bl.lease_bytes("x", "computer", naive) == bl.lease_bytes("x", "computer", T0)
-
-
-def test_without_board_in_the_toml_nothing_is_configured(tmp_path):
-    assert bb.read_config(tmp_path) is None

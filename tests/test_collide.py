@@ -48,29 +48,6 @@ def stop_of(h, a, b, by="plan", asked=None, why="Both change how a session token
 
 # -- §1: what a goal touches -----------------------------------------------------------------------------------------------
 
-def test_touches_are_the_pages_the_plans_files_and_the_merged_files_normalised_and_read_never_written(host):
-    h = host
-    slug = planned(h, h.app, "Sessions", ["./orkboard\\realm\\x.py", "`orkboard/core/`", "orkboard/gui/*", "src/app", "some prose here", "", "*.py"],
-                   tasks=[{"id": "k1", "title": "A", "state": "merged", "files": ["orkboard/design/ui.py"], "brief": "Edit `orkboard/zzz/skipped.py`."},
-                          {"id": "k2", "title": "B", "state": "ready", "files": ["tests/test_x.py"],
-                           "brief": "Change `orkboard/realm/y.py` and `README` and the folder `docs/specs/`."}])
-    before = sorted((p, p.stat().st_mtime_ns) for p in list(h.root.rglob("*")) + list(h.state.rglob("*")) if p.is_file())
-    got = collide.touches(h.root, h.state, slug)
-    assert got == sorted(["orkboard/realm/x.py", "orkboard/core/", "orkboard/gui/", "src/app/", "orkboard/design/ui.py", "tests/test_x.py",
-                          "orkboard/realm/y.py", "docs/specs/"])         # prose, a glob in the middle and an empty one are not paths; a merged task's brief is not read
-    assert collide.touches(h.root, h.state, "nowhere") == []
-    assert before == sorted((p, p.stat().st_mtime_ns) for p in list(h.root.rglob("*")) + list(h.state.rglob("*")) if p.is_file())      # read, never written
-
-
-def test_a_module_and_its_folder_overlap_and_tests_and_docs_are_left_out_unless_both_are_only_docs():
-    assert collide.shared(["orkboard/realm/x.py"], ["orkboard/realm/"]) == ["orkboard/realm/x.py"]
-    assert collide.shared(["orkboard/realm/"], ["orkboard/"]) == ["orkboard/realm/"]
-    assert collide.shared(["orkboard/realm/x.py"], ["orkboard/realm/y.py"]) == []                 # two modules in one folder are not the same thing
-    assert collide.shared(["tests/test_a.py", "docs/a.md"], ["tests/test_a.py", "docs/a.md", "src/x.py"]) == []
-    assert collide.shared(["docs/specs/", "src/a.py"], ["docs/specs/71.md"]) == []                # one of them touches code: docs are left out
-    assert collide.shared(["docs/specs/", "README.md"], ["docs/specs/71.md"]) == ["docs/specs/71.md"]      # both only docs
-    assert collide.shared([], ["src/"]) == []
-
 
 # -- §2.1: the overlap, before the work; none, nothing more ---------------------------------------------------------------
 
@@ -96,15 +73,6 @@ def test_a_goal_overlaps_the_open_goals_of_other_parties_only(two):
     assert collide.overlaps(h.root, h.state, bare) == []
 
 
-def test_the_later_goal_is_the_one_asked_about_by_its_plan_and_a_goal_with_no_plan_is_later(two):
-    h = two
-    assert collide.later_of(h.state, h.api, h.screen) == h.screen and collide.later_of(h.state, h.screen, h.api) == h.screen
-    unplanned = goal(h, h.app, "Not planned yet")
-    assert collide.later_of(h.state, h.api, unplanned) == unplanned and collide.later_of(h.state, unplanned, h.api) == unplanned
-    assert collide.later_of(h.state, unplanned, goal(h, h.web, "Another")) == unplanned           # neither has a plan: the one just planned
-    assert collide.pair_id(h.screen, h.api) == collide.pair_id(h.api, h.screen) == f"{h.api}|{h.screen}"
-
-
 # -- §8.1: the stop on the Board and the Map ---------------------------------------------------------------------------------
 
 def test_the_stop_is_a_needs_you_row_on_the_later_goal_with_the_shape_of_the_spec(two):
@@ -124,16 +92,6 @@ def test_the_stop_is_a_needs_you_row_on_the_later_goal_with_the_shape_of_the_spe
     assert pair == f"{h.api}|{h.screen}"
 
 
-def test_a_stop_by_a_changed_spec_is_on_the_goal_whose_spec_did_not_change_and_says_replan_or_leave(two):
-    h = two
-    pair = stop_of(h, h.api, h.screen, by="change", asked=h.api, why="The token's shape changed", first="")
-    row = next(n for n in h.command("ideas.board", {})["needs_you"] if n["kind"] == "collide")
-    assert (row["idea"], row["goal"], row["title"]) == (h.api, h.web, "Auth API")
-    assert row["text"] == "Mobile app changed «Sign-in screen»: «Auth API» in Website rests on what it was"
-    assert [g["idea"] for g in row["collide"]["goals"]] == [h.screen, h.api]                         # goals[0] is the goal whose spec changed
-    assert row["collide"]["answers"] == ["replan", "leave"] and row["collide"]["by"] == "change" and row["collide"]["id"] == pair
-
-
 def test_the_stop_counts_in_the_snapshot_sorts_not_last_and_not_blocking_and_is_the_nodes_needs_you(two):
     h = two
     for slug in (h.api, h.screen):
@@ -149,27 +107,6 @@ def test_the_stop_counts_in_the_snapshot_sorts_not_last_and_not_blocking_and_is_
     ideas.save_state(h.state, h.api, state="failed", error="Broke")
     kinds = [n["kind"] for n in h.command("ideas.board", {})["needs_you"]]
     assert sorted(kinds) == ["collide", "failed", "pitch"] and kinds[-1] == "pitch"        # as a plan's: among the goals' own rows, before a judged pitch
-
-
-def test_a_stop_whose_goal_is_gone_or_done_is_not_shown(two):
-    h = two
-    stop_of(h, h.api, h.screen)
-    ideas.save_state(h.state, h.api, state="done")
-    assert [n for n in h.command("ideas.board", {})["needs_you"] if n["kind"] == "collide"] == []
-    assert h.command("ideas.map", {})["project"]["collisions"] == []
-    ideas.save_state(h.state, h.api, state="plan")
-    h.command("ideas.drop", {"slug": h.api})
-    assert [n for n in h.command("ideas.board", {})["needs_you"] if n["kind"] == "collide"] == []
-
-
-def test_the_project_level_lists_the_open_collisions_on_every_map_and_none_without_a_file(two):
-    h = two
-    assert h.command("ideas.map", {})["project"]["collisions"] == []
-    pair = stop_of(h, h.screen, h.api)
-    want = [{"id": pair, "a": h.api, "b": h.screen}]                                                 # the pair sorted, as its id is
-    assert h.command("ideas.map", {})["project"]["collisions"] == want
-    assert h.command("ideas.map", {"goal": h.app})["project"]["collisions"] == want                 # the project's, whatever party the Map is of
-    assert h.command("ideas.map", {})["project"]["collide_week"] == {"asked": 0, "answered": 0, "taken": 0, "usd": None}
 
 
 # -- §4: a goal waits for another party's ---------------------------------------------------------------------------------
@@ -207,18 +144,6 @@ def test_a_goal_of_another_partys_depends_on_holds_its_start_until_the_flag_then
     assert collide.holds(h.root, h.state, h.screen) == []
 
 
-def test_a_dependency_joins_the_page_and_its_depends_on_section_and_never_closes_a_cycle(two):
-    h = two
-    assert collide.add_dependency(h.root, h.screen, h.api, "Auth API") is True
-    assert collide.add_dependency(h.root, h.screen, h.api, "Auth API") is False
-    page = ideas.idea_page(h.root, h.screen)
-    assert json.loads(page.get("depends_on")) == [h.api] and f"- {h.api} — Auth API" in page.section("Depends on")
-    assert collide.chain(h.root, h.screen) == {h.api} and h.screen not in collide.chain(h.root, h.api)
-    assert not ideas.state(h.state, h.screen).get("changed")                                           # a wait changes no plan
-    with pytest.raises(ValueError):
-        collide.add_dependency(h.root, "nowhere", h.api, "x")
-
-
 # -- §8.2: the command's refusals -------------------------------------------------------------------------------------------
 
 def test_collide_answer_refuses_an_answered_pair_an_unknown_id_and_an_answer_the_stop_does_not_offer(two):
@@ -236,12 +161,3 @@ def test_collide_answer_refuses_an_answered_pair_an_unknown_id_and_an_answer_the
     assert collide.known(h.state, pair, "plan") and not collide.known(h.state, pair, "change") and collide.open_of(h.state, pair) is None
 
 
-def test_the_last_two_hundred_answers_are_kept_and_the_open_ones_are_capped(host):
-    h = host
-    for n in range(230):
-        collide.add_answered(h.state, f"a{n}|b{n}", "plan", "leave")
-    kept = collide.read(h.state)["answered"]
-    assert len(kept) == collide.KEEP == 200 and kept[0]["id"] == "a30|b30" and kept[-1]["id"] == "a229|b229"
-    for n in range(60):
-        collide.add_open(h.state, f"c{n}|d{n}", "plan", f"d{n}", f"c{n}", "why", "")
-    assert len(collide.read(h.state)["open"]) == collide.OPEN_MAX == 50

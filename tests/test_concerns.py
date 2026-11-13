@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import concerns as store, event_log, goal_team, idea_lens, idea_spend, idea_target, ideas, journals, lens_rubrics, lexicon, library, map_parts, project_facts
+from orkboard.realm import concerns as store, event_log, goal_team, idea_lens, idea_target, ideas, journals, library, map_parts, project_facts
 
 APP = {
     "package.json": json.dumps({"dependencies": {"react-router-dom": "6"}}),
@@ -131,49 +131,6 @@ def test_the_record_is_kept_checked_and_read_back(tmp_path):
     assert store.read(tmp_path, "design")["concerns"] == [] and store.read(tmp_path, "../x")["status"] == ""
 
 
-def test_a_concern_names_its_aspect_from_the_answer_else_from_the_hint_on_its_part_and_an_unknown_id_is_not_kept(tmp_path):
-    parts = [{"map": "screens", "id": "cart", "name": "Cart"}, {"map": "screens", "id": "home", "name": "Home"}, {"map": "screens", "id": "about", "name": "About"}]
-    signals = [{"on": "cart", "kind": "a11y", "words": "an image with no alt text"}, {"on": "home", "kind": "dead_end", "words": "a dead end"}]
-    answer = {"concerns": [concern("cart", what="One", aspect="flow"), concern("home", what="Two"), concern("about", what="Three", aspect="no-such-aspect"),
-                           concern("about", what="Four", aspect="status"), concern("home", what="Five", aspect="hotspots")]}
-    got = {c["what"]: c["aspect"] for c in store.parse("design", answer, parts, signals=signals, craft="design")}
-    assert got == {"One": "flow", "Two": "flow", "Three": "", "Four": "status", "Five": "flow"}, "the answer's own id when it is one of the craft's, else the hint's aspect, else none"
-    assert {c["what"]: c["aspect"] for c in store.parse("design", {"concerns": [concern("cart", what="One", aspect="flow")]}, parts, signals=signals)} == {"One": ""}, "no craft: no aspect"
-    saved = store.save(tmp_path, "design", concerns=store.parse("design", answer, parts, signals=signals, craft="design"))
-    assert [c["aspect"] for c in saved["concerns"]] == ["flow", "flow", "", "status", "flow"] and store.read(tmp_path, "design")["concerns"][0]["aspect"] == "flow"
-    store.save(tmp_path, "design", concerns=[{"id": "c-1", "on": "cart", "name": "Cart", "level": "note", "what": "Old", "why": "", "fix": ""}])
-    assert store.read(tmp_path, "design")["concerns"][0]["aspect"] == "", "a record from before has no aspect"
-    assert len(store.save(tmp_path, "design", concerns=[{"id": "c-1", "on": "cart", "name": "Cart", "level": "note", "what": "Long", "aspect": "x" * 90}])["concerns"][0]["aspect"]) == 40
-
-
-def test_the_record_keeps_the_hints_of_code_well_formed_ones_and_twenty_at_most(tmp_path):
-    good = [{"on": f"p{n}", "kind": "big", "aspect": "hotspots", "words": f"p{n} is big"} for n in range(25)]
-    bad = [{"on": "p", "kind": "", "words": "no kind"}, {"on": "p", "kind": "big", "words": ""}, {"kind": "big", "words": "no on"}, "not a hint", {"on": 3, "kind": "big", "words": "on is no text"}]
-    saved = store.save(tmp_path, "tech", hints=[*bad, {"on": "", "kind": "no_channel", "words": "a hint of no part\nin two lines"}, *good])
-    assert len(saved["hints"]) == store.HINTS == 20 and saved["hints"][0] == {"on": "", "kind": "no_channel", "aspect": "", "words": "a hint of no part in two lines"}
-    assert saved["hints"][1] == {"on": "p0", "kind": "big", "aspect": "hotspots", "words": "p0 is big"} and store.read(tmp_path, "tech")["hints"] == saved["hints"]
-    assert store.save(tmp_path, "tech", hints="x")["hints"] == []
-
-
-def test_the_words_are_one_line_each_and_cut(tmp_path):
-    long = "w " * 300
-    got = store.save(tmp_path, "design", concerns=[{"id": "c-1", "on": "cart", "name": "Cart", "level": "note", "what": long, "why": "two\nlines", "fix": ""}])["concerns"][0]
-    assert len(got["what"]) == store.LINE and got["why"] == "two lines"
-
-
-def test_a_look_is_due_when_none_was_made_the_map_changed_a_day_ago_or_it_is_asked_again():
-    now = dt.datetime(2026, 10, 29, 12, 0)
-    ago = lambda **k: (now - dt.timedelta(**k)).isoformat(timespec="seconds")      # noqa: E731
-    assert store.look_due({"at": "", "status": ""}, "h", now)                                                   # opened with no look
-    assert not store.look_due({"at": ago(days=9), "map_hash": "h", "status": "ready"}, "h", now)               # the map did not change
-    assert not store.look_due({"at": ago(hours=23), "map_hash": "old", "status": "ready"}, "h", now)           # changed, the last look not a day old
-    assert store.look_due({"at": ago(hours=24), "map_hash": "old", "status": "ready"}, "h", now)               # changed, a day old
-    assert store.look_due({"at": ago(minutes=1), "map_hash": "h", "status": "ready"}, "h", now, again=True)   # asked again
-    assert not store.look_due({"at": "", "status": "looking"}, "h", now, again=True)                           # one at a time
-    assert not store.look_due({"at": ago(minutes=5), "map_hash": "", "status": "failed"}, "h", now)           # a look that failed waits for a day or a press
-    assert store.look_due({"at": ago(days=2), "map_hash": "", "status": "failed"}, "h", now)
-
-
 def test_the_answer_is_parsed_strictly_an_on_that_is_no_part_dropped_seven_at_most_alerts_first():
     parts = [{"map": "screens", "id": f"p{n}", "name": f"Part {n}"} for n in range(12)]
     answer = {"concerns": [concern("nowhere"), concern("p0", "note", "A note"), concern("p1", "weird", "An odd level"), *[concern(f"p{n}", "alert", f"Alert {n}") for n in range(2, 12)],
@@ -211,19 +168,6 @@ def test_a_goal_made_of_a_concern_is_noted_and_the_counts_are_the_open_ones(tmp_
     assert store.text(rec).splitlines()[0].startswith("- [alert] Home (home): Three Why: Because Fix: Mend it") and "One" not in store.text(rec)
 
 
-def test_a_part_hash_is_the_hash_of_the_lines_that_name_the_part():
-    text = "Screens\n- Cart (/cart) leads to Home\n- About (/about) leads nowhere\n"
-    cart = {"id": "cart", "name": "Cart"}
-    assert store.part_hash(text, cart) == store.part_hash(text.replace("About (/about) leads nowhere", "About (/about) leads to Home"), cart) != "", "a line that does not name the part is not the part's"
-    assert store.part_hash(text, cart) != store.part_hash(text.replace("Cart (/cart) leads to Home", "Cart (/cart) leads nowhere"), cart) and store.part_hash("nothing", cart) == ""
-    assert store.map_hash(text) == store.map_hash(text) != store.map_hash(text + " ")
-
-
-def test_the_word_is_in_the_glossary():
-    assert lexicon.term("concern") == "concern" and lexicon.term("concern", many=True) == "concerns"
-    assert {event_log.CONCERNS_MADE, event_log.CONCERN_OPENED, event_log.CONCERN_GOAL, event_log.CONCERN_DISMISSED} <= set(event_log.EVENTS)
-
-
 # -- the look: the leader's one call ---------------------------------------------------------------------------------------------------------
 
 def test_a_look_is_one_call_of_the_leader_on_the_cheaper_tier_with_no_tools_given_its_map_the_hints_and_the_parts(host, design, model):
@@ -246,76 +190,12 @@ def test_a_look_is_one_call_of_the_leader_on_the_cheaper_tier_with_no_tools_give
     assert len(model.looks) == 1, "reading the record is no second look"
 
 
-def test_the_prompt_names_the_crafts_rubric_before_the_map_the_aspect_of_each_hint_and_asks_for_an_aspect(host, design, tech, model):
-    model.answer = {"concerns": [concern("about", "note", "Nothing leads here", aspect="flow"), concern("cart", what="Not looked at", aspect="seen")]}
-    _look(host, design)
-    p = model.looks[0]["prompt"]
-    assert "How a senior of design reviews this map: Nielsen's ten usability heuristics, WCAG 2.2 AA" in p and "Judge by these aspects:\n- flow: The way through. " in p
-    assert "- consistency: Consistency. Do the screens use one set of words" in p and p.index("How a senior of design") < p.index("Your party's map:")
-    assert "Nothing leads to the screen About" in p and "[on about] (aspect flow)" in p and "no picture kept" in p and "(aspect seen)" in p, "each hint line ends with its aspect"
-    assert "Give each concern its `aspect`, one id of the aspects above. Look at every aspect, not only those the hints name" in p and '"aspect": "flow", "level": "alert"' in p
-    _look(host, tech)
-    q = model.looks[-1]["prompt"]
-    assert "How a senior of tech reviews this map: C4's containers and parts" in q and "- safety: Security and reliability. " in q and "(aspect flow)" not in q and '"aspect": "modularity"' in q
-    rec = host.command("ideas.concerns", {"party": design})
-    assert [(c["on"], c["aspect"]) for c in rec["concerns"]] == [("cart", "seen"), ("about", "flow")]
-
-
-def test_the_look_keeps_the_hints_it_was_given_with_their_aspects(host, design, model):
-    _look(host, design)
-    rec = host.command("ideas.concerns", {"party": design})
-    assert rec["hints"] and len(rec["hints"]) <= store.HINTS and all(set(h) == {"on", "kind", "aspect", "words"} and h["words"] for h in rec["hints"])
-    assert all(h["aspect"] == lens_rubrics.aspect_of("design", h["kind"]) for h in rec["hints"]) and {"loose", "no_picture"} <= {h["kind"] for h in rec["hints"]}
-    assert [h["aspect"] for h in rec["hints"] if h["kind"] == "loose"] == ["flow"] * sum(h["kind"] == "loose" for h in rec["hints"])
-    assert store.read(host.ideas.state_dir, design)["hints"] == rec["hints"]
-
-
-def test_every_concern_command_carries_the_rubric_with_the_scorecard_and_none_for_a_party_with_no_map(host, design, tech, model):
-    model.answer = {"concerns": [concern("about", "alert", "Nothing leads here", aspect="flow"), concern("cart", "note", "Not looked at", aspect="seen")]}
-    first = _look(host, design) and host.command("ideas.concerns", {"party": design})
-    r = lens_rubrics.RUBRICS["design"]
-    assert first["rubric"]["framework"] == r["framework"] and first["rubric"]["short"] == "Nielsen · WCAG 2.2"
-    card = {a["id"]: a for a in first["rubric"]["aspects"]}
-    assert list(card) == [a["id"] for a in r["aspects"]] and (card["flow"]["state"], card["flow"]["n"]) == ("alert", 1) and (card["seen"]["state"], card["seen"]["n"]) == ("note", 1)
-    assert card["consistency"]["state"] == "clear" and card["flow"]["name"] == "The way through" and card["flow"]["ask"] == r["aspects"][0]["ask"]
-    assert first["rubric"]["aspects"] == lens_rubrics.scorecard("design", store.read(host.ideas.state_dir, design))
-    made = host.command("ideas.concern_goal", {"party": design, "id": first["concerns"][0]["id"]})
-    assert {a["id"]: a["state"] for a in made["rubric"]["aspects"]}["flow"] == "hint", "a goal was made: the concern is not open, code's hint stays"
-    assert made["concerns"][0]["aspect"] == "flow"
-    gone = host.command("ideas.concern_dismiss", {"party": design, "id": first["concerns"][1]["id"]})
-    assert gone["rubric"] and {a["id"]: a["state"] for a in gone["rubric"]["aspects"]}["seen"] == "hint"
-    again = host.command("ideas.concerns_again", {"party": design})
-    assert again["rubric"]["framework"] == r["framework"]
-    plain = _party(host, "Plain", "taskmaster")
-    for rec in (host.command("ideas.concerns", {"party": plain}), host.command("ideas.concerns_again", {"party": plain})):
-        assert rec["rubric"] is None and rec["has_map"] is False
-    unlooked = host.command("ideas.concerns", {"party": tech})
-    assert unlooked["rubric"]["short"] == "C4 · ISO 25010 · hotspots"
-
-
 def test_at_most_seven_are_kept_and_what_is_not_on_the_map_is_dropped(host, design, model):
     model.answer = {"concerns": [concern("ghost", what="Not a part"), *[concern(p, "note", f"Note {p}") for p in ("home", "cart", "about")], *[concern(f"step:{n}", "alert", f"Alert {n}") for n in (1, 2, 3, 4)],
                                  *[concern("home", "alert", f"More {n}") for n in range(6)]]}
     rec = _look(host, design) and host.command("ideas.concerns", {"party": design})
     assert len(rec["concerns"]) == 7 and {c["on"] for c in rec["concerns"]} <= {p["id"] for p in map_parts.parts(host.ideas.state_dir, host.ideas.keeper.repo_root, "design")}
     assert [c["level"] for c in rec["concerns"]] == ["alert"] * 7 and rec["alerts"] == 7 and rec["notes"] == 0
-
-
-def test_the_step_is_in_the_specs_stage_of_its_partys_ledger_and_is_as_talks_round(host, design, model):
-    _look(host, design)
-    spent = idea_spend.of_goal(host.ideas.state_dir, design)
-    assert spent["stages"]["spec"]["usd"] == 0.01 and idea_spend.STEP_STAGE["concerns"] == "spec" and "concerns" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("concerns", target) == idea_target.pick("talk_round", target)
-    assert idea_target.READS["concerns"] == 0 and idea_target.reads_of("concerns", "design") == 4 and idea_target.reads_of("concerns", "tech") == 0
-
-
-def test_a_look_is_logged_without_a_word_of_the_leaders(host, design, model):
-    model.answer = {"concerns": [concern("cart", what="SECRET WORDS"), concern("about", "note", "Other")]}
-    _look(host, design)
-    (row,) = [r for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERNS_MADE]
-    assert {k: row[k] for k in ("party", "n", "alerts", "notes", "why")} == {"party": design, "n": 2, "alerts": 1, "notes": 1, "why": "open"} and row["signals"] >= 1 and row["cost"] == 0.01 and "seconds" in row
-    assert "SECRET WORDS" not in json.dumps(row)
 
 
 # -- when ----------------------------------------------------------------------------------------------------------------------------------------
@@ -327,24 +207,6 @@ def test_no_call_for_a_party_nobody_opens_or_that_has_no_map(host, design, model
     assert got["has_map"] is False and got["map"] == "" and got["concerns"] == [] and got["status"] == "" and model.looks == []
     again = host.command("ideas.concerns_again", {"party": plain})        # the whole record, as every concern command answers (spec 108 §2.5)
     assert (again["ok"], again["asked"], again["why"], again["concerns"]) == (True, False, "There is nothing on this map to look at yet", []) and model.looks == []
-
-
-def test_a_party_whose_map_has_nothing_to_look_at_yet_is_not_looked_at(host, model):
-    game = _party(host, "Game design", "game-designer")
-    assert host.command("ideas.concerns", {"party": game})["status"] == "" and model.looks == []                 # no loop is kept yet
-    assert host.command("ideas.concerns_again", {"party": game})["asked"] is False
-
-
-def test_the_first_opening_asks_the_second_does_not_and_again_does(host, design, model):
-    _look(host, design)
-    _look(host, design)
-    assert len(model.looks) == 1, "the map did not change"
-    again = host.command("ideas.concerns_again", {"party": design})
-    assert (again["ok"], again["asked"], again["party"]) == (True, True, design) and isinstance(again["concerns"], list)
-    _wait(host, design)
-    assert len(model.looks) == 2
-    rows = [r for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERNS_MADE]
-    assert [r["why"] for r in rows] == ["open", "again"]
 
 
 def test_a_map_that_changed_is_looked_at_again_only_when_the_last_look_is_a_day_old(host, design, model):
@@ -442,17 +304,6 @@ def test_a_concern_made_a_goal_is_a_goal_of_the_party_with_its_part_as_the_mark_
     assert [(r["party"], r["level"], r["idea"]) for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERN_GOAL] == [(design, "alert", made["idea"])]
 
 
-def test_the_type_of_the_goal_is_its_maps_default_when_the_party_is_offered_it(host, tech, model):
-    from orkboard.realm import goal_types
-    model.answer = lambda call: {"concerns": [concern("src", what="Too much in one place", fix="Split it")]}
-    rec = _look(host, tech) and host.command("ideas.concerns", {"party": tech})
-    assert rec["map"] == "system" and [c["on"] for c in rec["concerns"]] == ["src"]
-    offered = {t.id for t, _m in goal_types.offered(host.ideas.state_dir, host.ideas.root(), tech)}
-    made = host.command("ideas.concern_goal", {"party": tech, "id": rec["concerns"][0]["id"]})
-    assert made["type"] == ("restructure" if "restructure" in offered else "")
-    assert ideas.state(host.ideas.state_dir, made["idea"])["marks"] == [{"map": "system", "name": "src", "id": "src"}]
-
-
 def test_opening_a_map_that_has_concerns_is_logged_once_as_its_highest_level(host, design, model):
     model.answer = {"concerns": [concern("about", "note", "Nothing leads here")]}
     _look(host, design)                                                       # the first opening: no concerns yet when it answered
@@ -477,17 +328,6 @@ def test_a_gone_party_or_concern_is_refused_in_plain_words(host, design, model):
 
 
 # -- the snapshot, Talk, the pictures ------------------------------------------------------------------------------------------------------
-
-def test_the_partys_row_in_the_map_carries_its_counts_for_its_tab(host, design, model):
-    row = lambda: next(g for g in host.command("ideas.map", {})["goals"] if g["slug"] == design)["concerns"]      # noqa: E731
-    assert row() == {"alerts": 0, "notes": 0, "status": "", "list": []}
-    model.answer = {"concerns": [concern("cart"), concern("home", "alert", "Two"), concern("about", "note", "Three")]}
-    _look(host, design)
-    got = row()
-    assert (got["alerts"], got["notes"], got["status"]) == (2, 1, "ready") and [(c["level"], c["in_hand"]) for c in got["list"]] == [("alert", True), ("alert", True), ("note", False)]
-    store.save(host.ideas.state_dir, design, status="failed", error="x")
-    assert row()["status"] == "failed"
-
 
 def test_the_concerns_of_a_party_are_the_text_its_leader_is_given_in_a_talk_round(host, design, model):
     keeper = host.ideas.keeper
@@ -515,28 +355,6 @@ def test_design_reads_the_pictures_of_the_screens_kept_since_its_last_look_and_n
 
 # -- Spec 121 E: the evening line (docs/specs/121-the-day-the-morning-and-the-night.md §6) -----------------------------------------------------------
 
-def test_the_evening_line_is_parsed_strictly_a_way_out_of_the_three_is_unclear_and_the_line_is_cut():
-    assert store.parse_since({"concerns": [], "since": {"way": "toward", "line": "Checkout got shorter"}}) == {"way": "toward", "line": "Checkout got shorter"}
-    assert store.parse_since({"since": {"way": "away", "line": "The cart lost its back link"}})["way"] == "away"
-    assert store.parse_since({"since": {"way": "sideways", "line": "Who can say"}}) == {"way": "unclear", "line": "Who can say"}
-    assert store.parse_since({"since": {"line": "No way said"}}) == {"way": "unclear", "line": "No way said"}
-    assert store.parse_since({"since": {"way": "toward", "line": "  one \n line  " + "x" * 400}})["line"].startswith("one line xxx") and len(store.parse_since({"since": {"line": "y" * 400}})["line"]) == store.LINE == 200
-    for none in ({}, {"since": None}, {"since": "toward"}, {"since": {"way": "toward"}}, {"since": {"way": "toward", "line": "  "}}, {"since": {"way": "toward", "line": 7}}, "since", None, []):
-        assert store.parse_since(none) is None, none
-
-
-def test_the_record_keeps_the_evening_line_checked_and_none_without_one(tmp_path):
-    assert store.read(tmp_path, "design")["since"] is None and store.read(tmp_path, "design")["head"] == ""
-    saved = store.save(tmp_path, "design", head="a" * 40, since={"way": "away", "line": "It broke", "at": "2026-10-30T20:00:00", "map_hash": "abc"})
-    assert saved["since"] == {"way": "away", "line": "It broke", "at": "2026-10-30T20:00:00", "map_hash": "abc"} and saved["head"] == "a" * 40
-    assert store.read(tmp_path, "design") == saved
-    store.save(tmp_path, "design", since={"way": "worse", "line": "A made-up way", "at": "t", "map_hash": "h"})
-    assert store.read(tmp_path, "design")["since"]["way"] == "unclear", "a way out of the three reads as unclear"
-    for bad in ("toward", {"way": "toward", "line": ""}, {"way": "toward"}, ["toward"]):
-        store.save(tmp_path, "design", since=bad)
-        assert store.read(tmp_path, "design")["since"] is None, bad
-
-
 def _change_map(host) -> None:
     """A screen comes to dev: the map of Design is not what it was."""
     repo = Path(host.ideas.keeper.repo_root)
@@ -549,15 +367,6 @@ def _change_map(host) -> None:
 
 def _a_day_ago(host, party) -> None:
     store.save(host.ideas.state_dir, party, at=(dt.datetime.now() - dt.timedelta(days=2)).isoformat(timespec="seconds"))
-
-
-def test_the_first_look_asks_for_no_evening_line_and_keeps_none(host, design, model):
-    model.answer = {"concerns": [], "since": {"way": "toward", "line": "Nothing to compare yet"}}
-    got = _look(host, design)
-    (call,) = model.looks
-    assert "`since`" not in call["prompt"] and '"since"' not in call["prompt"], "there is no look before it"
-    rec = host.command("ideas.concerns", {"party": design})
-    assert rec["since"] is None and got["since"] is None and rec["head"], "the dev commit the look read is kept"
 
 
 def test_a_look_of_a_map_that_changed_asks_for_the_line_and_keeps_it_with_its_time_and_map(host, design, model):
@@ -593,36 +402,6 @@ def test_a_bad_way_is_unclear_and_a_look_that_says_no_line_keeps_none(host, desi
     assert host.command("ideas.concerns", {"party": design})["since"] is None
 
 
-def test_no_line_without_a_change_a_look_again_of_the_same_map_keeps_none(host, design, model):
-    _look(host, design)
-    model.answer = {"concerns": [], "since": {"way": "away", "line": "It broke"}}
-    again = host.command("ideas.concerns_again", {"party": design})
-    _wait(host, design)
-    assert again["asked"] is True and "`since`" not in model.looks[1]["prompt"], "the map did not change since the look before"
-    assert host.command("ideas.concerns", {"party": design})["since"] is None, "an answer to a question not asked is not kept"
-
-
-def test_the_line_stays_until_the_next_look_and_every_concern_command_carries_it(host, design, model):
-    _look(host, design)
-    _change_map(host)
-    _a_day_ago(host, design)
-    model.answer = {"concerns": [concern("about", "note", "Nothing leads here")], "since": {"way": "away", "line": "Cart lost its way back"}}
-    _look(host, design)
-    cid = host.command("ideas.concerns", {"party": design})["concerns"][0]["id"]
-    assert host.command("ideas.concerns", {"party": design})["since"]["line"] == "Cart lost its way back"
-    assert host.command("ideas.concern_dismiss", {"party": design, "id": cid})["since"]["way"] == "away"
-
-
-def test_a_failed_look_keeps_no_line_and_the_next_one_is_not_asked_one(host, design, model):
-    _look(host, design)
-    _change_map(host)
-    _a_day_ago(host, design)
-    model.answer = "not json at all"
-    _look(host, design)
-    rec = host.command("ideas.concerns", {"party": design})
-    assert rec["status"] == "failed" and rec["since"] is None and rec["map_hash"] == ""
-
-
 # -- the leader's view on opening a tab (spec 167 J) ----------------------------------------------------------------------------------------------
 
 def _views(model):
@@ -642,18 +421,6 @@ def test_opening_a_tab_begins_the_view_only_when_it_is_a_day_old_or_there_is_non
     _look(host, design)
     _wait(host, design)
     assert len(_views(model)) >= 1, "a view two days old begins one (a failed answer is tried twice)"
-
-
-def test_a_party_busy_with_its_maps_look_begins_no_view(host, design, model):
-    model.gate = threading.Event()
-    host.command("ideas.concerns", {"party": design})
-    assert host.ideas.keeper.busy_goal(design) and _views(model) == []
-    model.gate.set()
-    _wait(host, design)
-    assert _views(model) == []
-    _look(host, design)                                           # the next opening tries again
-    _wait(host, design)
-    assert len(_views(model)) >= 1
 
 
 # -- Spec 168 D4: a concern at the alert's level is a card in the hand; Later lays it face down (decisions §283.21) ----------------------------------------

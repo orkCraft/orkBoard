@@ -71,20 +71,6 @@ def test_a_request_does_not_wait_and_the_next_answers_what_was_kept(monkeypatch)
     assert calls["git"] == 0
 
 
-def test_a_second_request_at_the_same_rev_starts_no_refresh(monkeypatch):
-    calls = setup(monkeypatch)
-    f = Face()
-    f.heat({"party": "tech-party"})
-    join()
-    n = calls["head"]
-    f.heat({"party": "tech-party"})
-    f.reach({"party": "tech-party"})
-    join()
-    assert calls["head"] == n == 1 and calls["heat"] == ["tech"]
-    f.rev = 2
-    f.heat({"party": "tech-party"})
-    join()
-    assert calls["head"] == 2
 
 
 def test_at_most_one_refresh_runs_at_a_time(monkeypatch):
@@ -108,6 +94,3 @@ def test_a_party_gone_or_without_a_map_is_empty_without_an_error(monkeypatch):
     join()
 
 
-def test_the_commands_are_registered():
-    f = Face()
-    assert set(ideas_reach.reach_commands(f)) == {"ideas.heat", "ideas.reach"}

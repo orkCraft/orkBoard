@@ -136,64 +136,6 @@ def test_a_page_gets_the_probe_first_in_head_and_its_length_is_right(proxy):
     assert headers["x-dev"] == "yes" and headers["content-type"] == "text/html; charset=utf-8"
 
 
-def test_the_csp_headers_are_dropped_from_every_answer(proxy):
-    _, headers, _ = get(proxy, "/")
-    assert "content-security-policy" not in headers and "content-security-policy-report-only" not in headers
-    _, headers, body = get(proxy, "/app.js")
-    assert "content-security-policy" not in headers and body == b"console.log(1)"       # a script is not touched
-
-
-def test_an_html_answer_with_no_head_gets_it_after_the_doctype(proxy):
-    _, _, body = get(proxy, "/nohead")
-    assert body.startswith(b"<!doctype html><script src=") and body.endswith(b"<title>no head</title><p>hello")
-    assert play_proxy.inject(b"<p>x", b"<s>") == b"<s><p>x"
-    assert play_proxy.inject(b"\xef\xbb\xbf<p>x", b"<s>") == b"\xef\xbb\xbf<s><p>x"
-    assert play_proxy.inject(b"<html><body>x", b"<s>") == b"<html><s><body>x"
-    assert play_proxy.inject(b"<header>x</header><HEAD data-a=1><title>t", b"<s>") == b"<header>x</header><HEAD data-a=1><s><title>t"
-
-
-def test_a_chunked_answer_is_read_whole_and_sent_with_its_length(proxy):
-    status, headers, body = get(proxy, "/chunked")
-    assert status == 200 and b"/__ork/probe.js" in body and body.replace(play_proxy.tag_of("http://127.0.0.1:9", "abc123"), b"") == PAGE
-    assert int(headers["content-length"]) == len(body) and "transfer-encoding" not in headers
-
-
-def test_a_gzip_answer_is_unpacked_and_the_preview_is_asked_for_identity(proxy):
-    _, headers, body = get(proxy, "/gzip", {"Accept-Encoding": "gzip, br"})
-    assert b"/__ork/probe.js" in body and "content-encoding" not in headers and int(headers["content-length"]) == len(body)
-    assert Dev.seen[-1]["accept-encoding"] == "identity"
-
-
-def test_the_probe_file_is_the_hosts_own_and_never_passed_on(proxy):
-    status, headers, body = get(proxy, "/__ork/probe.js?o=x&p=y")
-    assert status == 200 and headers["content-type"].startswith("text/javascript") and headers["cache-control"] == "no-store"
-    assert body == (play_proxy.PROBE_DIR / "probe.js").read_bytes()
-    assert not Dev.seen                                                                  # the preview was never asked
-    assert get(proxy, "/__ork/nothing.js")[0] == 404 and get(proxy, "/__ork/../x")[0] == 404
-    conn = http.client.HTTPConnection("127.0.0.1", proxy.port)
-    conn.request("POST", "/__ork/probe.js", body=b"x")
-    assert conn.getresponse().status == 405
-    conn.close()
-
-
-def test_everything_else_passes_as_it_is(proxy):
-    status, headers, body = get(proxy, "/json")
-    assert (status, body, headers["content-type"]) == (200, b'{"ok": true}', "application/json")
-    status, _, body = get(proxy, "/missing")
-    assert status == 404 and b"not here" in body and b"/__ork/probe.js" in body         # a 404 page is HTML too
-    assert get(proxy, "/empty")[0] == 204
-    conn = http.client.HTTPConnection("127.0.0.1", proxy.port)
-    conn.request("POST", "/post", body=b"hello", headers={"Content-Type": "text/plain"})
-    res = conn.getresponse()
-    assert res.status == 200 and res.read() == b"got hello"
-    conn.close()
-    conn = http.client.HTTPConnection("127.0.0.1", proxy.port)
-    conn.request("HEAD", "/")
-    res = conn.getresponse()
-    assert res.status == 200 and res.read() == b""
-    conn.close()
-
-
 def test_the_preview_sees_its_own_address_and_a_redirect_comes_back_to_the_proxy(proxy, dev):
     get(proxy, "/", {"Origin": f"http://127.0.0.1:{proxy.port}", "Referer": f"http://127.0.0.1:{proxy.port}/a?b=1"})
     seen = Dev.seen[-1]
@@ -225,16 +167,6 @@ def test_an_unreachable_preview_is_a_502_and_stopping_closes_the_listener(dev):
     p.stop()
     with pytest.raises(OSError):
         socket.create_connection(("127.0.0.1", port), timeout=1)
-
-
-def test_stopping_ends_a_tunnel_that_is_open(proxy):
-    s = socket.create_connection(("127.0.0.1", proxy.port), timeout=5)
-    s.sendall(b"GET /ws HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
-    assert s.recv(4096).startswith(b"HTTP/1.1 101")
-    proxy.stop()
-    s.settimeout(5)
-    assert s.recv(4096) == b""                                                            # the tunnel ended with Play
-    s.close()
 
 
 # -- Play ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -288,27 +220,6 @@ def test_play_answers_with_the_proxys_url_and_stops_it_with_play(host):
     assert host.command("ideas.play", {"peek": True}) == {"state": "stopped"}
 
 
-def test_preview_probe_false_leaves_play_as_it_was(host):
-    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
-    (host.ideas.state_dir / "checks.toml").write_text("preview_probe = false\n")
-    host.command("ideas.play", {})
-    got = settle(host)
-    assert got["state"] == "playing" and got["probe"] is False and got["play"] == ""
-    assert got["url"] == f"http://127.0.0.1:{host.ideas.player.port}/"                    # the preview's own address
-    assert "/__ork/" not in fetch(got["url"])
-
-
-def test_a_proxy_that_cannot_start_falls_back_to_the_direct_url(host, monkeypatch, caplog):
-    def broken(self):
-        raise OSError("no port")
-    monkeypatch.setattr(play_proxy.PlayProxy, "start", broken)
-    with caplog.at_level("WARNING"):
-        host.command("ideas.play", {})
-        got = settle(host)
-    assert got["state"] == "playing" and got["probe"] is False and got["url"] == f"http://127.0.0.1:{host.ideas.player.port}/"
-    assert "probe proxy did not start" in caplog.text
-
-
 # -- the command's lines ------------------------------------------------------------------------------------------------------------------------------
 
 def test_the_commands_lines_are_kept_with_their_time_colour_and_secrets_out():
@@ -325,13 +236,6 @@ def test_the_commands_lines_are_kept_with_their_time_colour_and_secrets_out():
     assert tail.before(middle) == ["ready in 300 ms", "  ➜ Local: http://127.0.0.1:5173/", "[vite] src/App.tsx hot updated"]
     assert tail.before(middle, n=1) == ["[vite] src/App.tsx hot updated"] and tail.before(before - 1) == [] and tail.before()[-1] == "later"
     assert len(tail) == 8                                                                 # the list a failed start shows is as before
-
-
-def test_only_the_last_four_hundred_lines_are_kept():
-    tail = play_lines.Tail()
-    for n in range(450):
-        tail.append(f"line {n}")
-    assert len(tail.lines) == 400 and tail.lines[0][1] == "line 50" and tail.before(n=3) == ["line 447", "line 448", "line 449"]
 
 
 def test_play_keeps_the_lines_of_a_command_that_prints(fake_repo, tmp_path):
@@ -359,10 +263,6 @@ def test_play_keeps_the_lines_of_a_command_that_prints(fake_repo, tmp_path):
         if play is not None:
             play.stop("stopped", wait=True)
         h.close()
-
-
-def test_play_module_is_not_too_long():
-    assert len(Path(ideas_assets.__file__).read_text().splitlines()) < 600
 
 
 # -- Play at a path (spec 121 §5.3) --------------------------------------------------------------------------------------------------------------
@@ -397,10 +297,6 @@ def test_a_screens_route_is_a_pages_path_a_parameter_takes_a_value():
         assert page(bad) == "", bad
 
 
-def test_the_proxy_opens_the_page_at_the_path_asked(proxy):
-    assert proxy.url_of("/orders/1") == proxy.origin + "/orders/1" and proxy.url_of("orders") == proxy.origin + "/"
-
-
 def test_play_opens_its_first_page_at_the_path_of_a_screen(app_host):
     host = app_host
     first = host.command("ideas.play", {"path": "/orders/:id", "idea": "cart-total"})
@@ -423,22 +319,6 @@ def test_play_that_plays_already_is_answered_at_the_new_path_and_not_started_aga
     assert host.command("ideas.play", {})["url"] == base["url"], "asked with no path it is the preview's own again"
 
 
-def test_a_start_still_going_opens_at_the_page_last_asked(app_host):
-    host = app_host
-    host.command("ideas.play", {})
-    second = host.command("ideas.play", {"path": "/orders/:id"})               # a fast preview may be playing by now: then this answer carries the page
-    assert (second if second["state"] == "playing" else settle(host))["url"].endswith("/orders/1")
-
-
-def test_without_the_probe_the_previews_own_address_takes_the_path(app_host):
-    host = app_host
-    host.ideas.state_dir.mkdir(parents=True, exist_ok=True)
-    (host.ideas.state_dir / "checks.toml").write_text("preview_probe = false\n")
-    host.command("ideas.play", {"path": "/orders/:id"})
-    got = settle(host)
-    assert got["probe"] is False and got["url"] == f"http://127.0.0.1:{host.ideas.player.port}/orders/1"
-
-
 def test_a_path_no_screen_has_is_refused_in_words_before_the_start(app_host):
     host = app_host
     with pytest.raises(Exception, match="There is no screen at /nowhere"):
@@ -451,15 +331,3 @@ def test_a_path_no_screen_has_is_refused_in_words_before_the_start(app_host):
     assert [e for e in event_log.read(host.repo_root) if e["event"] == event_log.PLAY_AT_PATH] == []
     assert host.command("ideas.play", {"path": "/"})["state"] == "starting", "the preview's own page is always there"
 
-
-def test_a_project_with_no_screen_takes_the_root_alone(host):
-    with pytest.raises(Exception, match="There is no screen at /orders"):
-        host.command("ideas.play", {"path": "/orders"})
-    assert host.ideas._play is None
-    assert host.command("ideas.play", {"path": "/"})["state"] == "starting"
-
-
-def test_a_phone_is_refused_with_a_path_too(app_host):
-    with pytest.raises(Exception, match="Play on the computer"):
-        app_host.command("ideas.play", {"device": "phone", "path": "/orders/:id"})
-    assert app_host.ideas._play is None

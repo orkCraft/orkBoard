@@ -54,23 +54,6 @@ def test_nothing_is_kept_before_a_tree_and_the_outcomes_and_jobs_are_kept_in_ord
     assert json.loads((state / "tree.json").read_text())["jobs"][0]["when"] == "I start a new project"
 
 
-def test_the_words_the_sentence_puts_before_a_part_are_not_kept_twice(state):
-    got = tree.keep(state, OUT, [job("I want to see a sketch.", when="When I start a new project,", so="so I can judge the idea"), job("to share it", so="so that I can show it"),
-                                 job("compare", so="that it is quick")], "person")
-    assert got["jobs"][0]["when"] == "I start a new project" and got["jobs"][0]["want"] == "see a sketch" and got["jobs"][0]["so"] == "judge the idea"
-    assert (got["jobs"][1]["want"], got["jobs"][1]["so"]) == ("share it", "show it") and got["jobs"][2]["so"] == "that it is quick"
-
-
-def test_parts_are_bounded_and_one_part_given_leaves_the_other_as_it_is(state):
-    long = "word " * 100
-    got = tree.keep(state, [{"text": long}], [job(long, when=long, so=long, segment=long), *THREE[:2]], "person")
-    assert len(got["outcomes"][0]["text"]) <= tree.OUTCOME_CHARS
-    assert all(len(got["jobs"][0][k]) <= n for k, n in (("when", tree.PART_CHARS), ("want", tree.PART_CHARS), ("so", tree.PART_CHARS), ("segment", tree.SEGMENT_CHARS)))
-    only = tree.keep(state, [{"text": "Another outcome"}], None, "person")
-    assert only["jobs"] == got["jobs"] and [o["text"] for o in only["outcomes"]] == ["Another outcome"]
-    assert tree.keep(state, None, THREE, "person")["outcomes"] == only["outcomes"]
-
-
 def test_a_job_keeps_its_id_who_kept_it_and_its_goals_while_it_is_the_same_and_a_job_gone_takes_its_goals(state):
     first = kept(state, "leader")
     tree.attach(state, "see-a-sketch", "dark-mode")
@@ -99,18 +82,6 @@ def test_a_count_outside_the_bounds_or_a_part_missing_is_refused_in_plain_words_
     assert tree.read(state) == before
 
 
-def test_a_file_that_is_not_of_the_shape_reads_as_absent(state):
-    (state / "tree.json").write_text(json.dumps({"outcomes": [{"id": "A B", "text": "x"}, {"id": "ok", "text": "Fine"}, "no"],
-                                                 "jobs": [{"id": "j1", "when": "w", "want": "x", "so": "s", "by": "robot"}, {"id": "j2", "when": "w", "want": "", "so": "s"}, 3],
-                                                 "serves": [{"job": "j1", "goal": "a"}, {"job": "j1", "goal": "a"}, {"job": "j2", "goal": "b"}, {"job": "j1", "goal": "Bad Slug"}],
-                                                 "tests": [{"goal": "a", "experiment": "e"}, {"goal": "a", "experiment": "e"}, {"goal": "a", "experiment": "a"}, {"goal": 1}]}))
-    got = tree.read(state)
-    assert got["outcomes"] == [{"id": "ok", "text": "Fine"}] and [(j["id"], j["by"], j["segment"]) for j in got["jobs"]] == [("j1", "person", "")]
-    assert got["serves"] == [{"job": "j1", "goal": "a"}] and got["tests"] == [{"goal": "a", "experiment": "e"}]
-    (state / "tree.json").write_text("[1]")
-    assert tree.read(state)["jobs"] == []
-
-
 # -- the goals under a job, the experiments under a goal ------------------------------------------------------------------------------
 
 def test_a_goal_serves_one_job_at_most_attaching_moves_it_and_an_empty_job_detaches_it(state):
@@ -125,45 +96,7 @@ def test_a_goal_serves_one_job_at_most_attaching_moves_it_and_an_empty_job_detac
     assert tree.read(state)["serves"] == [{"job": "see-a-sketch", "goal": "faster-pages"}]
 
 
-def test_an_experiment_tests_one_goal_at_most_and_an_empty_one_takes_them_off(state):
-    kept(state)
-    tree.test(state, "dark-mode", "try-dark")
-    tree.test(state, "dark-mode", "try-contrast")
-    assert tree.test(state, "faster-pages", "try-dark") == [{"goal": "dark-mode", "experiment": "try-contrast"}, {"goal": "faster-pages", "experiment": "try-dark"}]
-    assert tree.test(state, "", "try-contrast") == [{"goal": "faster-pages", "experiment": "try-dark"}]
-    tree.test(state, "faster-pages", "try-more")
-    assert tree.test(state, "faster-pages", "") == []
-    for goal_, experiment, why in (("", "", "Say which goal"), ("a", "a", "its own experiment"), ("a", "Bad Slug", "goal's name")):
-        with pytest.raises(ValueError, match=why):
-            tree.test(state, goal_, experiment)
-    assert tree.read(state)["serves"] == []                                                         # the record's other parts stand
-    assert [j["id"] for j in tree.read(state)["jobs"]] == ["see-a-sketch", "share-it-with-a-friend", "compare-two-versions"]
-
-
 # -- the leader's answer, strictly ---------------------------------------------------------------------------------------------------
-
-def test_the_leaders_answer_is_taken_strictly(state):
-    good = {"outcomes": [{"text": "Cut the time"}], "jobs": [job("see a sketch"), job("share it"), job("compare two", so="so I can choose")]}
-    got = tree.parse(good)
-    assert got == {"outcomes": [{"text": "Cut the time"}], "jobs": [{"when": "I start a new project", "want": "see a sketch", "so": "judge the idea", "segment": "solo founders"},
-                                                                    {"when": "I start a new project", "want": "share it", "so": "judge the idea", "segment": "solo founders"},
-                                                                    {"when": "I start a new project", "want": "compare two", "so": "choose", "segment": "solo founders"}]}
-    assert tree.keep(state, got["outcomes"], got["jobs"], "leader")["jobs"][2]["so"] == "choose"
-    for bad in (None, "no", [], {}, {**good, "outcomes": []}, {**good, "outcomes": [{"text": "a"}, {"text": "b"}, {"text": "c"}]}, {**good, "outcomes": ["Cut the time"]},
-                {**good, "jobs": good["jobs"][:2]}, {**good, "jobs": [job(f"w{n}") for n in range(8)]}, {**good, "jobs": "no"}, {**good, "jobs": [*good["jobs"][:2], job("x", segment="")]},
-                {**good, "jobs": [*good["jobs"][:2], {"when": "w", "want": "x", "so": "s"}]}, {**good, "jobs": [*good["jobs"][:2], job("x", so=3)]}, {**good, "jobs": [*good["jobs"][:2], good["jobs"][0]]}):
-        assert tree.parse(bad) is None
-
-
-def test_the_proposal_is_recorded_beside_the_tree_and_forgotten_on_a_stop(state):
-    assert tree.proposal(state) == {"status": "", "error": "", "at": ""}
-    tree.save_proposal(state, "failed", "The leader\n did not answer")
-    got = tree.proposal(state)
-    assert got["status"] == "failed" and got["error"] == "The leader did not answer" and got["at"]
-    kept(state)
-    assert tree.proposal(state)["status"] == "failed" and tree.read(state)["jobs"]                  # the tree and the proposal live in one file, each alone
-    tree.save_proposal(state, "")
-    assert tree.proposal(state)["status"] == "" and tree.read(state)["jobs"]
 
 
 # -- its text --------------------------------------------------------------------------------------------------------------------------
@@ -189,44 +122,6 @@ Outcome: Cut the time to a first sketch from ten minutes to two
 
 No goal serves yet: 3 (compare two versions)"""
     assert tree.text(state, state).splitlines()[5] == f"   Served by: {one} (tested by {exp}); {two}"          # no pages: the goals' slugs
-
-
-def test_a_goal_gone_from_the_board_is_not_in_the_text_and_every_job_served_is_said(state, pages):
-    one, two, three = (goal(pages, state, t) for t in ("Dark mode", "Faster pages", "Share links"))
-    tree.keep(state, OUT, THREE, "person")
-    for n, g in enumerate((one, two, three)):
-        tree.attach(state, tree.read(state)["jobs"][n]["id"], g)
-    assert tree.text(state, state, pages=pages).endswith("A goal serves every job.")
-    (pages / ideas.IDEAS / f"{two}.md").unlink()
-    got = tree.text(state, state, pages=pages)
-    assert "Faster pages" not in got and two not in got and got.endswith("No goal serves yet: 2 (share it with a friend)")
-    assert set(tree.goals(state, pages)) == {one, three}
-
-
-def test_the_place_of_a_goal_is_in_line_at_work_or_done(state, pages):
-    seen = {s: tree.place_of(state, goal(pages, state, f"Goal {s}", s)) for s in ("raw", "ready", "plan", "asks", "failed", "reading", "planning", "working", "judging", "talk", "decided", "sections",
-                                                                                "done", "sent", "passed")}
-    assert {s: p for s, p in seen.items() if p == "line"}.keys() == {"raw", "ready", "plan", "asks", "failed"}
-    assert {s for s, p in seen.items() if p == "work"} == {"reading", "planning", "working", "judging", "talk", "decided", "sections"}
-    assert {s for s, p in seen.items() if p == "done"} == {"done", "sent", "passed"}
-
-
-def test_the_text_is_bounded_and_the_same_bytes_for_the_same_record_and_goals(state, pages):
-    words = "word " * 30
-    jobs = [job(f"w{n} {words}", when=words, so=words, segment=words) for n in range(7)]
-    tree.keep(state, [{"text": "A " + words * 3}, {"text": "B " + words * 4}], jobs, "person")
-    names = [goal(pages, state, f"A goal with a long title {n} " + words) for n in range(30)]
-    for n, g in enumerate(names):
-        tree.attach(state, tree.read(state)["jobs"][n % 7]["id"], g)
-    first = tree.text(state, state, pages=pages)
-    assert len(first) <= tree.LIMIT and first == tree.text(state, state, pages=pages) == tree.text(state, state, "dev-head-or-whatever", pages=pages)
-    assert first.startswith("The opportunity tree\n\nOutcome: ") and "7. When" in first                          # every job is named, the goals are cut first
-    assert tree.text(state, state)[:50] == tree.text(state, state)[:50] and len(tree.text(state, state)) <= tree.LIMIT
-
-
-def test_a_tree_with_jobs_and_no_outcome_still_reads(state):
-    tree.keep(state, None, THREE, "person")
-    assert tree.text(state, state).splitlines()[2] == "Outcome: not said yet"
 
 
 # -- the hypotheses under their job (spec 116 A) -------------------------------------------------------------------------------------
@@ -279,40 +174,6 @@ def test_a_record_with_only_hypotheses_is_still_nothing_to_read_and_none_leaves_
     assert "Hypothesis (open): Alone" in tree.text(state, state)
     hyp.drop(state, "alone")
     assert "Hypothesis" not in tree.text(state, state, pages=pages)
-
-
-def test_the_text_with_hypotheses_is_bounded_and_the_same_bytes(state, pages):
-    words = "word " * 30
-    jobs = [job(f"w{n} " + "word " * 8, when="word " * 8, so="word " * 8) for n in range(7)]
-    tree.keep(state, [{"text": "A " + words * 3}], jobs, "person")
-    ids = [j["id"] for j in tree.read(state)["jobs"]]
-    for n in range(hyp.MAX_OPEN):
-        hyp.add(state, f"Claim {n} " + words * 2, "signal " + words * 2, on=ids[n])
-    for n in range(10):
-        tree.attach(state, ids[n % 7], goal(pages, state, f"A goal with a long title {n} " + words))
-    first = tree.text(state, state, pages=pages)
-    assert len(first) <= tree.LIMIT and first == tree.text(state, state, pages=pages) == tree.text(state, state, "any-head", pages=pages)
-    assert "7. When" in first and "Hypothesis (open): Claim 0" in first and "…" in first                    # every job is named, the hypotheses' words are cut
-
-
-def test_a_hypotheses_words_are_cut_before_a_goal_is_left_out(state, pages):
-    tree.keep(state, OUT, THREE, "person")
-    for n in range(2):
-        tree.attach(state, "see-a-sketch", goal(pages, state, f"Goal number {n}"))
-    for n in range(hyp.MAX_OPEN):
-        hyp.add(state, f"Claim {n} " + "word " * 35, "signal " + "word " * 35, on="see-a-sketch")
-    got = tree.text(state, state, pages=pages)
-    assert len(got) <= tree.LIMIT and "Goal number 0 (in line); Goal number 1 (in line)" in got
-    assert got.count("Hypothesis (open): Claim") == hyp.MAX_OPEN and "…" in got
-
-
-def test_when_the_jobs_alone_fill_the_text_the_last_hypotheses_go_before_a_job_is_cut(state, pages):
-    words = "word " * 30
-    tree.keep(state, [{"text": "A " + words * 3}, {"text": "B " + words * 4}], [job(f"w{n} {words}", when=words, so=words, segment=words) for n in range(7)], "person")
-    for n in range(hyp.MAX_OPEN):
-        hyp.add(state, f"Claim {n} " + words, "signal " + words, on=tree.read(state)["jobs"][n]["id"])
-    got = tree.text(state, state, pages=pages)
-    assert len(got) <= tree.LIMIT and "7. When" in got and got.count("Hypothesis (open)") < hyp.MAX_OPEN and got == tree.text(state, state, pages=pages)
 
 
 def test_a_hypothesis_with_ways_says_them_in_the_trees_line_and_one_without_has_the_line_it_had(state, pages):

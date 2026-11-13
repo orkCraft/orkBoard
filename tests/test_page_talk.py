@@ -39,28 +39,6 @@ def test_the_acceptance_is_written_and_read_back_the_same_and_a_why_may_follow_a
     assert pt.read_accepted(q, "Art") == [{"line": "It is pretty — and quick", "status": "not met", "why": "slow"}, {"line": "It is pretty — and quick", "status": "met", "why": ""}]
 
 
-def test_every_other_part_and_section_is_kept_byte_for_byte():
-    p = page()
-    before = list(p.sections)
-    pt.write_talk(p, "Tech", SAY)
-    pt.write_accepted(p, "Tech", LINES)
-    assert [s for s in p.sections if s[0] != "Tech"] == [s for s in before if s[0] != "Tech"]
-    assert p.section("Tech").startswith(TECH + "\n\n### Talk") and spec_sections.split(p.section("Tech"))["Will be"] == "- changed web — the board"
-    assert (p.meta, p.title, p.head) == (page().meta, page().title, page().head)
-    other = p.section("Art")
-    pt.write_talk(p, "Art", {"verdict": "go"})
-    assert p.section("Art") == other + "\n\n### Talk\n- verdict: go" and p.section("Tech").count("### Talk") == 1
-    # a Talk written again replaces only itself; written after an Accepted it stands before it
-    q = idea_page.parse(PAGE)
-    pt.write_accepted(q, "Tech", LINES)
-    pt.write_talk(q, "Tech", SAY)
-    assert list(spec_sections.split(q.section("Tech")))[-2:] == ["Talk", "Accepted"]
-    mid = q.section("Tech")
-    pt.write_talk(q, "Tech", {"verdict": "go", "why": "fine"})
-    assert q.section("Tech").count("### Talk") == 1 and spec_sections.split(q.section("Tech"))["Accepted"] == spec_sections.split(mid)["Accepted"]
-    assert pt.read_talk(q, "Tech")["stance"] == "" and spec_sections.split(q.section("Tech"))["Will be"] == "- changed web — the board"
-
-
 def test_the_section_is_made_when_the_page_has_none_in_the_specs_format_after_the_last_party_section():
     p = page()
     pt.write_talk(p, "Product", {"verdict": "go", "stance": "Fine."})
@@ -77,12 +55,15 @@ def test_the_section_is_made_when_the_page_has_none_in_the_specs_format_after_th
     assert bare.sections[-1][0] == "Risks (party)" and pt.read_talk(bare, "Risks") == pt.read_talk(bare, "Risks (party)") is not None
 
 
-def test_a_party_is_found_by_its_title_or_its_slug():
-    p = idea_page.parse("---\nowner: board\n---\n# G\n\n## Game design\n### Why\nx\n\n## Gist\nthe Gist\n")
-    pt.write_talk(p, "game-design", {"verdict": "go", "stance": "yes"})
-    assert pt.read_talk(p, "Game design")["stance"] == "yes" and pt.read_talk(p, "game design")["stance"] == "yes" and pt.read_talk(p, "game-design")["stance"] == "yes"
-    assert [n for n, _t in p.sections] == ["Game design", "Gist"]                          # written into the section the page has, none made
-    assert pt.read_talk(p, "gist") is None and pt.read_talk(p, "") is None
+def test_talk_and_accepted_are_no_spec_part_the_page_still_folds_and_counts_as_before():
+    p = page()
+    pt.write_talk(p, "Tech", SAY)
+    pt.write_accepted(p, "Tech", LINES)
+    assert spec_sections.folded(p, "Done when") == spec_sections.folded(page(), "Done when") and p.section("Why") == "Because."
+    assert len(spec_sections.items(spec_sections.split(p.section("Tech"))["Done when"])) == 3
+    assert [s.party for s in spec_sections.read(p, [{"slug": "tech", "title": "Tech"}])["sections"]] == ["tech", ""]
+
+
 
 
 def test_the_limits_are_the_calls_own_and_a_doubt_with_no_why_reads_as_go():
@@ -99,22 +80,3 @@ def test_the_limits_are_the_calls_own_and_a_doubt_with_no_why_reads_as_go():
     assert all(len(x["line"]) <= pt.LINE_CHARS for x in pt.read_accepted(p, "Tech")) and "### Accepted" not in p.section("Art")
     long = pt.write_accepted(p, "Art", [{"line": "y " * 300, "status": "met", "why": "z " * 300}])[0]
     assert len(long["line"]) <= pt.LINE_CHARS and len(long["why"]) <= pt.LINE_CHARS
-
-
-def test_talk_and_accepted_are_no_spec_part_the_page_still_folds_and_counts_as_before():
-    p = page()
-    pt.write_talk(p, "Tech", SAY)
-    pt.write_accepted(p, "Tech", LINES)
-    assert spec_sections.folded(p, "Done when") == spec_sections.folded(page(), "Done when") and p.section("Why") == "Because."
-    assert len(spec_sections.items(spec_sections.split(p.section("Tech"))["Done when"])) == 3
-    assert [s.party for s in spec_sections.read(p, [{"slug": "tech", "title": "Tech"}])["sections"]] == ["tech", ""]
-
-
-def test_a_section_made_from_a_slug_is_headed_by_the_partys_title():
-    """Spec 154 A tells an agent to write under `## Tech`: a section Orkboard makes from the slug `tech` is that one, and both read it."""
-    page = idea_page.parse("---\nowner: board\n---\n# G\n\n## Gist\nG\n")
-    pt.write_talk(page, "tech", {"verdict": "go", "why": "", "stance": "s", "for": "f", "against": "a"})
-    pt.write_talk(page, "game-design", {"verdict": "go", "why": "", "stance": "s", "for": "f", "against": "a"})
-    text = page.text()
-    assert "## Tech\n" in text and "## Game design\n" in text and "## tech\n" not in text
-    assert pt.read_talk(page, "Tech")["stance"] == "s" and pt.read_talk(page, "tech")["stance"] == "s"

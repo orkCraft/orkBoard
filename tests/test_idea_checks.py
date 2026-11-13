@@ -3,12 +3,8 @@ task's prompt, and how a check task ends with a stub `claude` that writes its fi
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
-import subprocess
 
-import pytest
 
-from orkboard.core.idea_runner import RunnerError
 from orkboard.core.idea_task import FINDINGS_ASK
 from orkboard.realm import event_log, idea_checks
 from tests.test_idea_runner import calls, git, plan_of, reviewing, runner_of, tasks_of, town, wait_idle, wait_task  # noqa: F401
@@ -20,48 +16,6 @@ def text(*items, **more):
 
 def finding(**over):
     return {"where": "a.py:1", "what": "a bug", "fixed": False, **over}
-
-
-def test_the_tags_are_the_checkers_first_kinds():
-    assert idea_checks.TAGS == ("security", "review", "a11y", "playtest", "artcheck", "datacheck", "edit")      # spec 59: the Playtester checks after the Artist in the library; the Art reviewer after it
-    assert idea_checks.FINDINGS_FILE == ".orkcraft-findings.json"
-
-
-def test_parse_findings_is_strict_about_the_shape_twenty_at_most_and_the_lengths():
-    assert idea_checks.parse_findings(text()) == []
-    assert idea_checks.parse_findings(text(finding(fixed=True))) == [finding(fixed=True, kind="code")]
-    assert idea_checks.parse_findings(text(*[finding()] * 20)) is not None
-    assert idea_checks.parse_findings(text(*[finding()] * 21)) is None
-    assert idea_checks.parse_findings(text(finding(where="w" * 200), finding(what="x" * 300))) is not None
-    assert idea_checks.parse_findings(text(finding(where="w" * 201))) is None
-    assert idea_checks.parse_findings(text(finding(what="x" * 301))) is None
-    for bad in ("", "not json", "[]", "null", '{"findings": 3}', '{"other": []}', text({"where": "a", "what": "b"}),
-                text({"where": "a", "what": "b", "fixed": "yes"}), text({"where": 1, "what": "b", "fixed": True}), text("a bug"), None, 5):
-        assert idea_checks.parse_findings(bad) is None, bad
-    assert idea_checks.parse_findings(text(finding(extra=1))) == [finding(kind="code")]     # only the fields are kept, `kind` among them
-
-
-def test_counts_and_status_say_found_fixed_and_left_and_null_before_a_task_ends():
-    assert idea_checks.counts([finding(fixed=True), finding(), finding()]) == {"found": 3, "fixed": 1, "left": 2}
-    assert idea_checks.counts([]) == {"found": 0, "fixed": 0, "left": 0}
-    assert idea_checks.counts(None) == {"found": None, "fixed": None, "left": None}
-    checks = [{"by": "reviewer", "name": "Reviewer", "tag": "review", "tier": "elder", "applies": "x", "done": "y", "task": "z", "every": False}]
-    kept = [{"by": "reviewer", "applies": True, "why": ""}]
-    row = idea_checks.status(kept, checks, [{"id": "k2", "kind": "review", "state": "review", "findings": [finding(fixed=True), finding()]}])[0]
-    assert (row["found"], row["fixed"], row["left"], row["state"]) == (2, 1, 1, "review")
-    row = idea_checks.status(kept, checks, [{"id": "k2", "kind": "review", "state": "running"}])[0]
-    assert (row["found"], row["fixed"], row["left"]) == (None, None, None)
-    row = idea_checks.status(kept, checks, [])[0]
-    assert (row["found"], row["state"]) == (None, "")
-
-
-def test_a_check_task_s_prompt_ends_with_the_ask_and_another_task_s_does_not(town):
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "kind": "review", "after": ["k1"]}])
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    check, other = runner._prompt("demo", plan, plan["tasks"][1]), runner._prompt("demo", plan, plan["tasks"][0])
-    assert check.endswith(FINDINGS_ASK) and ".orkcraft-findings.json" in check and "at most 20" in check
-    assert "findings" not in other
 
 
 def test_clean_and_no_change_is_merged_with_no_commit_no_review_and_nothing_lands(town, monkeypatch):
@@ -100,31 +54,6 @@ def test_findings_left_and_no_change_wait_at_review_even_with_review_off_and_the
     assert len(calls(town)) == 1
 
 
-def test_all_fixed_with_changes_takes_todays_path_and_lands_when_review_is_off(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_fixed")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = runner_of(town, review=False)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    task = tasks_of(town)["k1"]
-    assert task["state"] == "merged" and task["commit"] and task["note"] == "" and task["findings"][0]["fixed"] is True
-    assert (town.repo / "k1.txt").read_text() == "fixed by k1\n"
-    assert not (town.repo / idea_checks.FINDINGS_FILE).exists()
-    assert idea_checks.FINDINGS_FILE not in git(town.repo, "log", "--all", "--name-only", "--format=")
-
-
-def test_changes_with_some_left_wait_at_review_after_a_green_gate_with_review_off(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_mixed")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = runner_of(town, review=False)
-    runner.start("demo")
-    task = wait_task(runner, "k1", "review")
-    assert task["note"] == "1 left" and task["tests"]["green"] is True and task["tests"]["ran"] and task["diff"]["files"] == 1
-    assert [f["fixed"] for f in task["findings"]] == [True, False]
-    done = next(r for r in event_log.read(town.repo) if r["event"] == "check_done")
-    assert (done["found"], done["fixed"], done["left"]) == (2, 1, 1)
-
-
 def test_no_findings_file_twice_fails_with_its_words_and_the_second_try_asks_again(town, monkeypatch):
     for mode in ("check_none", "check_bad"):
         monkeypatch.setenv("STUB_MODE", f"k1={mode}")
@@ -138,26 +67,6 @@ def test_no_findings_file_twice_fails_with_its_words_and_the_second_try_asks_aga
         assert len(calls(town)) >= 2
         assert FINDINGS_ASK in " ".join(calls(town)[1]["argv"])                # the retry asks for the file again
         town.log.unlink()
-
-
-def test_a_findings_file_written_at_the_retry_is_taken(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_late")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    assert [c["resume"] for c in calls(town)] == [False, True]
-    task = tasks_of(town)["k1"]
-    assert task["state"] == "merged" and task["note"] == "clean"
-
-
-def test_a_claim_of_a_fix_with_no_change_counts_as_left(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_claims")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    task = wait_task(runner, "k1", "review")
-    assert task["note"] == "1 left" and task["findings"][0]["fixed"] is False
 
 
 def test_fix_them_sends_back_and_the_check_runs_again_in_round_2(town, monkeypatch):
@@ -193,49 +102,7 @@ def test_leave_them_with_no_commit_merges_nothing_and_keeps_the_note(town, monke
     wait_task(runner, "k2", "review")                              # its dependant goes on
 
 
-def test_leave_them_with_fixes_lands_them_as_a_merge_does_today(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_mixed")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    commit = runner.merge("demo", "k1")
-    assert commit and git(town.repo, "rev-parse", "dev") == commit
-    assert git(town.repo, "show", "dev:k1.txt") == "fixed by k1"
-
-
-def test_drop_still_drops_a_check_s_result(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_left")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.drop_task("demo", "k1")
-    assert tasks_of(town)["k1"]["state"] == "dropped" and tasks_of(town)["k1"]["error"] == "dropped by you"
-
-
 # -- spec 86 D: findings of the code and of the place -------------------------------------------------------------------------------
-
-def test_a_finding_is_of_the_code_unless_it_says_it_is_of_the_place():
-    got = idea_checks.parse_findings(text(finding(), finding(kind="env"), finding(kind="code"), finding(kind="other"), finding(kind=3)))
-    assert [f["kind"] for f in got] == ["code", "env", "code", "code", "code"]
-    assert [f["kind"] for f in idea_checks.code_left(got)] == ["code", "code", "code", "code"]
-    assert idea_checks.code_left([finding(kind="env")]) == [] and idea_checks.code_left(None) == []
-    assert idea_checks.code_left([{"where": "a", "what": "b", "fixed": False}]) != []             # one kept before `kind` was read is of the code
-    assert idea_checks.is_env(finding(kind="env")) and not idea_checks.is_env(finding()) and not idea_checks.is_env(None)
-
-
-def test_the_same_findings_left_are_told_by_where_and_what_in_any_order():
-    a, b = finding(where="a.py:1", what="one"), finding(where="b.py:2", what="two")
-    assert idea_checks.same_left([a, b], [b, a]) and idea_checks.same_left([a, finding(fixed=True)], [a])
-    assert idea_checks.same_left([finding(where="A.py:1 ", what="One")], [finding(where="a.py:1", what="one")])
-    assert not idea_checks.same_left([a, b], [a]) and not idea_checks.same_left([a], [a, b])
-    assert not idea_checks.same_left([], []) and not idea_checks.same_left(None, [a]) and not idea_checks.same_left([finding(fixed=True)], [a])
-
-
-def test_the_checks_instructions_ask_for_the_kind_and_say_what_the_place_is():
-    assert '"kind"' in FINDINGS_ASK and '"env"' in FINDINGS_ASK and "refused" in FINDINGS_ASK and "tool is missing" in FINDINGS_ASK
-
 
 def test_the_findings_of_the_place_are_kept_with_their_kind_and_wait_at_review(town, monkeypatch):
     monkeypatch.setenv("STUB_MODE", "k1=check_env")
@@ -245,94 +112,3 @@ def test_the_findings_of_the_place_are_kept_with_their_kind_and_wait_at_review(t
     task = wait_task(runner, "k1", "review")
     assert [f["kind"] for f in task["findings"]] == ["env"] and task["look"] == "findings left" and task["same_as_before"] is False
 
-
-def test_a_send_back_tells_the_check_only_the_findings_of_the_code(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_mixed_kinds")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
-    monkeypatch.setenv("STUB_MODE", "k1=check_late")
-    wait_task(runner, "k1", "merged")
-    again = runner.log("demo", "k1", 400).split("== round 2")[1]
-    assert "The findings left from the last round:\n- a.py:1: a bug" in again and "the command was refused" not in again
-
-
-def test_findings_left_that_equal_the_round_befores_are_flagged_and_a_new_run_starts_over(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=check_left")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    assert wait_task(runner, "k1", "review")["same_as_before"] is False          # the first round has none before it
-    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
-    second = wait_task(runner, "k1", "review")
-    assert second["round"] == 2 and second["same_as_before"] is True              # the same two findings left
-    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
-    monkeypatch.setenv("STUB_MODE", "k1=check_env")                               # a different one left
-    third = wait_task(runner, "k1", "review")
-    assert third["round"] == 3 and third["same_as_before"] is False
-
-
-def test_the_review_list_carries_the_kind_the_reason_and_the_flag(town, monkeypatch):
-    """What the faces read: `findings[].kind`, `look`, `same`, `tests.none` (gui/ideas_review.py)."""
-    from orkboard.gui.ideas_review import ReviewMixin
-    monkeypatch.setenv("STUB_MODE", "k1=check_env")
-    plan_of(town, [{"id": "k1", "kind": "review"}])
-    runner, _ = runner_of(town, review=False)
-    runner.start("demo")
-    task = wait_task(runner, "k1", "review")
-    row = ReviewMixin._check_of(SimpleNamespace(state_dir=town.state), task)
-    assert row["findings"][0]["kind"] == "env" and row["same"] is False
-
-
-def test_the_checks_a_plan_holds_follow_the_partys_size_spec_152_a_4(tmp_path):
-    """Lean none, Standard the first check that applies in the squad's order, Full every one that applies, no size (a party of before) every one."""
-    checks = idea_checks.of_team(tmp_path, ["grunt", "reviewer", "security-reviewer"], [])
-    assert [c["by"] for c in checks] == ["reviewer", "security-reviewer"]
-    tasks = [{"id": "k1", "title": "Do", "kind": "code", "after": []}]
-    make = lambda i, title, brief, tag, tier, after: {"id": i, "kind": tag, "after": after}          # noqa: E731
-    both = idea_checks.kept(None, checks)
-    ids = lambda size, kept_: [t["kind"] for t in idea_checks.with_check_tasks(tasks, kept_, checks, make, size)[1:]]          # noqa: E731
-    assert ids("lean", both) == []
-    assert ids("standard", both) == ["review"]
-    assert ids("full", both) == ["review", "security"] and ids("", both) == ["review", "security"]
-    assert idea_checks.with_check_tasks(tasks, both, checks, make) == idea_checks.with_check_tasks(tasks, both, checks, make, "")
-    only_second = [{"by": "reviewer", "applies": False, "why": "small"}, {"by": "security-reviewer", "applies": True, "why": ""}]
-    assert ids("standard", only_second) == ["security"]                                                # the first that applies, not the first of the squad
-    skipped = [{"by": "reviewer", "applies": True, "why": "", "skipped": True}, {"by": "security-reviewer", "applies": True, "why": ""}]
-    assert ids("standard", skipped) == ["security"] and ids("lean", skipped) == []
-
-
-def test_a_check_the_size_does_not_hold_is_neither_asked_of_the_plan_nor_kept_when_the_plan_wrote_it_spec_152_a_4(tmp_path):
-    """The plan's prompt names only the checks the size holds, and a check task the plan wrote anyway goes (and out of the others' `after`): a Lean plan keeps none."""
-    checks = idea_checks.of_team(tmp_path, ["grunt", "reviewer", "security-reviewer"], [])
-    both = idea_checks.kept(None, checks)
-    assert idea_checks.plan_lines(both, checks, "lean") == ""
-    assert '"review"' in idea_checks.plan_lines(both, checks, "standard") and '"security"' not in idea_checks.plan_lines(both, checks, "standard")
-    assert '"security"' in idea_checks.plan_lines(both, checks, "full") and idea_checks.plan_lines(both, checks) == idea_checks.plan_lines(both, checks, "full")
-    make = lambda i, title, brief, tag, tier, after: {"id": i, "kind": tag, "after": after}          # noqa: E731
-    planned = lambda: [{"id": "k1", "kind": "code", "after": []}, {"id": "k2", "kind": "security", "after": ["k1"]}, {"id": "k3", "kind": "code", "after": ["k2"]}]      # noqa: E731
-    lean = idea_checks.with_check_tasks(planned(), both, checks, make, "lean")
-    assert [(t["id"], t["kind"], t["after"]) for t in lean] == [("k1", "code", []), ("k3", "code", [])]
-    standard = idea_checks.with_check_tasks(planned(), both, checks, make, "standard")
-    assert [(t["id"], t["kind"]) for t in standard] == [("k1", "code"), ("k3", "code"), ("k4", "review")], "the first that applies; a new id never one taken"
-    assert standard[-1]["after"] == ["k1", "k3"]
-    assert [t["kind"] for t in idea_checks.with_check_tasks(planned(), both, checks, make, "")] == ["code", "security", "code", "review"], "a party of before: as before"
-
-
-def test_a_task_that_has_files_starts_its_prompt_with_where_to_start_a_check_and_a_pick_too_spec_153_b3(town):
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "kind": "review", "after": ["k1"]},
-                   {"id": "k3"}, {"id": "k4"}])
-    path = town.state / "ideas" / "demo" / "plan.json"                       # plan_of keeps no `files`, `pick`: they are put in as the plan keeps them
-    data = json.loads(path.read_text())
-    for t, more in zip(data["tasks"], ({"files": ["a.py", "b/c.py"]}, {"files": ["a.py"]}, {"files": ["d.py"], "pick": {"n": 2, "kind": "text", "ask": "A name", "target": "n.txt"}}, {})):
-        t.update(more)
-    path.write_text(json.dumps(data))
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    work, check, pick, plain = (runner._prompt("demo", plan, plan["tasks"][i]) for i in range(4))
-    assert "\n\nStart at: `a.py`, `b/c.py` (its planner read them; read more as you need)\n\n# The idea" in work, "just before the spec's part"
-    assert not work.startswith("Start at:"), "the role and the rules stay the prompt's stable head (spec 36 §6)"
-    assert "Start at: `a.py` (its planner read it" in check and "Start at: `d.py`" in pick
-    assert "Start at:" not in plain

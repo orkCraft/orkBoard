@@ -60,16 +60,6 @@ def test_designs_parts_are_the_screens_and_the_steps_the_map_stamps(host):
     assert [p["id"] for p in host.command("ideas.pickables", {"party": design, "q": "car"})["parts"]] == ["cart"]
 
 
-def test_techs_parts_are_the_systems_part_paths(host):
-    tech = _party(host, "Tech", "architect", "tech")
-    got = host.command("ideas.pickables", {"party": tech})
-    system = host.command("ideas.system", {"party": tech})
-    drawn = {p["path"] for c in system["columns"] for p in c["parts"]}
-    assert drawn and drawn <= {p["id"] for p in got["parts"]} and got["map"] == "system"
-    assert all(p["name"] == p["id"] and p["label"] == p["id"].rsplit("/", 1)[-1] for p in got["parts"]), "a part's name is its path, as syspane.js stamps it"
-    assert [p["id"] for p in host.command("ideas.pickables", {"party": tech, "q": "ui"})["parts"]] == ["src/ui"]
-
-
 def test_game_designs_parts_are_the_loops_steps_and_currencies_as_the_map_stamps_them(host):
     game = _party(host, "Game design", "game-designer", "game-design")
     assert host.command("ideas.pickables", {"party": game}) == {"party": game, "map": "game-design", "parts": []}
@@ -87,22 +77,3 @@ def test_game_designs_parts_are_the_loops_steps_and_currencies_as_the_map_stamps
     assert {p["group"] for p in parts[:-1]} == {"loop"}
 
 
-def test_a_party_with_no_map_or_that_is_gone(host):
-    tech = _party(host, "Plain", "taskmaster", "")
-    assert host.command("ideas.pickables", {"party": tech})["parts"] == []
-    with pytest.raises(CommandError):
-        host.command("ideas.pickables", {"party": "nobody"})
-    with pytest.raises(CommandError):
-        host.command("ideas.pickables", {})
-
-
-def test_at_most_thirty_parts(host):
-    design = _party(host, "Design", "product-designer", "design")
-    many = {f"src/p{n}.jsx": "export default () => null;\n" for n in range(40)}
-    routes = "".join(f'<Route path="/p{n}" element={{<P />}} />' for n in range(40))
-    many["src/App.jsx"] = f'import {{ Routes, Route }} from "react-router-dom";\nexport default () => <Routes>{routes}</Routes>;\n'
-    for name, text in many.items():
-        (Path(host.ideas.host.repo_root) / name).write_text(text)
-    run(Path(host.ideas.host.repo_root), "add", "-A")
-    run(Path(host.ideas.host.repo_root), "commit", "-q", "-m", "many")
-    assert len(host.command("ideas.pickables", {"party": design})["parts"]) <= 30

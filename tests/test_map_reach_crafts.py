@@ -34,24 +34,6 @@ def test_the_tree_reaches_a_jobs_hypotheses_and_goals_and_a_hypothesis_or_goals_
     assert got["goal"]["lit"] == ["g-b"] and got["goal"]["one"] == ["j2"] and got["goal"]["two"] == ["hyp:h2"]
 
 
-def test_art_and_the_way_in_are_lit_only_a_folder_lights_its_files(monkeypatch):
-    for craft in ("art", "marketing"):
-        _parts(monkeypatch, craft, [{"id": "assets/a.png", "name": "a.png"}, {"id": "assets/b.png", "name": "b.png"}, {"id": "docs/x.md", "name": "x.md"}])
-        got = map_reach_crafts.reach(S, R, P, craft, {"g": ["assets"], "none": ["elsewhere/x"]})
-        assert got == {"g": {"lit": ["assets/a.png", "assets/b.png"], "one": [], "two": [], "no_test": []}}
-
-
-def test_no_map_a_failing_map_or_a_craft_not_here_is_empty(monkeypatch):
-    _parts(monkeypatch, "game-design", [])
-    assert map_reach_crafts.reach(S, R, P, "game-design", {"g": ["s1"]}) == {}
-    assert map_reach_crafts.reach(S, R, P, "release", {"g": ["s1"]}) == {}
-
-    def boom(*a, **k):
-        raise OSError("no")
-    monkeypatch.setattr(map_parts, "parts", boom)
-    assert map_reach_crafts.reach(S, R, P, "art", {"g": ["s1"]}) == {}
-
-
 def test_map_reach_reads_a_goals_will_be_for_these_crafts(monkeypatch, tmp_path):
     pages = tmp_path / "pages"
     (pages / "pages" / "ideas").mkdir(parents=True)

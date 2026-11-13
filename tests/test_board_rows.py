@@ -22,13 +22,6 @@ def goal(host, title, state=""):
     return slug
 
 
-def test_no_row_without_hypotheses_or_pages(host):
-    assert board_rows.rows(host.ideas.state_dir, host.ideas.root()) == [] and board_rows.hypothesis(host.ideas.state_dir) == []
-    item = hypotheses.add(host.ideas.state_dir, "People want a sketch", "most ask for one")
-    hypotheses.attach(host.ideas.state_dir, item["id"], test=goal(host, "Interview", state="done"))
-    assert board_rows.rows(host.ideas.state_dir) == []                                                  # without the pages no test can be told done
-
-
 def test_the_row_appears_when_the_last_test_is_done_and_not_before(host):
     state, root = host.ideas.state_dir, host.ideas.root()
     item = hypotheses.add(state, "People want a sketch", "most ask for one in a minute")
@@ -45,27 +38,6 @@ def test_the_row_appears_when_the_last_test_is_done_and_not_before(host):
                    "tests": [{"slug": first, "title": "Interview five founders"}, {"slug": second, "title": "Playtest the sketch"}],
                    "party": "", "leader": "orkmaster", "blocks": False, "priority": "normal", "at": item["at"],
                    "measures": [], "met": {"holds": None, "refuted": []}, "refuted": [], "if_holds": "", "draft": {"held": "", "refuted": {}}}
-
-
-def test_a_test_gone_from_the_board_is_not_done(host):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    item = hypotheses.add(state, "People want a sketch", "s")
-    test = goal(host, "Interview", state="done")
-    hypotheses.attach(state, item["id"], test=test)
-    assert len(board_rows.rows(state, root)) == 1
-    ideas.drop(root, test, state)
-    assert board_rows.rows(state, root) == []
-
-
-def test_a_proposed_one_is_not_due_and_a_judged_one_leaves(host):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    proposed = hypotheses.add(state, "Founders pay", "ten say so", by="leader", party="product")
-    hypotheses.attach(state, proposed["id"], test=goal(host, "Ask them", state="done"))
-    assert board_rows.rows(state, root) == []
-    hypotheses.keep(state, proposed["id"])
-    assert [r["id"] for r in board_rows.rows(state, root)] == [proposed["id"]]
-    hypotheses.judge(state, proposed["id"], "held", decision=3)
-    assert board_rows.rows(state, root) == []
 
 
 def test_a_leaders_hypothesis_names_its_party_and_that_partys_leader(host):

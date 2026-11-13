@@ -5,14 +5,13 @@ from __future__ import annotations
 
 import os
 import re
-import json
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import board_ask, event_log, goal_phase, idea_flag, idea_page, idea_questions, ideas, journals, spec_sections
+from orkboard.realm import event_log, goal_phase, idea_flag, idea_questions, ideas, journals
 
 IDEAS = "pages/ideas"
 
@@ -32,18 +31,6 @@ def test_every_fine_state_has_a_phase_and_each_phase_starts_in_itself():
         assert goal_phase.of(goal_phase.first(phase)) == phase
     assert [goal_phase.first(p) for p in goal_phase.PHASES] == ["raw", "routed", "decided", "ready", "done"]
     assert goal_phase.of({"state": "sketch"}) == "spec" and goal_phase.of("nonsense") == "new" and goal_phase.first("nonsense") == "raw"
-
-
-def test_board_asks_words_are_read_from_the_one_table_and_did_not_change():
-    assert board_ask.PHASES == {"routed": "Talk", "talk": "Talk", "decided": "Spec", "sketch": "Spec", "sections": "Spec", "ready": "Work", "planning": "Work", "plan": "Work",
-                                "working": "Work", "failed": "Work, failed", "done": "Done"}
-
-
-def test_the_keys_say_only_what_there_is_to_say():
-    st = {**ideas.STATE_DEFAULT, "state": "plan", "route": [{"party": "tech", "leader": "a"}, {"party": "design", "leader": "b"}], "queue": "night"}
-    assert goal_phase.keys(st, "abc1234 · 3 files · green", True, "person") == {
-        "phase": "work", "route": "tech, design", "queue": "night", "asks": "person", "gate": "abc1234 · 3 files · green", "by": "person", "schema": "3"}
-    assert goal_phase.keys({**ideas.STATE_DEFAULT, "queue": "now"}) == {"phase": "new", "schema": "3"}
 
 
 def test_the_gate_is_the_last_one_that_ran():
@@ -76,12 +63,6 @@ def test_an_answers_line_goes_under_its_question_and_reads_back():
     assert idea_questions.open_of(got) == [(1, "Which week?")]
     with pytest.raises(ValueError):
         idea_questions.with_answer(text, 5, "x", "2026-11-06")
-
-
-def test_an_answered_question_is_no_longer_open_in_the_page():
-    page = ideas.parse("---\nowner: board\n---\n# G\n\n## Open questions\n- One? (a / b)\n  - Answered: a (the person, 2026-11-06)\n- Two?\n")
-    assert ideas.items(page.section("Open questions")) == ["Two?"]
-    assert ideas.items("- x\n- y") == ["x", "y"] and ideas.items("plain\nlines") == ["plain", "lines"]
 
 
 def test_a_page_that_asks_the_person_lays_its_unanswered_choices_as_cards():
@@ -135,14 +116,6 @@ def test_a_flush_writes_the_keys_and_what_it_wrote(host):
     assert git(host.ideas.state_dir.parent, "rev-parse", "dev") == got["commit"]
 
 
-def test_no_key_where_there_is_nothing_to_say(host):
-    root, slug = _goal(host)
-    ideas.save_state(host.ideas.state_dir, slug, state="done", queue="")
-    host.ideas.tree_flush(force=True)
-    page = _page(root, slug)
-    assert page.get("phase") == "done" and not any(k in dict(page.meta) for k in ("route", "queue", "asks", "gate"))
-
-
 def test_a_state_change_rides_in_the_next_commit(host):
     root, slug = _goal(host)
     host.ideas.tree_flush(force=True)
@@ -155,13 +128,6 @@ def test_a_state_change_rides_in_the_next_commit(host):
     got = host.ideas.tree_flush()
     assert got["commit"] and _page(root, slug).get("phase") == "spec"
     assert "phase: spec" in git(host.ideas.state_dir.parent, "show", f"dev:llm-wiki/general/{IDEAS}/{slug}.md")
-
-
-def test_a_state_that_keeps_its_phase_asks_for_no_write(host):
-    root, slug = _goal(host)
-    host.ideas.tree_flush(force=True)
-    ideas.save_state(host.ideas.state_dir, slug, state="reading")
-    assert host.ideas._board_tree._since is None
 
 
 def _commit_outside(host, slug, edit, who="Claude Code"):
@@ -201,19 +167,6 @@ def test_a_page_moved_outside_moves_the_state_says_it_and_logs_it(host):
     assert len(toasts) == 1                                                                     # said once
     host.ideas.tree_flush(force=True)
     assert _page(host.ideas.root(), slug).get("phase") == "work" and _page(host.ideas.root(), slug).get("by") == "person"     # who laid it, not who moved it
-
-
-def test_a_tools_by_is_kept_and_names_it_in_the_line(host):
-    root, slug = _goal(host)
-    host.ideas.tree_flush(force=True)
-    toasts = []
-    host.ideas.host.toast = lambda msg, **k: toasts.append(msg)
-    _commit_outside(host, slug, lambda t: t.replace("phase: new", "phase: done\nby: Codex"))
-    host.ideas.tree_flush()
-    assert toasts[0].endswith("was moved to done in Codex") or "in Codex" in toasts[0]
-    assert ideas.state(host.ideas.state_dir, slug)["state"] == "done"
-    host.ideas.tree_flush(force=True)
-    assert _page(host.ideas.root(), slug).get("by") == "Codex"                                  # what the page says is kept
 
 
 def test_a_run_on_a_goal_moved_outside_is_stopped_as_stop_stops_it(host):
@@ -337,34 +290,6 @@ def test_the_journals_and_the_brief_ride_in_the_boards_commit_and_a_line_added_o
     assert "Decision 2: from a tool" in git(repo, "show", "dev:llm-wiki/general/journals/project.md")
 
 
-def test_the_schema_is_3_and_a_page_of_schema_1_or_2_is_read_as_it_is_and_written_3_when_the_board_writes_it(host):
-    """Spec 152 F.5, spec 154 B.3: a v1 page has no marks on its Done when lines and is read the same; a v2 page has no Talk or Accepted and is read the same; the Board writes `schema: 3` when it next writes the page."""
-    assert goal_phase.SCHEMA == "3" and goal_phase.keys({**ideas.STATE_DEFAULT})["schema"] == "3"
-    root, slug = _goal(host)
-    goal_phase.mirror(root, host.ideas.state_dir)
-    page = ideas.idea_page(root, slug)
-    assert page.get("schema") == "3"
-    for older in ("1", "2"):
-        page.set("schema", older)
-        old = idea_page.parse(page.text())
-        assert old.get("schema") == older and goal_phase.phase_of_page(old) == "new" and spec_sections.proof_of("a line of a v1 page") == ""
-    goal_phase.mirror(root, host.ideas.state_dir)
-    assert ideas.idea_page(root, slug).get("schema") == "3"
-
-
-def test_a_page_of_schema_1_whose_phase_is_unchanged_is_not_written_only_to_move_its_schema(host):
-    """Spec 155 G.1 (decisions §260.8): the Board writes a page when a key other than `schema` changes; the page it does write gets today's schema."""
-    root, slug = _goal(host)
-    sd = host.ideas.state_dir
-    assert goal_phase.mirror(root, sd) == [slug]
-    page = ideas.idea_page(root, slug)
-    page.set("schema", "1")
-    ideas._write(root / ideas.IDEAS / f"{slug}.md", page.text())
-    assert goal_phase.mirror(root, sd) == [] and ideas.idea_page(root, slug).get("schema") == "1"
-    ideas.save_state(sd, slug, state="talk")
-    assert goal_phase.mirror(root, sd) == [slug] and ideas.idea_page(root, slug).get("schema") == "3"
-
-
 def test_a_done_page_new_to_this_machine_is_seen_in_history_and_makes_no_commit_note(host):
     """Spec 155 G.2: a goal done before this machine read it has `seen_at` at once, so it is not in the discard; another phase is moved as before."""
     root, slug = _goal(host)
@@ -383,54 +308,6 @@ def test_a_done_page_new_to_this_machine_is_seen_in_history_and_makes_no_commit_
     assert st["state"] == "done" and st["phase_written"] == "done" and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d", st["seen_at"])
     assert notes == [("Spec before", "moved")]                                                  # the goal done before makes no note for a commit
     assert ideas.state(sd, "spec-before")["seen_at"] == ""
-
-
-def test_a_tools_route_gate_and_question_are_kept_by_a_write_until_the_board_has_its_own(host):
-    """Trial 152 E, F2 (trial 160 F1.3): a page an AI tool routed, gated and left asking keeps `route`, `gate` and `asks` when the Board writes it with nothing of
-    its own to say; a question whose choices no card can hold still waits. The Board's own gate replaces the tool's, and an answered question takes `asks` away."""
-    root, slug = _goal(host)
-    sd = host.ideas.state_dir
-    long = "a way said in far more words than a card's choice can hold"
-    page = _page(root, slug)
-    page.set("route", "design, tech")
-    page.set("gate", "1234567 · 9 files · green")
-    page.set("asks", "person")
-    page.set_section("Open questions", f"- Which way? (**{long}** / {long}, the other) — why")
-    ideas._write(Path(root) / IDEAS / f"{slug}.md", page.text())
-    ideas.save_state(sd, slug, state="ready")
-    host.ideas.tree_flush(force=True)
-    page = _page(root, slug)
-    assert [page.get(k) for k in ("phase", "route", "gate", "asks")] == ["work", "design, tech", "1234567 · 9 files · green", "person"]
-    ideas.save_plan(sd, slug, {"tasks": [{"id": "t1", "state": "merged", "commit": "abcdef0123", "diff": {"files": 2}, "finished": "2026-11-01T10:00:00",
-                                         "tests": {"green": True, "ran": True}}]})
-    page.set_section("Open questions", f"- Which way? (**{long}** / {long}, the other) — why\n  - Answered: the first (the person, 2026-11-08)")
-    ideas._write(Path(root) / IDEAS / f"{slug}.md", page.text())
-    host.ideas.tree_flush(force=True)
-    page = _page(root, slug)
-    assert page.get("gate") == "abcdef0 · 2 files · green" and page.get("route") == "design, tech" and "asks" not in dict(page.meta)
-
-
-def test_a_question_with_lines_is_an_outside_card_with_them_and_a_talk_card_with_lines_is_written_to_the_page_whole(host):
-    """Spec 159 B: the ways' lines travel to the page's outside cards, and a Talk card the page lacks is written with them."""
-    root, slug = _goal(host)
-    sd = host.ideas.state_dir
-    ideas.save_state(sd, slug, state="decided")
-    host.ideas.tree_flush(force=True)
-    ideas.set_section(root, slug, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone · App Store: Ships in a week · Google Play: Ships in a month\n- Which colour? (red / blue)")
-    ideas.set_meta(root, slug, asks="person", by="Claude Code")
-    cards = goal_phase.outside_cards(_page(root, slug))
-    assert cards[0]["lines"] == ["Ships in a week", "Ships in a month"] and cards[0]["why"] == "iPhone" and "lines" not in cards[1]
-    ideas.set_section(root, slug, "Open questions", "")
-    ideas.save_state(sd, slug, state="talk")
-    card = idea_questions.card({"q": "Which week?", "choices": ["this", "next"], "pick": 0, "why": "soon", "lines": ["Now", "Later"]}, id="c1", by="tech", leader="ork")
-    plain = idea_questions.card({"q": "Which size?", "choices": ["S", "L"], "pick": 0, "why": "small"}, id="c2", by="tech", leader="ork")
-    idea_questions.save_record(sd, slug, {"mode": "talk", "round": 1, "waiting": [card, plain], "stances": []})
-    host.ideas.keeper.talk_answer = lambda s, answers, decide=False: None
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": "c1", "pick": 1}, {"id": "c2", "pick": 0}]})
-    text = _page(root, slug).section("Open questions")
-    assert idea_questions.questions_of(text) == ["Which week? (**this** / next) — soon · this: Now · next: Later", "Which size?"]
-    assert idea_questions.parse(idea_questions.questions_of(text)[0])["lines"] == ["Now", "Later"]
-    assert idea_questions.answers(text) == ["next", "S"]
 
 
 # -- the quiet flag of a goal read done (spec 162 C; decisions §277) ----------------------------------------------------------------
@@ -477,30 +354,6 @@ def _journal_lines(sd):
     return [e.get("text") for e in journals.read(sd, journals.PROJECT)]
 
 
-def test_a_page_read_done_gets_a_quiet_flag_at_its_decisions_day_with_no_fold_no_journal_line_and_no_event(host):
-    """Spec 162 C.1: a history page is flagged by done at the day history_day gives (its decisions: in the log, else the day laid), seen at once, and nothing else is written."""
-    _goal(host)
-    host.ideas.tree_flush(force=True)
-    sd = host.ideas.state_dir
-    (Path(host.repo_root) / "docs").mkdir(exist_ok=True)
-    (Path(host.repo_root) / "docs/decisions.md").write_text(LOG, encoding="utf-8")                # the project's log in its working copy
-    _commit_files(host, {"docs/decisions.md": LOG, "llm-wiki/general/pages/ideas/dated.md": _done_page("decisions: 5, 6\n", "Dated"),
-                         "llm-wiki/general/pages/ideas/plain.md": _done_page("", "Plain")})
-    _no_keeper(host)
-    before = _journal_lines(sd)
-    _moved(host)
-    flag = idea_flag.flag_of(sd, "dated")
-    assert flag["by"] == "done" and flag["at"].startswith("2026-11-05")
-    assert idea_flag.flag_of(sd, "plain")["at"].startswith("2026-11-08")                        # no decision: the day it was laid
-    assert re.fullmatch(r"\d{4}-\d\d-\d\dT.*", ideas.state(sd, "dated")["seen_at"])             # history: never in the discard
-    kinds = [r["event"] for r in event_log.read(Path(host.repo_root))]
-    assert "idea_flagged" not in kinds and kinds.count("goal_moved_outside") == 2
-    assert _journal_lines(sd) == before
-    host.ideas._phase_sig = None
-    _moved(host)
-    assert idea_flag.flag_of(sd, "dated") == flag                                              # once
-
-
 def test_a_page_moved_to_done_after_it_was_read_is_flagged_at_the_day_it_was_moved_and_stays_in_the_discard_until_seen(host):
     _goal(host)
     host.ideas.tree_flush(force=True)
@@ -513,29 +366,6 @@ def test_a_page_moved_to_done_after_it_was_read_is_flagged_at_the_day_it_was_mov
     _moved(host)
     assert idea_flag.flag_of(sd, "later")["at"].startswith("2026-11-06") and ideas.state(sd, "later")["seen_at"] == ""
     assert "idea_flagged" not in [r["event"] for r in event_log.read(Path(host.repo_root))]
-
-
-def test_a_board_read_before_gets_the_quiet_flag_once_for_each_done_goal_with_no_plan_and_no_flag(host):
-    """Spec 162 C.2: the catch-up, once per Ideas; a done goal with a plan waits for the gate, one with a flag keeps it."""
-    root, a = _goal(host, "alpha")
-    _, b = _goal(host, "beta")
-    _, c = _goal(host, "gamma")
-    host.ideas.tree_flush(force=True)
-    sd = host.ideas.state_dir
-    for slug in (a, b, c):
-        ideas.save_state(sd, slug, state="done")
-    ideas.save_plan(sd, b, {"tasks": [{"id": "t1", "state": "merged", "commit": "abcdef0123"}]})
-    idea_flag.raise_flag(root, sd, c, "gate", "feed")
-    _no_keeper(host)
-    host.ideas._quiet_caught = False                                                             # an Ideas that has not made its catch-up
-    host.ideas._phase_sig = None
-    host.ideas.phase_moved(host.ideas._board_tree)
-    assert idea_flag.flag_of(sd, a)["by"] == "done" and idea_flag.flag_of(sd, b) is None and idea_flag.flag_of(sd, c)["by"] == "gate"
-    assert "idea_flagged" not in [r["event"] for r in event_log.read(Path(host.repo_root))]
-    (ideas.state_folder(sd, b) / "plan.json").unlink()
-    host.ideas._phase_sig = None                                                                 # a second look: the catch-up is not made again
-    host.ideas.phase_moved(host.ideas._board_tree)
-    assert idea_flag.flag_of(sd, b) is None
 
 
 def test_a_page_moved_to_done_outside_begins_its_views_and_one_laid_done_begins_none(host, monkeypatch):

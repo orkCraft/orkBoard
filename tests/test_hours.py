@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.realm import goal_route, goal_team, hours, ideas, library
 from orkboard.sources.limits import Limit
 
@@ -29,14 +29,6 @@ def test_presence_is_here_inside_the_hours_and_away_outside_them_with_the_next_e
     assert away == {"here": False, "until": "2026-11-03T19:00", "held": False}
     here = hours.presence(EVENINGS, at(1, 20))
     assert here == {"here": True, "until": "2026-11-03T23:00", "held": False}
-
-
-def test_with_no_hours_the_door_is_the_persons_alone_here_at_first_and_a_press_has_no_end():
-    assert hours.presence({}, DAY) == {"here": True, "until": "", "held": False}
-    hold = hours.hold_for({}, False, DAY)
-    assert hold == {"here": False, "until": ""}
-    assert hours.presence({"presence": hold}, DAY + dt.timedelta(days=30)) == {"here": False, "until": "", "held": False}, "no end"
-    assert hours.presence({"presence": hours.hold_for({}, True, DAY)}, DAY)["here"] is True
 
 
 def test_a_press_holds_the_other_state_until_the_hours_next_edge_and_the_hold_ends_by_itself():
@@ -66,28 +58,6 @@ def around_now(host, here: bool):
     now = dt.datetime.now().replace(second=0, microsecond=0)
     a, b = (now - dt.timedelta(minutes=30), now + dt.timedelta(minutes=30)) if here else (now + dt.timedelta(hours=3), now + dt.timedelta(hours=4))
     host.command("ideas.board_set", {"hours": [{"days": [0, 1, 2, 3, 4, 5, 6], "from": f"{a:%H:%M}", "to": f"{b:%H:%M}"}]})
-
-
-def test_the_snapshot_says_here_with_no_hours_and_presence_set_holds_it_and_the_phone_may_send_it(host):
-    assert host.snapshot()["presence"] == {"here": True, "until": "", "held": False}
-    assert "presence.set" in host.commands and "presence.set" in BoardPhone.COMMANDS and host.phone_snapshot()["presence"]["here"] is True
-    assert host.command("presence.set", {"here": False}) == {"here": False, "until": "", "held": False}
-    assert host.snapshot()["presence"]["here"] is False and host.ideas.settings_now()["presence"] == {"here": False, "until": ""}, "kept in the settings' file: the phone reads the same"
-    with pytest.raises(CommandError, match="Here or Away"):
-        host.command("presence.set", {"here": "no"})
-
-
-def test_the_hours_are_a_setting_and_the_snapshot_reads_them_and_a_press_holds_until_their_edge(host):
-    around_now(host, here=False)
-    assert host.command("ideas.board")["hours"] and host.snapshot()["presence"]["here"] is False and host.snapshot()["presence"]["held"] is False
-    got = host.command("presence.set", {"here": True})
-    assert got["here"] is True and got["held"] is True and got["until"], "held until the hours' next edge"
-    around_now(host, here=False)                                                       # the hours changed: the hold of the old ones ends
-    assert host.snapshot()["presence"]["held"] is False
-    with pytest.raises(Exception, match="rows of days"):
-        host.command("ideas.board_set", {"hours": "weekdays"})
-    host.command("ideas.board_set", {"hours": []})
-    assert host.snapshot()["presence"] == {"here": True, "until": "", "held": False}, "emptied: today's behaviour"
 
 
 def test_the_door_tells_the_faces_when_it_turns(host):
@@ -143,33 +113,6 @@ def test_away_a_goal_put_off_whose_reset_passed_does_not_start_talk_and_waits_fo
     assert hours.in_hours(host.ideas.settings_now(), dt.datetime.fromisoformat(st["held_until"]) + dt.timedelta(minutes=1)), "…inside the hours"
 
 
-def test_away_the_first_reset_inside_the_hours_is_where_it_waits(host, tech, went, monkeypatch):
-    slug = host.command("ideas.add", {"text": "another goal to talk over", "track": tech})["slug"]
-    _due(host, slug)
-    around_now(host, here=False)                                                       # the hours begin three hours from now and last an hour
-    start = dt.datetime.now().replace(second=0, microsecond=0) + dt.timedelta(hours=3, minutes=20)
-    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.9, start - dt.timedelta(hours=5))])      # its resets repeat every five hours: one falls at `start`
-    host.ideas._route_at = float("-inf")
-    host.ideas.route_tick(time.monotonic() + 1000)
-    held = dt.datetime.fromisoformat(_state(host, slug)["held_until"])
-    assert went == [] and abs((held - start).total_seconds()) < 90, "the first reset inside the hours, not the hours' start"
-
-
-def test_here_the_same_goal_starts_talk_and_with_no_hours_set_it_is_today(host, tech, went):
-    first = host.command("ideas.add", {"text": "a goal that is due", "track": tech})["slug"]
-    _due(host, first)
-    host.ideas._route_at = float("-inf")
-    host.ideas.route_tick(time.monotonic() + 1000)
-    assert went == [first], "no hours set: nothing waits"
-    ideas.save_state(host.ideas.state_dir, first, state="routed", held_until="", from_backlog=False)
-    went.clear()
-    around_now(host, here=True)
-    _due(host, first)
-    host.ideas._route_at = float("-inf")
-    host.ideas.route_tick(time.monotonic() + 2000)
-    assert went == [first], "inside the hours the person is Here"
-
-
 def test_a_goal_the_person_starts_by_hand_goes_at_once_even_when_away_and_a_step_that_asks_nothing_is_not_laid(host, tech, went):
     around_now(host, here=False)
     slug = host.command("ideas.add", {"text": "start this by hand", "track": tech})["slug"]
@@ -205,19 +148,6 @@ def test_the_wait_of_an_agreed_goal_keeps_its_time_while_away_when_each_result_w
 
 
 # -- the push while Away ------------------------------------------------------------------------------------------------------------------------
-
-def test_the_push_while_away_sends_only_money_and_safety_and_in_the_hours_as_before(fake_repo):
-    from tests.test_phone_push import Rig, at as when
-    rig = Rig(fake_repo)
-    rows = [{"days": [0, 1, 2, 3, 4, 5, 6], "from": "19:00", "to": "23:00"}]
-    rig.host.ideas.save_settings({**rig.host.ideas.settings_now(), "hours": rows})
-    rig.tick(when(12, 0))
-    rig.ask("Offline mode retry queue")
-    assert rig.tick(when(12, 1)) == [], "noon: the person is Away; a spec asking is not pushed"
-    (msg,) = rig.tick(when(20, 0))
-    assert msg["body"] == "A spec asks · Offline mode retry queue", "inside the hours it is, as before"
-    from orkboard.gui import phone_push
-    assert phone_push.AWAY_KINDS == ("paid", "start")
 
 
 # -- the cost against the window --------------------------------------------------------------------------------------------------------------

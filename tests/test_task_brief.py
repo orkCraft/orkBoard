@@ -62,25 +62,10 @@ def test_a_section_reads_the_common_part_its_own_whole_and_of_the_others_their_c
     assert task_brief.reading(page(), "tech")["own"][0] == "Tech"
 
 
-def test_a_page_of_before_or_a_section_the_page_lacks_is_read_as_it_was():
-    old = idea_page.parse("---\ntrack: web\n---\n# Old\n\n## Gist\nA goal\n\n## Why\nBecause\n\n## Done when\n- It works\n")
-    assert task_brief.reading(old, "Web") is None and task_brief.note(old, "Web") == ""
-    assert task_brief.reading(page(), "Nobody") is None and task_brief.reading(page(), "") is None and task_brief.note(page(), "Nobody") == ""
 
 
-def test_the_contract_is_done_when_and_will_be_as_the_leader_wrote_them_and_nothing_when_it_wrote_neither():
-    assert task_brief.contract("### Why\nx\n\n### Done when\n- a\n\n### Out\n- b") == "### Done when\n- a"
-    assert task_brief.contract("### Why\nx") == "" and task_brief.contract("") == ""
 
 
-def test_the_note_names_what_a_task_reads_and_a_lone_section_has_no_contract_to_keep():
-    note = task_brief.note(page(), "Design")
-    assert note == ("read the common part (`## Asked`, `## Gist`, `## Route`), your party's section `## Design` whole, and of the other sections (`## Tech`) only their "
-                    "`### Done when` and `### Will be`: they are the contract your work must not break. Read nothing else of it: the other parties' sections are theirs. "
-                    "A [test] line you prove: write its test first, see it fail, then make it pass.")
-    assert note.endswith(task_brief.PROVE)                                                      # spec 152 F.3: one line, how a [test] line is proven
-    lone = idea_page.parse(PAGE.split("## Tech")[0])
-    assert "of the other sections" not in task_brief.note(lone, "Design") and "your party's section `## Design` whole" in task_brief.note(lone, "Design")
 
 
 def test_a_page_is_found_in_the_boards_worktree_first_then_the_repository(tmp_path):

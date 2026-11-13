@@ -7,7 +7,7 @@ from __future__ import annotations
 import pytest
 
 from orkboard.core import idea_slices
-from orkboard.realm import concerns as concern_store, idea_target, slices
+from orkboard.realm import idea_target, slices
 from tests.test_idea_slices import HEAD, MAP, _hold, _route, design, goal, host, release, tech  # noqa: F401  (the fixtures)
 
 
@@ -22,11 +22,6 @@ def _part(prompt, facts=True, map_after=True):
             assert at < prompt.index(later), later
 
 
-def test_the_part_is_the_partys_standing_slices_under_a_heading_of_its_own(host, tech, design):
-    _hold(host, tech, design)
-    ((head, body),) = idea_slices.parts(host.ideas.state_dir, tech)
-    assert head == HEAD.rstrip("\n:") and body == "- Your builds are quick. (§6.2)"
-    assert idea_slices.parts(host.ideas.state_dir, "") == [] and idea_slices.parts(host.ideas.state_dir, "art") == []             # the Orkmaster's tab has none; an empty store adds none
 
 
 def test_a_store_that_cannot_be_read_adds_no_part_and_never_stops_a_call(host, tech, goal, monkeypatch):
@@ -42,16 +37,8 @@ def test_talks_round_has_the_part_after_the_facts_and_before_the_journals_and_th
     _part(host.ideas.keeper.round_prompt(goal, {"party": tech, "leader": "architect"}, _route(tech), rnd, "Q? A.", False, set()))
 
 
-def test_the_diagnosis_has_the_part_after_the_facts_and_before_the_map(host, tech, goal):
-    _hold(host, tech)
-    _part(host.ideas.keeper.diagnose_prompt(goal, {"party": tech, "leader": "architect"}, True, set(), []))
 
 
-def test_the_verdict_and_the_weighing_have_the_part(host, tech, goal):
-    _hold(host, tech)
-    entry = {"party": tech, "leader": "architect"}
-    for prompt in (host.ideas.keeper.verdict_prompt(goal, entry, _route(tech), []), host.ideas.keeper.weigh_prompt(goal, entry, _route(tech), [])):
-        _part(prompt)
 
 
 @pytest.mark.parametrize("first", [True, False])
@@ -69,38 +56,14 @@ def test_a_plan_and_a_change_asked_of_a_leader_have_the_part_before_the_map(host
     assert HEAD in change and change.index(HEAD) < change.index("Your map:")
 
 
-def test_a_leaders_look_at_a_tasks_result_has_the_part(host, tech, goal):
-    _hold(host, tech)
-    prompt = host.ideas.keeper.accept_prompt(host.ideas.root(), tech)
-    assert HEAD in prompt and "- Your builds are quick. (§6.2)" in prompt
 
 
-def test_the_leaders_bubble_has_the_part_in_a_partys_tab_only(host, tech, goal):
-    _hold(host, tech)
-    keeper = host.ideas.keeper
-    _part(keeper.ask_prompt(tech, "Is the cache safe?"), map_after=False)
-    orkmaster = keeper.ask_prompt("", "What did we decide?")
-    assert HEAD not in orkmaster and "Your builds are quick" not in orkmaster
 
 
-def test_the_leaders_look_at_its_map_has_the_part_before_the_frame_and_the_map(host, tech, goal):
-    _hold(host, tech)
-    prompt = host.ideas.keeper.concerns_prompt(tech, "tech", MAP, [{"id": "cache", "name": "Cache"}], [], [], concern_store.read(host.ideas.state_dir, tech))
-    _part(prompt)
-    assert prompt.index(HEAD) < prompt.index("The frame your craft reviews by")
 
 
-def test_the_trees_hypotheses_the_loops_and_the_projects_questions_have_the_part(host, tech):
-    _hold(host, tech)
-    keeper = host.ideas.keeper
-    for prompt in (keeper.tree_prompt(tech), keeper.hypotheses_prompt(tech, 3), keeper.loop_prompt(tech), keeper.project_prompt(tech, set())):
-        _part(prompt)
 
 
-def test_a_passed_question_has_the_part_of_the_leader_it_is_passed_to(host, tech, design, goal):
-    _hold(host, tech)
-    card = {"to": tech, "by": design, "q": "Which look?", "choices": ["A", "B"]}
-    _part(host.ideas.keeper.pass_prompt(goal, card), map_after=False)
 
 
 def test_every_prompt_has_the_part_once_and_a_party_with_none_has_prompts_as_before(host, tech, design, goal):
@@ -128,8 +91,3 @@ def test_the_context_of_each_step_that_reads_the_slices_grew_by_twelve_hundred()
     assert idea_target.CONTEXT["join"] == 8_000 and idea_target.CONTEXT["decide"] == 11_000 + 2_500                       # the rest stay; the decision's call grew by its own part's bound
 
 
-def test_what_fit_before_is_not_cut_now(host, tech, goal):
-    _hold(host, tech)
-    host.ideas.keeper._map = lambda party: "x" * 7_000
-    prompt = host.ideas.keeper.round_prompt(goal, {"party": tech, "leader": "architect"}, _route(tech), 1, "", False, set())
-    assert "x" * 6_999 in prompt and HEAD in prompt

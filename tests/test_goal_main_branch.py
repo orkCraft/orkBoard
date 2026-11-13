@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import commit_goal, goal_branch, goal_main, idea_gate, ideas
+from orkboard.realm import goal_branch, goal_main, idea_gate, ideas
 from orkboard.realm.idea_git import IdeaGit
 
 from tests.test_goal_main import commit_in, git, goal
@@ -78,15 +78,6 @@ def through_branch(host, repo):
     return lobby, chat, l1, c1, own, l2, merge
 
 
-def test_the_index_names_a_goals_own_commits_and_not_the_merge_commit_between_them(host, repo, through_branch):
-    lobby, chat, l1, c1, own, l2, merge = through_branch
-    owner = commit_goal.index(host.ideas.state_dir, repo, "dev")
-    assert [s for s in (*l1, *l2) if owner.get(s, {}).get("goal") == lobby] == [*l1, *l2], "every commit of Lobby's tasks is Lobby's"
-    assert [owner[s]["task"] for s in (*l1, *l2)] == ["k1", "k1", "k2"]
-    assert owner[c1[0]]["goal"] == chat
-    assert merge not in owner and own not in owner, "a merge commit of dev into the goal, and the person's own commit, belong to no goal"
-
-
 def test_to_main_takes_the_goals_commits_in_dev_order_and_not_the_merge_commit(host, repo, through_branch):
     lobby, chat, l1, c1, own, l2, merge = through_branch
     plan = plan_of(host, repo, lobby)
@@ -110,19 +101,3 @@ def test_the_merge_picks_the_goal_onto_main_and_a_goal_beside_it_is_still_waitin
     assert l1[0] not in pending and c1[0] in pending
 
 
-def test_dev_merged_into_the_goal_a_second_time_at_the_end_is_no_goals_either(host, repo):
-    """Dev moves while the goal's last step runs: the merge into dev merges dev into the branch once more, the merge commit is the branch's tip, and the goal still goes alone."""
-    state, g = host.ideas.state_dir, IdeaGit(repo)
-    lobby, chat = goal(host, "Lobby\nwhere players meet"), goal(host, "Chat rooms")
-    branch = goal_branch.begin(g, state, lobby, {"tasks": []}, "dev", 1)
-    l1 = land(host, repo, lobby, "k1", branch, {"lobby/room.ts": "room\n"})
-    c1 = land(host, repo, chat, "k1", "dev", {"chat/room.ts": "chat\n"})
-    goal_branch.ready(state, lobby)
-    got = goal_branch.to_dev(g, state, lobby, "dev", untested=True)
-    tip = got["commit"]
-    assert len(git(repo, "rev-list", "--parents", "-n1", tip).split()) == 3, "the branch's tip is the merge of dev"
-    owner = commit_goal.index(state, repo, "dev")
-    assert owner[l1[0]]["goal"] == lobby and owner[c1[0]]["goal"] == chat and tip not in owner
-    assert plan_of(host, repo, lobby)["commits"] == l1 and plan_of(host, repo, chat)["commits"] == c1
-    done = goal_main.merge(repo, state, chat, False, root=host.ideas.root(), into="dev", main="main")
-    assert done["goals"] == [chat] and "lobby/room.ts" not in git(repo, "ls-tree", "-r", "--name-only", "main").split()

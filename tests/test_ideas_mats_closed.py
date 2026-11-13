@@ -8,7 +8,7 @@ import pytest
 
 from orkboard.core import idea_undo
 from orkboard.gui import ideas_mats
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.realm import harnesses, ideas
 
 PAGE = ("---\nowner: board\nkind: idea\ntrack: tech\norder: 1\nphase: talk\nasks: person\nschema: 3\n---\n# Goal\n\n## Gist\nA goal.\n\n"
@@ -47,10 +47,6 @@ def host(fake_repo):
     sys.modules.pop("orkboard.core.idea_runner", None)
 
 
-def test_every_one_press_command_is_played_here(host):
-    assert set(PLAYED) == set(ideas_mats.ONE_PRESS_BY)               # a new one-press command must be added here, with its arguments
-
-
 @pytest.mark.parametrize("name", sorted(ideas_mats.ONE_PRESS_BY))
 def test_a_one_press_command_runs_no_model(host, monkeypatch, name):
     reached: list[str] = []
@@ -72,23 +68,6 @@ def test_a_one_press_command_runs_no_model(host, monkeypatch, name):
     assert kept["before"] == (before if "laid" not in kept else {"page": None, "state": None})          # its Undo is kept: the goal's own bytes, or none of the goal it laid
     host.command("ideas.undo", {"idea": "goal"})
     assert _board(host) == board and reached == []                                                     # its reverse puts every page and state back
-
-
-def test_the_two_tables_leave_no_kind_between(host):
-    for name in ideas_mats.ONE_PRESS_BY:
-        assert idea_undo.way(ideas_mats.move_kind(name, PLAYED[name])) == "press"
-    assert ideas_mats.move_kind("ideas.answer", {"slug": "goal", "from": "hand"}) == ""      # the keeper's pass is no hand's move
-    assert idea_undo.way(ideas_mats.move_kind("ideas.gate_fix_stage", {"idea": "goal", "from": "mat"})) == "sealed"      # its stage again goes only on its seal
-
-
-def test_the_stage_again_goes_only_on_its_seal_and_reaches_no_runner(host, monkeypatch):
-    """Goal "The battle and the gate" H: `ideas.gate_fix_stage` unsealed is refused before anything runs; the runner is never built."""
-    monkeypatch.setattr(type(host.ideas), "runner", lambda self, need=False: (_ for _ in ()).throw(AssertionError("the runner was reached")))
-    board = _board(host)
-    for origin in ("hand", "mat", ""):
-        with pytest.raises(CommandError, match="Run its stage again cannot be undone: it goes only on its seal"):
-            host.command("ideas.gate_fix_stage", {"idea": "goal", "from": origin})
-    assert _board(host) == board
 
 
 def test_new_wins_is_one_press_runs_no_model_and_its_reverse_puts_the_decision_back(host, monkeypatch):

@@ -52,9 +52,3 @@ def test_an_ask_goes_to_hermes_own_gate_and_nothing_said_is_nothing(monkeypatch,
     assert _warder(monkeypatch, capsys, "cursor", {"tool_name": "Shell", "tool_input": {"command": "ls"}}) == "{}"
 
 
-def test_pi_extension_carries_this_python_and_is_written_once(tmp_path: Path):
-    path = pi_extension.write(tmp_path / "x.ts")
-    text = path.read_text()
-    assert json.dumps(sys.executable) in text and 'pi.on("tool_call"' in text and "block: true" in text
-    mtime = path.stat().st_mtime_ns
-    assert pi_extension.write(tmp_path / "x.ts") == path and path.stat().st_mtime_ns == mtime

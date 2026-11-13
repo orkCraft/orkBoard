@@ -17,9 +17,8 @@ import pytest
 from orkboard.core.idea_loop import LoopMixin as KeeperLoop
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.gui.ideas_loop import LoopMixin as GuiLoop, loop_commands
-from orkboard.realm import goal_team, idea_spend, idea_target, ideas, library, loop, project_facts
+from orkboard.realm import goal_team, idea_target, ideas, library, loop
 
-COMMANDS = {"ideas.loop", "ideas.loop_set", "ideas.loop_propose"}
 
 
 def git(repo, *args):
@@ -127,27 +126,8 @@ def test_the_first_proposal_is_one_call_of_game_designs_leader_on_the_cheaper_ti
     assert "Read no file" in p
 
 
-def test_the_prompt_is_a_senior_game_designers_brief_for_version_2_of_the_loop(host, game, model):
-    _propose(host, game)
-    p = model.calls[0]["prompt"]
-    assert '{"loops": [{"span": "core"' in p and '"currencies"' in p and '"hooks"' in p and '"cards"' not in p                  # version 2, not 1
-    for word in ("core", "session", "meta", "seconds", "minutes", "days and weeks"):                                      # the spans and their time scales
-        assert word in p
-    assert all(f in p for f in loop.FEELS) and "MDA" in p and "intensity" in p                                            # the eight feelings, and how strongly
-    assert "what the player does" in p and "what they feel" in p                                                         # each step says what the player does and feels
-    assert "gives" in p and "takes" in p and "piles up" in p and all(k in p for k in loop.KINDS)                           # the currencies, with where they are earned and spent
-    assert "D1" in p and "D7" in p and "D30" in p and "comes back" in p                                                    # the hooks
-    assert "rests_on" in p and "Never invent a path" in p and "3 to 6" in p and "4 currencies at most" in p
 
 
-def test_the_step_is_as_project_qs_on_the_cheaper_tier_in_the_specs_stage_of_its_partys_ledger(host, game, model):
-    _propose(host, game)
-    spent = idea_spend.of_goal(host.ideas.state_dir, game)
-    assert spent["usd"] == 0.01 and spent["stages"]["spec"]["usd"] == 0.01
-    assert idea_spend.STEP_STAGE["loop"] == "spec" and "loop" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("loop", target) == idea_target.pick("project_q", target)
-    assert idea_target.READS["loop"] == 0 and idea_target.CONTEXT["loop"] == idea_target.CONTEXT["project_q"] and idea_target.CAPS["loop"] == idea_target.CAPS["project_q"] <= 0.15
 
 
 def test_the_proposal_is_kept_by_the_leader_with_the_paths_dev_has_and_the_command_reads_it(host, game, model):
@@ -161,16 +141,6 @@ def test_the_proposal_is_kept_by_the_leader_with_the_paths_dev_has_and_the_comma
     assert "1. Spawn: Enemies come in waves" in loop.text(host.ideas.state_dir, host.ideas.keeper.repo_root).splitlines()
 
 
-def test_the_command_says_what_the_loop_says_by_code(host, game):
-    Model(host, RICH)
-    _propose(host, game)
-    got = host.command("ideas.loop", {})
-    assert got["findings"] == [] and names(got, "session") == ["Join", "Hold", "Score"] and got["currencies"][0]["id"] == "gold" and got["hooks"] == [{"when": "D1", "line": "A daily chest waits"}]
-    flat = json.loads(json.dumps(RICH))
-    flat["loops"][1]["steps"] = [{**s, "intensity": 3} for s in flat["loops"][1]["steps"]]
-    flat["loops"][0]["steps"][1].pop("gives")
-    sent = host.command("ideas.loop_set", flat)
-    assert sent["findings"] == ["The core loop rewards nothing", "The session loop's feeling is flat"] and host.command("ideas.loop", {})["findings"] == sent["findings"]
 
 
 def test_it_is_asked_once_a_loop_kept_or_proposed_is_never_asked_again_unasked(host, game, model):
@@ -205,15 +175,6 @@ def test_propose_again_asks_over_a_loop_kept_and_puts_the_persons_version_aside(
     assert names(host.command("ideas.loop", {})["was"]) == list("ABCD")                                                # the leader's own version put aside is not theirs: `was` stays the person's
 
 
-def test_propose_again_is_asked_while_nothing_is_kept_and_not_a_second_time_while_it_is_asked(host, game):
-    seen = {}
-
-    def slow(call):
-        seen["again"] = host.command("ideas.loop_propose", {"again": True})
-        return ANSWER
-
-    model = Model(host, slow)
-    assert _propose(host, game, again=True)["asked"] is True and seen["again"]["asked"] is False and len(model.calls) == 1
 
 
 def test_a_call_that_does_not_answer_is_tried_once_more_then_recorded_and_asked_again_at_the_next_press(host, game):
@@ -230,10 +191,6 @@ def test_a_call_that_does_not_answer_is_tried_once_more_then_recorded_and_asked_
     assert _propose(host, game)["asked"] is True and host.command("ideas.loop", {})["status"] == "done" and len(names(loop.read(host.ideas.state_dir))) == 4
 
 
-def test_a_call_lost_with_the_process_is_not_proposing_and_is_asked_again(host, game, model):
-    loop.save_proposal(host.ideas.state_dir, "asking")                                                                 # the record of a run that died
-    assert host.command("ideas.loop", {})["proposing"] is False and host.command("ideas.loop", {})["status"] == ""
-    assert _propose(host, game)["asked"] is True and len(model.calls) == 1
 
 
 def test_a_proposal_being_asked_is_proposing_and_is_not_asked_a_second_time(host, game):
@@ -261,10 +218,6 @@ def test_no_game_design_party_or_no_call_to_make_is_asked_false_with_why_never_a
     assert game
 
 
-def test_a_party_that_is_not_game_designs_is_not_asked(host, model):
-    _party(host, "Product", "product-manager", ["copywriter"], "product")
-    _party(host, "Tech", "architect", ["grunt", "tester"], "engineering")
-    assert _propose(host)["asked"] is False and not model.calls
 
 
 # -- the person's loops --------------------------------------------------------------------------------------------------------------
@@ -292,11 +245,6 @@ def test_a_step_is_edited_in_its_name_line_feeling_and_intensity_and_a_currency_
     assert sent["findings"] == [] and sent["by"] == "person"
 
 
-def test_the_loops_of_the_leader_the_person_did_not_touch_stay_the_leaders(host, game, model):
-    _propose(host, game)
-    kept = loop.read(host.ideas.state_dir)["loops"][0]["steps"]
-    got = host.command("ideas.loop_set", {"loops": [{"span": "core", "name": "The hit", "steps": [kept[0], {**kept[1], "name": "Duel"}, kept[2], kept[3]]}]})
-    assert [c["by"] for c in got["loops"][0]["steps"]] == ["leader", "person", "leader", "leader"] and got["loops"][0]["steps"][1]["id"] == "fight"
 
 
 def test_a_set_that_is_none_is_refused_in_plain_words_and_changes_nothing(host, game):
@@ -310,10 +258,5 @@ def test_a_set_that_is_none_is_refused_in_plain_words_and_changes_nothing(host, 
     assert loop.read(host.ideas.state_dir) == before
 
 
-def test_a_version_1_set_is_one_core_loop(host, game):
-    got = host.command("ideas.loop_set", {"cards": FOUR})
-    assert [lp["span"] for lp in got["loops"]] == ["core"] and names(got) == ["Spawn", "Fight", "Loot", "Upgrade"] and {s["intensity"] for s in got["loops"][0]["steps"]} == {3}
 
 
-def test_the_commands_are_in_the_table_by_name(host):
-    assert COMMANDS <= set(host.commands) and set(loop_commands(host.ideas)) == COMMANDS

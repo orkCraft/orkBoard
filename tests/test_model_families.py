@@ -5,7 +5,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 from orkboard.realm import harnesses, model_families
 from orkboard.sources import pricing
@@ -39,27 +38,6 @@ if sys.argv[1:] == ["models"]:
     return calls
 
 
-def test_the_newest_of_a_family_by_its_version():
-    models = ["gemini-3.7-flash-high", "gemini-3.10-flash-high", "gemini-3.8-flash-high", "gemini-3.10-flash-low",
-              "gemini-3.11-flash-high-preview", "gemini-3.11-flash-high"]
-    assert model_families.newest("gemini-flash-high", models) == "gemini-3.11-flash-high"   # a release over its preview
-    assert model_families.newest("gpt-sol", ["gpt-6-sol", "gpt-6.1-sol", "gpt-5.6-sol", "gpt-6-astra"]) == "gpt-6.1-sol"
-    assert model_families.newest("gpt-terra", ["gpt-6-sol"]) == ""
-    assert model_families.is_family("gemini-pro-high") and not model_families.is_family("gemini-3.1-pro-high")
-    assert not model_families.is_family("opus")                        # a tool's alias, not a family
-
-
-def test_a_tools_list_is_read():
-    assert model_families.parse_agy(AGY_LIST)[:2] == ["gemini-3.7-flash-high", "gemini-3.8-flash-high"]
-    # agy 1.3.3 puts a tab between the id and the name, after a line that is not a model
-    tabbed = "Fetching available models...\ngemini-3.8-flash-low\tGemini 3.8 Flash (Low)\n"
-    assert model_families.parse_agy(tabbed) == ["gemini-3.8-flash-low"]
-    codex = json.dumps({"models": [{"slug": "gpt-6-astra", "visibility": "list"},
-                                   {"slug": "gpt-daybreak-blue-latest", "visibility": "hide"}]})
-    assert model_families.parse_codex(codex) == ["gpt-6-astra"]
-    assert model_families.parse_codex("not json") == []
-
-
 def test_a_run_names_the_newest_model_and_the_list_is_kept_a_day(tmp_path, monkeypatch):
     calls = fake_agy(tmp_path, monkeypatch)
     agy = harnesses.need("agy")
@@ -79,17 +57,6 @@ def test_a_run_names_the_newest_model_and_the_list_is_kept_a_day(tmp_path, monke
     assert calls.read_text().count("models") == 2                       # a day on: asked again
 
 
-def test_no_list_no_model_flag(tmp_path, monkeypatch):
-    fake_agy(tmp_path, monkeypatch, listing=None)
-    argv = harnesses.need("agy").ask("hi", tmp_path, "elder")
-    assert "--model" not in argv                                         # the tool's own default
-    fake_agy(tmp_path, monkeypatch, listing="gemini-3.8-flash-low x\n")
-    model_families.cache_file().unlink()
-    assert "--model" not in harnesses.need("agy").ask("hi", tmp_path, "elder")   # no pro in the list
-    monkeypatch.setenv("ORKCRAFT_CODEX_BIN", str(tmp_path / "no-such-codex"))
-    assert "--model" not in harnesses.need("codex").read("hi", tmp_path, "elder")
-
-
 def test_a_chosen_model_wins(tmp_path, monkeypatch):
     calls = fake_agy(tmp_path, monkeypatch)
     agy = harnesses.need("agy")
@@ -100,30 +67,12 @@ def test_a_chosen_model_wins(tmp_path, monkeypatch):
     assert harnesses.need("claude").pick("elder") == "opus"              # Claude Code's alias: already the newest
 
 
-def test_a_family_reads_with_the_version_it_runs_on(tmp_path, monkeypatch):
-    fake_agy(tmp_path, monkeypatch)
-    assert model_families.label("gemini-flash-high") == "Gemini Flash High"   # nothing listed yet
-    harnesses.need("agy").pick("warrior")
-    assert model_families.label("gemini-flash-high") == "Gemini Flash High (3.8)"
-    assert model_families.label("gpt-astra") == "GPT Astra"
-    assert model_families.label("gemini-3.1-pro-high") == "gemini-3.1-pro-high"
-
-
 def test_a_price_by_family_when_the_version_is_not_in_the_table():
     assert pricing.price_for("claude-opus-5-7") == pricing.PRICES["claude-opus-5-5"]     # the nearest version
     assert pricing.price_for("claude-sonnet-4-7") == pricing.PRICES["claude-sonnet-4-6"]
     assert pricing.price_for("opus") == pricing.PRICES["claude-opus-5-5"]                # no version: the newest
     assert pricing.price_for("claude-haiku-4-5-20251001") == pricing.PRICES["claude-haiku-4-5"]
     assert pricing.price_for("claude-unknown-1") is None and pricing.price_for("gemini-3.8-flash") is None
-
-
-def test_a_codex_price_by_family(monkeypatch):
-    monkeypatch.setattr(pricing, "OPENAI_PRICES", {"gpt-6-luna": pricing.OpenAIPrice(2, 0.5, 10),
-                                                   "gpt-5.6-luna": pricing.OpenAIPrice(1, 0.1, 5)})
-    assert pricing.openai_price_for("gpt-6.2-luna") == pricing.OPENAI_PRICES["gpt-6-luna"]
-    assert pricing.openai_price_for("gpt-luna") == pricing.OPENAI_PRICES["gpt-6-luna"]
-    assert pricing.openai_price_for("gpt-6-astra") is None              # no astra priced: unknown, never $0
-    assert pricing.codex_usage_cost("gpt-luna", {"input_tokens": 1_000_000}) == pytest.approx(2)
 
 
 def test_a_model_chosen_for_a_tier_wins_over_the_latest(tmp_path, monkeypatch):

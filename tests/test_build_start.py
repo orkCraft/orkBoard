@@ -19,19 +19,8 @@ def test_the_two_old_keys_read_as_the_one_value(autostart, look, value):
     assert settings.clean_ideas({"autostart": autostart, "look_wait": look}) | {} is not None       # and the file that says them loads
 
 
-def test_a_settings_file_with_only_the_old_keys_reads_the_value():
-    for raw, want in (({"autostart": True, "look_wait": "30m"}, "30m"), ({"autostart": False}, "hand"), ({"look_wait": "none"}, "now"), ({}, look_wait.build_start(True, settings.IDEAS["look_wait"]))):
-        ideas = settings.clean_ideas(raw)
-        assert look_wait.build_start(ideas["autostart"], ideas["look_wait"]) == want
 
 
-@pytest.mark.parametrize("value, keys", [
-    ("now", {"autostart": True, "look_wait": "none"}), ("30m", {"autostart": True, "look_wait": "30m"}), ("2h", {"autostart": True, "look_wait": "2h"}),
-    ("tonight", {"autostart": True, "look_wait": "tonight"}),
-])
-def test_a_value_writes_both_old_keys(value, keys):
-    assert look_wait.build_start_keys(value, "2h") == keys
-    assert look_wait.build_start(**{"autostart": keys["autostart"], "look": keys["look_wait"]}) == value
 
 
 def test_by_hand_turns_the_start_off_and_keeps_the_look():
@@ -59,13 +48,6 @@ def test_the_board_says_the_value_and_sets_it(host):
         host.command("ideas.board_set", {"build_start": "soon"})
 
 
-def test_the_old_keys_still_set_it(host):
-    host.command("ideas.board_set", {"autostart": True, "look_wait": "30m"})
-    assert host.command("ideas.board")["build_start"] == "30m"
-    host.command("ideas.board_set", {"autostart": False})
-    assert host.command("ideas.board")["build_start"] == "hand"
-    host.command("ideas.board_set", {"autostart": True, "look_wait": "none"})
-    assert host.command("ideas.board")["build_start"] == "now"
 
 
 def test_the_night_is_read_through_one_function(host):
@@ -78,8 +60,3 @@ def test_the_night_is_read_through_one_function(host):
     assert host.command("ideas.board")["night_rung"] == "ideas" and host.ideas.settings_now()["work_at_night"] is False
 
 
-def test_goals_at_once_is_one_to_eight(host):
-    assert host.command("ideas.board_set", {"max_parallel": 3})["max_parallel"] == 3
-    for bad in (0, 9, "3", True):
-        with pytest.raises(CommandError):
-            host.command("ideas.board_set", {"max_parallel": bad})

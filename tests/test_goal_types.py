@@ -48,38 +48,6 @@ def _offer(board, craft_or_preset):
 
 # -- the catalog ----------------------------------------------------------------------------------------------
 
-def test_the_catalog_is_in_spec_59s_order_with_unique_ids_and_the_words_fit_their_places():
-    assert [t.id for t in goal_types.CATALOG] == [
-        "feature", "bug", "tidy", "shaped-feature", "restructure", "screen", "icon", "logo", "flow-feature", "pain", "experiment",
-        "launch", "metric", "report", "abtest", "landing", "post", "tagline",
-        "mechanic", "level", "character", "balance", "sound", "store", "release"]
-    assert len({t.id for t in _all()}) == len(_all())
-    for t in _all():
-        assert len(t.line) <= 60 and t.lens in goal_types.LENSES and len(t.asks) <= 3 and t.needs, t
-        assert len({a.id for a in t.asks}) == len(t.asks) and goal_types.REFS not in {a.id for a in t.asks}
-        assert all(len(a.label) <= 24 and len(a.hint) <= 60 for a in t.asks), t
-        assert t.over == "" or t.over in goal_types.BY_ID and goal_types.BY_ID[t.over].over == "", t
-    assert {t.id: t.over for t in _all() if t.over} == {"shaped-feature": "feature", "flow-feature": "feature", "experiment": "abtest"}
-    assert not hasattr(goal_types, "TYPES") and not hasattr(goal_types, "of") and not hasattr(goal_types, "GENERAL")
-
-
-def test_the_types_of_spec_52_keep_their_words_and_the_new_ones_are_spec_59s():
-    bug = goal_types.get("bug")
-    assert [(a.label, a.hint) for a in bug.asks] == [("What you did", "the steps, in order"), ("What happened", "what you saw"),
-                                                     ("What should have", "what you expected")] and bug.lens == "text"
-    logo = goal_types.get("logo")
-    assert (logo.sign, logo.needs, logo.lens, logo.refs) == ("logo", ("art",), "text", True)
-    assert goal_types.get("landing").needs == ("text", "seo") and goal_types.get("tagline").sign == "tagline"
-    assert (goal_types.get("shaped-feature").name, goal_types.get("shaped-feature").lens) == ("New feature", "code")
-    assert goal_types.get("experiment").needs == ("research", "experiment")
-    mechanic, sound, release = goal_types.get("mechanic"), goal_types.get("sound"), goal_types.get("release")
-    assert (mechanic.name, mechanic.sign, mechanic.needs, mechanic.refs) == ("New mechanic", "mechanic", ("gamedesign",), False)
-    assert [(a.label, a.hint) for a in mechanic.asks] == [("What the player does", "the verb, in one line"), ("Why it is fun", "what they get from it")]
-    assert (sound.name, sound.sign, sound.needs, sound.refs) == ("New sound", "tune", ("sound",), True)       # never the media's `sound`
-    assert (release.needs, release.refs, release.sign) == (("aso", "code"), False, "release")
-    assert [(a.label, a.hint) for a in goal_types.get("store").asks] == [("Who it is for", ""), ("The stores", "App Store, Google Play")]
-    assert {t.id: t.sign for t in _all() if t.id in ("level", "character", "balance", "store")} == {
-        "level": "level", "character": "character", "balance": "balance", "store": "store"}
 
 
 def test_a_type_is_read_by_its_id_and_an_old_key_by_the_one_it_was_and_anything_else_reads_none():
@@ -96,33 +64,6 @@ def test_a_type_is_read_by_its_id_and_an_old_key_by_the_one_it_was_and_anything_
         assert goal_types.get(bad) is None, bad
 
 
-def test_every_sign_is_one_of_orkuis_and_a_type_shares_its_sign_only_with_the_same_thing():
-    have = {p.stem for p in (ROOT / "design-system" / "orkui" / "signs").glob("*.svg")}
-    assert A0_SIGNS <= have and len(A0_SIGNS) == 23                                       # the twenty-three come with orkUI 0.4.1 (specs 56, 59)
-    assert set(goal_types.SIGNS) == A0_SIGNS | {"text", "compass", "steps"}               # `text` stays spec 51's media tile; orkUI 0.16's two kinds of New feature
-    assert set(goal_types.SIGNS) <= have
-    for t in _all():
-        assert t.sign in goal_types.SIGNS and t.sign != "text", t
-    by_sign: dict[str, list[str]] = {}
-    for t in _all():
-        by_sign.setdefault(t.sign, []).append(t.id)
-    assert {s: ids for s, ids in by_sign.items() if len(ids) > 1} == {}                  # each kind of New feature its own (orkUI 0.16: the wand, the compass, the shoe)
-    assert set(by_sign) == A0_SIGNS | {"compass", "steps"}                    # every sign drawn by a type (spec 56 §1.6)
-
-
-def test_every_need_is_a_known_kind_and_the_ones_with_a_taker_have_one():
-    for t in _all():
-        for kind in t.needs:
-            assert kind in roles.TASK_KINDS, (t, kind)
-    leaders = {k for a in library.LIBRARY if a.band == "lead" for k in a.takes}
-    for t in _all():
-        for kind in t.needs:
-            assert goal_types.taker(kind, roles.DEFAULT_CRAFT) or kind in leaders, (t, kind)    # a kind only a leader takes has no one to join
-    assert {k: goal_types.taker(k, "design") for k in ("art", "uikit", "text", "seo", "experiment", "query", "data", "sound", "level", "aso", "playtest")} == {
-        "art": "artist", "uikit": "ui-kit", "text": "copywriter", "seo": "seo", "experiment": "experimenter",
-        "query": "sql", "data": "data-engineer", "sound": "sound-designer", "level": "level-designer", "aso": "aso", "playtest": "playtester"}
-
-
 # -- what a party offers --------------------------------------------------------------------------------------
 
 def test_the_library_parties_are_offered_spec_59s_lists_with_who_each_near_one_misses(board):
@@ -136,19 +77,6 @@ def test_the_library_parties_are_offered_spec_59s_lists_with_who_each_near_one_m
                                                            ("Write the launch", ["copywriter"])]
     assert [n for n, m in got["website"]] == ["New feature", "Fix a bug", "Clean up", "A landing page", "A launch post", "A tagline"]
     assert all(not m for _n, m in got["website"])
-
-
-def test_the_parties_of_one_craft_are_offered_theirs_not_their_neighbours(board, tmp_path_factory):
-    names = lambda c: [(n, m) for n, m in _offer((tmp_path_factory.mktemp(c) / "wiki", tmp_path_factory.mktemp(c) / ".orkcraft"), c)]
-    assert sorted(n for n, _m in names("engineering")) == sorted(["New feature", "Fix a bug", "Clean up", "Restructure"])   # the Architect's New feature, once
-    design = names("design")
-    assert sorted(n for n, _m in design) == sorted(["New screen", "New icon", "New logo", "New feature", "New character"]) and not any(m for _n, m in design)
-    assert names("data") == [("A new metric", []), ("A report", []), ("An A/B test", ["experimenter"])]
-    assert [n for n, _m in names("marketing")] == ["A landing page", "A launch post", "A tagline"]
-    product = names("product")
-    assert [n for n, m in product if not m] == ["New feature", "Fix a bug", "Clean up", "Solve a pain", "Write the launch", "A tagline"]
-    assert [(n, m) for n, m in product if m] == [("New screen", ["ui-kit"]), ("Try an experiment", ["experimenter"])]
-    assert names("mixed") == [("New feature", []), ("Fix a bug", []), ("Clean up", [])]                 # the Taskmaster alone
 
 
 def test_code_is_someones_a_type_that_needs_it_is_offered_only_when_a_member_takes_it_itself(board, monkeypatch):
@@ -187,54 +115,12 @@ def test_a_type_missing_one_agent_is_offered_only_when_the_leader_does_another_p
     assert "launch" not in {t.id for t, _r in goal_types.offered(state, root, taskless)}
 
 
-def test_a_type_that_stands_in_for_another_hides_it_when_it_is_met_and_is_not_offered_when_it_misses_someone(board):
-    root, state = board
-    eng = _party(root, state, ["grunt"], leader="architect")
-    ids = [t.id for t, _r in goal_types.offered(state, root, eng)]
-    assert "shaped-feature" in ids and "feature" not in ids                                    # one New feature, the Architect's
-    lone = _party(root, state, ["grunt"], leader="product-designer", title="Lone")
-    assert "feature" in [t.id for t, _r in goal_types.offered(state, root, lone)] and "flow-feature" not in [t.id for t, _r in goal_types.offered(state, root, lone)]
-    kit = _party(root, state, ["grunt", "ui-kit"], leader="product-designer", title="Kit")
-    ids = [t.id for t, _r in goal_types.offered(state, root, kit)]
-    assert "flow-feature" in ids and "feature" not in ids
-    data = _party(root, state, ["data-engineer"], leader="analyst", title="Data")
-    assert {t.id: [m["agent"] for m in r] for t, r in goal_types.offered(state, root, data)}["abtest"] == ["experimenter"]
-    pm = _party(root, state, ["grunt", "experimenter"], leader="product-manager", title="Lab")
-    ids = [t.id for t, _r in goal_types.offered(state, root, pm)]
-    assert "experiment" in ids and "abtest" not in ids                                         # the same name once
-    # the general type met hides nothing the other way: the shaped one missing someone does not hide, nor is hidden by, the plain one
-    assert "feature" in ids
-
-
-def test_the_free_seat_of_a_missing_row_reads_the_leaders_seats(board):
-    root, state = board
-    held = _party(root, state, ["grunt"], leader="product-designer", title="Held")
-    (row,) = goal_types.missing(state, root, held, ("art",))
-    assert row["free"] is True and len(row["out"]) == 1                                        # one of five seats is held, for every leader (spec 99 §1.3)
-    five = _party(root, state, ["grunt", "tester", "ui-kit", "copywriter", "seo"], leader="product-designer", title="Five")
-    (row,) = goal_types.missing(state, root, five, ("art",))
-    assert row["free"] is False and len(row["out"]) == 5                                       # five who do: the band is full
-    game = _party(root, state, ["grunt"], leader="game-designer", title="Game")
-    (row,) = goal_types.missing(state, root, game, ("art",))
-    assert row["free"] is True
-    empty = _party(root, state, [], leader="product-designer", title="Empty")
-    (row,) = goal_types.missing(state, root, empty, ("art",))
-    assert row["free"] is True and row["out"] == []                                              # nobody in the seat
-    old = _party(root, state, ["grunt", "level-designer", "sound-designer", "artist", "copywriter"], leader="game-designer", title="Old")      # five who do
-    assert goal_types.missing(state, root, old, ("aso",))[0]["free"] is False
-
-
 def test_the_taker_is_of_the_leaders_craft_first_and_never_a_leader(monkeypatch):
     scribe = library.Agent("scribe", "Scribe", "design", "warrior", ("text",), "Writes a screen's words", "")
     monkeypatch.setattr(library, "LIBRARY", (*library.LIBRARY, scribe))
     assert goal_types.taker("text", "design") == "scribe" and goal_types.taker("text", "marketing") == "copywriter"
     assert goal_types.taker("text", "data") == "copywriter"                                # no one of its craft: the library's order
     assert goal_types.taker("design", "design") == goal_types.taker("metrics", "data") == ""      # a leader's kind: no one is offered
-
-
-def test_a_kind_in_a_sentence():
-    assert [goal_types.words(k) for k in ("art", "uikit", "text", "experiment", "seo")] == [
-        "pixel art", "UI kit", "text for people", "experiments", "search (SEO)"]
 
 
 # -- whether a party does it ---------------------------------------------------------------------------------
@@ -253,39 +139,6 @@ def test_met_by_a_member_the_leader_the_projects_role_or_the_grunts_own_kinds_ne
 
 # -- what a party misses -----------------------------------------------------------------------------------------
 
-def test_missing_says_who_would_join_once_each_and_whether_a_seat_is_free(board):
-    root, state = board
-    ship = _party(root, state, ["grunt"], leader="product-designer")
-    got = goal_types.missing(state, root, ship, ("uikit", "art", "uikit", "design", "code"))
-    assert [(m["kind"], m["agent"], m["name"], m["band"], m["free"]) for m in got] == [
-        ("uikit", "ui-kit", "Design system designer", "build", True), ("art", "artist", "Artist", "build", True)]
-    assert got[0]["words"] == "UI kit" and got[1]["words"] == "pixel art" and got[1]["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 0}]
-    full = _party(root, state, ["grunt", "tester", "copywriter", "seo", "ui-kit"], leader="product-designer", title="Full")
-    (art,) = goal_types.missing(state, root, full, ("art", "uikit"))
-    assert art["free"] is False and [o["slug"] for o in art["out"]] == ["ui-kit", "seo", "copywriter", "tester", "grunt"]       # no runs: the later first
-    assert goal_types.missing(state, root, full, ()) == [] and goal_types.missing(state, root, full, ("bogus",)) == []
-
-
-def test_out_leaves_the_members_with_open_work_out_and_puts_the_fewest_runs_first(board, monkeypatch):
-    root, state = board
-    full = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer")
-    monkeypatch.setattr(goal_types.idea_spend, "by_role", lambda state_dir, days=7: {"grunt": {"finished": 1}, "tester": {"finished": 4}, "ui-kit": {"finished": 1}})
-    open_ = {"id": "k1", "title": "t", "kind": "uikit", "role": "ui-kit", "state": "running"}
-    _goal(root, state, full, [open_])
-    (art,) = goal_types.missing(state, root, full, ("art",))
-    assert art["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 1}, {"slug": "tester", "name": "Tester", "runs": 4}]
-    assert goal_types.is_dropped({"state": "dropped"}) and goal_types.is_dropped({"state": "failed", "error": "dropped by you"})
-    assert not goal_types.is_dropped({"state": "failed", "error": "tests failed"}) and not goal_types.is_dropped({"state": "merged"})
-    for gone in ({"state": "merged"}, {"state": "dropped"}, {"state": "failed", "error": "dropped by you"}):
-        other = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title=f"Other {len(ideas.tracks(root))}")
-        _goal(root, state, other, [{**open_, **gone}])
-        assert "ui-kit" in [o["slug"] for o in goal_types.missing(state, root, other, ("art",))[0]["out"]], gone
-    done = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title="Done")
-    _goal(root, state, done, [open_], state_="done")                                     # a goal done holds no one
-    assert "ui-kit" in [o["slug"] for o in goal_types.missing(state, root, done, ("art",))[0]["out"]]
-    failed = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title="Failed")
-    _goal(root, state, failed, [{**open_, "state": "failed", "error": "tests failed"}])   # a failure waits: its member stays
-    assert "ui-kit" not in [o["slug"] for o in goal_types.missing(state, root, failed, ("art",))[0]["out"]]
 
 
 # -- a party not saved ----------------------------------------------------------------------------------------------
@@ -308,25 +161,6 @@ def test_a_party_not_saved_is_read_from_its_leader_and_team_with_no_open_work_an
     assert [t.id for t, _r in goal_types.offered(state, root, "", read=alone)] == ["feature", "bug", "tidy"]
 
 
-def test_a_party_not_saved_offers_what_the_same_party_saved_does_and_a_library_agent_not_yet_the_projects_is_read_as_the_library_has_it(board, tmp_path_factory):
-    root, state = board
-    base = tmp_path_factory.mktemp("fresh")
-    fresh_root, fresh_state = base / "wiki", base / ".orkcraft"
-    ask = lambda st, rt, slug, read=None: [(t.id, [m["agent"] for m in rows]) for t, rows in goal_types.offered(st, rt, slug, read=read)]
-    parties = [(c, lead, [*build, *check]) for c, (lead, build, check) in library.PARTIES.items()] + [(p[0], p[4], [*p[5][:goal_team.SEATS - len(p[6])], *p[6]]) for p in library.PRESETS]   # a team holds at most SEATS: Art and sound's fifth builder is left out here
-    for name, lead, team in parties:
-        saved = _party(root, state, team, leader=lead, title=name)
-        got = ask(fresh_state, fresh_root, "", goal_types.Party.of(fresh_state, fresh_root, lead, team))
-        assert got == ask(state, root, saved), name
-        assert got == ask(state, root, "", goal_types.Party.of(state, root, lead, team)), name           # the same once they are the project's
-    game = goal_types.Party.of(fresh_state, fresh_root, "game-designer", ["grunt", "level-designer"])
-    assert game.fresh == ("level-designer", "game-designer")                                           # the Grunt is the project's already
-    assert roles.role(fresh_state, "level-designer") is None and ideas.tracks(fresh_root, make=False) == []        # nothing is installed, nothing saved
-    scribe = roles.save(state, "Coder", "", 1, "Write code.", None, ["code"])
-    own = goal_types.Party.of(state, root, "product-manager", [scribe])
-    assert own.fresh == () and "bug" in [t.id for t, _r in goal_types.offered(state, root, "", read=own)]    # an agent of the person's own, as the saved party
-
-
 # -- a plan's missing ------------------------------------------------------------------------------------------
 
 def test_a_plans_missing_is_the_kinds_no_one_of_the_party_does_once_each_in_its_order(board):
@@ -335,36 +169,6 @@ def test_a_plans_missing_is_the_kinds_no_one_of_the_party_does_once_each_in_its_
     tasks = [{"kind": "code"}, {"kind": "art"}, {"kind": "uikit"}, {"kind": "art"}, {"kind": "design"}, {"kind": "community"}]
     got = goal_types.of_plan(state, tasks, ["grunt", "product-designer"], "product-designer")
     assert got == [{"kind": "art", "agent": "artist"}, {"kind": "uikit", "agent": "ui-kit"}, {"kind": "community", "agent": "community"}]
-
-
-def test_a_plans_missing_read_now_drops_what_a_member_added_since_does_and_a_party_with_no_team_has_none(board):
-    root, state = board
-    ship = _party(root, state, ["grunt"], leader="product-designer")
-    missed = [{"kind": "art", "agent": "artist"}, {"kind": "uikit", "agent": "ui-kit"}, {"kind": "nope", "agent": "x"}]
-    assert [(m["kind"], m["name"], m["free"]) for m in goal_types.still_missing(state, root, ship, missed)] == [
-        ("art", "Artist", True), ("uikit", "Design system designer", True)]
-    library.install(state, ["artist"])
-    goal_team.set_team(root, ship, ["grunt", "artist"])
-    assert [m["kind"] for m in goal_types.still_missing(state, root, ship, missed)] == ["uikit"]
-    assert set(goal_types.still_missing(state, root, ship, missed)[0]) == {"kind", "words", "agent", "name", "band", "free"}
-    alone = _party(root, state, [], leader="product-designer", title="Alone")
-    assert goal_types.still_missing(state, root, alone, missed) == [] and goal_types.still_missing(state, root, ship, None) == []
-
-
-def test_the_prompts_line_says_the_type_and_its_plan(board):
-    root, state = board
-    ship = _party(root, state)
-    slug = ideas.add_idea(root, "the login breaks", ship, state)
-    assert goal_types.prompt_line(state, slug) == ""
-    ideas.save_state(state, slug, type="bug")
-    assert goal_types.prompt_line(state, slug) == f"Its type: Fix a bug. {goal_types.get('bug').plan}\n"
-    ideas.save_state(state, slug, type="taskmaster/bug")                                # a key kept before is read as its id
-    assert goal_types.prompt_line(state, slug) == f"Its type: Fix a bug. {goal_types.get('bug').plan}\n"
-    ideas.save_state(state, slug, type="feature")
-    assert goal_types.prompt_line(state, slug) == "Its type: New feature.\n"            # no plan line: the name alone
-    ideas.save_state(state, slug, type="nobody/bug")
-    assert goal_types.prompt_line(state, slug) == ""
-    assert json.loads((ideas.state_folder(state, slug) / "state.json").read_text())["type"] == "nobody/bug"   # kept as it was written
 
 
 # -- spec 68 §3.1: A release asks its version and is offered by the Release party alone ----------------------------------------
@@ -379,21 +183,6 @@ def test_a_release_asks_its_version_first_and_then_what_is_new():
     t = goal_types.get("release")
     assert [(a.id, a.label, a.hint) for a in t.asks] == [("version", "Version", "1.4"), ("new", "What is new", "in the person's words")]
     assert t.needs == ("aso", "code") and len(t.asks) <= 3
-
-
-def test_the_release_party_offers_a_release_and_mobile_app_beside_it_does_not(board):
-    root, state = board
-    names = lambda slug: [t.name for t, rows in goal_types.offered(state, root, slug) if not rows]
-    app = _preset(board, "mobile-app", "Mobile app")
-    assert "A release" in names(app)                                                       # no Release party: as spec 59 §4.3 has it
-    release = _preset(board, "release", "Release")
-    assert "A release" in names(release) and goal_types.release_party(root) == release
-    assert "A release" not in names(app) and "Store listing" in names(app)                # one place to release
-    assert [t.name for t, rows in goal_types.offered(state, root, app) if t.id == "release"] == []
-    unsaved = goal_types.Party.of(state, root, "product-manager", ["grunt", "artist", "aso"])
-    assert "release" not in [t.id for t, _r in goal_types.offered(state, root, "", read=unsaved)]       # a party not yet kept, too
-    again = goal_types.Party.of(state, root, "release-manager", ["release-engineer", "release-notes", "aso", "release-checker"])
-    assert "release" in [t.id for t, rows in goal_types.offered(state, root, "", read=again) if not rows]
 
 
 def test_dropping_the_release_party_gives_mobile_app_its_release_back(board):

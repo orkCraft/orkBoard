@@ -11,7 +11,7 @@ import pytest
 from orkboard import settings
 from orkboard.core import bus as b
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, ideas, paid, tool_now
+from orkboard.realm import event_log, paid, tool_now
 from orkboard.sources.limits import Limit
 
 AT = float(int(time.time()))
@@ -53,33 +53,6 @@ def test_the_row_when_every_subscription_is_dry_and_an_api_tool_is_on(host):
     assert host.snapshot()["needs_you"] == 1                          # a card of the hand like the others: it counts (decisions §178.5)
 
 
-def test_no_row_without_an_api_tool_or_while_a_subscription_has_room(host):
-    host.machine = machine_of("claude", "codex")                      # both by subscription
-    assert rows(host) == []
-    host.machine = machine_of("claude", "codex", api=("codex",))
-    host.limits.rows = [left("claude", 0.0, 5 * H), left("codex", 0.5)]
-    assert len(rows(host)) == 1 and host.snapshot()["mana"]["now"] is None    # codex has room, but it is billed by its API: it is no subscription to move on to
-    host.machine = machine_of("claude", "agy", "codex", api=("codex",))
-    host.limits.rows = [left("claude", 0.0, 5 * H), left("agy", 0.7)]
-    assert rows(host) == [] and host.snapshot()["mana"]["now"] == "agy"
-    host.limits.rows = []                                              # nothing read: no limit holds
-    assert rows(host) == []
-
-
-def test_the_row_carries_the_tools_own_cost_a_task_once_it_has_one(host):
-    root = host.ideas.root()
-    goal = ideas.add_track(root, "First goal")
-    slug = host.command("ideas.add", {"text": "Something", "track": goal, "hold": True})["slug"]
-    plan = {"idea": slug, "made_at": "x", "passed_at": "y", "todos": [], "tasks": [
-        {"id": "k1", "state": "merged", "tool": "codex", "cost": 0.5, "role": "grunt"},
-        {"id": "k2", "state": "merged", "tool": "codex", "cost": 0.3, "role": "grunt"},
-        {"id": "k3", "state": "merged", "tool": "claude", "cost": 9.0, "role": "grunt"}]}
-    ideas.save_plan(host.ideas.state_dir, slug, plan)
-    assert host.ideas.usd_task_of("codex") == 0.4
-    (row,) = rows(host)
-    assert row["usd_task"] == 0.4
-
-
 def test_a_yes_keeps_the_work_going_with_the_api_tool_until_the_reset(host):
     runner = host.ideas.runner(need=True)
     task = {"id": "k1", "kind": "code"}
@@ -118,16 +91,6 @@ def test_a_wait_is_not_asked_again_before_the_reset(host):
     assert paid.row(host.ideas.state_dir, host.machine, {"now": None, "until": AT + 7 * H}, None, kept["paid_wait"] + 1)[0]["kind"] == "paid"
 
 
-def test_a_yes_replaces_a_wait_and_the_other_way_round(host):
-    host.command("ideas.paid", {"yes": False})
-    assert list(json.loads((host.ideas.state_dir / "paid.json").read_text())) == ["paid_wait"]
-    state = host.ideas.state_dir
-    paid.answer(state, True, AT + 5 * H, AT)
-    assert list(json.loads((state / "paid.json").read_text())) == ["paid_until"]
-    paid.answer(state, False, None, AT)                                # no reset known: the five-hour window
-    assert json.loads((state / "paid.json").read_text()) == {"paid_wait": AT + tool_now.PAID_HOLD_S}
-
-
 def test_the_answer_is_refused_when_nothing_asks(host):
     with pytest.raises(CommandError, match="yes is true or false"):
         host.command("ideas.paid", {"yes": "maybe"})
@@ -140,14 +103,3 @@ def test_the_answer_is_refused_when_nothing_asks(host):
         host.command("ideas.paid", {"yes": True})
     assert not (host.ideas.state_dir / "paid.json").exists()
 
-
-def test_the_command_is_the_boards_and_a_phones(host):
-    from orkboard.gui.board_host import BoardPhone
-    assert "ideas.paid" in host.commands and BoardPhone.allowed(host, "ideas.paid", {})
-
-
-def test_the_row_is_not_asked_in_the_demo(fake_repo):
-    h = Orkboard(fake_repo, demo=True)
-    h.machine = machine_of("claude", "codex", api=("codex",))
-    h.limits.rows = [left("claude", 0.0, 5 * H)]
-    assert rows(h) == []

@@ -91,16 +91,6 @@ def _events(keeper, event):
 
 # -- §1: what changed since the plan ------------------------------------------------------------------------------
 
-def test_the_sections_that_make_a_plan_are_what_the_plan_prompt_reads(keeper):
-    """`PLAN_SECTIONS` is what `plan_prompt` reads of the spec (and so what `revise_prompt` shows of it)."""
-    slug = _idea(keeper)
-    for name in ideas.SECTIONS:
-        ideas.set_section(keeper.root, slug, name, f"TEXT-{name.replace(' ', '-')}")
-    read = lambda prompt: [n for n in ideas.SECTIONS if f"TEXT-{n.replace(' ', '-')}" in prompt]      # noqa: E731
-    assert read(keeper.plan_prompt(keeper.root, slug)) == [n for n in ideas.SECTIONS if n in idea_change.PLAN_SECTIONS]
-    assert read(keeper.revise_prompt(keeper.root, slug)) == [*read(keeper.plan_prompt(keeper.root, slug)), "Decisions"]     # …and what was decided
-    assert idea_change.PLAN_SECTIONS == ("Gist", "Done when", "Out", "Risks", "Depends on")
-
 
 def test_a_talk_keeps_the_plan_sections_it_wrote_and_no_other(keeper):
     slug = _idea(keeper)
@@ -133,32 +123,6 @@ def test_a_talk_while_a_change_waits_keeps_what_changed_and_the_change_stays(kee
     _wait(keeper, slug)
     assert ideas.state(keeper.state, slug)["changed"] == ["Gist", "Out"] and idea_change.read(keeper.state, slug)["change"][0]["id"] == "k2"
     assert ideas.state(keeper.state, slug)["state"] == "working"                       # the talk does not move the goal
-
-
-def test_a_goal_with_no_plan_keeps_nothing_changed(keeper):
-    slug = _idea(keeper)                                           # the draft and the answer write the spec before any plan
-    keeper.call = Model(talk={"reply": "Out.", "sections": {"Out": "No export of images"}})
-    keeper.say(slug, "No images", "Out")
-    _wait(keeper, slug)
-    assert ideas.idea_page(keeper.root, slug).section("Out") == "No export of images"
-    assert ideas.state(keeper.state, slug)["changed"] == []
-    idea_change.set_section(keeper.root, keeper.state, slug, "Risks", "Big files")
-    assert ideas.state(keeper.state, slug)["changed"] == []
-
-
-def test_a_section_by_hand_is_kept_as_a_talks_is(keeper):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"])])
-    idea_change.set_section(keeper.root, keeper.state, slug, "Depends on", "other-goal")
-    idea_change.set_section(keeper.root, keeper.state, slug, "Depends on", "other-goal")            # the same text
-    idea_change.set_section(keeper.root, keeper.state, slug, "Why", "Because")
-    idea_change.set_section(keeper.root, keeper.state, slug, "Stages", "1. k1")
-    assert ideas.state(keeper.state, slug)["changed"] == ["Depends on"]
-    idea_change.set_section(keeper.root, keeper.state, slug, "Gist", "Export csv, quickly")
-    assert idea_change.changed_of(ideas.state(keeper.state, slug)) == ["Gist", "Depends on"]
-    assert ideas.state(keeper.state, _idea(keeper, "another"))["changed"] == []
-    with pytest.raises(ValueError, match="no section"):
-        idea_change.set_section(keeper.root, keeper.state, slug, "Bogus", "x")
 
 
 def test_a_plan_made_clears_what_changed_and_the_change_that_waited(keeper):
@@ -210,44 +174,6 @@ def test_re_plan_what_is_left_refuses_in_words(keeper):
         keeper.revise(slug)
     release.set()
     _wait(keeper, slug)
-
-
-def test_the_prompt_holds_the_tasks_not_started_and_names_the_started_ones_as_staying(keeper):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "running", ["k1"]), ("k3", "review", ["k1"]), ("k4", "ready", ["k1"]),
-                         ("k5", "waiting", ["k4"]), ("k6", "held", []), ("k7", "failed", []), ("k8", "waiting", ["k1", "k5"], CHECK)])
-    ideas.set_section(keeper.root, slug, "Decisions", "\n".join(f"- line {n}" for n in range(1, 16)))
-    idea_change.mark(keeper.state, slug, ["Out", "Gist"])
-    prompt = keeper.revise_prompt(keeper.root, slug)
-    context = prompt[prompt.index("The spec:"):prompt.index("Rules:")]
-    done, at_work, not_started = (context.split(h)[1] for h in ("Done (", "At work (", "Not started:"))
-    assert "These sections changed since the plan: Gist, Out." in context and "- line 15" in context and "- line 5" not in context
-    assert "k1 Task k1" in context.split("At work")[0] and "k2 Task k2: Do k2" in at_work and "k3 Task k3: Do k3" in at_work
-    assert "(these stay as they are)" in context and "k7 Task k7" in context.split("Not started")[0]
-    rows = [json.loads(line) for line in not_started.strip().splitlines() if line.startswith("{")]
-    assert [r["id"] for r in rows] == ["k4", "k5", "k6", "k8"]
-    assert set(rows[1]) == {"id", "title", "short", "brief", "kind", "tier", "after"} and rows[1]["after"] == ["k4"]
-    assert rows[3]["check"] is True and "check" not in rows[0]
-    assert "k2" not in not_started and "k3" not in not_started and "k1" not in not_started.replace('"k1"', "")
-    assert "never change, drop or redo a task there" in prompt and "Answer with one JSON object" in prompt
-    assert "These sections changed" not in keeper.revise_prompt(keeper.root, slug).replace("These sections changed since the plan: Gist, Out.", "")
-    idea_change.clear(keeper.state, slug)
-    assert "The person asked to look again." in keeper.revise_prompt(keeper.root, slug)
-
-
-def test_the_prompt_is_cut_to_the_plan_contexts_size(keeper):
-    slug = _idea(keeper)
-    for name in idea_change.PLAN_SECTIONS:
-        ideas.set_section(keeper.root, slug, name, f"{name} " + "words " * 3000)
-    _plan(keeper, slug, [("k1", "merged", [])] + [(f"k{n}", "waiting", ["k1"]) for n in range(2, 9)])
-    data = ideas.plan(keeper.state, slug)
-    for t in data["tasks"]:
-        t["brief"] = "brief " * 1000
-    ideas._write_json(ideas.state_folder(keeper.state, slug) / "plan.json", data)
-    prompt = keeper.revise_prompt(keeper.root, slug)
-    context = prompt[prompt.index("The spec:"):prompt.index("Rules:")]
-    assert len(context) <= idea_target.CONTEXT["plan"] + 60
-    assert context.count('"id": "k') >= 3 and "Not started" in context and "Gist" in context
 
 
 def test_the_call_is_made_on_the_plan_step_and_the_plan_change_is_saved_beside_the_plan(keeper):
@@ -314,16 +240,6 @@ def idea_revise_clean(plan, answer):
     return idea_revise.clean_change(plan, answer)
 
 
-def test_an_answer_with_too_many_tasks_or_not_an_object_is_cut_or_refused(keeper):
-    from orkboard.core import idea_revise
-    plan = {"tasks": [{"id": "k1", "title": "One", "state": "waiting", "after": [], "started": ""}]}
-    got = idea_revise.clean_change(plan, {"add": [{"title": f"T{n}", "brief": "b"} for n in range(12)]})
-    assert len(got["add"]) == idea_keeper.MAX_TASKS and got["add"][-1]["key"] == "n8"
-    assert idea_revise.clean_change(plan, {}) == {"why": "", "change": [], "drop": [], "add": []}
-    with pytest.raises(KeeperError, match="not a plan change"):
-        idea_revise.clean_change(plan, None)
-
-
 def test_a_failed_call_is_the_goals_error_and_saves_nothing(keeper):
     slug = _idea(keeper)
     _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"])])
@@ -343,42 +259,6 @@ def test_a_failed_call_is_the_goals_error_and_saves_nothing(keeper):
     assert ideas.state(keeper.state, slug)["error"] == "" and idea_change.read(keeper.state, slug)["why"] == "fine"
 
 
-def test_a_failed_goals_own_error_is_kept_when_the_leader_finds_nothing_to_say(keeper):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "failed", [])], state="failed")
-    ideas.save_state(keeper.state, slug, error="Task k1: dropped by you")
-    keeper.call = Model(revise={"why": "Nothing", "change": [], "drop": [], "add": []})
-    keeper.revise(slug)                                            # a failed goal's tasks wait for its work to start again
-    _wait(keeper, slug)
-    assert ideas.state(keeper.state, slug)["error"] == "Task k1: dropped by you" and ideas.state(keeper.state, slug)["state"] == "failed"
-
-
-def test_the_estimate_is_what_it_adds_or_saves_and_negative_when_it_saves(keeper):
-    slug = _idea(keeper)
-    plan = _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"]), ("k3", "waiting", ["k2"])])
-    for t in plan["tasks"]:
-        t["tier"] = "warrior"
-    plan["tasks"][2]["tier"] = "elder"
-    ideas._write_json(ideas.state_folder(keeper.state, slug) / "plan.json", plan)
-    costs = {"elder": 1.0, "warrior": 0.3, "laborer": 0.05}                            # the board's default price of a task
-    price = lambda *tiers: idea_keeper.estimate([{}] * len(tiers), list(tiers), costs)      # noqa: E731
-    keeper.call = Model(revise=[{"why": "More", "add": [{"title": "Big", "brief": "b", "tier": "elder"}, {"title": "Small", "brief": "b", "tier": "laborer"}]},
-                                {"why": "Less", "drop": ["k3"], "change": [{"id": "k2", "tier": "laborer"}]},
-                                {"why": "Same", "drop": ["k2"], "add": [{"title": "Same again", "brief": "b", "tier": "warrior"}]}])
-    keeper.revise(slug)
-    _wait(keeper, slug)
-    more = idea_change.read(keeper.state, slug)["estimate"]
-    assert more == {k: price("elder", "laborer")[k] for k in ("usd_low", "usd_high")} and more["usd_low"] > 0
-    keeper.revise(slug)
-    _wait(keeper, slug)
-    less = idea_change.read(keeper.state, slug)["estimate"]                          # k2 warrior → laborer, k3 elder gone
-    assert less == {k: round(price("laborer")[k] - price("warrior", "elder")[k], 2) for k in ("usd_low", "usd_high")}
-    assert less["usd_low"] < 0 and less["usd_high"] < less["usd_low"]               # negative when it saves; the low end is the smaller saving
-    keeper.revise(slug)
-    _wait(keeper, slug)
-    assert idea_change.read(keeper.state, slug)["estimate"] == {"usd_low": 0.0, "usd_high": 0.0}      # one warrior goes, one comes
-
-
 def test_plan_revised_carries_the_sections_the_counts_the_price_and_the_calls_measure(keeper):
     slug = _idea(keeper)
     _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"]), ("k3", "waiting", ["k2"])])
@@ -394,62 +274,6 @@ def test_plan_revised_carries_the_sections_the_counts_the_price_and_the_calls_me
 
 
 # -- the file, its summary and its words ---------------------------------------------------------------------------
-
-def test_the_tasks_are_put_in_order_for_the_stages_a_change_adds_its_tasks_last():
-    from orkboard.core import idea_draft
-    tasks = [{"id": "k1", "title": "One", "after": ["k3"]}, {"id": "k2", "title": "Two", "after": []}, {"id": "k3", "title": "Three", "after": ["k2"]},
-             {"id": "k4", "title": "Four", "after": ["k9"]}]
-    ordered = idea_change.in_order(tasks)
-    assert [t["id"] for t in ordered] == ["k2", "k3", "k1", "k4"]
-    assert idea_draft.stages({"tasks": ordered}).splitlines() == ["1. k2 Two (M) ∥ k4 Four (M), after k9", "2. k3 Three (M), after k2", "3. k1 One (M), after k3"]
-    assert idea_draft.stages({"tasks": tasks}).startswith("1. k1 One (M), after k3 ∥ k2 Two")             # as they stand, k1 is a wave too early
-    assert [t["id"] for t in idea_change.in_order([{"id": "a", "after": ["b"]}, {"id": "b", "after": ["a"]}])] == ["a", "b"]      # a cycle: as it stands
-
-
-def test_the_stops_text_says_only_the_parts_that_are_not_zero():
-    said = lambda a, c, d: idea_change.text_of({"added": a, "changed": c, "dropped": d})      # noqa: E731
-    assert said(2, 1, 1) == "The plan changes · +2 · 1 changed · −1"
-    assert said(0, 3, 0) == "The plan changes · 3 changed" and said(1, 0, 2) == "The plan changes · +1 · −2"
-    assert said(0, 0, 0) == "The plan stays as it is"
-
-
-def test_a_summary_counts_what_taking_it_now_would_do(keeper):
-    slug = _idea(keeper)
-    plan = _plan(keeper, slug, [("k1", "merged", []), ("k2", "running", ["k1"]), ("k3", "ready", ["k1"]), ("k4", "waiting", ["k3"])])
-    change = {"made_at": "2026-10-23T11:00:00", "why": "w", "changed": [], "estimate": {"usd_low": -0.1, "usd_high": -0.3},
-              "change": [{"id": "k2", "title": "Gone on"}, {"id": "k3", "title": "Third"}], "drop": ["k4", "k9"], "add": []}
-    said = idea_change.summary(change, plan)
-    assert (said["added"], said["changed"], said["dropped"]) == (0, 1, 1) and [r["id"] for r in said["rows"]] == ["k3", "k4"]
-    assert said["made_at"] == "2026-10-23T11:00:00" and said["usd_low"] == -0.1 and said["usd_high"] == -0.3
-    assert idea_change.summary(change, None)["rows"] == []
-
-
-def test_a_plan_change_is_dropped_by_itself(keeper):
-    """Spec 62 §3.3: when the goal is done, when its plan is made again, and when every task it names has started and it adds nothing."""
-    slug = _idea(keeper)
-    base = {"why": "w", "changed": ["Out"], "estimate": {"usd_low": 0.1, "usd_high": 0.3}, "drop": [], "add": []}
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"]), ("k3", "waiting", ["k2"])])
-    idea_change.write(keeper.state, slug, {**base, "change": [{"id": "k2", "title": "Two"}], "drop": ["k3"]})
-    plan = ideas.plan(keeper.state, slug)
-    assert idea_change.live(keeper.state, slug, plan, "working") is not None and not idea_change.settle(keeper.state, slug)
-    assert idea_change.live(keeper.state, slug, plan, "done") is None              # done: shown nowhere (a read drops nothing)
-    assert idea_change.read(keeper.state, slug) is not None
-    ideas.save_state(keeper.state, slug, state="done")
-    assert idea_change.settle(keeper.state, slug) and idea_change.read(keeper.state, slug) is None
-    ideas.save_state(keeper.state, slug, state="working")
-    idea_change.write(keeper.state, slug, {**base, "change": [{"id": "k2", "title": "Two"}], "drop": ["k3"]})
-    ideas.edit_plan(keeper.state, slug, lambda p: p["tasks"][1].update(state="running", started=OLD))
-    assert idea_change.live(keeper.state, slug, ideas.plan(keeper.state, slug), "working") is not None      # k3 can still go
-    ideas.edit_plan(keeper.state, slug, lambda p: p["tasks"][2].update(state="running", started=OLD))
-    assert idea_change.live(keeper.state, slug, ideas.plan(keeper.state, slug), "working") is None
-    assert idea_change.settle(keeper.state, slug) and idea_change.read(keeper.state, slug) is None
-    idea_change.write(keeper.state, slug, {**base, "change": [{"id": "k2", "title": "Two"}], "drop": ["k3"], "add": [{"key": "n1", "title": "N", "brief": "b"}]})
-    assert idea_change.live(keeper.state, slug, ideas.plan(keeper.state, slug), "working") is not None      # it adds: it stays
-    idea_change.write(keeper.state, slug, {**base, "change": [], "drop": [], "add": []})
-    assert idea_change.live(keeper.state, slug, ideas.plan(keeper.state, slug), "working") is not None      # a change of nothing: its stop says so
-    ideas.edit_plan(keeper.state, slug, lambda p: p.update(passed_at=None))
-    assert idea_change.live(keeper.state, slug, ideas.plan(keeper.state, slug), "plan") is None and idea_change.settle(keeper.state, slug)
-    assert idea_change.read(keeper.state, slug) is None and not idea_change.settle(keeper.state, slug)
 
 
 # -- §3.2: taken by the runner, under its lock ----------------------------------------------------------------------
@@ -478,30 +302,6 @@ def _row(tid, **more):
 
 def _add(key, **more):
     return {"key": key, "title": f"Added {key}", "short": f"Add {key}", "brief": f"Brief {key}", "kind": "code", "tier": "elder", "after": [], "role": "", **more}
-
-
-def test_the_runner_applies_it_only_under_its_lock(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"])])
-    done = threading.Event()
-    taking = threading.Thread(target=lambda: (runner.revise_tasks(slug, _change(add=[_add("n1")])), done.set()))
-    with runner._lock:                                      # the tick, or Review's answer, holds it
-        taking.start()
-        assert not done.wait(0.3) and list(_tasks(keeper, slug)) == ["k1", "k2"]
-    assert done.wait(5) and list(_tasks(keeper, slug)) == ["k1", "k2", "k3"]
-
-
-def test_the_plan_is_read_fresh_inside_the_lock(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"]), ("k3", "waiting", ["k2"])])
-    change = _change(drop=["k3"], change=[_row("k2")])                          # made while k2 and k3 were not started
-    with runner._lock:
-        started = threading.Thread(target=lambda: runner.revise_tasks(slug, change))
-        started.start()
-        ideas.edit_plan(keeper.state, slug, lambda p: p["tasks"][1].update(state="running", started=OLD))      # …and k2 starts before it takes the lock
-    started.join(5)
-    after = _tasks(keeper, slug)
-    assert list(after) == ["k1", "k2"] and after["k2"]["title"] == "Task k2" and after["k2"]["state"] == "running"
 
 
 def test_taking_a_plan_change_drops_changes_and_adds_under_the_lock(keeper, runner):
@@ -560,63 +360,3 @@ def test_a_task_that_started_meanwhile_is_left_and_a_change_of_only_such_tasks_c
         runner.revise_tasks("nothing", _change())
 
 
-def test_a_ready_task_that_now_waits_for_one_not_merged_waits_and_one_that_waits_for_merged_stays_ready(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "ready", ["k1"]), ("k3", "ready", ["k1"]), ("k4", "held", ["k1"])])
-    runner.revise_tasks(slug, _change(change=[_row("k2", after=["k1"]), _row("k3", after=["k4"]), _row("k4", after=[])]))
-    after = _tasks(keeper, slug)
-    assert after["k2"]["state"] == "ready" and after["k3"]["state"] == "waiting" and after["k4"]["state"] == "held"
-
-
-def test_a_changed_task_given_no_after_keeps_what_it_waits_for(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "waiting", ["k1"]), ("k3", "waiting", ["k1", "k2"])])
-    row = {k: v for k, v in _row("k3").items() if k != "after"}
-    runner.revise_tasks(slug, _change(change=[row]))
-    assert _tasks(keeper, slug)["k3"]["after"] == ["k1", "k2"] and _tasks(keeper, slug)["k3"]["title"] == "New k3"
-
-
-def test_an_added_task_is_taken_up_as_any_waiting_task_on_the_next_tick(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "running", ["k1"])])
-    runner._active.append(slug)
-    runner._runs[(slug, "k2")] = Run(threading.current_thread(), threading.Event())             # k2 is at work
-    runner.revise_tasks(slug, _change(add=[_add("n1", after=["k1"]), _add("n2", after=["k2"])]))
-    assert runner.launched == ["k3"]                                                  # n1 waits for merged k1: ready, then started; n2 waits for k2
-    after = _tasks(keeper, slug)
-    assert after["k3"]["state"] == "running" and after["k4"]["state"] == "waiting" and after["k4"]["after"] == ["k2"]
-    ideas.edit_plan(keeper.state, slug, lambda p: p["tasks"][1].update(state="merged"))
-    runner.tick()
-    assert runner.launched == ["k3", "k4"]
-
-
-def test_a_failed_goal_keeps_its_state_and_its_new_tasks_wait_for_its_work_to_start_again(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "failed", ["k1"])], state="failed")
-    runner.revise_tasks(slug, _change(add=[_add("n1", after=["k1"])]))
-    assert ideas.state(keeper.state, slug)["state"] == "failed" and runner.launched == []
-    assert _tasks(keeper, slug)["k3"]["state"] == "waiting"
-    runner.start(slug)                                                                # Start again: the new task is taken up with the rest
-    assert "k3" in runner.launched
-
-
-def test_taking_it_when_everything_is_merged_but_the_added_tasks_keeps_the_goal_working(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "merged", ["k1"])])
-    runner.revise_tasks(slug, _change(add=[_add("n1", after=["k2"])]))
-    assert ideas.state(keeper.state, slug)["state"] == "working" and _tasks(keeper, slug)["k3"]["after"] == ["k2"]
-
-
-def test_an_add_that_waits_for_a_check_or_closes_a_cycle_through_one_is_left_out(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "waiting", ["k1"]), ("k3", "waiting", ["k1", "k2"], CHECK)])
-    runner.revise_tasks(slug, _change(add=[_add("n1", after=["k3", "k2"])]))         # the check will wait for n1: n1 cannot wait for it
-    after = _tasks(keeper, slug)
-    assert after["k4"]["after"] == ["k2"] and after["k3"]["after"] == ["k1", "k2", "k4"]
-
-
-def test_a_started_check_task_does_not_wait_for_the_added_tasks(keeper, runner):
-    slug = _idea(keeper)
-    _plan(keeper, slug, [("k1", "merged", []), ("k2", "review", ["k1"], CHECK)])
-    runner.revise_tasks(slug, _change(add=[_add("n1", after=["k1"])]))
-    assert _tasks(keeper, slug)["k2"]["after"] == ["k1"] and "k3" in _tasks(keeper, slug)

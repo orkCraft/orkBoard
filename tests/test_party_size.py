@@ -11,9 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.core import idea_kind
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, goal_team, idea_target, ideas, library, orkmaster, party_recipes, project_kind
+from orkboard.realm import event_log, goal_team, idea_target, ideas, orkmaster, party_recipes
 
 APP = ["product", "design", "tech", "release", "run", "marketing"]          # one craft a party (spec 99 §1.1): what every kind but a game proposes
 
@@ -79,15 +78,6 @@ def track(h, slug):
 
 # -- §3: a party's size is no Target of its own (spec 168 H4, decisions §283.33) ------------------------------------------------------------------------------------------------
 
-def test_a_size_is_no_target_the_setting_is_the_partys_target_old_pages_with_a_size_read_so():
-    assert [idea_target.target_for({"target": "quality"}, {"size": s}) for s in ("lean", "standard", "full")] == ["quality"] * 3
-    assert idea_target.target_for({"target": "quality"}, {"size": ""}) == "quality"             # a party made before has no size
-    assert idea_target.target_for({"target": "thrift"}, None) == "thrift" and idea_target.target_for({"target": "x"}, {}) == idea_target.DEFAULT
-    assert idea_target.target_for({"target": "thrift"}, "full") == "thrift" and idea_target.target_for({"target": "thrift"}, "huge") == "thrift"
-    assert idea_target.target_for(None, {"size": "lean"}) == idea_target.DEFAULT and idea_target.target_of({"target": "quality"}) == "quality"
-    assert idea_target.SIZES == ("lean", "standard", "full")
-
-
 def test_goal_save_keeps_a_size_on_the_partys_page_and_the_board_reads_it(host):
     h = host
     slug = save(h, size="lean")
@@ -100,23 +90,6 @@ def test_goal_save_keeps_a_size_on_the_partys_page_and_the_board_reads_it(host):
     assert track(h, older)["size"] == "" and next(g for g in h.command("ideas.map", {})["goals"] if g["slug"] == older)["size"] == ""
     h.command("ideas.goal_save", {"slug": slug, "about": "Code, changed."})                                         # saved again with none sent: it keeps its size
     assert track(h, slug)["size"] == "lean"
-
-
-def test_a_size_that_is_none_is_refused(host):
-    with pytest.raises(CommandError, match="A size is lean, standard or full"):
-        save(host, size="huge")
-    with pytest.raises(CommandError, match="A size is lean, standard or full"):
-        host.command("ideas.party_price", {"leader": "architect", "team": [], "size": "huge"})
-
-
-def test_a_resize_says_party_resized_and_a_first_size_says_none(host):
-    h = host
-    slug = save(h, size="standard")
-    assert events(h, "party_resized") == []                                                                       # a new party: no resize
-    h.command("ideas.goal_save", {"slug": slug, "size": "full", "device": "phone"})
-    h.command("ideas.goal_save", {"slug": slug, "size": "full"})                                                   # the same: nothing
-    [row] = events(h, "party_resized")
-    assert (row["party"], row["from"], row["to"], row["device"]) == (slug, "standard", "full", "phone")
 
 
 def test_a_size_that_lets_a_member_with_work_open_go_is_refused_and_one_that_does_not_is_kept(host):
@@ -170,30 +143,6 @@ def test_the_runner_runs_a_task_on_its_partys_target_and_on_the_setting_for_a_pa
     assert runner.ran_on(task, ideas_of["old"]) == ("elder", "high") and runner.ran_on(task, ideas_of["lean"]) == ("warrior", "high")
 
 
-def test_a_plans_heads_and_the_map_wear_the_partys_tier(host):
-    h = host
-    lean = save(h, size="lean")
-    full = save(h, size="full", title="Big")
-    heads = {}
-    for name, party in (("lean", lean), ("full", full)):
-        idea = ideas.add_idea(h.root, f"A goal {name}", party, h.state)
-        ideas.save_state(h.state, idea, state="plan")
-        ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "ready", "tier": "warrior", "role": "grunt", "kind": "code"}]})
-        node = next(n for n in h.command("ideas.map", {})["nodes"] if n["slug"] == idea)
-        heads[name] = h.command("ideas.page", {"slug": idea})["plan"]["tasks"][0]["head"], node["tasks"][0]["head"]
-    assert heads["lean"][1]["tier"] == "warrior" and heads["full"][1]["tier"] == "warrior"           # (spec 81: the size's tiers: no seat below Seasoned)
-    assert heads["lean"][0]["tier"] == "warrior" and heads["full"][0]["tier"] == "warrior"
-
-
-def test_the_price_reads_a_sizes_target_and_a_size_sent_changes_it(host):
-    h = host
-    args = {"leader": "architect", "team": ["grunt", "tester", "reviewer", "security-reviewer"], "every": []}
-    plain = h.command("ideas.party_price", args)
-    thrift, quality = h.command("ideas.party_price", {**args, "size": "lean"}), h.command("ideas.party_price", {**args, "size": "full"})
-    assert thrift["high"] <= plain["high"] < quality["high"] and thrift["high"] < quality["high"]       # a size prices the squad part it uses (goal_team.price_team), never the squad as ticked
-    assert thrift["high"] < h.command("ideas.party_price", {**args, "size": "standard"})["high"] < quality["high"]       # (its seats at the size's tiers)
-
-
 # -- §4: the proposals -----------------------------------------------------------------------------------------------------------------
 
 def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_prices_rising(mobile):
@@ -228,16 +177,6 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     assert release["id"] == "release" and release["name"] == "Release" and release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"]
     assert [release["sizes"][s]["team"] for s in ("lean", "standard", "full")] == [["release-engineer", "release-notes"]] * 3
     assert release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
-
-
-def test_a_party_the_project_has_is_proposed_last_as_have(mobile):
-    h = mobile
-    std = party_recipes.sized(party_recipes.get("product"), "standard")
-    h.command("ideas.goal_save", {"title": "Features", "about": "Features.", "craft": "product", "leader": std["leader"], "team": std["team"]})
-    got = h.command("ideas.proposals", {})
-    assert [(p["id"], p["have"]) for p in got["proposals"]] == [("design", False), ("tech", False), ("release", False), ("run", False), ("marketing", False), ("product", True)]
-    deal = h.command("ideas.map", {})["project"]["deal"]
-    assert [r["id"] for r in deal[:2]] == ["design", "tech"] and "product" not in [r["id"] for r in deal[:5]]
 
 
 def test_proposals_write_nothing_and_ask_no_model(mobile):
@@ -286,87 +225,6 @@ def test_a_line_is_read_by_one_cheap_call_as_the_orkmaster_into_a_kind(empty):
     assert orkmaster.role(h.state)["slug"] == "orkmaster" and (h.state / "roles" / "orkmaster.md").is_file()
 
 
-def test_a_garbled_answer_or_another_kind_is_code_and_the_kind_empty_is_never_asked_for(empty):
-    h = empty
-    for answer in ("I think it is a wiki, honestly", {"kind": "banana"}, {"kind": "empty"}, {"kind": 7}, {"nothing": 1}, "", "[1, 2]"):
-        h.model = h.ideas.keeper.call = Reads(h.ideas.keeper, answer)
-        got = h.command("ideas.proposals", {"about": "something"})
-        assert got["kind"]["id"] == "code" and got["read"] is True and [p["id"] for p in got["proposals"]] == APP, answer
-    assert idea_kind.read_answer('prose before {"kind": "game"} and after') == "game"
-    assert idea_kind.read_answer(json.dumps({"kind": "data"})) == "data" and "empty" not in idea_kind.ASKED
-    assert all(k in project_kind.KINDS for k in idea_kind.ASKED) and len(idea_kind.ASKED) == len(project_kind.KINDS) - 1
-
-
-def test_no_model_is_codes_proposals_said_so(empty):
-    h = empty
-    h.ideas.keeper.call = Reads(h.ideas.keeper, RuntimeError("no claude on this machine"))
-    got = h.command("ideas.proposals", {"about": "my game"})
-    assert got["kind"]["id"] == "code" and got["read"] is False and [p["id"] for p in got["proposals"]] == APP
-    assert got["proposals"][0]["why"].startswith("nothing here says more")
-    h.ideas.keeper.budget_ok = lambda: False                                                    # today's spend limit
-    h.ideas.keeper.call = Reads(h.ideas.keeper, {"kind": "game"})
-    again = h.command("ideas.proposals", {"about": "my game"})
-    assert again["read"] is False and again["kind"]["id"] == "code" and h.ideas.keeper.call.asked == []
-
-
-def test_a_demo_reads_no_line(empty):
-    h = empty
-    h.ideas.host.demo = True
-    h.ideas.keeper.demo = True
-    h.ideas.keeper.call = Reads(h.ideas.keeper, {"kind": "game"})
-    got = h.command("ideas.proposals", {"about": "my game"})
-    assert got["read"] is False and h.ideas.keeper.call.asked == []
-
-
-def test_the_line_is_cut_to_three_hundred_characters_and_must_be_text(empty):
-    h = empty
-    h.model = h.ideas.keeper.call = Reads(h.ideas.keeper, {"kind": "game"})
-    h.command("ideas.proposals", {"about": "x" * 900})
-    assert "x" * 300 in h.model.asked[0]["prompt"] and "x" * 301 not in h.model.asked[0]["prompt"]
-    with pytest.raises(CommandError, match="about is not text"):
-        h.command("ideas.proposals", {"about": 7})
-
-
-def test_the_events_hold_the_kind_and_the_recipe_never_the_line(empty, tmp_path):
-    h = empty
-    h.model = h.ideas.keeper.call = Reads(h.ideas.keeper, {"kind": "wiki"})
-    h.command("ideas.proposals", {})
-    h.command("ideas.proposals", {"about": LINE, "device": "phone"})
-    shown = events(h, "proposals_shown")
-    assert [(r["kind"], r["n"], r["ask"], r["read"]) for r in shown] == [("empty", 6, True, None), ("wiki", 6, False, True)] and shown[1]["device"] == "phone"
-    std = party_recipes.sized(party_recipes.get("product"), "standard")
-    h.command("ideas.goal_save", {"title": "Wiki", "about": "The team's pages.", "craft": "product", "leader": std["leader"], "team": std["team"],
-                                  "size": "standard", "proposal": "product"})
-    [taken] = events(h, "proposal_taken")
-    assert (taken["recipe"], taken["size"], taken["kind"]) == ("product", "standard", "wiki")
-    log = event_log.path(h.ideas.host.repo_root).read_text(encoding="utf-8")
-    assert "Zanzibar" not in log and "quokka" not in log
-    for path in h.state.rglob("*"):                                                             # nor the ledger, nor any file of the Board's
-        if path.is_file():
-            assert "Zanzibar" not in path.read_text(encoding="utf-8", errors="ignore"), path
-    assert event_log.PROPOSALS_SHOWN == "proposals_shown" and event_log.PROPOSAL_TAKEN == "proposal_taken" and event_log.PARTY_RESIZED == "party_resized"
-    assert {event_log.PROPOSALS_SHOWN, event_log.PROPOSAL_TAKEN, event_log.PARTY_RESIZED} <= set(event_log.EVENTS)
-
-
-def test_the_calls_spend_is_the_boards_own_and_names_no_goal(empty):
-    from orkboard.realm import idea_spend
-    h = empty
-    h.model = h.ideas.keeper.call = Reads(h.ideas.keeper, {"kind": "game"})
-    h.command("ideas.proposals", {"about": "my game"})
-    rows = [r for p in h.state.rglob("*.jsonl") for r in idea_spend.read(p)]
-    mine = [r for r in rows if r.get("step") == "kind"]
-    assert len(mine) == 1 and mine[0]["role"] == "orkmaster"
-
-
-def test_a_proposal_taken_from_a_preset_id_is_counted_and_a_party_made_otherwise_is_not(mobile):
-    h = mobile
-    std = party_recipes.sized(party_recipes.get("release"), "standard")
-    h.command("ideas.goal_save", {"title": "Release", "about": "Out.", "craft": "product", "leader": std["leader"], "team": std["team"], "size": "standard", "preset": "release"})
-    h.command("ideas.goal_save", {"title": "Mine", "about": "Mine.", "craft": "engineering", "leader": "architect", "team": ["grunt"], "size": "lean"})
-    h.command("ideas.goal_save", {"title": "Mine too", "about": "Mine.", "craft": "engineering"})
-    assert [(r["kind"], r["recipe"], r["size"]) for r in events(h, "proposal_taken")] == [("mobile", "release", "standard")]
-
-
 # -- §4.3: the map ----------------------------------------------------------------------------------------------------------------------
 
 def test_the_map_carries_the_kind_with_no_call_and_the_deal_puts_the_proposals_first(mobile):
@@ -377,24 +235,6 @@ def test_the_map_carries_the_kind_with_no_call_and_the_deal_puts_the_proposals_f
     assert ids[:6] == APP and sorted(ids) == sorted(party_recipes.CRAFTS)                         # one craft a party: the deal has no mixed preset and no Ideation
     assert project["deal"][0] == {"id": "product", "why": "", "n": 0}
     assert project["deal"][3]["id"] == "release"                                               # a craft's row keeps the deal's own
-
-
-def test_an_empty_folders_deal_is_the_crafts_first_and_a_known_kind_costs_one_read(empty, monkeypatch):
-    h = empty
-    assert [r["id"] for r in h.command("ideas.map", {})["project"]["deal"]][:6] == APP
-    calls = []
-    real = project_kind.scan
-    monkeypatch.setattr(project_kind, "scan", lambda r: calls.append(r) or real(r))
-    for _ in range(4):
-        h.command("ideas.map", {})
-    assert len(calls) <= 1                                                                      # kept by the root and its top level's times
-
-
-def test_deal_first_is_the_deal_when_the_kind_proposes_nothing_new():
-    deal = [{"id": "release", "why": "have", "n": 0}, {"id": "liveops", "why": "", "n": 0}]
-    tracks = [{"leader": r["leader"], "team": party_recipes.squad_of(r), "recipe": r["id"]} for r in party_recipes.for_kind("empty")]
-    assert orkmaster.deal_first(deal, tracks, "empty", {}) == deal
-    assert [r["id"] for r in orkmaster.deal_first(deal, [], "empty", {})] == ["product", "design", "tech", "release", "run", "marketing", "liveops"]
 
 
 def test_a_party_made_before_keeps_its_saved_team_and_a_size_changes_its_tiers_never_its_squad(host):

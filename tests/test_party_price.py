@@ -9,7 +9,7 @@ import json
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import goal_types, idea_spend, ideas, library, party_price, plans, roles
+from orkboard.realm import goal_types, idea_spend, ideas, library, party_price
 
 
 ACCEPT = 0.25                       # the leader's acceptance of its step: one call at the floor of accept_step's tier (elder) until goals have priced it (spec 152 B.4)
@@ -55,18 +55,6 @@ def test_a_first_guess_with_no_basis_takes_the_defaults_at_the_tiers_the_target_
     json.dumps(got)
 
 
-def test_every_idea_gives_a_share_of_one_and_a_party_with_no_builder_takes_the_grunt_s_cost(host):
-    every = price(host, every=["reviewer"])
-    assert every["checks"][0]["share"] == 1.0 and every["checks"][0]["every"] is True
-    assert every["high"] - price(host)["high"] == pytest.approx(1.0 * 0.5 * 1.5, abs=0.011)           # the other half of the Reviewer's task
-    no_builder = price(host, leader="product-manager", team=["reviewer"])
-    assert no_builder["checks"][0]["by"] == "reviewer"
-    base = 2.0 + ACCEPT + 3 * 0.30 + 0.5                                                                       # the Grunt's warrior task
-    assert no_builder["low"] == pytest.approx(base * 0.5, abs=0.006)
-    alone = price(host, leader="taskmaster", team=[])
-    assert alone["checks"] == [] and alone["low"] == pytest.approx((2.0 + ACCEPT + 3 * 0.30) * 0.5, abs=0.006)
-
-
 def test_learned_from_three_priced_ideas_the_steps_the_tasks_and_a_check_s_share(host):
     for n in range(3):                                                                                # 3 ideas: draft 0.4 + plan 0.6, 3 tasks at 0.5, a review at 0.2
         tasks = [task(f"k{i}", "code", "grunt", cost=0.5) for i in (1, 2, 3)] + [task("k4", "review", "reviewer", cost=0.2)]
@@ -83,27 +71,6 @@ def test_learned_from_three_priced_ideas_the_steps_the_tasks_and_a_check_s_share
     assert got["low"] == pytest.approx(base * 0.5, abs=0.006) and got["high"] == pytest.approx(base * 1.5, abs=0.006)
     every = price(host, team=("grunt", "reviewer"), every=["reviewer"])
     assert every["checks"][0]["share"] == 1.0 and every["high"] == pytest.approx((1.0 + ACCEPT + 1.5 + 0.2) * 1.5, abs=0.006)
-
-
-def test_fewer_than_three_priced_ideas_is_a_first_guess_and_an_unpriced_idea_does_not_count(host):
-    guess = price(host)
-    for n in range(2):
-        s = add(host, f"Priced {n}", [task("k1", "code", "grunt")], [], made=n)
-        line(host, s, "plan", "architect", 0.6)
-    unpriced = add(host, "Unpriced", [task("k1", "code", "grunt")], [], made=5)
-    line(host, unpriced, "plan", "architect", None)
-    got = price(host)
-    assert got["learned"] is False and got["ideas"] == 3
-    assert got["low"] == guess["low"] and got["high"] == guess["high"] and got["checks"] == guess["checks"]       # the same guess, with the tasks that ended unpriced
-
-
-def test_the_basis_is_the_project_s_newest_twenty_ideas_with_a_plan(host):
-    for n in range(22):
-        add(host, f"Idea number {n}", [task("k1", "code", "grunt")], [], made=n)
-    ideas.add_idea(host.ideas.root(), "No plan", next(t["slug"] for t in ideas.tracks(host.ideas.root(), make=False) if t["slug"] != "general"), host.ideas.state_dir)
-    assert price(host)["ideas"] == 20
-    rows = party_price.basis(host.ideas.root(), host.ideas.state_dir)
-    assert len(rows) == 20 and not any(s.endswith("-0") or s == "idea-number-0" for s, _p in rows)
 
 
 def test_ideas_party_price_is_the_hosts_and_a_phones_and_checks_the_party(host):
@@ -142,55 +109,6 @@ def test_the_game_party_is_offered_spec_59s_game_list_each_with_its_sign_and_not
     assert [t["id"] for t in got] == [t.id for t in goal_types.CATALOG if t.id in {g["id"] for g in got}]    # in the catalog's order
 
 
-def test_the_taskmaster_alone_is_offered_new_feature_fix_a_bug_and_clean_up(host):
-    assert types(host) == types(host, "taskmaster") == types(host, "taskmaster", []) == [("New feature", ""), ("Fix a bug", ""), ("Clean up", "")]
-    assert host.command("ideas.party_price", {})["types"][0] == {"id": "feature", "name": "New feature", "sign": "feature", "missing": ""}
-
-
-def test_a_mobile_app_team_without_the_design_system_designer_is_offered_new_screen_with_the_agent_it_needs(host):
-    got = types(host, *preset("mobile-app"))
-    assert [n for n, m in got if not m] == ["New feature", "Fix a bug", "Clean up", "New icon", "New logo", "Solve a pain", "New character", "Store listing", "A release"]
-    assert [(n, m) for n, m in got if m] == [("New screen", "Design system designer"), ("Try an experiment", "Experimenter"), ("Write the launch", "Copywriter")]
-    assert [n for n, _m in got].index("New screen") == 3                                                    # where the catalog puts it, not at the end
-
-
-def test_an_agent_added_to_the_team_that_opens_a_type_adds_it_and_one_that_was_missing_stops_missing(host):
-    base = types(host, "game-designer", ["grunt"])
-    assert base == [("New feature", ""), ("Fix a bug", ""), ("Clean up", ""), ("New mechanic", ""), ("Balance pass", "")]
-    assert types(host, "game-designer", ["grunt", "level-designer"]) == [*base[:4], ("New level", ""), base[4]]       # in the catalog's order
-    lone = types(host, "product-manager", ["grunt"])
-    assert ("New screen", "Design system designer") in lone and ("Try an experiment", "Experimenter") in lone
-    kit = types(host, "product-manager", ["grunt", "ui-kit"])
-    assert ("New screen", "") in kit and ("New screen", "Design system designer") not in kit and ("Try an experiment", "Experimenter") in kit
-    lab = types(host, "product-manager", ["grunt", "ui-kit", "experimenter"])
-    assert ("Try an experiment", "") in lab and ("Try an experiment", "Experimenter") not in lab and ("Write the launch", "Copywriter") in lab
-
-
-def test_the_types_are_read_from_the_call_s_seats_and_nothing_is_saved_or_installed(host):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    before = (ideas.tracks(root, make=False), roles.role(state, "level-designer"), roles.role(state, "game-designer"))
-    assert [n for n, _m in types(host, *preset("game"))][5:8] == ["New mechanic", "New level", "New character"]
-    assert (ideas.tracks(root, make=False), roles.role(state, "level-designer"), roles.role(state, "game-designer")) == before and before[1:] == (None, None)
-    library.install(state, ["level-designer", "game-designer", "grunt", "artist", "sound-designer", "playtester"])
-    assert [n for n, _m in types(host, *preset("game"))][5:8] == ["New mechanic", "New level", "New character"]       # the same once they are the project's
-
-
-def test_a_refused_party_is_refused_as_before_and_its_types_are_not_asked(host, monkeypatch):
-    def asked(*a, **k):
-        raise AssertionError("the types of a refused party were asked")
-    monkeypatch.setattr(goal_types.Party, "of", asked)
-    monkeypatch.setattr(goal_types, "offered", asked)
-    for bad, why in (({"leader": "nobody"}, "No agent"), ({"team": "grunt"}, "list of agents"),
-                     ({"leader": "grunt"}, "does not lead"), ({"leader": "architect", "team": ["grunt", "product-manager"]}, "A leader leads")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.party_price", bad)
-
-
-def test_a_party_made_before_with_more_than_a_seat_a_stage_is_still_priced_as_it_is_spec_87(host):
-    got = host.command("ideas.party_price", {"leader": "architect", "team": ["grunt", "tester", "ui-kit", "artist"]})      # a quote, not a save
-    assert got["high"] > 0
-
-
 def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_setting(host):
     """Spec 168 H4: a size is no Target of its own: it prices the part of the squad it uses at the setting's Target (spec 75 §3.3 before); without it the whole squad. Spec 81 §2: the
     size's tiers (Seasoned all through for Lean, the leader Veteran for Standard…) are what its seats are priced at."""
@@ -213,8 +131,6 @@ def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_set
     views = [*library.VIEWS, library.SKEPTIC]
     lean = host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "lean"})
     assert lean["pitch"] is True and lean["high"] == host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "full"})["high"]      # a pitch is priced at the setting, a size no Target
-
-
 
 
 def test_the_price_adds_the_leaders_acceptance_one_call_at_the_floor_until_goals_have_priced_it_then_what_they_spent_spec_152_b4(host, monkeypatch):

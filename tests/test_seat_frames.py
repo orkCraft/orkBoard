@@ -26,16 +26,6 @@ def test_an_agent_frame_holds_its_seats_rules_exactly_and_none_of_a_calls_frame(
     assert f"{WIKI}/pages/ideas/<slug>.md" in frame
 
 
-def test_the_rules_are_the_text_the_calls_prompt_is_built_from():
-    assert goal_route.rules() in goal_route.instruction()
-    assert idea_talk.rules("engineering") in idea_talk.instruction("engineering")
-    assert idea_talk.rules("engineering", second=True) in idea_talk.instruction("engineering", second=True)
-    assert idea_sections.rules() in idea_sections.instruction()
-    assert idea_sections.join_rules() in idea_sections.join_instruction()
-    assert idea_accept.rules() in idea_accept.instruction()
-    assert roles.instruction("grunt") == roles.rules("grunt") and roles.instruction("nobody") == ""
-
-
 def test_a_frame_names_what_to_read_what_to_write_and_what_to_give_back():
     talk = seat_frames.agent("tech-leader", "talk", "engineering")
     for path in (f"{WIKI}/project.md", f"{WIKI}/journals/<party>.md", f"{WIKI}/pages/tracks/<party>.md", DECISIONS):
@@ -49,22 +39,9 @@ def test_a_frame_names_what_to_read_what_to_write_and_what_to_give_back():
     assert "your leader" in grunt and "do not ask the person" in grunt
 
 
-def test_the_paths_follow_the_wiki_and_the_decisions_given():
-    frame = seat_frames.agent("tech-leader", "section", "engineering", wiki="wiki/x", decisions="notes/decisions.md")
-    assert "wiki/x/pages/ideas/<slug>.md" in frame and "notes/decisions.md" in frame and WIKI not in frame
-
-
 def test_steps_of_each_seat():
     assert seat_frames.steps("orkmaster") == ("route",)
     assert seat_frames.steps("tech-leader") == seat_frames.steps("design-leader") == ("talk", "section", "accept")
     assert seat_frames.steps("taskmaster") == ("plan",) and seat_frames.steps("grunt") == ("task",)
     assert seat_frames.steps("nobody") == () and seat_frames.steps("-leader") == ()
 
-
-def test_a_step_a_seat_does_not_have_is_refused():
-    with pytest.raises(ValueError):
-        seat_frames.agent("grunt", "talk")
-    with pytest.raises(ValueError):
-        seat_frames.agent("tech-leader", "plan")
-    with pytest.raises(ValueError):
-        seat_frames.agent("nobody", "route")

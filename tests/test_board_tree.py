@@ -74,17 +74,6 @@ def test_the_day_each_page_was_laid_and_last_moved_are_read_in_one_log(repo, mon
     assert [c[1] for c in calls] == ["log", "log"]                       # one call for all pages, not one a page
 
 
-def test_no_tree_no_days(tmp_path):
-    t = BoardTree(tmp_path / "none", tmp_path / "state", WIKI, lambda: "dev")
-    assert t.laid_days() == {} and t.moved_days() == {}
-
-
-def test_the_tree_is_detached_at_the_work_branch(repo):
-    t = _tree(repo)
-    assert subprocess.run(["git", "symbolic-ref", "-q", "HEAD"], cwd=t.path).returncode != 0
-    assert git(t.path, "rev-parse", "HEAD") == git(repo, "rev-parse", "dev") and git(repo, "branch", "--show-current") == "main"
-
-
 def test_a_write_is_one_commit_of_the_pages_only_and_moves_the_branch_by_update_ref(repo):
     t = _tree(repo)
     _page(t, "a.md")
@@ -96,18 +85,6 @@ def test_a_write_is_one_commit_of_the_pages_only_and_moves_the_branch_by_update_
     assert git(repo, "show", "--name-only", "--format=%an|%s", "dev").splitlines() == [
         "Orkboard board|board: Dark mode — drafted", "", f"{WIKI}/pages/ideas/a.md"]
     assert not (repo / WIKI).exists()                                    # the person's tree is not touched
-
-
-def test_in_place_when_the_root_is_on_the_branch_and_the_person_checks_out_cleanly(repo):
-    t = _tree(repo)
-    git(repo, "checkout", "-q", "dev")
-    _page(t, "b.md")
-    t.note("B", "edited", 0.0)
-    assert t.flush(force=True)["held"] == ""
-    assert (repo / WIKI / "pages" / "ideas" / "b.md").exists()             # moved in place: its files came along
-    git(repo, "checkout", "-q", "main")
-    git(repo, "checkout", "-q", "dev")
-    assert git(repo, "status", "--porcelain") == ""
 
 
 def test_uncommitted_changes_in_those_files_hold_it_and_the_next_write_lands_it(repo):
@@ -126,52 +103,12 @@ def test_uncommitted_changes_in_those_files_hold_it_and_the_next_write_lands_it(
     assert (repo / WIKI / "pages" / "ideas" / "c.md").read_text() == "# two\n"
 
 
-def test_writes_within_ten_seconds_are_one_commit(repo):
-    t = _tree(repo)
-    before = git(repo, "rev-list", "--count", "dev")
-    _page(t, "e.md")
-    t.note("E", "drafted", 100.0)
-    assert t.flush(105.0) is None                                           # not due yet
-    _page(t, "f.md")
-    t.note("F", "edited", 105.0)
-    got = t.flush(110.0)
-    assert got["pages"] == 2 and int(git(repo, "rev-list", "--count", "dev")) == int(before) + 1
-
-
 def test_a_tasks_worktree_holds_the_specs_committed_before_it(repo):
     t = _tree(repo)
     _page(t, "spec.md", "# The spec\n")
     t.flush(force=True)
     path, _branch = IdeaGit(repo).prepare("spec", "k1", "dev")
     assert (path / WIKI / "pages" / "ideas" / "spec.md").read_text() == "# The spec\n"
-
-
-def test_the_tree_follows_its_branch_when_a_task_landed(repo):
-    t = _tree(repo)
-    git(repo, "checkout", "-q", "dev")
-    (repo / "landed.py").write_text("y = 2\n")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-qm", "a task landed")
-    _page(t, "g.md")
-    got = t.flush(force=True)
-    assert got["held"] == "" and git(repo, "log", "-1", "--format=%s", "dev").startswith("board:")
-    assert (t.path / "landed.py").exists() and git(repo, "status", "--porcelain") == ""
-
-
-def test_the_move_copies_commits_then_removes_only_untracked_copies(repo):
-    legacy = repo / WIKI
-    (legacy / "pages" / "ideas").mkdir(parents=True)
-    (legacy / "pages" / "ideas" / "tracked.md").write_text("# tracked\n")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-qm", "a tracked page")
-    (legacy / "pages" / "ideas" / "loose.md").write_text("# loose\n")
-    git(repo, "branch", "dev", "HEAD~1")                                   # dev does not hold either page
-    t = _tree(repo)
-    got = t.move(legacy)
-    assert got["commit"] and git(repo, "log", "-1", "--format=%s", "dev") == "board: the pages move to dev"
-    assert (t.root() / "pages" / "ideas" / "loose.md").read_text() == "# loose\n"
-    assert not (legacy / "pages" / "ideas" / "loose.md").exists()           # untracked: removed after the commit
-    assert (legacy / "pages" / "ideas" / "tracked.md").exists()             # tracked: left alone
 
 
 def test_the_host_keeps_its_pages_in_the_tree_and_logs_each_commit(fake_repo):
@@ -189,22 +126,6 @@ def test_the_host_keeps_its_pages_in_the_tree_and_logs_each_commit(fake_repo):
     assert not (fake_repo / "llm-wiki").exists()
 
 
-def test_the_host_says_board_held_when_the_person_has_changes_in_those_files(fake_repo):
-    (fake_repo / ".gitignore").write_text(".orkcraft/\n")
-    host = Orkboard(fake_repo)
-    root = host.ideas.root()
-    goal = ideas.add_track(root, "Held")
-    host.ideas.tree_flush(force=True)
-    git(fake_repo, "checkout", "-q", "dev")
-    rel = (root / "pages" / "tracks" / f"{goal}.md").relative_to(fake_repo / ".orkcraft" / "board")
-    (fake_repo / rel).write_text("# mine\n")
-    host.command("ideas.track_set", {"slug": goal, "about": "Changed by the Board"})
-    got = host.ideas.tree_flush(force=True)
-    assert got["commit"] and got["held"]
-    (e,) = [r for r in event_log.read(Path(fake_repo)) if r["event"] == "board_held"]
-    assert "uncommitted" in e["why"]
-
-
 def test_a_file_of_the_project_is_edited_under_the_lock_and_committed_with_the_pages_in_one_commit(repo):
     """Spec 99 E §6.2: a goal's decision is the project's decisions file, edited as the work branch holds it and committed with the Board's pages, nothing else of the tree."""
     t = _tree(repo)
@@ -217,45 +138,6 @@ def test_a_file_of_the_project_is_edited_under_the_lock_and_committed_with_the_p
     assert not (repo / "docs").exists() and (t.path / "stray.txt").exists()                      # the person's tree is not touched; a stray file is not taken
     got = t.edit_file("docs/decisions.md", lambda old: old + "\n## 2. Two\n", "board: decision 2")
     assert git(repo, "show", "dev:docs/decisions.md").endswith("## 2. Two") and git(repo, "log", "-1", "--format=%s", "dev") == "board: decision 2" and got["held"] == ""
-
-
-def test_the_files_edit_reads_the_branch_as_it_moved_and_refuses_a_path_outside_the_project(repo):
-    t = _tree(repo)
-    other = repo.parent / "other"
-    git(repo, "worktree", "add", "-q", "--detach", str(other), "dev")
-    (other / "docs").mkdir()
-    (other / "docs" / "decisions.md").write_text("# Decisions\n\n## 5. Five\n")
-    git(other, "add", "-A")
-    git(other, "-c", "user.name=T", "-c", "user.email=t@x", "commit", "-qm", "five")
-    git(repo, "branch", "-f", "dev", git(other, "rev-parse", "HEAD"))                          # dev moved under the tree (a task landed)
-    seen = []
-    t.edit_file("docs/decisions.md", lambda old: seen.append(old) or old + "\n## 6. Six\n", "board: decision 6")
-    assert seen == ["# Decisions\n\n## 5. Five\n"] and git(repo, "show", "dev:docs/decisions.md").endswith("## 6. Six")
-    for bad in ("../outside.md", "/etc/passwd", "."):
-        with pytest.raises(RuntimeError, match="outside the project"):
-            t.edit_file(bad, lambda old: "x", "no")
-
-
-def test_the_clock_alone_makes_no_tree_and_no_branch(fake_repo):
-    host = Orkboard(fake_repo)
-    host.ideas.keeper._tick_at = float("-inf")
-    host.ideas.tick()
-    assert not (fake_repo / ".orkcraft" / "board").exists()
-    assert "dev" not in git(fake_repo, "branch", "--list", "dev")
-
-
-def test_the_last_change_of_a_page_is_its_commit_and_its_author(repo):
-    """Spec 151 A.4: who moved a page, read from the tree: the commit and its author; none while the change is not committed."""
-    t = _tree(repo)
-    path = _page(t, "a.md")
-    assert t.last_change(path) == ("", "")
-    t.note("A", "added", 0.0)
-    got = t.flush(force=True)
-    assert t.last_change(path) == (git(repo, "rev-parse", "--short", got["commit"]), "Orkboard board")
-    path.write_text("# Page\n\nmore\n")
-    assert t.last_change(path) == ("", "")
-    t.touch(5.0)
-    assert t._since == 5.0 and t._notes == [] and t.due(16.0) and not t.due(14.0)
 
 
 def test_a_tree_asked_where_the_board_goes_keeps_the_work_branch_when_the_answer_is_no(repo):

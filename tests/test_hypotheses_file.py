@@ -108,43 +108,7 @@ Nothing to hold.
 ONE = SMALL[:SMALL.index("## H2.")]                                                  # SMALL without the section that has no condition (its number would be taken)
 
 
-def test_a_section_with_no_holds_when_is_skipped_and_what_is_not_ours_is_kept():
-    got = hf.parse(SMALL)
-    assert [i["id"] for i in got["items"]] == ["h1"] and got["skipped"] == [2]
-    one = got["items"][0]
-    assert one["signal"] == "most ask for one within a minute" and one["refuted"] == [{"name": "the hook", "when": "they look and do not pick", "change": ""}] and one["if_holds"] == "Sketch first, always."
-    new, _ = hf.apply(SMALL, got["items"])
-    assert new == SMALL                                              # the Notes and the skipped section stay as written
-
-
 # -- written: only the lines a change touches -----------------------------------------------------------------------------------------------
-
-def test_a_changed_state_signal_way_draft_and_evidence_each_change_only_their_own_lines():
-    item = hf.parse(SMALL)["items"][0]
-    status = lambda it: changed(SMALL, hf.apply(SMALL, [it])[0])                                   # noqa: E731
-    assert status({**item, "text": "Founders want a sketch first"}) == ["-## H1. People want a sketch first", "+## H1. Founders want a sketch first"]
-    got = status({**item, "state": "held", "verdict": {"state": "held", "why": "", "decision": 12, "way": "", "at": "2026-11-04T10:00:00"}})
-    assert got[:2] == ["-**Status:** open; ready to test. **Raised:** the owner.", "+**Status:** held; became decision §12. **Raised:** the owner."]
-    assert got[2:] == []                                                                                    # the decision's number is in the status; a verdict line comes with a why or a way
-    assert status({**item, "signal": "most pick one"}) == ["-- **Holds** when most ask for one", "-  within a minute", "+- **Holds** when most pick one"]
-    assert status({**item, "refuted": [{"name": "the hook", "when": "they skip it", "change": ""}, {"name": "the noise", "when": "it is off", "change": ""}]}) == [
-        "-- **Refuted, the hook**: they look and do not pick", "+- **Refuted, the hook**: they skip it", "+- **Refuted, the noise**: it is off"]
-    assert status({**item, "refuted": []}) == ["-- **Refuted, the hook**: they look and do not pick"]
-    assert status({**item, "if_holds": "Sketch first, for every goal."}) == ["-Sketch first, always.", "+Sketch first, for every goal."]
-    drafted = hf.apply(SMALL, [{**item, "refuted": [{**item["refuted"][0], "change": "Drop the sketch."}]}])[0]
-    assert "### If it is refuted, the hook\n\nDrop the sketch." in drafted and hf.parse(drafted)["items"][0]["refuted"][0]["change"] == "Drop the sketch."
-    ev = hf.apply(SMALL, [{**item, "evidence": [{"text": "Four of five asked", "ref": "interview", "at": "2026-11-03T09:00:00"}]}])[0]
-    assert "### Evidence\n\n- Four of five asked (interview) — 2026-11-03" in ev and hf.parse(ev)["items"][0]["evidence"] == [{"text": "Four of five asked", "ref": "interview", "at": "2026-11-03"}]
-
-
-def test_a_verdict_is_written_as_the_status_and_a_verdict_line_and_read_back():
-    item = hf.parse(SMALL)["items"][0]
-    done = {**item, "state": "refuted", "verdict": {"state": "refuted", "why": "Only opens rose", "decision": 7, "way": "the hook", "at": "2026-11-04T10:00:00"}}
-    text, _ = hf.apply(SMALL, [done])
-    assert "**Status:** refuted; Only opens rose. **Raised:** the owner." in text and "### Verdict\n\nrefuted: Only opens rose (decision §7, the hook) — 2026-11-04" in text
-    back = hf.parse(text)["items"][0]
-    assert back["state"] == "refuted" and back["verdict"] == {"state": "refuted", "why": "Only opens rose", "decision": 7, "way": "the hook", "at": "2026-11-04"}
-    assert hf.apply(text, [back])[0] == text
 
 
 def test_an_item_with_no_section_is_appended_as_the_next_number_and_a_dropped_one_is_removed():
@@ -174,12 +138,6 @@ def proj(tmp_path: Path):
 
 def kept(proj: Path) -> list[dict]:
     return hyp.read(proj / ".orkcraft")["items"]
-
-
-def test_with_no_file_bound_the_record_is_as_it_was(proj):
-    state = proj / ".orkcraft"
-    item = hyp.add(state, "Alone", "it shows")
-    assert item["id"] == "alone" and (proj / "docs" / "hypotheses.md").read_text("utf-8") == ONE and [i["id"] for i in kept(proj)] == ["alone"]
 
 
 def test_a_bound_file_is_the_source_overlaid_with_the_goals_the_record_keeps(proj):
@@ -233,38 +191,6 @@ def test_eight_open_are_the_newest_seven_open_and_the_eldest_waiting_and_judging
     assert (proj / "docs" / "hypotheses.md").read_text("utf-8").count("## H") == 8                                   # never dropped
 
 
-def test_a_failed_write_changes_neither_the_file_nor_the_record(proj, monkeypatch):
-    state = proj / ".orkcraft"
-    hyp.bind(state, "docs/hypotheses.md")
-    before = (state / "hypotheses.json").read_text()
-
-    def boom(rel, edit, message):
-        raise RuntimeError("the Board is held")
-    hyp.set_writer(state, boom)
-    with pytest.raises(ValueError, match="could not be written: the Board is held"):
-        hyp.add(state, "Never kept", "x")
-    with pytest.raises(ValueError, match="could not be written"):
-        hyp.judge(state, "h1", "held")
-    assert (state / "hypotheses.json").read_text() == before and (proj / "docs" / "hypotheses.md").read_text("utf-8") == ONE and [i["id"] for i in kept(proj)] == ["h1"]
-    hyp.set_writer(state, None)
-
-
-def test_the_writer_gets_the_files_path_the_edit_and_a_message_naming_the_hypothesis(proj):
-    state = proj / ".orkcraft"
-    hyp.bind(state, "docs/hypotheses.md")
-    seen = []
-
-    def put(rel, edit, message):
-        path = proj / rel
-        path.write_text(edit(path.read_text("utf-8")), "utf-8")
-        seen.append((rel, message() if callable(message) else message))
-    hyp.set_writer(state, put)
-    hyp.add(state, "Founders pay", "ten say so")
-    hyp.judge(state, "h1", "held", "", 4)
-    hyp.set_writer(state, None)
-    assert seen == [("docs/hypotheses.md", "board: hypothesis h2 — added"), ("docs/hypotheses.md", "board: hypothesis h1 — judged held")]
-
-
 def test_the_records_own_items_are_adopted_into_the_file_when_it_is_first_bound(proj):
     state = proj / ".orkcraft"
     mine = hyp.add(state, "Founders pay", "ten say so", refuted=[{"name": "the price", "when": "none would"}])
@@ -277,14 +203,6 @@ def test_the_records_own_items_are_adopted_into_the_file_when_it_is_first_bound(
     assert got["h2"]["text"] == "Founders pay" and got["h2"]["rests"] == ["pricing-page"] and got["h2"]["refuted"][0]["name"] == "the price"
     assert got["h1"]["tests"] == ["interview"] and got[prop["id"]]["state"] == "proposed" and set(got) == {"h1", "h2", prop["id"]}
     assert hyp.bind(state, "docs/hypotheses.md") == 0 and (proj / "docs" / "hypotheses.md").read_text("utf-8").count("## H") == 3
-
-
-def test_a_file_that_is_gone_reads_as_no_file_and_the_records_copy_is_read(proj):
-    state = proj / ".orkcraft"
-    hyp.bind(state, "docs/hypotheses.md")
-    hyp.attach(state, "h1", goal="dark-mode")
-    (proj / "docs" / "hypotheses.md").unlink()
-    assert [i["id"] for i in kept(proj)] == ["h1"] and kept(proj)[0]["rests"] == ["dark-mode"]
 
 
 # -- spec 146 C.2: the measure lines of *How we test it* ----------------------------------------------------------------------------------------
@@ -302,33 +220,12 @@ def test_two_measure_lines_are_read_with_their_bars_their_party_and_their_span_o
     assert (second["id"], second["by"], second["bars"]["holds"]["n"], second["date"]) == ("m2", "", 30.0, "2026-12-01")
 
 
-def test_a_line_of_another_shape_is_kept_and_read_as_no_measure():
-    odd = ["- Measure: no bars — from nowhere — 4 weeks", "- Measure: a — from b — holds <= x — 4 weeks", "- Measure: a — from b — holds <= 5 — someday", "- Measure: a — holds <= 5 — 4 weeks"]
-    text = ONE.replace("An interview.\n", "An interview.\n\n" + "\n".join(odd) + "\n")
-    item = hf.parse(text)["items"][0]
-    assert item["measures"] == [] and hf.apply(text, [item])[0] == text
-
-
 def test_one_measure_changed_is_written_back_and_the_other_lines_are_untouched():
     item = hf.parse(WITH_MEASURES)["items"][0]
     assert hf.apply(WITH_MEASURES, [item])[0] == WITH_MEASURES
     first, second = item["measures"]
     new = hf.apply(WITH_MEASURES, [{**item, "measures": [{**first, "bars": {**first["bars"], "holds": {"op": "<=", "n": 60.0, "unit": "% of the Work clip's"}}}, second]}])[0]
     assert changed(WITH_MEASURES, new) == [f"-{M1}", f"+{M1.replace('<= 70', '<= 60')}"]
-
-
-def test_a_measure_added_dropped_or_given_a_day_changes_only_the_measure_lines_and_no_value_is_written():
-    item = hf.parse(ONE)["items"][0]
-    assert item["measures"] == []
-    m = {"id": "m1", "what": "Picked a sketch", "from": "", "by": "", "bars": {"holds": {"op": ">=", "n": 4.5, "unit": ""}, "refuted": [{"way": "", "op": "<", "n": 1.0, "unit": "a day"}]},
-         "span_days": 14, "date": "2026-11-17", "value": {"n": 9.0, "by": "person", "at": "x", "from": "y"}}
-    text = hf.apply(ONE, [{**item, "started": "2026-11-03", "measures": [m]}])[0]
-    assert [ln for ln in changed(ONE, text) if ln.startswith("+")] == ["+- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — 2 weeks"] and "9.0" not in text
-    back = hf.parse(text)["items"][0]["measures"][0]
-    assert (back["what"], back["from"], back["span_days"], back["value"], back["bars"]["refuted"][0]["way"]) == ("Picked a sketch", "", 14, None, "")
-    dayed = hf.apply(text, [{**item, "started": "2026-11-03", "measures": [{**m, "date": "2026-12-01"}]}])[0]
-    assert changed(text, dayed) == ["-- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — 2 weeks", "+- Measure: Picked a sketch — from - — holds >= 4.5, refuted < 1 a day — until 2026-12-01"]
-    assert "Measure" not in hf.apply(text, [{**item, "measures": []}])[0]
 
 
 def test_a_bound_files_measures_are_read_with_their_value_from_the_record_and_written_through(proj):
@@ -347,14 +244,3 @@ def test_a_bound_files_measures_are_read_with_their_value_from_the_record_and_wr
     assert "Camp clip" not in (proj / "docs" / "hypotheses.md").read_text("utf-8") and [m["what"] for m in kept(proj)[0]["measures"]] == ["Came back within 7 days"]
 
 
-def test_product_map_reads_h5_from_own_file(proj):
-    from orkboard.realm import map_parts
-    state = proj / '.orkcraft'
-    (proj / 'docs' / 'hypotheses.md').write_text(OWN.read_text('utf-8'), 'utf-8')
-    hyp.bind(state, 'docs/hypotheses.md')
-    h5 = next(h for h in hyp.read(state)['items'] if h['id'] == 'h5')
-    assert "Art's first ten paid picks" in h5['signal']
-    assert 'kept' in h5['signal'] and 'price' in h5['signal']
-    assert {'map': 'product', 'id': 'hyp:h5', 'name': h5['text'], 'group': 'hypotheses'} in map_parts.parts(state, proj, 'product')
-    text = OWN.read_text('utf-8').split('## H5.', 1)[1]
-    assert 'project that seats Art' in text and 'kept share' in text

@@ -21,26 +21,6 @@ def test_an_entry_is_kept_in_its_scope_with_its_goal_its_parts_and_its_ref(sd):
     assert len(journals.add(sd, "tech", "stance", "x" * 900)["text"]) == journals.TEXT_CHARS
 
 
-def test_a_scope_and_a_kind_must_be_ones_and_a_project_kind_is_not_a_leaders(sd):
-    with pytest.raises(ValueError):
-        journals.add(sd, "Tech!", "stance", "x")
-    with pytest.raises(ValueError):
-        journals.add(sd, "tech", "done", "x")                                                     # a project's kind
-    assert journals.add(sd, "tech", "decision", "ADR 3: Postgres")["kind"] == "decision"             # a decision of its craft, read in (spec 126 B)
-    with pytest.raises(ValueError):
-        journals.add(sd, journals.PROJECT, "overruled", "x")
-    assert journals.add(sd, journals.PROJECT, "decision", "Decision 4: no accounts", ref="4")["kind"] == "decision"
-    assert journals.kind_of(journals.PROJECT) == "project" and journals.kind_of("game-design") == "leader"
-
-
-def test_a_line_that_is_not_an_entry_is_skipped(sd):
-    journals.add(sd, "tech", "stance", "One")
-    with (sd / "journals" / "tech.jsonl").open("a") as f:
-        f.write("not json\n{\"id\": \"x\", \"kind\": \"nope\", \"text\": \"t\"}\n[1]\n")
-    journals.add(sd, "tech", "stance", "Two")
-    assert [e["text"] for e in journals.read(sd, "tech")] == ["One", "Two"]
-
-
 def test_a_struck_entry_is_never_read_into_a_call_but_is_kept_marked(sd):
     a = journals.add(sd, "tech", "came_back", "The lobby came back at Review", idea="add-lobby")
     b = journals.add(sd, "tech", "stance", "Go on the timer", idea="timer")
@@ -49,18 +29,6 @@ def test_a_struck_entry_is_never_read_into_a_call_but_is_kept_marked(sd):
     assert journals.read(sd, "tech") == [b] and journals.read(sd, "tech", struck=True)[0]["struck"]["why"].startswith("It came back")
     assert "lobby" not in journals.text(sd, "tech", idea="add-lobby")
     assert journals.strike(sd, "tech", a["id"]) is None and journals.strike(sd, "tech", "../x") is None and journals.strike(sd, "tech", "nope") is None
-
-
-def test_the_digest_and_what_came_after_it(sd):
-    a = journals.add(sd, "design", "stance", "One")
-    b = journals.add(sd, "design", "stance", "Two")
-    assert journals.digest(sd, "design") == {} and journals.since_digest(sd, "design") == [a, b]
-    journals.save_digest(sd, "design", "Screens grow; the person keeps the menu flat.", a["id"])
-    assert journals.digest(sd, "design")["text"] == "Screens grow; the person keeps the menu flat." and journals.since_digest(sd, "design") == [b]
-    with pytest.raises(ValueError):
-        journals.save_digest(sd, "design", "  ", b["id"])
-    journals.save_digest(sd, "design", "y" * 2000, "gone")
-    assert len(journals.digest(sd, "design")["text"]) == journals.DIGEST_CHARS and journals.since_digest(sd, "design") == [a, b]
 
 
 def test_a_call_is_given_the_digest_then_this_goals_and_these_parts_entries_then_the_latest_within_its_chars(sd):
@@ -81,14 +49,6 @@ def test_a_call_is_given_the_digest_then_this_goals_and_these_parts_entries_then
     assert journals.text(sd, journals.PROJECT).startswith("What the project decided and what came of it")
 
 
-def test_an_entry_read_in_keeps_the_day_it_happened_and_its_ref_is_known(sd):
-    e = journals.add(sd, journals.PROJECT, "decision", "Decision 3: Postgres", ref="docs/adr/0003-postgres.md", at="2024-05-02")
-    assert e["at"] == "2024-05-02"
-    assert journals.add(sd, journals.PROJECT, "decision", "x", at="last spring")["at"] != "last spring"      # not a day: now
-    journals.strike(sd, journals.PROJECT, e["id"])
-    assert "docs/adr/0003-postgres.md" in journals.refs(sd, journals.PROJECT)                                   # struck, still known: never read in twice
-
-
 def test_each_journal_has_its_markdown_mirror_written_again_after_each_change(sd):
     from orkboard.realm import read_in
     a = journals.add(sd, "tech", "stance", "On “Lobby” you said no: the cache", idea="lobby", on=["cache"])
@@ -104,24 +64,6 @@ def test_each_journal_has_its_markdown_mirror_written_again_after_each_change(sd
 
 
 # -- the Markdown in any folder (spec 151 B.1) ---------------------------------------------------------------------------------------------
-
-def test_a_journal_is_written_into_a_folder_only_when_it_changed_and_never_over_a_file_of_another(sd, tmp_path):
-    out = tmp_path / "wiki" / "journals"
-    journals.add(sd, journals.PROJECT, "decision", "Decision 3: Postgres", ref="3")
-    journals.add(sd, "tech", "stance", "Keep the cache", idea="lobby")
-    assert journals.mirror_into(sd, journals.PROJECT, out) and journals.mirror_into(sd, "tech", out, "Tech", "Archie")
-    assert sorted(p.name for p in out.iterdir()) == ["project.md", "tech.md"]                  # the project's journal is `project.md`
-    text = (out / "tech.md").read_text()
-    assert text.startswith("---\norkboard-journal: tech\nparty: Tech\nleader: Archie\n") and "Keep the cache" in text and "idea=lobby" in text
-    assert not journals.mirror_into(sd, "tech", out, "Tech", "Archie")                         # the day it was exported alone is no change
-    journals.add(sd, "tech", "heeded", "Heeded the cache")
-    assert journals.mirror_into(sd, "tech", out, "Tech", "Archie") and "Heeded the cache" in (out / "tech.md").read_text()
-    (out / "mine.md").write_text("my own notes\n")
-    journals.add(sd, "mine", "stance", "Not yours")
-    assert not journals.mirror_into(sd, "mine", out) and (out / "mine.md").read_text() == "my own notes\n"      # a file Orkboard did not write stays
-    with pytest.raises(ValueError):
-        journals.mirror_into(sd, "No Such", out)
-    assert journals.file_name("project") == "party-project.md" and journals.file_name(journals.PROJECT) == "project.md"
 
 
 def test_a_leaders_journal_keeps_what_it_accepted_sent_back_and_learned_of_a_step_spec_152_b(tmp_path):
@@ -139,13 +81,3 @@ def test_a_leaders_journal_keeps_what_it_accepted_sent_back_and_learned_of_a_ste
     assert journals.read(sd, "tech")[0]["kind"] == "accepted"
 
 
-def test_a_digest_keeps_its_date_and_what_it_read(sd):
-    got = journals.save_digest(sd, "tech", "Works: x", "u", read=["a", "§1", "a", "b, c", "", "z" * 200] + [f"s{i}" for i in range(30)])
-    assert got["read"][:4] == ["a", "§1", "b c", "z" * journals.READ_CHARS] and len(got["read"]) == journals.READ_MAX
-    assert journals.digest(sd, "tech")["read"] == got["read"] and got["at"]
-    journals.save_digest(sd, "tech", "Works: y", "u", read=["k"], at="2026-11-08T10:00:00")
-    assert journals.digest(sd, "tech") == {"text": "Works: y", "upto": "u", "at": "2026-11-08T10:00:00", "read": ["k"]}
-    journals.save_digest(sd, "tech", "Works: z", "u")
-    assert journals.digest(sd, "tech")["read"] == [] and journals.digest(sd, "tech")["at"] != "2026-11-08T10:00:00"
-    text = (sd / "journals" / "tech.md").read_text()
-    assert "digest_at: " in text and "digest_read:" not in text

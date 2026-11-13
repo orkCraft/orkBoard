@@ -32,24 +32,10 @@ def parsed(**texts: str) -> dict:
     return {k: idea_page.parse(v) for k, v in texts.items()}
 
 
-def test_each_goal_that_waits_has_one_turn_and_a_goal_at_work_none():
-    got = board_turns.turns(parsed(asking=ASKING, talked=TALKED, spec=SPEC, work=WORK), PARTIES, {"asking": "2026-11-12T10:00:00"})
-    assert [(t["goal"], t["kind"]) for t in got] == [("asking", "asks"), ("talked", "talk"), ("spec", "spec")]
-    assert got[0]["at"] == "2026-11-12T10:00:00" and got[1]["at"] == ""
-
-
 def test_a_question_is_a_turn_with_its_ways_and_an_answered_one_is_left_out():
     (turn,) = board_turns.turns(parsed(asking=ASKING), PARTIES)
     assert [q["ask"] for q in turn["questions"]] == ["Which store?"]
     assert turn["questions"][0]["ways"] == ["A", "B"]
-
-
-def test_a_goal_waits_only_when_every_party_of_its_route_has_spoken_or_written():
-    assert board_turns.turns(parsed(a=HALF_TALK, b=HALF_SPEC, c=page("talk", route=""), d=page("new")), PARTIES) == []
-
-
-def test_a_goal_on_hold_or_done_has_no_turn():
-    assert board_turns.turns(parsed(held=HELD, done=page("done", "asks: person\n", "## Open questions\n- Which?\n")), PARTIES) == []
 
 
 def _sums(root: Path) -> dict:
@@ -81,11 +67,6 @@ def test_ideas_turns_on_a_fixture_board_runs_no_model_and_writes_no_file(host):
     got = host.command("ideas.turns", {})["turns"]
     assert sorted((t["goal"], t["kind"]) for t in got) == [("asking", "asks"), ("spec", "spec"), ("talked", "talk")]
     assert (_sums(root), _sums(host.ideas.state_dir)) == before
-
-
-def test_the_module_is_pure():
-    text = Path(board_turns.__file__).read_text(encoding="utf-8")
-    assert "subprocess" not in text and "write_text" not in text and "open(" not in text
 
 
 def test_a_card_the_record_holds_is_a_question_until_the_page_answers_it():

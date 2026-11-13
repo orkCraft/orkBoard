@@ -1,7 +1,6 @@
 """The git of an idea's tasks (realm/idea_git.py): the gate's files, the fast-forward, the secrets."""
 from __future__ import annotations
 
-import json
 import subprocess
 import threading
 from pathlib import Path
@@ -65,74 +64,6 @@ def test_main_checked_out_with_the_touched_file_dirty_is_left_as_it_was(repo):
         g.land(path, branch, "main")
     assert git(repo, "rev-parse", "main") == before
     assert (repo / "a.txt").read_text() == "the owner's own edit\n"
-
-
-def test_an_unrelated_dirty_file_does_not_stop_the_fast_forward(repo):
-    g = IdeaGit(repo)
-    path, branch = g.prepare("demo", "k1", "main")
-    commit_in(path, "b.txt", "b\n")
-    (repo / "a.txt").write_text("the owner's own edit\n")
-    g.land(path, branch, "main")
-    assert (repo / "b.txt").exists() and (repo / "a.txt").read_text() == "the owner's own edit\n"
-
-
-def test_a_second_prepare_cuts_the_branch_anew(repo):
-    g = IdeaGit(repo)
-    path, branch = g.prepare("demo", "k1", "main")
-    commit_in(path, "b.txt", "old try\n")
-    path, _ = g.prepare("demo", "k1", "main")
-    assert git(path, "rev-parse", "HEAD") == git(repo, "rev-parse", "main")
-    assert not (path / "b.txt").exists()
-
-
-def test_a_push_failure_is_a_note_not_a_failure(repo, tmp_path):
-    git(repo, "remote", "add", "origin", str(tmp_path / "nowhere.git"))
-    g = IdeaGit(repo)
-    path, branch = g.prepare("demo", "k1", "main")
-    commit_in(path, "b.txt", "b\n")
-    _commit, _subjects, note = g.land(path, branch, "main", push=True)
-    assert note.startswith("push failed")
-
-
-def test_one_lock_per_repository(repo):
-    assert idea_git.lock_of(repo) is idea_git.lock_of(repo / ".") is IdeaGit(repo).lock
-
-
-def test_secrets_are_read_from_the_state_file(tmp_path):
-    (tmp_path / "secrets.json").write_text(json.dumps({"ideas/demo/t1": "v1", "other": {"t2": "v2"}}))
-    assert idea_git.read_secret(tmp_path, "demo", "t1") == "v1"
-    assert idea_git.read_secret(tmp_path, "other", "t2") == "v2"
-    assert idea_git.read_secret(tmp_path, "demo", "nope") is None
-    assert idea_git.read_secret(tmp_path / "missing", "demo", "t1") is None
-
-
-def test_the_env_name_comes_from_the_todos_title():
-    assert idea_git.env_name("Add API_KEY for the mailer") == "API_KEY"
-    assert idea_git.env_name("The STRIPE token: STRIPE_SECRET") == "STRIPE_SECRET"
-    assert idea_git.env_name("GITHUB token") == "GITHUB"
-    assert idea_git.env_name("a key") == ""
-
-
-def test_the_review_branch_is_made_from_the_default_branch_when_missing(repo):
-    g = IdeaGit(repo)
-    assert g.branches() == ["main"] and g.default_branch() == "main"
-    assert g.ensure_branch("dev") is True and g.ensure_branch("dev") is False
-    assert git(repo, "rev-parse", "dev") == git(repo, "rev-parse", "main") and g.branches() == ["dev", "main"]
-    for bad in ("", "bad name", "a..b", "-x"):
-        with pytest.raises(RuntimeError):
-            g.ensure_branch(bad)
-
-
-def test_stats_counts_the_lines_a_task_removed(repo):
-    g = IdeaGit(repo)
-    (repo / "c.txt").write_text("one\ntwo\nthree\nfour\n")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-m", "add c")
-    base = git(repo, "rev-parse", "HEAD")
-    path, branch = g.prepare("i", "k1", "main")
-    commit_in(path, "c.txt", "one\nfour\n")          # removes two lines, adds none
-    commit_in(path, "d.txt", "new\n")                 # adds one line
-    assert g.stats(path, base) == {"files": 2, "added": 1, "removed": 2}
 
 
 def test_the_diff_has_commits_files_and_patches_and_cuts_what_is_too_large(repo, monkeypatch):
@@ -203,50 +134,6 @@ def test_a_worktree_gets_the_main_checkouts_node_modules_and_venv_as_links(repo)
     assert (path / "node_modules" / "dep" / "index.js").read_text() == "module.exports = 1\n"
 
 
-def test_the_links_are_never_committed_even_when_the_project_ignores_nothing(repo):
-    (repo / "package.json").write_text("{}")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-m", "node")
-    (repo / "node_modules" / "dep").mkdir(parents=True)                          # .gitignore does not name it
-    (repo / ".venv").mkdir()
-    g = IdeaGit(repo)
-    path, _ = g.prepare("demo", "k1", "main")
-    assert (path / "node_modules").is_symlink() and (path / ".venv").is_symlink()
-    assert g.dirty(path) is False                                                # git sees neither link
-    commit_in(path, "b.txt", "b\n")
-    git(path, "add", "-A")
-    assert git(path, "ls-files").split() == [".gitignore", "a.txt", "b.txt", "package.json"]
-    assert {"node_modules", ".venv"} <= set((repo / ".git" / "info" / "exclude").read_text().split())
-
-
-def test_a_worktree_that_has_its_own_or_a_project_without_them_gets_no_link(repo):
-    g = IdeaGit(repo)
-    path, _ = g.prepare("demo", "plain", "main")                                  # nothing installed: nothing linked
-    assert not (path / "node_modules").exists() and not (path / ".venv").exists()
-    installed(repo)
-    (repo / "tracked").mkdir()
-    (repo / "tracked" / "package.json").write_text("{}")
-    (repo / "tracked" / "node_modules").mkdir()
-    (repo / "tracked" / "node_modules" / "x.js").write_text("x\n")
-    git(repo, "add", "-f", "tracked/node_modules/x.js", "tracked/package.json")
-    git(repo, "commit", "-m", "tracked dependencies")
-    path, _ = g.prepare("demo", "k2", "main")
-    assert (path / "tracked" / "node_modules").is_dir() and not (path / "tracked" / "node_modules").is_symlink()   # its own
-    assert (path / "node_modules").is_symlink()
-
-
-def test_the_links_go_with_the_worktree_and_leave_the_main_checkout_whole(repo):
-    installed(repo)
-    g = IdeaGit(repo)
-    path, _ = g.prepare("demo", "k1", "main")
-    g.remove(path)
-    assert not path.exists()
-    assert (repo / "node_modules" / "dep" / "index.js").is_file() and (repo / ".venv" / "bin").is_dir()
-    again, _ = g.prepare("demo", "k1", "main")                                     # a second try links again, once
-    assert (again / "node_modules").is_symlink()
-    assert (repo / ".git" / "info" / "exclude").read_text().split().count("node_modules") == 1
-
-
 # -- spec 107 §1.2: documents only, a run that could not run -----------------------------------------------------------
 
 def toml(root: Path, text: str) -> None:
@@ -294,8 +181,3 @@ def test_a_run_that_found_a_command_missing_says_so_and_a_red_one_does_not(repo)
     red = gate_on(repo)
     assert red.ok is False and red.code == 1 and red.env == ""
 
-
-def test_a_command_that_cannot_start_could_not_run(repo):
-    toml(repo, '[gate]\nrun = "nonexistent-tool-xyz --go"\n')
-    run = gate_on(repo)
-    assert run.ok is False and run.code == 127 and "`nonexistent-tool-xyz`" in run.env

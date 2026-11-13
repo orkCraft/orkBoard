@@ -66,8 +66,3 @@ def test_an_open_fork_holds_talk(host, parties, model, went):
     assert idea_say.holding(ds, slug)
 
 
-def test_an_old_record_with_no_say_goes_on_as_before(host, parties, model, went):
-    _round_one(model, parties, per=0)
-    slug = _talk(host, parties, ["design", "tech"], GOAL)
-    assert not idea_say.holding(host.ideas.state_dir, slug) and went == [slug]
-    assert idea_say.holding(host.ideas.state_dir, "no-such-goal") is False

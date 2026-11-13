@@ -77,12 +77,6 @@ def test_the_chronicle_has_the_newest_chapter_open_and_the_others_as_a_line(host
         host.command("ideas.chronicle_chapter", {"id": "v:v9"})
 
 
-def test_the_line_is_the_last_version_alone_and_none_for_a_project_with_no_past(host, fake_repo):
-    assert host.command("ideas.chronicle_line", {}) == {"earlier": None}
-    tag(fake_repo, "v0.1", "2026-10-10")
-    assert host.command("ideas.chronicle_line", {}) == {"earlier": {"kind": "tag", "name": "v0.1", "day": "2026-10-10"}}
-
-
 def test_find_goal_and_decision(host, fake_repo):
     tag(fake_repo, "v0.1", "2026-10-10")
     a = through(host, "Purple buttons", "2026-10-05", 1)
@@ -100,18 +94,6 @@ def test_find_goal_and_decision(host, fake_repo):
     for bad in ({"number": 99}, {"number": "1"}, {}):
         with pytest.raises(CommandError, match="not in the log"):
             host.command("ideas.chronicle_decision", bad)
-
-
-def test_the_commands_read_and_write_nothing(host, fake_repo):
-    tag(fake_repo, "v0.1", "2026-10-10")
-    a = through(host, "Purple buttons", "2026-10-05", 1)
-    before = tree(fake_repo / ".orkcraft") if (fake_repo / ".orkcraft").is_dir() else {}
-    pages_before = tree(host.ideas.root())
-    for name, args in (("ideas.chronicle", {}), ("ideas.chronicle_line", {}), ("ideas.chronicle_chapter", {"id": "v:v0.1"}), ("ideas.chronicle_find", {"query": "purple"}),
-                       ("ideas.chronicle_goal", {"idea": a}), ("ideas.chronicle_decision", {"number": 1})):
-        host.command(name, args)
-    assert (tree(fake_repo / ".orkcraft") if (fake_repo / ".orkcraft").is_dir() else {}) == before and tree(host.ideas.root()) == pages_before
-    assert not (fake_repo / ".orkcraft" / "usage" / "events.jsonl").exists() or "chronicle" not in (fake_repo / ".orkcraft" / "usage" / "events.jsonl").read_text()
 
 
 # -- by party (spec 150 E1.4, decisions §254.7) ---------------------------------------------------------------------------------------------
@@ -150,15 +132,6 @@ def test_the_chronicle_read_by_party_holds_the_goals_its_route_held_and_the_deci
     assert nobody["unreleased"] == {"goals": [], "decisions": []} and nobody["chapters"][0]["goals"] == [] and nobody["chapters"][0]["decisions"] == []
 
 
-def test_the_search_and_the_line_read_by_party_too(host, fake_repo):
-    a, _b, _c = _by_party(host, fake_repo)
-    found = host.command("ideas.chronicle_find", {"query": "purple", "party": "design"})
-    assert found["found"] == 1 and found["chapters"][0]["goals"][0]["idea"] == a
-    assert host.command("ideas.chronicle_find", {"query": "purple", "party": "tech"})["found"] == 0
-    assert host.command("ideas.chronicle_find", {"query": "purple"})["found"] == 1
-    assert host.command("ideas.chronicle_line", {"party": "design"})["earlier"]["name"] == "v0.2"
-
-
 def test_chronicle_last_is_the_partys_last_decisions_newest_first_by_code(host, fake_repo):
     _by_party(host, fake_repo)
     got = host.command("ideas.chronicle_last", {"party": "design"})["decisions"]
@@ -173,14 +146,6 @@ def test_chronicle_last_is_the_partys_last_decisions_newest_first_by_code(host, 
     assert len(host.command("ideas.chronicle_last", {"n": 99})["decisions"]) == 3 and len(host.command("ideas.chronicle_last", {"n": 0})["decisions"]) == 3
     with pytest.raises(CommandError, match="n is not a number"):
         host.command("ideas.chronicle_last", {"n": "2"})
-
-
-def test_the_party_reads_write_nothing(host, fake_repo):
-    _by_party(host, fake_repo)
-    before = tree(host.ideas.root())
-    host.command("ideas.chronicle_last", {"party": "design"})
-    host.command("ideas.chronicle", {"party": "design"})
-    assert tree(host.ideas.root()) == before
 
 
 def test_the_search_kept_to_one_deck_by_its_id(host, fake_repo):

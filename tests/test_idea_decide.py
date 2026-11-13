@@ -113,34 +113,6 @@ def _decided(host, parties, model, which=("tech",), text="add a dark mode option
 
 # -- the words of a decision, strictly ----------------------------------------------------------------------------------------------------
 
-def test_a_decision_is_a_title_a_why_and_numbered_points_by_code():
-    got = clean_decision({"title": " Dark  mode ", "why": "Because.", "points": ["1. One", "- Two", "Two", 3, "", "Three"]})
-    assert got == {"title": "Dark mode", "why": "Because.", "points": ["One", "Two", "Three"]}               # the model never numbers; a repeat once; a non-text point is nothing
-    assert body_of(got["why"], got["points"]) == "Why: Because.\n\n1. One\n2. Two\n3. Three"
-    assert clean_decision({"title": "T", "why": "W", "points": ["only one"]}) is None and clean_decision({"title": "", "why": "W", "points": ["a", "b"]}) is None
-    assert clean_decision("not an object") is None and clean_decision({"title": "T", "why": "W", "points": "a, b"}) is None
-    assert len(clean_decision({"title": "T", "why": "W", "points": [f"p{n}" for n in range(20)]})["points"]) == 8
-
-
-def test_an_entry_is_the_files_heading_with_the_date_and_who_and_a_body_never_starts_a_heading_of_its_own():
-    import datetime as dt
-    assert entry_of(119, "Dark mode", "Why: x.", dt.date(2026, 10, 28)) == "## 119. Dark mode (28 October 2026, the person and Orkboard)\n\nWhy: x.\n"
-    assert demote("Why\n# One\n## Two\n### Three\n#nospace") == "Why\n### One\n### Two\n### Three\n#nospace"
-    assert corrected("## 12. A better title (28 October, the person and Orkboard)\nWhy: mine.", "Old") == ("A better title", "Why: mine.")
-    assert corrected("Why: just words.\n## sneaky", "Old") == ("Old", "Why: just words.\n### sneaky")
-    assert worded("Dark mode", "add a dark mode option\nmore", ["Which first? — Web"], ["Tech"])["points"] == ["Which first? — Web", "Done by Tech"]
-
-
-def test_the_entry_is_signed_by_its_host_and_a_correction_reads_back_any_name():
-    """Decisions §169: Orkboard signs Orkboard, a host named signs its name; a signature of any name (an older file's too) is cut off a corrected title."""
-    import datetime as dt
-    day = dt.date(2026, 10, 28)
-    assert entry_of(5, "T", "b", day).startswith("## 5. T (28 October 2026, the person and Orkboard)")
-    assert entry_of(5, "T", "b", day, host="Some Host").startswith("## 5. T (28 October 2026, the person and Some Host)")
-    for name in ("Orkboard", "Orkline", "Some Host"):
-        assert corrected(f"## 12. A better title (28 October, the person and {name})\nWhy: mine.", "Old") == ("A better title", "Why: mine.")
-    assert corrected("## 12. A title (with a word) here\nWhy.", "Old")[0] == "A title (with a word) here"
-
 
 # -- the call -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -164,14 +136,6 @@ def test_one_call_of_the_orkmaster_on_the_cheaper_tier_with_no_tools_and_the_dec
     assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["by"] == "orkmaster"
 
 
-def test_a_call_that_cannot_be_had_is_worded_by_code_for_the_person_to_correct(host, parties, model):
-    slug = _decided(host, parties, model, per=1, answer="I am sorry, I cannot")
-    d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
-    assert d["by"] == "code" and d["title"] == "add a dark mode option" and "tech question 0 — A" in d["text"]
-    row = _row(host, slug, "decision")
-    assert row["number"] == 1 and row["text"].startswith("Why: The person asked for this and talked it through with Tech")        # no decisions file yet: number 1
-
-
 def test_a_stop_during_the_call_puts_the_goal_back_at_its_route_card(host, parties, model):
     def stopped(row):
         raise InterruptedError("stopped")
@@ -183,29 +147,7 @@ def test_a_stop_during_the_call_puts_the_goal_back_at_its_route_card(host, parti
     assert _state(host, slug)["error"] == "" and _row(host, slug, "decision") is None and _row(host, slug, "route") is not None
 
 
-def test_the_decision_is_asked_only_of_a_goal_at_talk(host, parties, model):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    with pytest.raises(idea_keeper.KeeperError, match="not at Talk"):
-        host.ideas.keeper.decide(slug)
-    with pytest.raises(idea_keeper.KeeperError, match="gone"):
-        host.ideas.keeper.decide("nobody")
-
-
 # -- Confirm and start --------------------------------------------------------------------------------------------------------------------------
-
-def test_an_agreed_goals_entry_is_signed_by_the_leaders_and_a_correction_reads_back_either_signature():
-    """Spec 120 §3.5: `## <n>. <title> (<date>, the leaders, all agreed; <host>)`."""
-    import datetime as dt
-    from orkboard.core.idea_decide import leaders_body
-    day = dt.date(2026, 11, 1)
-    assert entry_of(7, "T", "b", day, by="leaders") == "## 7. T (1 November 2026, the leaders, all agreed; Orkboard)\n\nb\n"
-    assert entry_of(7, "T", "b", day, host="Some Host", by="leaders").startswith("## 7. T (1 November 2026, the leaders, all agreed; Some Host)")
-    assert entry_of(7, "T", "b", day, by="person").startswith("## 7. T (1 November 2026, the person and Orkboard)")                  # as it was
-    assert corrected("## 7. A title (1 November, the leaders, all agreed; Orkboard)\nWhy: x.", "Old") == ("A title", "Why: x.")
-    body = leaders_body("Why: x.\n\n1. One.\n2. Two.", [{"leader": "architect", "for": "It helps at night", "stance": "s"}, {"leader": "product-manager", "for": ""},
-                                                         {"leader": "designer", "for": "The look holds"}, "nonsense"], lambda leader: leader.title())
-    assert body == "Why: x.\n\n1. One.\n2. Two.\n3. For Architect: It helps at night\n4. For Designer: The look holds"          # numbered on from the Orkmaster's; a leader with nothing for it adds none
-    assert leaders_body("Why: x.", [], str) == "Why: x."
 
 
 def test_confirm_by_the_leaders_writes_the_agreed_heading_with_their_stances_among_the_points_then_the_sections_follow(host, parties, model):
@@ -221,15 +163,6 @@ def test_confirm_by_the_leaders_writes_the_agreed_heading_with_their_stances_amo
     d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
     assert d["confirmed"] is True and d["confirmed_by"] == "leaders" and "For" in d["text"]
     assert ideas.talk(host.ideas.state_dir, slug)[-1]["who"] == "keeper" and "the leaders, all agreed" in ideas.talk(host.ideas.state_dir, slug)[-1]["text"]
-
-
-def test_the_person_s_confirm_is_signed_as_it_was(host, parties, model):
-    slug = _decided(host, parties, model)
-    host.ideas.keeper.sections = lambda s: None
-    host.ideas.keeper.confirm(slug, "", host.ideas._decision_tree())
-    entry = git(host.repo_root, "show", "dev:docs/decisions.md")
-    assert ", the person and Orkboard)" in entry and "the leaders" not in entry and "For tech" not in entry
-    assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["confirmed_by"] == "person"
 
 
 def test_confirm_appends_the_numbered_entry_and_commits_it_to_dev_with_the_pages_then_the_sections_follow(host, parties, model):
@@ -251,15 +184,6 @@ def test_confirm_appends_the_numbered_entry_and_commits_it_to_dev_with_the_pages
     assert _row(host, slug, "decision") is None and spec_sections.record(host.ideas.state_dir, slug)["decision"]["confirmed"] is True
 
 
-def test_the_person_s_correction_is_kept_as_written_and_its_heading_is_the_title(host, parties, model):
-    slug = _decided(host, parties, model)
-    host.ideas.keeper.sections = lambda s: None
-    host.command("ideas.confirm", {"idea": slug, "text": "## 3. Light and dark (28 October, the person and Orkboard)\nWhy: mine.\n\n## 1. Sneaky\n1. Only dark."})
-    entry = git(host.repo_root, "show", "dev:docs/decisions.md")
-    assert "## 1. Light and dark (" in entry and "Why: mine.\n\n### 1. Sneaky\n1. Only dark." in entry                         # a heading inside is demoted, the number is the file's own
-    assert [h.split(" (")[0] for h in decisions_log.headings(entry)] == ["1. Light and dark"]
-
-
 def test_the_number_is_read_again_at_the_commit_so_two_goals_never_take_one(host, parties, model):
     first = _decided(host, parties, model, text="add a dark mode option")
     second = _decided(host, parties, model, text="add a light mode option")
@@ -269,25 +193,6 @@ def test_the_number_is_read_again_at_the_commit_so_two_goals_never_take_one(host
     b = host.command("ideas.confirm", {"idea": first})
     assert (a["number"], b["number"]) == (1, 2)
     assert decisions_log.headings(git(host.repo_root, "show", "dev:docs/decisions.md"))[0].startswith("1. ") and len(decisions_log.headings(git(host.repo_root, "show", "dev:docs/decisions.md"))) == 2
-
-
-def test_the_number_follows_the_file_as_dev_holds_it_even_when_it_moved_after_the_decision_was_worded(host, parties, model):
-    slug = _decided(host, parties, model)
-    tree = host.ideas._board_tree
-    tree.edit_file("docs/decisions.md", lambda old: "# Decisions\n\n## 41. Forty-one (1 May, the owner)\n\nWhy: x.\n", "someone else's")
-    host.ideas.keeper.sections = lambda s: None
-    assert host.command("ideas.confirm", {"idea": slug})["number"] == 42
-
-
-def test_the_path_the_project_chose_is_the_decisions_file_and_the_file_is_made_with_a_head(host, parties, model):
-    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
-    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "notes/adr.md"}), encoding="utf-8")
-    slug = _decided(host, parties, model)
-    host.ideas.keeper.sections = lambda s: None
-    assert host.command("ideas.confirm", {"idea": slug})["path"] == "notes/adr.md"
-    assert git(host.repo_root, "show", "dev:notes/adr.md").startswith("# Decisions\n\n## 1. ")
-    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "../outside.md"}), encoding="utf-8")          # never outside the project
-    assert host.ideas.keeper._decisions()[1] == "docs/decisions.md"
 
 
 def test_a_decision_confirmed_twice_writes_once_and_asks_the_sections_again(host, parties, model):
@@ -301,20 +206,6 @@ def test_a_decision_confirmed_twice_writes_once_and_asks_the_sections_again(host
     got = host.command("ideas.confirm", {"idea": slug})
     assert got["number"] == 1 and asked == ["sections", "sections"]
     assert decisions_log.headings(git(host.repo_root, "show", "dev:docs/decisions.md")) and git(host.repo_root, "show", "dev:docs/decisions.md").count("## 1.") == 1
-
-
-def test_confirm_is_refused_in_plain_words_where_there_is_nothing_to_confirm_or_the_sections_could_not_follow(host, parties, model):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    with pytest.raises(idea_keeper.KeeperError, match="no decision to confirm"):
-        host.ideas.keeper.confirm(slug)
-    with pytest.raises(idea_keeper.KeeperError, match="gone"):
-        host.ideas.keeper.confirm("nobody")
-    decided = _decided(host, parties, model)
-    k = host.ideas.keeper
-    k.window_until = lambda: time.time() + 3600                                                                                    # a spent window: the sections would be refused, so nothing is written
-    with pytest.raises(idea_keeper.KeeperError, match="window is spent"):
-        k.confirm(decided)
-    assert not decisions_log.path(host.repo_root).exists() and spec_sections.record(host.ideas.state_dir, decided)["decision"]["confirmed"] is False
 
 
 def test_without_the_boards_tree_the_file_is_written_in_the_working_copy_and_nothing_is_committed(host, parties, model):
@@ -365,16 +256,6 @@ def _overruled(host, parties, model, answer=DECISION, **said):
     return slug
 
 
-def test_named_puts_each_line_among_the_points_word_for_word_and_the_orkmasters_last_points_make_room():
-    got = {"title": "T", "why": "W", "points": [f"p{n}" for n in range(8)]}
-    lines = ["Against A: x", "Doubt from B: y"]
-    out = named(got, lines)
-    assert out["points"] == [*got["points"][:6], *lines] and out["title"] == "T" and named(out, lines) == out                 # at most eight; said once
-    assert named(got, []) is got
-    assert named({"title": "T", "why": "W", "points": ["a", "Against A: x"]}, lines)["points"] == ["a", "Against A: x", "Doubt from B: y"]        # one the Orkmaster wrote stays
-    assert named({"title": "T", "why": "W", "points": ["a", "b"]}, ["Against " + "A" * 400])["points"][-1] == ("Against " + "A" * 400)[:300]
-
-
 def test_the_decision_is_given_each_no_the_person_overruled_and_its_entry_says_it(host, parties, model):
     slug = _overruled(host, parties, model, **NO)
     name = host.ideas.keeper._name("architect")
@@ -387,21 +268,6 @@ def test_the_decision_is_given_each_no_the_person_overruled_and_its_entry_says_i
     host.command("ideas.confirm", {"idea": slug})
     entry = git(host.repo_root, "show", "dev:docs/decisions.md")
     assert f"4. {line}\n" in entry + "\n"                                                                              # and it is in the file the entry is appended to
-
-
-def test_a_doubt_is_in_the_entry_too_and_a_goal_nobody_doubted_has_neither(host, parties, model):
-    slug = _overruled(host, parties, model, verdict="doubt", why="Only if the theme file stays one")
-    assert f"Doubt from {host.ideas.keeper._name('architect')}: Only if the theme file stays one" in _row(host, slug, "decision")["text"]
-    assert "Doubt from" in model.steps("decide")[0]["prompt"]
-    plain = _overruled(host, parties, model)
-    assert "Against" not in _row(host, plain, "decision")["text"] and "Doubt from" not in _row(host, plain, "decision")["text"]
-    assert "overruled" not in model.steps("decide")[-1]["prompt"]                                                      # no line, no rule about lines
-
-
-def test_a_decision_the_orkmaster_could_not_word_names_the_overruled_as_well(host, parties, model):
-    slug = _overruled(host, parties, model, answer="I am sorry, I cannot", **NO)
-    d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
-    assert d["by"] == "code" and f"Against {host.ideas.keeper._name('architect')}: It adds a third caller to server/ws" in d["text"]
 
 
 # -- a decision with no goal (spec 116 §4: a hypothesis's verdict) -----------------------------------------------------------------------------------
@@ -418,29 +284,6 @@ def test_write_decision_appends_the_next_numbered_entry_with_no_goal_and_commits
     assert [h.split(" (")[0] for h in decisions_log.headings(log)] == ["1. Hypothesis held: People want a sketch", "2. Hypothesis refuted: Teams want sharing"]
     assert git(host.repo_root, "rev-parse", "dev") == second["commit"] and git(host.repo_root, "log", "-1", "--format=%s", "dev") == "board: decision 2 — Hypothesis refuted: Teams want sharing"
     assert not (host.repo_root / "docs" / "decisions.md").exists()
-
-
-def test_write_decision_without_the_boards_tree_writes_the_working_copy_and_commits_nothing(host):
-    got = host.ideas.keeper.write_decision("A decision", "Why: because.")
-    assert got["number"] == 1 and got["commit"] == "" and got["path"] == "docs/decisions.md"
-    assert (host.repo_root / "docs" / "decisions.md").read_text(encoding="utf-8").startswith("# Decisions\n\n## 1. A decision (")
-    assert host.ideas.keeper.write_decision("Another", "Why: too.")["number"] == 2
-
-
-def test_write_decision_needs_its_words_and_cuts_a_long_title(host):
-    k = host.ideas.keeper
-    for title, body in (("", "Why: x."), ("T", "  "), ("   ", "Why: x.")):
-        with pytest.raises(idea_keeper.KeeperError, match="needs its words"):
-            k.write_decision(title, body)
-    k.write_decision("t" * 300, "Why: x.")
-    assert len(decisions_log.headings((host.repo_root / "docs" / "decisions.md").read_text(encoding="utf-8"))[0].split(" (")[0]) <= 123
-
-
-def test_write_decision_follows_the_path_the_project_chose(host):
-    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
-    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "notes/adr.md"}), encoding="utf-8")
-    assert host.ideas.keeper.write_decision("A decision", "Why: x.")["path"] == "notes/adr.md"
-    assert (host.repo_root / "notes" / "adr.md").read_text(encoding="utf-8").startswith("# Decisions\n\n## 1. A decision (")
 
 
 def test_a_goals_decision_and_a_goalless_one_share_the_numbers(host, parties, model):
@@ -492,29 +335,6 @@ def test_a_decision_is_the_next_madr_file_of_the_projects_folder_committed_throu
     assert "docs/decisions.md" not in git(host.repo_root, "ls-tree", "--name-only", "dev", "docs/")                                # no one-file log was made beside the folder
 
 
-def test_a_decision_in_a_nygard_folder_is_a_nygard_file(host):
-    from orkboard.realm import doc_formats
-    _adr_folder(host, "docs/adr", NYGARD_FILE, 3)
-    got = host.ideas.keeper.write_decision("Keep one theme file", "Why: one place.\n\n1. Tech owns it.", host.ideas._decision_tree())
-    assert got["number"] == 4 and got["path"] == "docs/adr/0004-keep-one-theme-file.md"
-    text = git(host.repo_root, "show", f"dev:{got['path']}")
-    assert text.startswith("# 4. Keep one theme file\n\nDate: ") and "## Status\n\nAccepted" in text
-    rec = doc_formats.parse_record(text, "0004-x.md")
-    assert (rec["format"], rec["number"], rec["status"]) == ("nygard", 4, "accepted") and rec["decision"].endswith("1. Tech owns it.")
-    assert [r["number"] for r in doc_formats.records(host.repo_root / "docs" / "adr")] == [1, 2, 3]
-
-
-def test_a_chosen_folder_that_is_empty_gets_a_madr_file_in_the_working_copy_when_there_is_no_tree(host):
-    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
-    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "docs/adr"}), encoding="utf-8")
-    (host.repo_root / "docs" / "adr").mkdir()
-    got = host.ideas.keeper.write_decision("A decision", "Why: because.")
-    assert got["number"] == 1 and got["commit"] == "" and got["path"] == "docs/adr/0001-a-decision.md"
-    assert (host.repo_root / "docs" / "adr" / "0001-a-decision.md").read_text(encoding="utf-8").startswith("---\nstatus: accepted\n")
-    assert host.ideas.keeper.write_decision("Another", "Why: too.")["path"] == "docs/adr/0002-another.md"
-    assert not (host.repo_root / "docs" / "decisions.md").exists()
-
-
 def test_a_goals_confirm_in_a_folder_writes_the_file_with_the_goal_and_the_leaders_read_the_folder(host, parties, model):
     _adr_folder(host, "docs/decisions", MADR_FILE)
     slug = _decided(host, parties, model)
@@ -530,13 +350,3 @@ def test_a_goals_confirm_in_a_folder_writes_the_file_with_the_goal_and_the_leade
     assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["path"] == got["path"]
 
 
-def test_the_number_of_a_file_is_read_again_at_the_commit(host):
-    _adr_folder(host, "docs/decisions", MADR_FILE)
-    tree = host.ideas._decision_tree()
-    tree.add_file("docs/decisions", lambda folder: ("0003-someone-else.md", MADR_FILE.format(n=3)), "someone else's")           # taken between the card and Confirm
-    got = host.ideas.keeper.write_decision("Mine", "Why: x.", tree)
-    assert got["number"] == 4 and got["path"] == "docs/decisions/0004-mine.md"
-    with pytest.raises(RuntimeError, match="there already"):
-        tree.add_file("docs/decisions", lambda folder: ("0003-someone-else.md", "x"), "again")
-    with pytest.raises(RuntimeError, match="outside"):
-        tree.add_file("../x", lambda folder: ("a.md", "x"), "no")

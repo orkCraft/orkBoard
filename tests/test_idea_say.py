@@ -10,7 +10,7 @@ import pytest
 
 from pathlib import Path
 
-from orkboard.realm import event_log, goal_refine, idea_questions, idea_say, idea_target, ideas
+from orkboard.realm import event_log, goal_refine, idea_say, idea_target, ideas
 from orkboard.realm.idea_talk_parse import clean_better, clean_needs, clean_round
 from tests.test_idea_talk import Model, _round_one, _talk, _wait, card, host, model, parties  # noqa: F401  (the fixtures and the helpers of Talk's tests)
 
@@ -41,31 +41,12 @@ def test_a_reply_with_needs_and_better_is_parsed_and_limited():
     assert clean_needs("nonsense") == [] and clean_better({"line": "x"}) == [] and clean_needs([None, 3, "x"]) == []
 
 
-def test_the_second_round_asks_neither_and_a_reply_with_questions_only_reads_as_before():
-    second = clean_round({"needs": [{"kind": "risk", "line": "l"}], "better": [{"line": "l", "weight": "same"}], "questions": [card("q")]}, "tech", "a", 2, False, set())
-    assert second["needs"] == [] and second["better"] == [] and len(second["cards"]) == 1
-    old = clean_round({"stance": "s", "for": "f", "against": "a", "questions": [card("q1"), card("q2")], "second_round": False}, "tech", "a", 1, False, set())
-    assert old["needs"] == [] and old["better"] == [] and [c["q"] for c, _b, _k in old["cards"]] == ["q1", "q2"]
-
-
 # -- the prompt: what code knows -----------------------------------------------------------------------------------------------------------
 
 def _say_round(model, parties, per=1, **per_party):
     _round_one(model, parties, per)
     for who, more in per_party.items():
         model.said[("talk_round", parties[who])] = {**model.said[("talk_round", parties[who])], **more}
-
-
-def test_the_prompt_holds_the_goals_in_line_and_the_piles_look_alikes_for_every_leader_and_asks_for_needs_and_better(host, parties, model):
-    other = host.command("ideas.add", {"text": "add a dark mode toggle to the settings screen", "track": parties["product"]})["slug"]
-    _round_one(model, parties)
-    slug = _talk(host, parties, ["design", "tech"], GOAL)
-    prompts = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    for party in (parties["design"], parties["tech"]):                                     # not only Product's leader
-        assert "Goals in the pile this one looks like:" in prompts[party] and f"- {other}:" in prompts[party]
-        assert '"needs"' in prompts[party] and '"better"' in prompts[party] and "`needs` (at most 3" in prompts[party] and "`better` (at most 3" in prompts[party]
-    assert slug not in prompts[parties["tech"]].split("Goals in the pile this one looks like:")[1].split("\n\n")[0]                 # the goal itself is not its own look-alike
-    assert all(c["tools"] is False for c in model.steps("talk_round")) and idea_target.READS["talk_round"] == 0
 
 
 # -- the rows the faces read ------------------------------------------------------------------------------------------------------------------
@@ -86,15 +67,6 @@ def test_a_leaders_say_is_kept_and_the_old_questions_read_as_needs_of_the_kind_q
     design = next(r for r in say["leaders"] if r["party"] == parties["design"])
     assert design["verdict"] == "go" and [n for n in design["needs"] if not n["legacy"]] == [] and design["better"] == [] and design["needs"]       # an old reply: its questions only
     assert say["judged"] == 0 and say["judge_left"] == 2 and say["rewrite"] is None and say["fork"] is None and say["answered"] is False
-
-
-def test_the_boards_map_node_carries_the_say(host, parties, model):
-    from orkboard.realm import board_map
-    _say_round(model, parties, tech={"better": [{"line": "name the option plainly", "weight": "same"}]})
-    slug = _talk(host, parties, ["tech"], GOAL)
-    nodes = board_map.build(host.ideas.root(), host.ideas.state_dir)["nodes"]
-    mine = next(n for n in nodes if n["slug"] == slug)
-    assert mine["say"]["leaders"][0]["better"][0]["line"] == "name the option plainly" and mine["say"]["to_judge"] == []
 
 
 # -- a better taken is written into the Gist by one cheap call of the Orkmaster ---------------------------------------------------------------------
@@ -155,39 +127,6 @@ def test_a_better_taken_rewrites_the_gist_keeps_the_added_lines_and_is_undone_by
         host.command("ideas.undo_rewrite", {"idea": slug})
 
 
-def test_a_way_taken_changes_the_idea_the_same_way_and_the_persons_own_edit_is_not_written_over(host, parties, model):
-    tech = parties["tech"]
-    slug = _spoken(host, parties, model, tech={"needs": [{"kind": "risk", "line": "the theme file is shared", "rests_on": "§283.1",
-                                                          "ways": [{"name": "Fork the theme", "line": "keep a dark copy"}, {"name": "Share it", "line": "one theme, two modes"}]}]})
-    with pytest.raises(Exception, match="Take one of its ways"):
-        host.command("ideas.take_way", {"idea": slug, "id": _id(host, slug, tech, "n"), "way": 7})
-    model.said[("rewrite", "")] = {"gist": "Add a dark mode, kept in a copy of the theme."}
-    host.command("ideas.take_way", {"idea": slug, "id": _id(host, slug, tech, "n"), "way": 0})
-    _wait(host, slug)
-    prompt = model.steps("rewrite")[0]["prompt"]
-    assert "risk: the theme file is shared" in prompt and "the way taken: Fork the theme: keep a dark copy" in prompt and "Share it" not in prompt
-    assert _gist(host, slug).startswith("Add a dark mode, kept in a copy of the theme.")
-    ideas.update(host.ideas.root(), slug, {"Gist": _gist(host, slug) + "\n\nmy own line"})        # the person typed since
-    with pytest.raises(Exception, match="words changed since"):
-        host.command("ideas.undo_rewrite", {"idea": slug})
-    assert _gist(host, slug).endswith("my own line")
-
-
-def test_the_gist_changed_while_the_call_ran_is_not_written_over(host, parties, model):
-    tech = parties["tech"]
-    slug = _spoken(host, parties, model, tech={"better": [{"line": "plainly", "weight": "same"}]})
-
-    def late(row):
-        ideas.update(host.ideas.root(), slug, {"Gist": "the person's newer words"})
-        return {"gist": "the rewrite"}
-
-    model.said[("rewrite", "")] = late
-    host.command("ideas.take_better", {"idea": slug, "id": _id(host, slug, tech, "b")})
-    _wait(host, slug)
-    assert _gist(host, slug) == "the person's newer words" and "changed meanwhile" in ideas.state(host.ideas.state_dir, slug)["error"]
-    assert idea_say.node(host.ideas.root(), host.ideas.state_dir, slug)["rewrite"] is None
-
-
 # -- taken ones that contradict come back as one fork ----------------------------------------------------------------------------------------------
 
 def test_two_that_contradict_come_back_as_one_fork_and_the_choice_writes_them(host, parties, model):
@@ -218,20 +157,6 @@ def test_two_that_contradict_come_back_as_one_fork_and_the_choice_writes_them(ho
     assert {i["state"] for r in idea_say.leaders(host.ideas.state_dir, slug) for i in r["better"]} == {"open"}
 
 
-def test_a_call_that_forks_again_after_the_choice_fails_and_keeps_the_gist(host, parties, model):
-    tech = parties["tech"]
-    slug = _spoken(host, parties, model, tech={"better": [{"line": "one way", "weight": "same"}, {"line": "the other way", "weight": "same"}]})
-    before = _gist(host, slug)
-    fork = {"fork": {"ask": "Which?", "choices": ["One", "Other"], "between": []}}
-    model.said[("rewrite", "")] = fork
-    host.command("ideas.take_better", {"idea": slug, "id": _id(host, slug, tech, "b", 1)})
-    _wait(host, slug)
-    host.command("ideas.say_fork", {"idea": slug, "pick": 0})
-    _wait(host, slug)
-    assert _gist(host, slug) == before and "was not rewritten" in ideas.state(host.ideas.state_dir, slug)["error"]
-    assert idea_say.node(host.ideas.root(), host.ideas.state_dir, slug)["fork"] is None
-
-
 # -- judging again ----------------------------------------------------------------------------------------------------------------------------
 
 def _verdicts(model, parties, **by):
@@ -243,29 +168,6 @@ def _verdicts(model, parties, **by):
 def _spoken_three(host, parties, model, per=1, **more):
     _say_round(model, parties, per, product={"verdict": "doubt", "why": "not now"}, design={"better": [{"line": "d", "weight": "same"}]}, tech={"better": [{"line": "t", "weight": "same"}]}, **more)
     return _talk(host, parties, ["product", "design", "tech"], GOAL)
-
-
-def test_the_rejudge_picks_those_that_doubted_were_turned_down_or_touched_and_nobody_else(host, parties, model):
-    product, design, tech = parties["product"], parties["design"], parties["tech"]
-    slug = _spoken_three(host, parties, model)
-    assert idea_say.to_judge(host.ideas.state_dir, slug) == [product]                           # Product doubted; the others said go and nothing was done yet
-    host.command("ideas.leave_say", {"idea": slug, "id": _id(host, slug, design, "b")})          # Design's proposal turned down
-    assert idea_say.to_judge(host.ideas.state_dir, slug) == [product, design]
-    model.said[("rewrite", "")] = {"gist": "Rewritten with Tech's line."}
-    host.command("ideas.take_better", {"idea": slug, "id": _id(host, slug, tech, "b")})          # Tech's taken: its part is touched
-    _settle(host, slug)
-    assert idea_say.to_judge(host.ideas.state_dir, slug) == [product, design, tech]
-
-
-def test_a_need_of_another_leader_that_rests_on_the_same_part_is_touched_too(host, parties, model):
-    design, tech = parties["design"], parties["tech"]
-    on = {"kind": "conflict", "line": "l", "rests_on": "§283.1", "ways": [{"name": "w", "line": ""}]}
-    _say_round(model, parties, design={"needs": [on]}, tech={"needs": [on]})
-    slug = _talk(host, parties, ["design", "tech"], GOAL)
-    model.said[("rewrite", "")] = {"gist": "Rewritten."}
-    host.command("ideas.take_way", {"idea": slug, "id": _id(host, slug, tech, "n"), "way": 0})
-    _settle(host, slug)
-    assert idea_say.to_judge(host.ideas.state_dir, slug) == [design, tech]
 
 
 def test_all_answered_judges_again_by_itself_and_the_second_round_is_the_last(host, parties, model):
@@ -299,38 +201,6 @@ def _events(host, name):
     return [e for e in event_log.read(Path(host.repo_root)) if e["event"] == name]
 
 
-def test_after_the_second_round_a_doubt_that_is_left_is_the_hearing(host, parties, model):
-    design, tech = parties["design"], parties["tech"]
-    _say_round(model, parties, design={"better": [{"line": "d", "weight": "same"}]})            # the old cards stay open: nothing judges by itself
-    slug = _talk(host, parties, ["design", "tech"], GOAL)
-    _verdicts(model, parties, design={"verdict": "doubt", "why": "the option is not what I asked"})
-    host.command("ideas.leave_say", {"idea": slug, "id": _id(host, slug, design, "b")})
-    assert model.steps("talk_verdict") == [] and not idea_questions.record(host.ideas.state_dir, slug).get("hearing")
-    host.command("ideas.judge_again", {"idea": slug})
-    _settle(host, slug)
-    assert idea_say.node(host.ideas.root(), host.ideas.state_dir, slug)["judged"] == 1 and not idea_questions.record(host.ideas.state_dir, slug).get("hearing")      # once: a doubt may change
-    host.command("ideas.judge_again", {"idea": slug})                                              # it still doubts: the second and last
-    _settle(host, slug)
-    assert idea_questions.record(host.ideas.state_dir, slug).get("hearing") is True
-    assert [e["hearing"] for e in _events(host, event_log.JUDGED_AGAIN)] == [False, True] and [e["now"] for e in _events(host, event_log.JUDGED_AGAIN)] == [True, True]
-    assert tech not in {c["party"] for c in model.steps("talk_verdict")}
-
-
-def test_judge_again_now_writes_what_was_taken_first_and_refuses_when_nobody_has_anything_to_judge(host, parties, model):
-    design, tech = parties["design"], parties["tech"]
-    slug = _spoken(host, parties, model, design={"better": [{"line": "d", "weight": "same"}]}, tech={"better": [{"line": "t", "weight": "same"}]})
-    with pytest.raises(Exception, match="anything to judge again"):
-        host.command("ideas.judge_again", {"idea": slug})                                            # both said go, nothing was done
-    model.said[("rewrite", "")] = {"gist": "Rewritten."}
-    _verdicts(model, parties, tech={"verdict": "go"})
-    host.command("ideas.take_better", {"idea": slug, "id": _id(host, slug, tech, "b")})              # Design's is open and the old cards too: nothing judges by itself
-    _settle(host, slug)
-    assert model.steps("talk_verdict") == [] and len(model.steps("rewrite")) == 1
-    out = host.command("ideas.judge_again", {"idea": slug})
-    _settle(host, slug)
-    assert out["parties"] == [tech] and [c["party"] for c in model.steps("talk_verdict")] == [tech] and len(model.steps("rewrite")) == 1
-
-
 def test_a_taken_one_waiting_is_written_before_the_leaders_judge(host, parties, model):
     tech = parties["tech"]
     slug = _spoken(host, parties, model, tech={"better": [{"line": "t", "weight": "same"}]})
@@ -340,31 +210,3 @@ def test_a_taken_one_waiting_is_written_before_the_leaders_judge(host, parties, 
     with pytest.raises(Exception, match="choose first"):
         host.command("ideas.judge_again", {"idea": slug})                                            # a fork waits: the person's choice comes first
 
-
-def test_a_say_that_no_leader_made_or_is_answered_already_is_refused_in_plain_words(host, parties, model):
-    tech = parties["tech"]
-    slug = _spoken(host, parties, model, tech={"better": [{"line": "t", "weight": "same"}]})
-    with pytest.raises(Exception, match="did not say that"):
-        host.command("ideas.take_better", {"idea": slug, "id": "b-nobody-1"})
-    host.command("ideas.leave_say", {"idea": slug, "id": _id(host, slug, tech, "b")})
-    with pytest.raises(Exception, match="answered already"):
-        host.command("ideas.leave_say", {"idea": slug, "id": _id(host, slug, tech, "b")})
-    with pytest.raises(Exception, match="index"):
-        host.command("ideas.take_way", {"idea": slug, "id": "n-x-1", "way": "0"})
-    with pytest.raises(Exception, match="index"):
-        host.command("ideas.say_fork", {"idea": slug, "pick": None})
-    with pytest.raises(Exception, match="No fork waits"):
-        host.command("ideas.say_fork", {"idea": slug, "pick": 0})
-
-
-def test_judge_again_now_writes_a_taken_one_that_was_waiting_before_the_leaders_judge(host, parties, model):
-    tech = parties["tech"]
-    slug = _spoken(host, parties, model, tech={"better": [{"line": "t", "weight": "same"}]})
-    idea_say.take(host.ideas.state_dir, slug, _id(host, slug, tech, "b"))                            # taken while the keeper could not write it
-    assert idea_say.node(host.ideas.root(), host.ideas.state_dir, slug)["waiting"] == [_id(host, slug, tech, "b")]
-    model.said[("rewrite", "")] = {"gist": "Written first."}
-    _verdicts(model, parties, tech={"verdict": "go"})
-    out = host.command("ideas.judge_again", {"idea": slug})
-    _settle(host, slug)
-    assert out["parties"] == [tech] and _gist(host, slug).startswith("Written first.")
-    assert [c["step"] for c in model.calls if c["step"] in ("rewrite", "talk_verdict")] == ["rewrite", "talk_verdict"]

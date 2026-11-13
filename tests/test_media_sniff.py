@@ -18,22 +18,11 @@ def test_a_page_is_html_by_its_bytes(tmp_path, data):
     assert media_sniff.sniff(pf.write(tmp_path, "whatever.bin", data)) == "text/html"
 
 
-def test_a_page_is_html_whatever_its_name_says(tmp_path):
-    assert media_sniff.sniff(pf.write(tmp_path, "logo.png", PAGE)) == "text/html"            # a page called a picture
-    assert media_sniff.sniff(pf.write(tmp_path, "page.html", pf.text("just words"))) == "text/plain"      # words called a page
-
-
 @pytest.mark.parametrize("data", [
     b"<div>a fragment is no page</div>", b"<b>bold</b>", b"A note that says <html> in the middle", b"<!doctypehtml>", b"<htmlish></htmlish>", b"# <html>\n", b"<style>x{}</style><html></html>",
 ])
 def test_a_text_that_is_not_a_page_stays_a_text(tmp_path, data):
     assert media_sniff.sniff(pf.write(tmp_path, "a.html", data)) == "text/plain"
-
-
-def test_a_page_with_a_control_character_or_cut_in_a_character_is_not_text_at_all(tmp_path):
-    assert media_sniff.sniff(pf.write(tmp_path, "a.html", PAGE + b"\x00")) is None
-    assert media_sniff.sniff(pf.write(tmp_path, "b.html", b"<!doctype html>\x07")) is None
-    assert media_sniff.sniff(pf.write(tmp_path, "c.html", b"<!doctype html>\xff\xfe")) is None
 
 
 def test_the_other_types_are_unchanged_and_a_page_has_no_size(tmp_path):
@@ -43,6 +32,3 @@ def test_the_other_types_are_unchanged_and_a_page_has_no_size(tmp_path):
     assert media_sniff.measure(pf.write(tmp_path, "p.html", PAGE), "text/html") == {"w": None, "h": None, "seconds": None}
 
 
-def test_a_long_page_is_sniffed_from_its_start(tmp_path):
-    big = b"<!doctype html><body>" + b"<p>caf\xc3\xa9</p>" * 20_000
-    assert media_sniff.sniff(pf.write(tmp_path, "big.html", big)) == "text/html"

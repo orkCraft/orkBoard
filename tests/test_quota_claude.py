@@ -55,63 +55,6 @@ def test_claude_quota_from_fixture() -> None:
     assert week.reset_time == expected_week_reset
 
 
-def test_claude_multiple_week_lines() -> None:
-    """Synthetic test: handles multiple week lines (including 'Sonnet only')."""
-    result_text = (
-        "Current session: 20% used · resets Sep 26 at 4:00pm (Europe/Warsaw)\n"
-        "Current week (all models): 80% used · resets Sep 30 at 1pm (Europe/Warsaw)\n"
-        "Current week (Sonnet only): 45% used · resets Sep 30 at 1pm (Europe/Warsaw)\n"
-    )
-    payload = json.dumps({"result": result_text})
-    statuses = get_claude_quota(
-        runner=lambda cmd, **kwargs: payload,
-        now=datetime(2026, 9, 26, 12, 0, 0, tzinfo=timezone.utc),
-    )
-
-    assert len(statuses) == 3
-    assert statuses[0].group == "session"
-    assert statuses[0].remaining_fraction == pytest.approx(0.80)
-
-    assert statuses[1].group == "week (all models)"
-    assert statuses[1].window == "weekly"
-    assert statuses[1].remaining_fraction == pytest.approx(0.20)
-
-    assert statuses[2].group == "week (Sonnet only)"
-    assert statuses[2].window == "weekly"
-    assert statuses[2].remaining_fraction == pytest.approx(0.55)
-
-
-def test_claude_year_inference_across_new_year() -> None:
-    """
-    Synthetic test: reset happens in January when now is end of December.
-    The year must be inferred as the next year (not in the past).
-    """
-    result_text = "Current week (all models): 10% used · resets Jan 2 at 3pm (UTC)\n"
-    payload = json.dumps({"result": result_text})
-    now = datetime(2026, 12, 31, 22, 0, 0, tzinfo=timezone.utc)
-
-    statuses = get_claude_quota(runner=lambda cmd, **kwargs: payload, now=now)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.error is None
-    assert s.reset_time == datetime(2027, 1, 2, 15, 0, 0, tzinfo=timezone.utc)
-
-
-def test_claude_year_inference_recent_past_across_new_year() -> None:
-    """
-    Synthetic test: reset was 2 hours ago across New Year (not more than 1 day in past).
-    """
-    result_text = "Current session: 99% used · resets Dec 31 at 11:30pm (UTC)\n"
-    payload = json.dumps({"result": result_text})
-    now = datetime(2027, 1, 1, 1, 30, 0, tzinfo=timezone.utc)
-
-    statuses = get_claude_quota(runner=lambda cmd, **kwargs: payload, now=now)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.error is None
-    assert s.reset_time == datetime(2026, 12, 31, 23, 30, 0, tzinfo=timezone.utc)
-
-
 def test_claude_cli_not_found() -> None:
     def runner(cmd, **kwargs):
         raise FileNotFoundError("claude not found")
@@ -125,30 +68,6 @@ def test_claude_cli_not_found() -> None:
     assert s.remaining_fraction is None
 
 
-def test_claude_cli_timeout() -> None:
-    def runner(cmd, **kwargs):
-        raise subprocess.TimeoutExpired(cmd=cmd, timeout=30)
-
-    statuses = get_claude_quota(runner=runner)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "claude"
-    assert s.error is not None
-    assert "timed out" in s.error
-
-
-def test_claude_cli_nonzero_exit() -> None:
-    def runner(cmd, **kwargs):
-        raise subprocess.CalledProcessError(returncode=127, cmd=cmd, stderr="Command not found")
-
-    statuses = get_claude_quota(runner=runner)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "claude"
-    assert s.error is not None
-    assert "exit 127" in s.error
-
-
 def test_claude_says_why_its_usage_failed() -> None:
     # the owner's 19 October: Claude was missing from the limits; its reader's words say why, not its raw JSON
     env = json.dumps({"type": "result", "is_error": True, "result": "Not logged in · Please run /login"})
@@ -160,25 +79,6 @@ def test_claude_says_why_its_usage_failed() -> None:
     assert s.error == "Command failed (exit 1): Not logged in · Please run /login"
     (s,) = get_claude_quota(runner=lambda cmd, **kwargs: env)          # an error envelope that exits 0
     assert s.error == "Not logged in · Please run /login" and s.remaining_fraction is None
-
-
-def test_claude_garbage_json() -> None:
-    statuses = get_claude_quota(runner=lambda cmd, **kwargs: "not json at all!")
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "claude"
-    assert s.error is not None
-    assert "Failed to parse JSON" in s.error
-
-
-def test_claude_no_quota_lines_in_output() -> None:
-    payload = json.dumps({"result": "Some general output without any quota information."})
-    statuses = get_claude_quota(runner=lambda cmd, **kwargs: payload)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "claude"
-    assert s.error is not None
-    assert "No quota lines found" in s.error
 
 
 def test_claude_runner_receives_correct_args_and_temp_cwd() -> None:

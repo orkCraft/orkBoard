@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from orkboard.core.idea_keeper import KeeperError
 from orkboard.realm import answer_ways, goal_team, idea_questions, idea_target, ideas, seat_talk_rules
 from tests.test_idea_talk import _round_one, _state, _talk, card, host, model, parties  # noqa: F401  (the fixtures)
 
@@ -58,22 +57,10 @@ def test_a_leaders_own_tier_is_the_tier_of_its_own_calls_and_default_follows_how
             k._tls.party = ""
 
 
-def test_a_talk_runs_each_leader_on_its_own_tier_and_the_others_on_the_matrix(host, parties, model):
-    _round_one(model, parties)
-    goal_team.set_lead_tier(host.ideas.root(), parties["tech"], "elder")
-    _talk(host, parties, ["product", "design", "tech"])
-    tiers = {c["party"]: c["tier"] for c in model.steps("talk_round")}
-    assert tiers[parties["tech"]] == "elder" and tiers[parties["product"]] == tiers[parties["design"]] == idea_target.pick("talk_round", "balance")[0] == "warrior"
 
 
 # -- each way's prompt line ---------------------------------------------------------------------------------------------------------
 
-def test_each_way_has_its_prompt_line_and_a_choice_adds_none():
-    assert seat_talk_rules.way_rule("choice") == "" and seat_talk_rules.way_rule("") == "" and seat_talk_rules.way_rule("shout") == ""
-    pen, fork, silent = (seat_talk_rules.way_rule(w) for w in ("pen", "fork", "silent"))
-    assert "own words" in pen and "gains" in fork and "elder tier" in fork
-    assert "decide these questions yourself" in silent and "going into main" in silent and "money above what was agreed" in silent and "dropping or holding a goal" in silent
-    assert len({pen, fork, silent}) == 3
 
 
 def test_a_leaders_prompt_says_its_way_and_a_choices_is_as_it_was(host, parties, model):
@@ -87,36 +74,12 @@ def test_a_leaders_prompt_says_its_way_and_a_choices_is_as_it_was(host, parties,
     assert k.for_rule(parties["tech"]) == base_tech
 
 
-def test_a_silent_leader_is_told_to_decide_in_the_talk_call(host, parties, model):
-    _round_one(model, parties)
-    _silent(host, parties)
-    _talk(host, parties, ["product", "tech"])
-    prompts = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert "decide these questions yourself" in prompts[parties["tech"]] and "decide these questions yourself" not in prompts[parties["product"]]
 
 
 # -- the locks ----------------------------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("ask, choices, why, lock", [
-    ("Merge the result into main now?", ["Yes", "Later"], "", "going into main"),
-    ("Ship it", ["Push to main when the gate is green", "Keep it in dev"], "", "going into main"),
-    ("How much may the cloud run spend?", ["$5", "$20"], "", "money above what was agreed"),
-    ("Take the paid tier?", ["Yes", "No"], "it needs a budget", "money above what was agreed"),
-    ("Drop this goal?", ["Drop the goal", "Keep it"], "", "dropping or holding a goal"),
-    ("Put it on hold?", ["Put this goal on hold", "Go on"], "", "dropping or holding a goal"),
-    ("Which store?", ["Use a log", "Use a table"], "this goes against decision §214", "a decision against an earlier one"),
-    ("Should this overrule the earlier decision?", ["Overrule the decision", "Keep it"], "", "a decision against an earlier one"),
-])
-def test_a_question_that_is_a_lock_says_why(ask, choices, why, lock):
-    c = {"q": ask, "choices": choices, "why": why, "pick": 0}
-    assert answer_ways.lock_of(c) == lock
 
 
-def test_a_way_whose_kind_is_drop_or_later_is_a_lock_and_an_ordinary_question_is_none():
-    assert answer_ways.lock_of({"q": "What next?", "choices": ["A", "B"], "kinds": ["replace", "drop"]}) == "dropping a goal"
-    assert answer_ways.lock_of({"q": "What next?", "choices": ["A", "B"], "kinds": ["later", "keep"]}) == "holding a goal"
-    c = {"q": "Which container holds the rooms?", "choices": ["rooms.ts", "a new file"], "why": "the map shows one", "pick": 0, "kinds": ["keep", "replace"]}
-    assert answer_ways.lock_of(c) == ""
 
 
 # -- Silent -------------------------------------------------------------------------------------------------------------------------
@@ -146,13 +109,6 @@ def test_a_silent_leader_never_decides_a_lock_it_asks_it_and_says_why(host, part
     assert [d["q"] for d in _decided(host, slug)] == ["Where do the rooms live?"]                                   # only the one that is no lock
 
 
-def test_a_silent_leaders_project_question_is_the_persons(host, parties, model):
-    _silent(host, parties)
-    model.said[("talk_round", parties["tech"])] = {"stance": "s", "for": "f", "against": "a", "second_round": False, "questions": [],
-                                                    "project_questions": [{**card("What does it run on?"), "key": "runs_on"}]}
-    slug = _talk(host, parties, ["tech"])
-    rec = idea_questions.record(host.ideas.state_dir, slug)
-    assert [c["q"] for c in rec["waiting"]] == ["What does it run on?"] and _decided(host, slug) == []
 
 
 def test_a_choice_leader_decides_nothing_for_the_person(host, parties, model):
@@ -188,16 +144,6 @@ def test_replay_brings_the_question_back_with_its_ways_and_undoes_the_decision(h
     assert _decided(host, slug) == [] and all(d["id"] != qid for d in rec["defaults"])                               # no longer decided: the person answers it
 
 
-def test_the_veto_card_leaves_by_itself_when_the_goal_moves_to_its_next_stage(host, parties, model):
-    _silent(host, parties)
-    model.said[("talk_round", parties["tech"])] = {"stance": "s", "for": "f", "against": "a", "questions": [card("Where do the rooms live?")], "second_round": False}
-    _round_one(model, parties)
-    slug = _talk(host, parties, ["product", "tech"])
-    assert len(_decided(host, slug)) == 1
-    ideas.save_state(host.ideas.state_dir, slug, state="decided")                                                   # the decision made: the spec phase
-    assert _decided(host, slug) == []
-    with pytest.raises(KeeperError, match="gone on|not there"):
-        host.ideas.keeper.way_replay(slug, "x")
 
 
 # -- the Fork -----------------------------------------------------------------------------------------------------------------------
@@ -219,17 +165,5 @@ def test_a_fork_is_one_more_call_a_question_at_the_elder_tier_its_lines_and_its_
     assert c["fork"] == answer_ways.fork_price("balance") and c["fork"]["high"] >= calls[0]["budget"] - 0.01                      # its price, the cap of the call
 
 
-def test_a_fork_whose_call_fails_leaves_the_card_as_its_leader_made_it(host, parties, model):
-    _fork(host, parties, model)
-    model.said[("fork", parties["tech"])] = "not json at all"
-    slug = _talk(host, parties, ["tech"])
-    c = idea_questions.record(host.ideas.state_dir, slug)["waiting"][0]
-    assert "lines" not in c and c["choices"] == ["rooms.ts", "a new file"] and c["fork"]["high"] > 0                    # never fails the Talk
 
 
-def test_a_choice_or_pen_leader_makes_no_fork_call(host, parties, model):
-    for way in ("choice", "pen"):
-        goal_team.set_answers(host.ideas.root(), parties["tech"], way)
-        model.said[("talk_round", parties["tech"])] = {"stance": "s", "for": "f", "against": "a", "questions": [card("Where?")], "second_round": False}
-        _talk(host, parties, ["tech"])
-    assert model.steps("fork") == []

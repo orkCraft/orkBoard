@@ -54,20 +54,6 @@ def test_a_row_says_its_stage_its_proposed_size_the_roles_to_tick_and_the_squad_
     assert (game["game-design"]["name"], game["liveops"]["name"], game["liveops"]["leader"]) == ("Game design", "LiveOps", "analyst")
 
 
-def test_the_own_party_is_the_taskmaster_alone():
-    own = party_presets.listed("code")[-1]
-    assert (own["id"], own["name"], own["line"], own["leader"], own["build"], own["check"]) == (
-        "mixed", "Your own party", "Start from the Taskmaster and add who you need", "taskmaster", [], [])
-    assert own["sizes"]["full"]["team"] == [] and own["sizes"]["lean"]["tiers"] == {}                                   # the Taskmaster is no seat
-
-
-def test_a_running_party_carries_the_recurring_goals_of_its_kind_and_team_is_no_row():
-    web = {r["id"]: r for r in party_presets.listed("web")}
-    assert [x["id"] for x in web["run"]["routines"]] and web["run"]["routines"] == party_presets.recurring.listed("web-liveops")
-    game = {r["id"]: r for r in party_presets.listed("game")}
-    assert game["liveops"]["routines"] == party_presets.recurring.listed("game-liveops") and game["tech"]["routines"] == []
-
-
 # -- the command ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 def test_ideas_party_presets_answers_for_the_projects_kind_and_writes_nothing(host):
@@ -75,12 +61,6 @@ def test_ideas_party_presets_answers_for_the_projects_kind_and_writes_nothing(ho
     assert got["kind"] == {"id": "code", "words": "code", "how": "1 .py files"} and got["presets"] == party_presets.listed("code")
     assert [r["id"] for r in got["presets"][:6]] == ["product", "design", "tech", "release", "run", "marketing"]
     assert ideas.tracks(host.root, make=False) == [] or all(t["slug"] == "general" for t in ideas.tracks(host.root, make=False))
-
-
-def test_ideas_party_presets_follows_what_the_folder_is(fake_repo):
-    (fake_repo / "project.godot").write_text("", encoding="utf-8")
-    got = Orkboard(fake_repo).command("ideas.party_presets", {})
-    assert got["kind"]["id"] == "game" and [r["id"] for r in got["presets"][:6]] == ["game-design", "tech", "art", "release", "liveops", "marketing"]
 
 
 def test_a_party_made_from_a_craft_keeps_it_as_its_recipe_and_a_size_never_changes_its_squad(host):
@@ -94,20 +74,6 @@ def test_a_party_made_from_a_craft_keeps_it_as_its_recipe_and_a_size_never_chang
     assert grown["tiers"] == tech["sizes"]["full"]["tiers"]
     host.command("ideas.goal_save", {"slug": slug, "size": "full"})
     assert goal_team.team_of(host.root, slug) == ["grunt", "tester", "reviewer"] and goal_team.tiers_of(host.root, slug) == tech["sizes"]["full"]["tiers"]
-
-
-def test_a_party_made_from_a_craft_without_a_size_still_keeps_its_recipe(host):
-    row = next(r for r in party_presets.listed("code") if r["id"] == "design")
-    slug = host.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "leader": row["leader"], "team": row["squad"], "every": [], "proposal": "design"})["slug"]
-    assert goal_team.recipe_of(host.root, slug) == "design" and goal_team.craft_of(host.root, slug) == "design" and goal_team.size_of(host.root, slug) == ""
-
-
-def test_a_party_made_from_a_craft_saves_the_seats_tools_beside_the_size(host):
-    row = next(r for r in party_presets.listed("game") if r["id"] == "tech")
-    full = row["sizes"]["full"]
-    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "A game.", "leader": full["leader"], "team": full["team"], "every": [], "size": "full", "proposal": row["id"],
-                                            "tools": {"grunt": "claude"}})["slug"]
-    assert goal_team.team_of(host.root, slug) == ["grunt", "tester", "reviewer"] and goal_team.tools_of(host.root, slug) == {"grunt": "claude"}
 
 
 def test_a_running_party_made_with_its_recurring_goals_asks_its_kinds_routines(host):

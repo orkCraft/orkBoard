@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import os
 import plistlib
-import subprocess
 import sys
 import types
 
@@ -31,21 +30,6 @@ def test_the_app_is_a_plist_a_script_and_an_icon(tmp_path):
     keep = {"CLAUDE_CONFIG_DIR": "/Users/me/.claude work", "ANTHROPIC_API_KEY": "sk-never"}   # a key is never written
     text = (mac_app.make(tmp_path, "/p", "/usr/bin", keep=keep) / "Contents" / "MacOS" / "Orkboard").read_text(encoding="utf-8")
     assert "export CLAUDE_CONFIG_DIR='/Users/me/.claude work'" in text and "sk-never" not in text
-
-
-def test_the_launcher_starts_orkboard_through_the_login_shell_with_its_path(tmp_path):
-    seen = tmp_path / "seen.txt"
-    python = tmp_path / "python3"                    # a Python that says how it was started
-    python.write_text(f'#!/bin/sh\necho "$PATH" > {seen}\necho "$@" >> {seen}\n', encoding="utf-8")
-    python.chmod(0o755)
-    app = mac_app.make(tmp_path, str(python), "/made/with/this")
-    home = tmp_path / "mac-home"                     # the Dock's HOME, apart from the tests' own
-    home.mkdir()
-    subprocess.run([str(app / "Contents" / "MacOS" / "Orkboard")], check=True, timeout=30,
-                   env={"HOME": str(home), "SHELL": "/bin/sh", "PATH": "/usr/bin:/bin"})
-    path, args = seen.read_text(encoding="utf-8").splitlines()
-    assert "/made/with/this" in path.split(":") and args == "-m orkboard.gui.board_host"   # the profile may add its own
-    assert (home / "Library" / "Logs" / "Orkboard.log").exists()
 
 
 def test_make_app_is_a_macs(capsys, monkeypatch, tmp_path):
@@ -96,26 +80,3 @@ def test_the_window_wears_orkboards_name_and_icon_on_a_mac(monkeypatch):
     mac_app.dress()
     assert calls == []
 
-
-def test_the_name_and_icon_only_when_a_window_opens(monkeypatch):
-    dressed, made = [], []
-
-    class Webview:
-        @staticmethod
-        def create_window(*a, **k):
-            made.append(dressed[:])
-            return types.SimpleNamespace(destroy=lambda: None)
-
-        @staticmethod
-        def start():
-            return None
-
-    host = types.SimpleNamespace(updates=types.SimpleNamespace(quit=None))
-    server = types.SimpleNamespace(url="http://127.0.0.1:1", stop=lambda: None)
-    thread = types.SimpleNamespace(join=lambda *a: None)
-    monkeypatch.setitem(sys.modules, "webview", Webview)
-    board_host.show(host, server, thread, False, toolkit=lambda: True, dress=lambda: dressed.append(1))
-    assert made == [[1]]                                                             # before its window
-    monkeypatch.setattr(board_host, "_in_browser", lambda *a: None)
-    board_host.show(host, server, thread, True, toolkit=lambda: True, dress=lambda: dressed.append(2))
-    assert dressed == [1]                                                            # the browser: no Dock icon

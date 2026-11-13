@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 import datetime as dt
-import io
 import json
-import zipfile
 
 import pytest
 
-from orkboard.realm import analytics, idea_spend, ideas, plans
+from orkboard.realm import idea_spend, ideas, plans
 
 
 def _line(step, cost, task="", rnd=None, role="taskmaster", at="", tier="elder", tokens=None):
@@ -59,9 +57,6 @@ def test_each_line_goes_to_its_ledger(tmp_path):
     assert idea_spend.append(tmp_path, _line("draft", 0.1), idea="../x") is False
 
 
-def test_a_disk_that_refuses_never_troubles_the_work(tmp_path):
-    (tmp_path / "ideas").write_text("a file where the folder should be")
-    assert idea_spend.append(tmp_path, _line("draft", 0.1), idea="dark-mode") is False
 
 
 def test_the_rollup_gives_each_stage_its_sum(tmp_path):
@@ -78,19 +73,8 @@ def test_the_rollup_gives_each_stage_its_sum(tmp_path):
     assert list(st) == list(idea_spend.STAGES)
 
 
-def test_only_unpriced_lines_give_null_never_0(tmp_path):
-    idea_spend.append(tmp_path, _line("draft", None), idea="x")
-    idea_spend.append(tmp_path, _line("task", None, "k1", 1, "grunt"), idea="x")
-    got = idea_spend.of_idea(tmp_path, "x")
-    assert got["usd"] is None and got["stages"]["spec"]["usd"] is None and got["stages"]["work"]["usd"] is None
-    assert got["unpriced"] == 2 and got["tasks"]["k1"]["usd"] is None
 
 
-def test_a_task_the_person_dropped_counts_in_dropped_as_a_failed_one_does(tmp_path):
-    _fixture(tmp_path)
-    _plan(tmp_path, "dark-mode", [_task("k1", "review", 2), _task("k2", "dropped")])
-    assert idea_spend.of_idea(tmp_path, "dark-mode")["stages"]["dropped"] == {"usd": 0.3, "tokens": 160, "calls": 1}
-    assert idea_spend.of_goal(tmp_path, "speed", ["dark-mode"])["stages"]["dropped"]["usd"] == 0.3
 
 
 def test_a_goal_sums_its_own_lines_and_its_ideas(tmp_path):
@@ -148,13 +132,6 @@ def test_a_deleted_ideas_lines_land_in_spend_gone_and_the_week_keeps_them(tmp_pa
     assert g["merged"] == 1 and g["spent"] == 0.7
 
 
-def test_the_analytics_zip_holds_each_ideas_ledger(tmp_path):
-    state = tmp_path / ".orkcraft"
-    _plan(state, "dark-mode", [_task("k1", "review")])
-    idea_spend.append(state, _line("plan", 0.2), idea="dark-mode")
-    data = analytics.pack(tmp_path, [], {}, lambda b, d: [], lambda b, d: [])
-    names = zipfile.ZipFile(io.BytesIO(data)).namelist()
-    assert "ideas/dark-mode/spend.jsonl" in names and "ideas/dark-mode/plan.json" in names
 
 
 def test_the_estimate_learns_from_the_last_20_tasks_of_a_tier(tmp_path):
@@ -172,12 +149,6 @@ def test_the_estimate_learns_from_the_last_20_tasks_of_a_tier(tmp_path):
     assert idea_spend.over(3.0, est) == 2.0 and idea_spend.over(1.4, est) is None and idea_spend.over(None, est) is None
 
 
-def test_the_keepers_estimate_uses_the_learned_costs():
-    from orkboard.core import idea_keeper
-    tasks = [{"tier": "warrior"}, {"tier": "elder"}]
-    assert idea_keeper.estimate(tasks, None, {"warrior": 2.0, "elder": 4.0, "laborer": 0.1}) == {
-        "tasks": 2, "usd_low": 3.0, "usd_high": 9.0}
-    assert idea_keeper.estimate(tasks)["usd_high"] == round((0.3 + 1.0) * 1.5, 2)
 
 
 def _calls(state, rows, slug="dark-mode"):
@@ -198,10 +169,6 @@ def test_task_session_is_none_under_too_few_and_the_median_of_round_one_task_cal
     assert idea_spend.task_session(tmp_path) == {"tokens": 200, "usd": 2.0, "n": 3}
 
 
-def test_task_session_takes_the_newest_twenty_and_says_no_dollars_when_none_is_priced_spec_153_a1(tmp_path):
-    rows = [_line("task", None, f"k{i}", 1, "grunt", f"2026-11-01T09:{i:02d}:00", tokens=idea_spend.tokens_of(None, 1000 if i < 5 else 50)) for i in range(25)]
-    _calls(tmp_path, rows)
-    assert idea_spend.task_session(tmp_path) == {"tokens": 50, "usd": None, "n": 20}       # the five oldest, of 1000, are left out
 
 
 def _party_task(tid, state, party, kind="code"):

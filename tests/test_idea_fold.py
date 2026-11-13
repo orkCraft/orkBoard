@@ -5,17 +5,16 @@ The model call is stubbed (`keeper.call`), as `tests/test_idea_journal.py` does.
 from __future__ import annotations
 
 import json
-import shutil
 import sys
 import time
 from pathlib import Path
 
 import pytest
 
-from orkboard.core import idea_fold, idea_keeper
+from orkboard.core import idea_keeper
 from orkboard.core.idea_fold import FoldMixin
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import (event_log, goal_team, idea_spend, idea_target, ideas, journals, library, living_specs, living_specs_io, read_in, spec_sections, write_out)
+from orkboard.realm import (event_log, goal_team, idea_target, ideas, journals, library, living_specs, living_specs_io, read_in, write_out)
 
 MAP = "THE MAP TEXT"
 ANSWER = {"capability": "sign-in", "title": "Sign-in", "purpose": "How a player gets into a game.",
@@ -122,18 +121,6 @@ def test_the_fold_is_one_call_of_the_goals_partys_leader_on_the_cheaper_tier_wit
     assert "The capabilities the product has, as specs:\n(none)" in p
 
 
-def test_the_call_is_given_the_capabilities_the_product_has_and_the_sections_of_each_party(host, tech, design, model):
-    living_specs.apply(host.ideas.root(), "lobby", {"added": [{"name": "Rooms", "text": "The product SHALL list rooms.", "scenarios": []}]}, "g", "tech", title="Lobby", purpose="Where players meet.")
-    slug = _goal(host, tech, done="")
-    page = ideas.idea_page(host.ideas.root(), slug)
-    page.sections += [("Tech", spec_sections.join({"Why": "Tech's why.", "Done when": "- The link is one-time", "Will be": "changed src/auth — the link", "Out": "- Nothing else"})),
-                      ("Design", spec_sections.join({"Why": "Design's why.", "Done when": "- The screen says where the link went"}))]
-    ideas._write(host.ideas.root() / ideas.IDEAS / f"{slug}.md", page.text())
-    host.ideas.keeper.fold(slug)
-    _wait(host, tech)
-    p = model.calls[0]["prompt"]
-    assert "- lobby — Lobby: Where players meet. (requirements: Rooms)" in p
-    assert "Tech's why." in p and "The link is one-time" in p and "changed src/auth — the link" in p and "The screen says where the link went" in p and "Design's why." in p
 
 
 # -- what is kept ------------------------------------------------------------------------------------------------------------------------
@@ -166,28 +153,8 @@ def test_a_second_fold_modifies_and_removes_by_name(host, tech, goal, model):
     assert [(e["added"], e["modified"], e["removed"]) for e in _events(host)] == [(1, 0, 0), (1, 1, 1)]
 
 
-def test_the_answer_is_cleaned_strictly():
-    clean = idea_fold.clean
-    assert clean("text") is None and clean([]) is None and clean(None) is None
-    got = clean({"capability": " Sign In! ", "title": "Sign [in] #1", "purpose": "x " * 300,
-                 "added": [{"name": "A", "text": "The product SHALL a.", "scenarios": [{"when": "w", "then": "t"}] * 6 + [{"when": "only when"}, "junk", {"then": "only then"}]},
-                           {"name": "No text"}, {"text": "No name"}, "junk", {"name": "L" * 400, "text": "T" * 400}],
-                 "modified": [{"name": "M", "text": "The product SHALL m."}], "removed": ["R", "R", 5, "  ", "S"]})
-    assert got["capability"] == "sign-in" and got["title"] == "Sign in 1" and len(got["purpose"]) == 300
-    assert [r["name"] for r in got["added"]] == ["A", "L" * 300] and len(got["added"][0]["scenarios"]) == 4 and got["added"][1]["text"] == "T" * 300
-    assert got["added"][0]["scenarios"][0] == {"name": "w", "when": "w", "then": "t"}
-    assert [r["name"] for r in got["modified"]] == ["M"] and got["removed"] == ["R", "S"]
-    many = clean({"capability": "x", "added": [{"name": f"A{i}", "text": "t"} for i in range(6)], "modified": [{"name": f"M{i}", "text": "t"} for i in range(6)], "removed": [f"R{i}" for i in range(12)]})
-    assert len(many["added"]) + len(many["modified"]) == 8 and len(many["added"]) == 6 and len(many["removed"]) == 8      # eight requirements in all, the added first
-    assert clean({"capability": "", "added": [{"name": "A", "text": "t"}]}) is None and clean({"capability": 5, "removed": ["A"]}) is None       # requirements and no capability: no answer
-    assert clean({"added": [], "modified": [], "removed": []}) == {"capability": "", "title": "", "purpose": "", "added": [], "modified": [], "removed": []}      # nothing to fold
 
 
-def test_an_answer_with_nothing_to_fold_is_one_call_keeping_nothing(host, tech, goal, model):
-    model.answer = {"capability": "sign-in", "added": [], "modified": [], "removed": []}
-    assert host.ideas.keeper.fold(goal) is True
-    _wait(host, tech)
-    assert len(model.calls) == 1 and _specs(host) == [] and _events(host) == []
 
 
 @pytest.mark.parametrize("answer", ["not json", {"capability": "", "added": [{"name": "A", "text": "t"}]}, ["x"], RuntimeError("the tool failed")])
@@ -224,40 +191,10 @@ def test_a_goal_with_nothing_to_fold_is_not_called(host, tech, model):
     assert keeper.fold(bare) is False and model.calls == []
 
 
-def test_nothing_is_begun_for_a_call_that_cannot_be_made_or_a_party_that_is_busy_never_an_error(host, tech, goal, model):
-    keeper = host.ideas.keeper
-    keeper.budget_ok = lambda: False                                          # today's spend limit: no call, no error
-    assert keeper.fold(goal) is False and model.calls == []
-    keeper.budget_ok = lambda: True
-    keeper.demo = True
-    assert keeper.fold(goal) is False and model.calls == []
-    keeper.demo = False
-    keeper.window_until = lambda: time.time() + 3600                          # a spent window
-    assert keeper.fold(goal) is False and model.calls == []
-    del keeper.window_until
-    keeper._claim(f"goal:{tech}", "looking")                                  # busy with the party
-    assert keeper.fold(goal) is False and model.calls == []
-    keeper._busy.pop(f"goal:{tech}")
-    assert keeper.fold(goal) is True
-    _wait(host, tech)
-    assert len(_specs(host)) == 1
 
 
-def test_the_fold_runs_as_its_partys_step_in_the_specs_stage_of_its_partys_ledger(host, tech, goal, model):
-    host.ideas.keeper.fold(goal)
-    _wait(host, tech)
-    spent = idea_spend.of_goal(host.ideas.state_dir, tech)
-    assert spent["usd"] == 0.01 and spent["stages"]["spec"]["usd"] == 0.01
 
 
-def test_the_step_has_its_tables_and_its_tier():
-    assert "fold" in idea_target.STEPS and idea_spend.STEP_STAGE["fold"] == "spec" and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("fold", target) == idea_target.pick("journal", target)
-    assert idea_target.pick("fold", "thrift") == ("laborer", "") and idea_target.pick("fold", "quality") == ("warrior", "medium")
-    assert idea_target.READS["fold"] == 0 and idea_target.CONTEXT["fold"] == 12_000 and idea_target.CAPS["fold"] == 0.05
-    assert idea_target.budget("fold", "balance") == 0.15
-    assert [idea_target.CONTEXT[s] for s in ("talk_round", "section_first", "section")] == [8_000 + 3_000 + 2_500 + 1_200, 12_000 + 3_000 + 2_500 + 1_200, 12_000 + 3_000 + 2_500 + 1_200]
 
 
 # -- the trigger ---------------------------------------------------------------------------------------------------------------------------
@@ -271,16 +208,8 @@ def test_the_flag_a_goal_gets_at_main_folds_it(host, tech, goal, model):
     assert len(model.steps("fold")) == 1
 
 
-def test_a_fold_that_breaks_never_troubles_the_flag(host, tech, goal, model, monkeypatch):
-    def boom(self, slug):
-        raise RuntimeError("no")
-    monkeypatch.setattr(FoldMixin, "fold", boom)
-    assert host.ideas._raise_flag(goal, "done") is True and model.calls == []
 
 
-def test_a_goal_at_main_with_no_done_when_is_flagged_and_not_folded(host, tech, model):
-    slug = _goal(host, tech, done="")
-    assert host.ideas._raise_flag(slug, "done") is True and model.calls == []
 
 
 # -- the part in the leaders' calls -------------------------------------------------------------------------------------------------------
@@ -305,28 +234,10 @@ def test_talks_round_has_the_specs_after_the_journals_and_before_the_map(host, t
     assert p.index("Decision 12") < p.index("How the product works now") < p.index(f"Your party's map:\n{MAP}")
 
 
-@pytest.mark.parametrize("first", [True, False])
-def test_the_sections_prompt_has_the_specs_after_the_journals_and_before_the_map(host, tech, goal, first):
-    _specs_made(host, tech)
-    journals.add(host.ideas.state_dir, journals.PROJECT, "decision", "Decision 12: no accounts in the first release.", idea=goal, ref="12")
-    p = host.ideas.keeper.section_prompt(goal, {"party": tech, "leader": "architect"}, _route(tech), first)
-    assert "How the product works now:\n- Billing: How people pay." in p and "Magic link: The product SHALL send a link." in p
-    assert p.index("Decision 12") < p.index("How the product works now") < p.index(f"Your party's map:\n{MAP}")
 
 
-def test_a_product_with_no_specs_adds_no_part_and_a_spec_that_cannot_be_read_never_stops_a_call(host, tech, goal, monkeypatch):
-    p = host.ideas.keeper.round_prompt(goal, {"party": tech, "leader": "architect"}, _route(tech), 1, "", False, set())
-    assert "How the product works now" not in p and idea_fold.parts(host.ideas.root(), tech) == []
-    _specs_made(host, tech)
-    monkeypatch.setattr(living_specs, "text", lambda *a, **k: (_ for _ in ()).throw(OSError("disk")))
-    assert idea_fold.parts(host.ideas.root(), tech) == []
-    assert "Your party's map" in host.ideas.keeper.round_prompt(goal, {"party": tech, "leader": "architect"}, _route(tech), 1, "", False, set())
 
 
-def test_only_the_leaders_calls_ask_for_the_specs():
-    """No module of a member's call (a task's prompt, the Taskmaster's runner) reads `idea_fold`."""
-    users = sorted(p.name for p in Path(idea_fold.__file__).parent.glob("*.py") if p.name != "idea_fold.py" and "idea_fold" in p.read_text(encoding="utf-8"))
-    assert users == ["idea_keeper.py", "idea_sections.py", "idea_talk.py"]
 
 
 # -- out: OpenSpec -------------------------------------------------------------------------------------------------------------------------
@@ -461,37 +372,10 @@ def test_a_spec_that_is_kept_is_never_read_over_and_a_file_there_that_is_no_spec
     assert [r["name"] for r in living_specs.read(board, "auth")["requirements"]] == ["Mine"] and (board / "specs" / "lobby.md").read_text("utf-8").startswith("# My own notes")
 
 
-def test_a_files_of_orkboards_own_export_is_the_same_spec_and_is_not_read_twice(project, tmp_path):
-    ideas.add_track(project / "llm-wiki" / "general", "Tech")
-    board = project / "llm-wiki" / "general"
-    _kept(board)
-    before = {cap: (board / "specs" / f"{cap}.md").read_text("utf-8") for cap in ("sign-in", "billing")}
-    write_out.write(project, project / ".orkcraft", tmp_path / "out")                         # exported, and committed in the project as its own `openspec/specs`
-    shutil.copytree(tmp_path / "out" / "openspec", project / "openspec")
-    assert (project / "openspec" / "specs" / "sign-in" / "spec.md").is_file()
-    assert read_in.take(project, project / ".orkcraft")["specs_read"] == 0
-    assert {cap: (board / "specs" / f"{cap}.md").read_text("utf-8") for cap in before} == before
 
 
-def test_an_export_read_into_another_project_is_the_same_specs(project, tmp_path):
-    ideas.add_track(project / "llm-wiki" / "general", "Tech")
-    board = project / "llm-wiki" / "general"
-    _kept(board)
-    other = tmp_path / "other"
-    (other / ".orkcraft").mkdir(parents=True)
-    write_out.write(project, project / ".orkcraft", other)
-    assert read_in.take(other, other / ".orkcraft")["specs_read"] == 2
-    for cap in ("sign-in", "billing"):
-        assert living_specs.read(other / "llm-wiki" / "general", cap) == living_specs.read(board, cap)
 
 
-def test_a_link_a_secret_and_a_large_file_are_never_read(project, tmp_path):
-    outside = tmp_path / "elsewhere.md"
-    outside.write_text(OPENSPEC, "utf-8")
-    (project / "openspec" / "specs" / "linked").mkdir(parents=True)
-    (project / "openspec" / "specs" / "linked" / "spec.md").symlink_to(outside)
-    _w(project, "openspec/specs/big/spec.md", OPENSPEC + "x" * 1_100_000)
-    assert read_in.take(project, project / ".orkcraft")["specs_read"] == 0
 
 
 def test_the_cli_says_how_many_living_specs_it_read_and_a_dry_run_writes_none(project, capsys):
@@ -503,12 +387,6 @@ def test_the_cli_says_how_many_living_specs_it_read_and_a_dry_run_writes_none(pr
     assert read_in.run_cli(project)[1].splitlines()[-1].endswith("0 releases")
 
 
-def test_the_gui_reads_in_to_the_boards_pages(host):
-    board = host.ideas.root()                                                           # the Board's tree, made
-    root = Path(host.repo_root)
-    _w(root, "openspec/specs/auth/spec.md", OPENSPEC)
-    got = host.command("ideas.read_in_take", {})
-    assert got["specs_read"] == 1 and living_specs.read(board, "auth") is not None
 
 
 

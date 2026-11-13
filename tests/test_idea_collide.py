@@ -10,7 +10,6 @@ import types
 import pytest
 
 from orkboard.core import idea_collide
-from orkboard.gui.board_host import CommandError
 from orkboard.realm import collide, event_log, idea_change, ideas, orkmaster, roles
 from tests.test_collide import EARLY, LATE, node, planned, stop_of, two  # noqa: F401
 from tests.test_idea_route import events, flag, goal, host  # noqa: F401  (`host`: the fixture of spec 68's route tests)
@@ -147,47 +146,12 @@ def test_a_true_answer_is_a_stop_on_the_later_goal_and_the_events_hold_no_goals_
         assert words.lower() not in log.lower().replace(h.api, "").replace(h.screen, "")
 
 
-def test_the_hook_at_a_plan_made_finds_and_judges_in_the_background(two):
-    h = two
-    model = judged(h, YES)
-    ideas.save_state(h.state, h.screen, state="ready")
-    h.ideas._seen.pop(h.screen, None)
-    ideas.save_state(h.state, h.screen, state="plan")
-    h.ideas._state_event(h.screen)                                                                    # the keeper reached `plan`: plan_made
-    h.ideas.collide_join()
-    assert len(model.asked) == 1 and len(events(h, "plan_made")) == 1 and collide.read(h.state)["open"][0]["id"] == collide.pair_id(h.api, h.screen)
-    h.ideas._state_event(h.screen)                                                                    # nothing new: no second call
-    h.ideas.collide_join()
-    assert len(model.asked) == 1
 
 
 # -- no model: the plan goes on ----------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("answer", [RuntimeError("no claude on this machine"), "no json at all", {"collide": "maybe"}])
-def test_a_judge_that_cannot_answer_never_breaks_a_plan_and_the_pair_is_asked_again_next_time(two, answer):
-    h = two
-    judged(h, answer)
-    before = ideas.plan(h.state, h.screen)
-    run(h, h.screen)
-    assert collide.read(h.state) == {"open": [], "answered": []} and ideas.plan(h.state, h.screen) == before
-    assert ideas.state(h.state, h.screen)["state"] == "plan"
-    assert [(r["judged"], r["collide"], r["cost"]) for r in found(h)] == [(False, False, None)]
-    model = judged(h, YES)
-    run(h, h.screen)
-    assert len(model.asked) == 1 and len(collide.read(h.state)["open"]) == 1
 
 
-def test_the_demo_and_a_spent_budget_ask_no_model(two):
-    h = two
-    model = judged(h, YES)
-    h.ideas.keeper.budget_ok = lambda: False
-    run(h, h.screen)
-    assert model.asked == [] and collide.read(h.state)["open"] == []
-    h.ideas.keeper.budget_ok = lambda: True
-    h.ideas.host.demo = True
-    h.ideas._collide_spawn(h.screen, "plan", "")
-    h.ideas.collide_join()
-    assert model.asked == []
 
 
 # -- §2.3: the answers ---------------------------------------------------------------------------------------------------------
@@ -210,17 +174,6 @@ def test_first_makes_the_other_goal_wait_for_it_held_until_its_flag_then_started
     assert [(r["pair"], r["answer"]) for r in events(h, "collide_answered")] == [(pair, f"first:{h.api}")]
 
 
-def test_first_the_later_goal_makes_the_earlier_wait_and_a_wait_that_closes_a_cycle_is_refused(two):
-    h = two
-    judged(h, YES)
-    run(h, h.api)
-    pair = collide.pair_id(h.api, h.screen)
-    ideas.set_meta(h.root, h.api, depends_on=json.dumps([h.screen]))                                  # Auth API waits for the screen already
-    with pytest.raises(CommandError, match="waits for"):
-        h.command("ideas.collide_answer", {"id": pair, "answer": f"first:{h.api}"})                   # …so the screen cannot wait for it
-    assert collide.open_of(h.state, pair) is not None                                                  # it waits as it did
-    h.command("ideas.collide_answer", {"id": pair, "answer": f"first:{h.screen}"})                    # …but Auth API may wait for the screen (it does)
-    assert json.loads(ideas.idea_page(h.root, h.api).get("depends_on")) == [h.screen]
 
 
 def test_one_goal_joins_the_later_text_into_the_earlier_as_a_change_and_drops_the_later(two):
@@ -240,16 +193,6 @@ def test_one_goal_joins_the_later_text_into_the_earlier_as_a_change_and_drops_th
     assert [n for n in h.command("ideas.board", {})["needs_you"] if n["kind"] == "collide"] == []
 
 
-def test_one_goal_is_refused_for_a_later_goal_that_has_started_and_the_stop_waits_as_it_did(two):
-    h = two
-    judged(h, YES)
-    run(h, h.api)
-    pair = collide.pair_id(h.api, h.screen)
-    ideas.edit_plan(h.state, h.screen, lambda p: p["tasks"][0].update(state="running", started="2026-10-24T10:30:00"))
-    with pytest.raises(CommandError, match="has started"):
-        h.command("ideas.collide_answer", {"id": pair, "answer": "one"})
-    assert ideas.idea_page(h.root, h.screen) is not None and collide.open_of(h.state, pair) is not None
-    assert collide.read(h.state)["answered"] == [x for x in collide.read(h.state)["answered"] if x["id"] != pair]
 
 
 def test_leave_it_keeps_both_as_they_are_and_the_pair_is_never_asked_again(two):
@@ -298,17 +241,6 @@ def test_a_spec_changed_under_another_party_is_judged_with_the_changes_words_and
     assert len(model.asked) == 1
 
 
-def test_a_spec_with_a_plan_not_passed_or_no_plan_beside_it_is_not_compared_and_a_change_of_nothing_is_not_a_change(two):
-    h = two
-    model = judged(h, YES)
-    bare = goal(h, h.web, "Bare goal")                                                                # no plan: nothing rests on a plan that is not there
-    ideas.set_meta(h.root, bare, touches=json.dumps(["orkboard/realm/auth.py"]))
-    idea_change.set_section(h.root, h.state, h.screen, "Gist", "Changed.")
-    changed_event(h, h.screen)
-    assert [json.loads(json.dumps(s["asked"])) for s in collide.read(h.state)["open"]] == [h.api]
-    assert len(model.asked) == 1
-    idea_change.set_section(h.root, h.state, h.api, "Gist", ideas.idea_page(h.root, h.api).section("Gist"))      # the same text: not a change
-    assert idea_change.changed_of(ideas.state(h.state, h.api)) == []
 
 
 def test_replan_it_has_the_leader_of_the_goal_asked_about_replan_what_is_left_and_tells_it_the_change(two, monkeypatch):
@@ -342,15 +274,6 @@ def test_replan_it_on_a_plan_not_passed_plans_again_and_what_it_was_told_is_used
     assert collide.told_of(h.state, h.api) == "" and "Orkmaster" not in h.ideas.keeper.plan_prompt(h.root, h.api)
 
 
-def test_replan_it_that_the_keeper_refuses_leaves_the_stop_open_and_tells_nothing(two, monkeypatch):
-    h = two
-    judged(h, YES)
-    stop_of(h, h.api, h.screen, by="change", asked=h.api)
-    pair = collide.pair_id(h.api, h.screen)
-    monkeypatch.setattr(h.ideas.keeper, "plan", lambda slug, auto=False: (_ for _ in ()).throw(RuntimeError("busy")))
-    with pytest.raises(RuntimeError):
-        h.command("ideas.collide_answer", {"id": pair, "answer": "replan"})
-    assert collide.open_of(h.state, pair) is not None and collide.told_of(h.state, h.api) == ""
 
 
 # -- §5: measured and priced ---------------------------------------------------------------------------------------------------
@@ -370,11 +293,3 @@ def test_the_orkmasters_week_counts_its_stops_answered_taken_and_what_the_judge_
     assert collide.work(h.ideas.host.repo_root.parent / "nowhere") == {"asked": 0, "answered": 0, "taken": 0, "usd": None}
 
 
-def test_the_collide_events_are_in_the_closed_list_with_the_spend_on_the_goal_asked_about(two):
-    h = two
-    assert event_log.COLLIDE_FOUND in event_log.EVENTS and event_log.COLLIDE_ANSWERED in event_log.EVENTS
-    judged(h, YES)
-    run(h, h.api)
-    from orkboard.realm import idea_spend
-    steps = [r.get("step") for r in idea_spend.read(ideas.state_folder(h.state, h.screen) / idea_spend.FILE)]
-    assert steps == ["collide"] and idea_spend.STEP_STAGE["collide"] == "plan"

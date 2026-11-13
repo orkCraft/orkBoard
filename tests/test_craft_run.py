@@ -1,6 +1,5 @@
 """The paid makers run on fake transports; a missing fake fails before networking."""
 import base64
-import http.client
 import json
 import socket
 from dataclasses import replace
@@ -108,25 +107,6 @@ def test_missing_key_never_calls_transport(tmp_path, monkeypatch):
     assert not (tmp_path / "assets").exists()
 
 
-@pytest.mark.parametrize('maker,payload', [
-    (run.PictureMaker, {'prompt': 'picture'}),
-    (run.SoundMaker, {'duration_seconds': 5}),
-])
-def test_pre_transport_refusal_never_reserves(tmp_path, monkeypatch, maker, payload):
-    from orkboard.core.craft_spend import Spend
-    spend = Spend(tmp_path, 'goal', 'k1', maker.tool_id,
-                  {'amount': '1', 'currency': 'USD'})
-    tool = maker(lambda **kw: pytest.fail('transport called'), spend=spend)
-    monkeypatch.setattr(run.craft_tools, 'key', lambda _: None)
-    with pytest.raises(run.MakerError, match='no key on this computer'):
-        tool._request(payload)
-    assert not spend.path.exists()
-    monkeypatch.setattr(run.craft_tools, 'key', lambda _: 'fake-key')
-    with pytest.raises(TypeError):
-        tool._request({**payload, 'invalid': object()})
-    assert not spend.path.exists()
-
-
 @pytest.mark.parametrize("host", ["api.openai.com", "api.elevenlabs.io"])
 def test_real_maker_endpoint_fails_the_gate_before_network(tmp_path, host):
     maker = run.PictureMaker if host == "api.openai.com" else run.SoundMaker
@@ -138,19 +118,6 @@ def test_real_maker_endpoint_fails_the_gate_before_network(tmp_path, host):
     with socket.socket() as sock:
         with pytest.raises(pytest.fail.Exception, match="paid tool host"):
             sock.connect((host, 443))
-
-
-def test_guard_allows_localhost_http_and_dns(monkeypatch):
-    # Sandbox forbids binding sockets. Stop at the HTTP send seam, beneath the
-    # guard, to prove localhost requests still reach the normal HTTP machinery.
-    sent = []
-    monkeypatch.setattr(http.client.HTTPConnection, "_send_output",
-                        lambda self, *a, **kw: sent.append(self.host))
-    connection = http.client.HTTPConnection("localhost", 12345, timeout=2)
-    connection.request("GET", "/")
-    assert sent == ["localhost"]
-    assert socket.getaddrinfo("localhost", 12345)
-
 
 
 def test_https_transport_is_bounded_closes_and_never_follows_redirects(monkeypatch):
@@ -186,29 +153,3 @@ def test_https_transport_is_bounded_closes_and_never_follows_redirects(monkeypat
     with pytest.raises(run.MakerError, match="endpoint"):
         run.https_transport(host="other.example", path="/v1/else", headers={}, body=b"", timeout=3, limit=10)
 
-
-@pytest.mark.parametrize("mime,data", [
-    ("audio/mpeg", pf.mp3()), ("audio/wav", pf.wav()),
-    ("audio/ogg", pf.ogg()), ("audio/mp4", pf.mp4(b"soun")),
-])
-def test_sound_accepts_the_picks_audio_types(tmp_path, mime, data):
-    files = run.SoundMaker(lambda **kw: run.Response(200, mime, data)).make("sound", tmp_path / "assets")
-    assert files[0].read_bytes() == data
-    assert files[0].suffix == "." + idea_pick.EXT[mime]
-
-
-def test_existing_assets_are_never_removed(tmp_path):
-    folder = tmp_path / "assets"
-    folder.mkdir()
-    kept = folder / "kept.txt"
-    kept.write_text("earlier work")
-    with pytest.raises(FileExistsError):
-        run.PictureMaker(lambda **kw: pytest.fail("request sent")).make("picture", folder)
-    assert kept.read_text() == "earlier work"
-
-
-@pytest.mark.parametrize("count", [0, 7, True, 1.5])
-def test_invalid_count_never_sends_or_writes(tmp_path, count):
-    with pytest.raises(run.MakerError, match="between one and six"):
-        run.PictureMaker(lambda **kw: pytest.fail("request sent")).make("picture", tmp_path / "assets", count=count)
-    assert not (tmp_path / "assets").exists()

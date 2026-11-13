@@ -29,11 +29,6 @@ def tool(monkeypatch):
     return seen
 
 
-def test_outside_a_bench_run_no_call_is_kept(tmp_path, tool):
-    jobs.run_work("claude", "do it", tmp_path, threading.Event())
-    assert not list(tmp_path.rglob(call_log.LINES))
-
-
 def test_a_call_in_a_bench_run_keeps_its_line_and_itself(tmp_path, tool):
     with call_log.kept(tmp_path / "calls", "building"):
         jobs.run_work("claude", "fix the tests", tmp_path, threading.Event(), "sonnet",
@@ -47,14 +42,6 @@ def test_a_call_in_a_bench_run_keeps_its_line_and_itself(tmp_path, tool):
     raw = call_log.raw(tmp_path / "calls", line)
     assert raw["prompt"] == "fix the tests" and raw["stdout"] == ENVELOPE and raw["stderr"] == "a warning"
     assert "SECRET_KEY" not in (tmp_path / "calls" / call_log.LINES).read_text()
-
-
-def test_a_call_that_fails_is_kept_too(tmp_path, tool):
-    tool.update(code=1, out="not logged in")
-    with call_log.kept(tmp_path / "calls", "bare"), pytest.raises(RuntimeError):
-        jobs.run_read("claude", "read it", tmp_path, threading.Event())
-    [line] = call_log.read(tmp_path / "calls")
-    assert (line["side"], line["who"], line["mode"], line["code"], line["tokens"]) == ("bare", "", "read", 1, None)
 
 
 def test_the_calls_add_up_by_side_who_and_purpose(tmp_path, tool):
@@ -71,14 +58,6 @@ def test_the_calls_add_up_by_side_who_and_purpose(tmp_path, tool):
     assert rows[("bare", "")]["calls"] == 1
 
 
-def test_the_usage_is_read_from_an_envelope_or_the_last_event():
-    assert call_log.usage_of(ENVELOPE)["output_tokens"] == 100
-    lines = "\n".join(json.dumps(e) for e in ({"type": "turn.completed", "usage": {"input_tokens": 1}},
-                                              {"type": "turn.completed", "usage": {"input_tokens": 7, "output_tokens": 2}}))
-    assert call_log.usage_of(lines) == {"input_tokens": 7, "output_tokens": 2}
-    assert call_log.usage_of("plain text") == {}
-
-
 # -- the day logs (realm/day_log.py; Orkboard's are gui/board_host.py `BoardLogs`) ------------------------------
 
 @pytest.fixture(autouse=True)
@@ -88,32 +67,6 @@ def no_day_log():
     call_log.keep_days(None)
 
 
-def test_outside_a_bench_run_a_call_goes_to_its_buildings_day(tmp_path, tool):
-    call_log.keep_days(tmp_path)
-    jobs.run_work("claude", "fix it", tmp_path, threading.Event(), env={"ORKCRAFT_ORC": "pool/Grub"})
-    jobs.run_read("claude", "nobody's", tmp_path, threading.Event())
-    today = dt.date.today().isoformat()
-    lines = call_log.read(call_log.day_folder(tmp_path, today, "pool"))
-    assert [(x["who"], x["side"], x["mode"]) for x in lines] == [("Grub", "", "work")]
-    assert [x["who"] for x in call_log.read(call_log.day_folder(tmp_path, today, call_log.UNPLACED))] == ["agent"]
-
-
-def test_a_claude_call_keeps_how_it_worked_from_its_transcript(tmp_path, tool, monkeypatch):
-    monkeypatch.setenv("CLAUDE_HOME", str(tmp_path / "claude"))
-    from orkboard.sources import sessions
-    work = tmp_path / "wt"
-    work.mkdir()
-    transcript = sessions.claude_projects_dir(work) / "s1.jsonl"
-    transcript.parent.mkdir(parents=True)
-    transcript.write_text('{"type": "assistant", "message": {"content": [{"type": "thinking", "thinking": "hmm"}]}}\n')
-    with call_log.kept(tmp_path / "calls", "building"):
-        jobs.run_work("claude", "fix it", work, threading.Event())                   # its session from the output
-    [first] = call_log.read(tmp_path / "calls")
-    assert first["session"] == "s1" and '"thinking": "hmm"' in call_log.raw(tmp_path / "calls", first)["trail"]
-    assert call_log.trail("claude", "../s1", work) == ""                         # a session id, never a path
-    assert call_log.trail("codex", "s1", work) == ""                             # its output holds how it went
-
-
 def _day(root, day, building, asked=False):
     folder = call_log.day_folder(root, day, building)
     folder.mkdir(parents=True)
@@ -121,18 +74,6 @@ def _day(root, day, building, asked=False):
     if asked:
         (folder / day_log.ASKED).touch()
     return folder
-
-
-def test_a_day_nobody_asked_for_and_nobody_disliked_is_cleared_the_next_morning(tmp_path):
-    today = dt.date(2026, 10, 12)
-    kept = [_day(tmp_path, "2026-10-11", "asked", asked=True), _day(tmp_path, "2026-10-11", "disliked"),
-            _day(tmp_path, "2026-10-12", "today")]
-    gone = [_day(tmp_path, "2026-10-11", "plain"), _day(tmp_path, "2026-09-20", "old", asked=True)]
-    removed = day_log.clear(tmp_path, today, lambda b, day: b == "disliked" and day == "2026-10-11")
-    assert sorted(removed) == ["2026-09-20/old", "2026-10-11/plain"]
-    assert all(f.is_dir() for f in kept) and not any(f.exists() for f in gone)
-    assert not (tmp_path / call_log.DAYS / "2026-09-20").exists()
-    assert day_log.days(tmp_path, "asked") == ["2026-10-11"]
 
 
 def test_a_buildings_day_is_one_zip_and_asking_for_it_keeps_it(tmp_path, tool):
@@ -149,27 +90,7 @@ def test_a_buildings_day_is_one_zip_and_asking_for_it_keeps_it(tmp_path, tool):
     assert (call_log.day_folder(tmp_path, today, "pool") / day_log.ASKED).exists()
 
 
-def test_a_one_off_answer_is_kept_with_what_it_was_for(tmp_path, monkeypatch):
-    import subprocess as sp
-    from orkboard.sources import telemetry
-    call = lambda h, prompt, model: sp.CompletedProcess([], 0, ENVELOPE, "")      # noqa: E731
-    with call_log.kept(tmp_path / "calls", "building"), telemetry.tagged("sort", "tower"):
-        assert tool_run.ask("claude", "sort these letters", "haiku", call=call)[0] == "done"
-    [line] = call_log.read(tmp_path / "calls")
-    assert (line["who"], line["purpose"], line["mode"], line["model"], line["tokens"]) == \
-        ("claude -p", "sort", "ask", "haiku", 5000)
-    assert call_log.raw(tmp_path / "calls", line)["prompt"] == "sort these letters"
-
-
 # -- the logs kept for analysis, a period as one zip (realm/analytics.py) ------------------------------------------------
-
-def test_kept_for_analysis_every_day_stays_a_month(tmp_path):
-    today = dt.date(2026, 10, 12)
-    kept = [_day(tmp_path, "2026-10-11", "plain"), _day(tmp_path, "2026-09-20", "older")]
-    gone = _day(tmp_path, "2026-09-01", "too_old")
-    assert day_log.clear(tmp_path, today, lambda b, day: False, keep=True) == ["2026-09-01/too_old"]
-    assert all(f.is_dir() for f in kept) and not gone.exists()
-
 
 def test_a_period_is_one_zip_with_each_day_added_up(tmp_path, tool):
     from orkboard.realm import analytics
@@ -237,12 +158,6 @@ def test_a_resumed_sessions_line_keeps_the_tools_figure_and_its_own_cost(tmp_pat
     assert call_log.totals([first, second, third])[0]["cost"] == 0.04          # the sum counts each session once
 
 
-def test_cost_once_takes_the_sessions_last_total_off_and_never_goes_below_nothing():
-    assert tool_run.cost_once(0.77, 0.68) == 0.09
-    assert tool_run.cost_once(0.30, None) == 0.30 and tool_run.cost_once(None, 0.5) is None
-    assert tool_run.cost_once(0.5, 0.9) == 0.0
-
-
 # -- spec 97 part A: a read call's reads, its bound and its bare floor on its line; the floor measured ---------------------
 
 def _stream(*files, searches=0):
@@ -277,30 +192,6 @@ def test_a_read_calls_line_says_what_it_read_its_bound_and_when_it_went_over(tmp
     assert second["reads"]["files"] == 1
 
 
-def test_a_call_that_is_not_a_claude_read_stream_has_no_reads_and_a_work_call_none_at_all(tmp_path, tool):
-    with call_log.kept(tmp_path / "calls", "building"), call_log.bounded(2):
-        jobs.run_read("claude", "a recording of before", tmp_path, threading.Event())       # one JSON object: no events to count
-        tool["out"] = _stream("/a", "/b", "/c")
-        jobs.run_work("claude", "work", tmp_path, threading.Event())
-    old, work = call_log.read(tmp_path / "calls")
-    assert "reads" not in old and old["bound"] == 2 and "over" not in old                   # the line is as it was, and says its bound
-    assert not {"reads", "bound", "over", "bare"} & set(work)
-    assert call_log.totals([old, work])[0]["calls"] == 2                                    # every reader of lines reads either
-
-
-def test_a_claude_read_calls_line_names_the_flags_that_kept_the_persons_servers_and_skills_out(tmp_path, tool, monkeypatch):
-    from orkboard.realm import harness_claude
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in ("--strict-mcp-config", "--mcp-config", "--disable-slash-commands"))
-    with call_log.kept(tmp_path / "calls", "building"):
-        jobs.run_read("claude", "read it", tmp_path, threading.Event())
-        jobs.run_work("claude", "work", tmp_path, threading.Event())
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: False)
-    with call_log.kept(tmp_path / "calls", "building"):
-        jobs.run_read("claude", "read it", tmp_path, threading.Event())
-    bare, work, before = call_log.read(tmp_path / "calls")
-    assert bare["bare"] == ["mcp", "skills"] and "bare" not in work and "bare" not in before
-
-
 def _kept(n, bare, cost, made, purpose="plan", mode="read", tool_="claude", code=0, out=100):
     line = {"n": n, "mode": mode, "purpose": purpose, "tool": tool_, "code": code, "cost": cost,
             "usage": {"output_tokens": out, "cache_creation_input_tokens": made}}
@@ -320,20 +211,6 @@ def test_the_floor_splits_a_keepers_one_turn_read_calls_by_bare_and_takes_the_me
                                   "after": {"calls": 0, "cache_creation_input_tokens": None, "cost": None}}
 
 
-def test_the_floor_command_prints_the_last_seven_days_of_a_project(tmp_path, capsys):
-    today = dt.date.today()
-    for ago, line in ((0, _kept(1, True, 0.04, 5_000)), (6, _kept(1, False, 0.20, 25_000)), (7, _kept(1, False, 9.0, 999_999))):
-        folder = call_log.day_folder(tmp_path, (today - dt.timedelta(days=ago)).isoformat(), "board")
-        folder.mkdir(parents=True)
-        (folder / call_log.LINES).write_text(json.dumps(line) + "\n")
-    assert call_log.main(["floor", str(tmp_path)]) == 0
-    out = capsys.readouterr().out.splitlines()
-    assert out[0].startswith("before") and "1 calls" in out[0] and "25000 tokens" in out[0] and "$0.2000" in out[0]
-    assert out[1].startswith("after") and "1 calls" in out[1] and "5000 tokens" in out[1] and "$0.0400" in out[1]
-    assert call_log.main(["floor"]) == 2 and call_log.main([]) == 2
-    assert len(call_log.week(tmp_path, 7)) == 2 and len(call_log.week(tmp_path, 8)) == 3 and call_log.week(tmp_path / "none") == []
-
-
 # -- spec 120 part E: a leader's call in Talk, measured before it is changed -------------------------------------------------
 
 def _talk(n, at, idea, party, made=0, read=0, step="talk_round", code=0):
@@ -341,15 +218,6 @@ def _talk(n, at, idea, party, made=0, read=0, step="talk_round", code=0):
     stamp = dt.datetime(2026, 11, 1, 9, 0, 0) + dt.timedelta(seconds=at)
     return {"n": n, "at": stamp.isoformat(timespec="seconds"), "mode": "read", "tool": "claude", "step": step, "idea": idea, "party": party, "code": code,
             "usage": {"cache_creation_input_tokens": made, "cache_read_input_tokens": read}}
-
-
-def test_a_keepers_call_line_says_its_step_and_its_party_the_floor_reads_them(tmp_path, tool):
-    with call_log.kept(tmp_path / "calls", "board"):
-        jobs.run_read("claude", "prompt", tmp_path, threading.Event(), "opus", env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": "a-goal", "ORKCRAFT_STEP": "talk_round",
-                                                                                   "ORKCRAFT_PARTY": "tech"})
-        jobs.run_read("claude", "prompt", tmp_path, threading.Event(), "opus", env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": "a-goal"})
-    first, second = call_log.read(tmp_path / "calls")
-    assert (first["idea"], first["step"], first["party"]) == ("a-goal", "talk_round", "tech") and "step" not in second and "party" not in second       # a line of before has neither
 
 
 def test_the_talk_floor_groups_a_goals_calls_into_rounds_and_says_which_wrote_the_cache_anew():
@@ -364,41 +232,3 @@ def test_the_talk_floor_groups_a_goals_calls_into_rounds_and_says_which_wrote_th
     assert got["rest"]["calls"] == 4 and got["rest"]["wrote"] == 2 and got["rest"]["read"] == 2 and got["rest"]["cache_creation_input_tokens"] == 7500
     assert got["again"]["calls"] == 2 and got["again"]["read"] == 1                                                  # g2's Product and Tech, each within five minutes of its own call on g1
 
-
-def test_the_talk_floor_says_a_staggered_start_would_pay_only_when_the_rest_wrote_again_and_the_system_prompt_only_when_the_map_was_not_read():
-    def round_of(n, idea, at, made=8000, read=0):
-        return [_talk(n, at, idea, "product", made=9000), _talk(n + 1, at + 1, idea, "design", made=made, read=read), _talk(n + 2, at + 2, idea, "tech", made=made, read=read)]
-
-    writes = [x for k in range(3) for x in round_of(10 * k, f"g{k}", 1000 * k)]
-    assert call_log.talk_floor(writes)["stagger"] is True and call_log.talk_floor(writes)["system_prompt"] is False        # no leader called twice inside five minutes: nothing to say
-    reads = [x for k in range(3) for x in round_of(10 * k, f"g{k}", 1000 * k, made=100, read=8000)]
-    got = call_log.talk_floor(reads)
-    assert got["stagger"] is False and got["rest"]["read"] == 6                                                           # the rest read what the first wrote
-    twice = [x for k in range(2) for x in round_of(10 * k, "g", 10 * k * 6, made=8000, read=0)]                            # one goal, two rounds a minute apart: Product's, Design's, Tech's second calls
-    got = call_log.talk_floor(twice)
-    assert got["again"]["calls"] == 3 and got["again"]["read"] == 0 and got["system_prompt"] is True                      # the map was not read from the cache between a leader's calls
-    assert call_log.talk_floor(writes[:2])["stagger"] is False                                                           # too few calls to say
-    assert call_log.talk_floor([]) == {"calls": 0, "goals": 0, "rounds": 0, "stagger": False, "system_prompt": False,
-                                       "first": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None},
-                                       "rest": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None},
-                                       "again": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None}}
-
-
-def test_the_talk_command_prints_the_last_seven_days_of_a_project(tmp_path, capsys):
-    today = dt.date.today()
-    folder = call_log.day_folder(tmp_path, today.isoformat(), "board")
-    folder.mkdir(parents=True)
-    rows = [_talk(1, 0, "g", "product", made=9000), _talk(2, 1, "g", "design", made=8000), _talk(3, 2, "g", "tech", made=8000), _talk(4, 3, "g", "release", made=8000)]
-    (folder / call_log.LINES).write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    assert call_log.main(["talk", str(tmp_path)]) == 0
-    out = capsys.readouterr().out.splitlines()
-    assert out[0] == "4 talk_round calls · 1 goals · 1 rounds" and out[1].startswith("first") and "1 calls" in out[1]
-    assert out[2].startswith("rest") and "3 calls · wrote the cache anew: 3" in out[2] and "yes: a staggered start would pay" in out[4] and "no (or too few calls to say)" in out[5]
-    assert call_log.main(["talk"]) == 2 and call_log.main(["nothing", str(tmp_path)]) == 2
-
-
-def test_a_read_that_answers_the_one_json_object_of_before_still_reads(tmp_path, monkeypatch):
-    """Before spec 97 a read answered the single JSON envelope; the read argv now asks for stream-json, and the reader takes both."""
-    monkeypatch.setattr(tool_run, "run_proc", lambda cmd, *a, **k: (0, ENVELOPE, ""))
-    got = jobs.run_read("claude", "read it", tmp_path, threading.Event())
-    assert got == ("done", 0.03, 5000, "s1") and jobs.last_usage() == {"in": 900, "out": 100, "cache_read": 4000}

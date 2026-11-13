@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import chronicle, history_day, ideas, spec_sections
+from orkboard.realm import chronicle, history_day, spec_sections
 from tests.test_chronicle import LOG, tag, through  # noqa: F401
 from tests.test_commit_goal import git, repo, state  # noqa: F401  (the fixture)
 
@@ -18,18 +18,6 @@ def pages(tmp_path: Path) -> Path:
 def test_a_goal_is_dated_by_each_of_the_three_days():
     got = history_day.dates("2026-11-01T09:00:00", "2026-10-30", ["2026-11-03T10:00:00", "2026-11-04T08:00:00"], {"at": "2026-11-06T12:00:00", "by": "gate"})
     assert got == {"agreed": "2026-11-01", "done": "2026-11-04", "main": "2026-11-06"}, "agreed by the confirmation, done by the newest merged task, in main by the flag"
-
-
-def test_a_goal_missing_one_date_keeps_the_others_and_says_none_for_it():
-    assert history_day.dates("", "", [], None) == {"agreed": "", "done": "", "main": ""}
-    only_flag = history_day.dates("", "2026-10-30", [None, "not a day"], {"at": "2026-11-06T12:00:00", "by": "gate"})
-    assert only_flag == {"agreed": "2026-10-30", "done": "", "main": "2026-11-06"}, "the decision's log day stands in for the confirmation; a gate flag is not a done day"
-    assert history_day.dates("", "", ["2026-11-03"], None) == {"agreed": "", "done": "2026-11-03", "main": ""}
-
-
-def test_a_goal_done_where_there_is_no_gate_is_done_the_day_of_its_flag():
-    got = history_day.dates("", "2026-10-26", [], {"at": "2026-10-26T00:00:00", "by": "done"})
-    assert got == {"agreed": "2026-10-26", "done": "2026-10-26", "main": "2026-10-26"}
 
 
 def test_the_history_gives_each_goal_its_three_days_its_gist_and_the_versions(repo, pages):

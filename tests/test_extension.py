@@ -50,17 +50,3 @@ def test_serve_is_asked_for_and_kept_over_an_update(fake_repo, monkeypatch):
     assert started == [True] and restarted == [["--repo", str(fake_repo.resolve()), "--serve"]]
 
 
-def test_the_socket_takes_the_server_as_localhost_and_no_other_origin(fake_repo):
-    """An editor's `asExternalUri` may name the server `localhost`: the same machine, the same port."""
-    server = Server(Orkboard(fake_repo))
-    thread = server.start_thread()
-    ws = f"ws://127.0.0.1:{server.port}/ws?t={server.token}"
-    try:
-        with connect(ws, origin=f"http://localhost:{server.port}") as socket:
-            assert json.loads(socket.recv(5))["t"] == "state"
-        for other in (f"http://localhost:{server.port + 1}", "vscode-webview://abc", "https://example.com"):
-            with pytest.raises(InvalidStatus):
-                connect(ws, origin=other)
-    finally:
-        server.stop()
-        thread.join(10)

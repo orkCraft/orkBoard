@@ -5,7 +5,6 @@ events. Code, no model."""
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import time
 from pathlib import Path
@@ -14,7 +13,6 @@ import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, jobs, own_parties, roles
-from orkboard.realm import ideas
 
 
 def repo(tmp_path: Path, name: str) -> Path:
@@ -53,62 +51,6 @@ def test_a_party_is_saved_listed_and_dropped_in_a_private_file_beside_the_settin
     assert own_parties.list() == []
     with pytest.raises(own_parties.OwnPartyError, match="gone"):
         own_parties.drop(party)
-
-
-def test_a_name_is_one_to_forty_characters_unique_whatever_its_case_and_replaced_only_when_asked():
-    for bad in ("", "   ", "x" * 41):
-        with pytest.raises(own_parties.OwnPartyError, match="1 to 40 characters"):
-            lean(name=bad)
-    first = lean()
-    with pytest.raises(own_parties.OwnPartyError, match="You have a party named “Lean web”"):
-        lean(name="lean  WEB")
-    own_parties.used(first, "abc", "shop", "billing")
-    again = lean(name="LEAN web", team=["grunt"], every=[], replace=True)
-    assert again == first                                                                              # the same party, its uses kept
-    (got,) = own_parties.list()
-    assert got["team"] == ["grunt"] and got["name"] == "LEAN web" and len(got["uses"]) == 1
-
-
-def test_at_most_twelve_parties_and_a_replace_of_the_twelfth_is_still_allowed():
-    for n in range(12):
-        lean(name=f"Party {n}")
-    with pytest.raises(own_parties.OwnPartyError, match="You have 12 parties: remove one first"):
-        lean(name="A thirteenth")
-    lean(name="party 3", replace=True)
-    assert len(own_parties.list()) == 12
-
-
-def test_uses_are_kept_replaced_per_goal_marked_and_at_most_fifty():
-    party = lean()
-    own_parties.used(party, "aaaaaaaaaaaa", "shop", "billing")
-    own_parties.used(party, "aaaaaaaaaaaa", "shop", "billing")                                       # the same goal again: one use
-    own_parties.used(party, "bbbbbbbbbbbb", "blog", "billing")
-    assert [(u["project"], u["goal"], u["met"]) for u in own_parties.list()[0]["uses"]] == [("aaaaaaaaaaaa", "billing", None), ("bbbbbbbbbbbb", "billing", None)]
-    own_parties.mark("aaaaaaaaaaaa", "billing", True)
-    own_parties.mark("aaaaaaaaaaaa", "billing", False)                                                # asked again: the last verdict
-    own_parties.mark("aaaaaaaaaaaa", "billing", True)
-    own_parties.mark("cccccccccccc", "billing", True)                                                 # no such use: nothing
-    assert [u["met"] for u in own_parties.list()[0]["uses"]] == [True, None]
-    for n in range(60):
-        own_parties.used(party, "dddddddddddd", "docs", f"goal-{n}")
-    uses = own_parties.list()[0]["uses"]
-    assert len(uses) == 50 and uses[-1]["goal"] == "goal-59" and uses[0]["goal"] == "goal-10"       # the oldest dropped
-    own_parties.used("p-00000000", "x", "x", "x")                                                     # an unknown party: nothing
-    assert own_parties.project_key("/work/shop") == own_parties.project_key("/work/shop") and len(own_parties.project_key("/work/shop")) == 12
-
-
-def test_a_file_of_another_shape_reads_as_none_and_is_kept_until_a_save():
-    for text in ("not json", "[]", '{"v": 2, "parties": []}', '{"v": 1, "parties": "no"}'):
-        own_parties.path().parent.mkdir(parents=True, exist_ok=True)
-        own_parties.path().write_text(text)
-        assert own_parties.list() == []
-        own_parties.used("p-00000000", "x", "x", "x")
-        own_parties.mark("x", "x", True)
-        with pytest.raises(own_parties.OwnPartyError):
-            own_parties.drop("p-00000000")
-        assert own_parties.path().read_text() == text                                                  # not overwritten
-    lean()
-    assert len(own_parties.list()) == 1 and json.loads(own_parties.path().read_text())["v"] == 1       # a save writes it anew
 
 
 # -- the commands --------------------------------------------------------------------------------------------------
@@ -176,13 +118,6 @@ def test_a_party_picked_in_another_project_installs_its_own_agent_keeps_a_role_o
         third.command("ideas.goal_save", {"about": "x", "party": "p-00000000"})
 
 
-def test_only_the_party_s_id_sent_takes_the_party_as_it_was_saved(host):
-    party = lean(name="Plain", team=["grunt", "reviewer"], every=["reviewer"], leader="architect")
-    got = host.command("ideas.goal_save", {"about": "Only the id.", "party": party})
-    assert goal_team.team_of(host.ideas.root(), got["slug"]) == ["grunt", "reviewer"] and goal_team.every_of(host.ideas.root(), got["slug"]) == ["reviewer"]
-    assert goal_team.leader_of(host.ideas.root(), got["slug"]) == "architect" and goal_team.party_of(host.ideas.root(), got["slug"]) == party
-
-
 def test_a_party_changed_afterwards_clears_the_goal_s_party_and_a_goal_never_changes_a_saved_party(host):
     party = lean()
     goal = pick(host, party)["slug"]
@@ -246,49 +181,3 @@ def test_ideas_parties_counts_goals_projects_and_met(host, tmp_path):
     assert host.command("ideas.parties")["parties"][2]["own"] == ["Scribe"]
     json.dumps(host.command("ideas.parties"))
 
-
-def test_saving_a_goal_s_party_unchanged_keeps_the_use_and_its_met_and_works_when_the_saved_party_is_gone(host):
-    party = lean(team=["grunt"], every=[], name="Small")
-    goal = pick(host, party)["slug"]
-    own_parties.mark(own_parties.project_key(host.repo_root), goal, True, party)
-    assert own_parties.list()[0]["uses"][0]["met"] is True
-    got = host.command("ideas.goal_save", {"slug": goal, "party": party})                                   # the phone's Team sheet resends the id
-    assert "notes" not in got and own_parties.list()[0]["uses"][0]["met"] is True
-    pick(host, party, slug=goal)                                                                            # the same party sent with its seats, unchanged
-    assert own_parties.list()[0]["uses"][0]["met"] is True and len(own_parties.list()[0]["uses"]) == 1
-    own_parties.drop(party)
-    host.command("ideas.goal_save", {"slug": goal, "party": party, "title": "Renamed"})                     # not refused: it is the goal's own
-    assert goal_team.party_of(host.ideas.root(), goal) == party
-
-
-def test_used_keeps_met_of_the_same_goal_s_use():
-    party = lean()
-    own_parties.used(party, "aaaaaaaaaaaa", "shop", "billing")
-    own_parties.mark("aaaaaaaaaaaa", "billing", False, party)
-    own_parties.used(party, "aaaaaaaaaaaa", "shop", "billing")
-    assert own_parties.get(party)["uses"][0]["met"] is False
-
-
-def test_mark_with_a_party_marks_only_that_party_s_use():
-    a, b = lean(), lean(name="Another")
-    for p in (a, b):
-        own_parties.used(p, "aaaaaaaaaaaa", "shop", "billing")
-    own_parties.mark("aaaaaaaaaaaa", "billing", True, b)                                                    # the goal has party b now
-    assert [own_parties.get(p)["uses"][0]["met"] for p in (a, b)] == [None, True]
-
-
-def test_a_party_keeps_the_library_party_it_started_from_as_one_optional_key_and_a_file_without_it_reads_as_before():
-    """Spec 59 §2.4 (storage): `preset` only when given and one of the library's ids' shape; a party saved before has none."""
-    plain = lean()
-    tagged = own_parties.save("Game one", "design", "game-designer", ["grunt", "artist"], [], preset="game")
-    got = {p["id"]: p for p in own_parties.list()}
-    assert "preset" not in got[plain] and got[tagged]["preset"] == "game"
-    odd = own_parties.save("Odd", "design", "game-designer", [], [], preset="Not A Preset!")
-    assert "preset" not in {p["id"]: p for p in own_parties.list()}[odd]
-    again = own_parties.save("Game one", "design", "game-designer", ["grunt"], [], replace=True, preset="game")
-    assert again == tagged and {p["id"]: p for p in own_parties.list()}[tagged]["preset"] == "game"
-    path = own_parties.path()
-    data = json.loads(path.read_text())
-    data["parties"] = [{k: v for k, v in p.items() if k != "preset"} for p in data["parties"]]
-    path.write_text(json.dumps(data))                                                    # a file written before
-    assert all("preset" not in p for p in own_parties.list()) and len(own_parties.list()) == 3

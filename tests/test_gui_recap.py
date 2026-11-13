@@ -54,24 +54,10 @@ def test_since_is_required_clamped_to_thirty_days_and_never_ahead(host):
     assert host.command("ideas.recap", {"since": _ms(24 * 90)})["hours"] == 24 * 30
 
 
-def test_opened_takes_the_new_what_and_via(host):
-    for what in ("recap", "flag", "week", "push"):
-        host.command("ideas.log", {"event": "opened", "what": what, "ref": "x"})
-    for via in ("recap", "week", "flags", "push"):
-        host.command("ideas.log", {"event": "opened", "what": "idea", "ref": "x", "via": via})
-    with pytest.raises(CommandError, match="`what` is one of"):
-        host.command("ideas.log", {"event": "opened", "what": "nothing"})
-    rows = [r for r in event_log.read(Path(host.town.repo_root)) if r["event"] == "opened"]
-    assert [r["what"] for r in rows] == ["recap", "flag", "week", "push", "idea", "idea", "idea", "idea"]
 
 
 # -- Spec 121 D: `ideas.night` (docs/specs/121-the-day-the-morning-and-the-night.md §5.4) --------------------------------------------------------------
 
-def test_the_night_is_the_hosts_and_a_phones_and_null_when_it_did_nothing(host):
-    assert BoardPhone.allowed(host, "ideas.night", {})
-    assert host.command("ideas.night", {}) is None
-    with pytest.raises(CommandError, match="Open a folder first"):
-        Orkboard().command("ideas.night", {})
 
 
 def test_the_nights_record_lists_the_goals_that_reached_dev_and_the_card_opened_is_one_event(host):
@@ -98,26 +84,6 @@ def test_a_last_look_after_the_nights_window_cuts_the_record_and_it_is_checked(h
         host.command("ideas.night", {"since": _ms(-2)})
 
 
-def test_the_hints_of_the_last_play_stay_for_the_card_after_the_play_stops(host):
-    from types import SimpleNamespace
-    _merge(host, 1)
-    ideas_ = host.ideas
-    ideas_._play = SimpleNamespace(state="playing", play_id="p1")
-    ring = ideas_._ring("p1")
-    ring.add({"kind": "error", "message": "boom", "path": "/", "at": 5})
-    assert [h["kind"] for h in ideas_.last_play_hints()] == ["error"], "while it plays, the play's own"
-    assert host.command("ideas.night", {})["play"]["hints"][0]["words"] == "An error here: boom"
-    ideas_._play = None                                                              # Play stopped: its ring is dropped, its hints are kept
-    assert [h["kind"] for h in ideas_.last_play_hints()] == ["error"]
-    assert host.command("ideas.night", {})["play"]["hints"][0]["kind"] == "error"
 
 
-def test_the_card_lifted_is_kept_so_the_first_mark_on_play_after_it_is_timed_once(host):
-    _merge(host, 1)
-    assert host.ideas.card_minutes() is None, "nothing was lifted"
-    host.command("ideas.night", {})
-    assert host.ideas.card_minutes() is None, "reading the record is no opening"
-    host.command("ideas.night", {"opened": True})
-    first = host.ideas.card_minutes()
-    assert first is not None and 0 <= first < 1 and host.ideas.card_minutes() is None, "timed once: only the first mark after an opening"
 

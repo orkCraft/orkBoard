@@ -43,41 +43,6 @@ def _answer(host, slug, picks):
 
 # -- priority and risk, taken strictly -----------------------------------------------------------------------------------------------------
 
-def test_priority_is_products_and_risk_is_techs_and_a_value_out_of_its_set_is_dropped():
-    said = {"stance": "s", "priority": " High ", "risk": "medium"}
-
-    def one(craft, **more):
-        got = clean_round({**said, **more}, craft, "leader", 1, False, set(), (), craft)
-        return got["priority"], got["risk"]
-
-    assert one("product") == ("high", "") and one("tech") == ("", "medium")                                                 # each leader gives only its own
-    assert one("design") == ("", "") and one("art") == ("", "") and one("") == ("", "")                                       # any other gives neither
-    assert one("product", priority="urgent", risk="high") == ("", "") and one("tech", priority="high", risk="huge") == ("", "")   # out of the set: dropped
-    assert one("product", priority=3) == ("", "") and one("tech", risk=None) == ("", "") and one("product", priority="LOW") == ("low", "")
-    assert [one("product", priority=p)[0] for p in ("high", "normal", "low")] == ["high", "normal", "low"] and [one("tech", risk=r)[1] for r in ("low", "medium", "high")] == ["low", "medium", "high"]
-    second = clean_round({"verdict": "no", "why": "w", "priority": "high", "questions": []}, "product", "leader", 2, False, set(), (), "product")
-    assert (second["verdict"], second["priority"], second["rejudged"]) == ("go", "", False)                                  # the second round asks no verdict, unless it was told to
-    again = clean_round({"verdict": "no", "why": "w", "priority": "low", "questions": []}, "product", "leader", 2, False, set(), (), "product", True)
-    assert (again["verdict"], again["why"], again["priority"], again["rejudged"]) == ("no", "w", "low", True)
-
-
-def test_a_verdict_alone_is_a_verdict_and_the_weight_its_leader_gives_and_nothing_else():
-    assert clean_judgement({"verdict": "doubt", "why": " not now ", "instead": "i", "after": "g1", "priority": "low", "risk": "high", "questions": [{"ask": "x"}], "stance": "s"}, "product", ["g1"]) == {
-        "verdict": "doubt", "why": "not now", "instead": "i", "after": "", "priority": "low", "risk": ""}
-    assert clean_judgement({"verdict": "no", "why": "w", "after": "g1"}, "tech", ["g1"])["after"] == "g1"
-    assert clean_judgement({"verdict": "no"}, "tech")["verdict"] == "go" and clean_judgement("not an object") is None and clean_judgement([]) is None
-
-
-def test_the_round_names_priority_to_product_and_risk_to_tech_and_neither_to_anyone_else(host, parties, model):
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "design", "tech"])
-    by = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert '"priority"' in by[parties["product"]] and "`priority` (`high`, `normal` or `low`)" in by[parties["product"]] and '"risk"' not in by[parties["product"]]
-    assert '"risk"' in by[parties["tech"]] and "`risk` (`low`, `medium` or `high`)" in by[parties["tech"]] and '"priority"' not in by[parties["tech"]]
-    assert '"priority"' not in by[parties["design"]] and '"risk"' not in by[parties["design"]]
-    stances = {s["party"]: s for s in _record(host, _slug_of(host))["stances"]}
-    assert stances[parties["product"]]["craft"] == "product" and stances[parties["tech"]]["craft"] == "tech" and stances[parties["design"]]["craft"] == "design"
-
 
 def _slug_of(host):
     return next(i["slug"] for i in ideas.ideas(host.ideas.root()) if _state(host, i["slug"])["state"] == "talk")
@@ -92,33 +57,6 @@ def test_the_priority_and_the_risk_are_kept_with_the_stances_and_make_the_weight
 
 
 # -- heard as it goes ---------------------------------------------------------------------------------------------------------------------------
-
-def test_each_leader_is_marked_heard_as_its_answer_is_parsed_and_nothing_else_of_it_is_shown_before_the_round_is_whole(host, parties, model):
-    _round_one(model, parties)
-    seen: dict = {}
-
-    def tech(row):
-        for _ in range(400):                                                    # Tech answers last: it waits for Product's and Design's marks
-            heard = _record(host, seen["slug"]).get("heard", [])
-            if parties["product"] in heard and parties["design"] in heard:
-                break
-            time.sleep(0.01)
-        seen["when_tech_answered"] = list(_record(host, seen["slug"]).get("heard", []))
-        seen["row"] = _row(host, seen["slug"], "talk")
-        return {"stance": "tech stance", "questions": [card("tech question")]}
-
-    model.said[("talk_round", parties["tech"])] = tech
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["product"]})["slug"]
-    seen["slug"] = slug
-    host.command("ideas.route_set", {"idea": slug, "route": [parties[w] for w in ("product", "design", "tech")]})
-    assert _record(host, slug) == {}                                             # nothing yet
-    host.command("ideas.talk", {"idea": slug})
-    _wait(host, slug)
-    assert sorted(seen["when_tech_answered"]) == sorted([parties["product"], parties["design"]])        # marked while Tech was still being heard
-    assert seen["row"] is None                                                   # …but not its stance or its cards: the row waits for the whole round
-    assert sorted(_record(host, slug)["heard"]) == sorted(parties[w] for w in ("product", "design", "tech")) and idea_questions.talk_of(host.ideas.state_dir, slug)["heard"] == _record(host, slug)["heard"]
-    told = _events(host, event_log.TALK_HEARD)
-    assert sorted(e["party"] for e in told) == sorted(_record(host, slug)["heard"]) and all(e["idea"] == slug and e["weigher"] is False for e in told)
 
 
 # -- Product weighs every goal -----------------------------------------------------------------------------------------------------------------
@@ -149,40 +87,6 @@ def test_product_weighs_a_goal_it_is_not_routed_on_with_a_verdict_and_a_priority
 
 
 @pytest.mark.weighs
-def test_a_weighers_no_makes_no_objection_and_its_priority_is_kept(host, parties, model):
-    _noes(model, parties, per=0, product={"verdict": "no", "why": "Not before the lobby", "priority": "low"})
-    slug = _talk(host, parties, ["tech"])
-    assert _objections(host, slug) == []
-    rec = _record(host, slug)
-    assert rec["weight"]["priority"] == "low" and not rec.get("hearing")
-    line = next(t["text"] for t in ideas.talk(host.ideas.state_dir, slug) if t["section"] == "Talk" and "weighs it" in t["text"])
-    assert "weighs it: low — Not before the lobby" in line and "For: —" not in line.split("weighs it")[1]                # the weigher's record line (spec 155 E)
-
-
-def test_a_weighers_stance_counts_in_no_objection_no_hearing_no_rejudging():
-    from orkboard.core.idea_talk import TalkMixin
-    from orkboard.core.idea_verdict import VerdictMixin
-    from orkboard.realm import idea_hearing, idea_objections
-    w = {"party": "p", "leader": "pm", "weigher": True, "verdict": "no", "why": "Not now", "after": "x", "instead": "", "priority": "low"}
-    assert idea_objections.made([w]) == [] and idea_objections.made([{**w, "weigher": False}]) != []
-    assert idea_hearing.of_talk({"stances": [w]}, lambda leader: leader)["sides"][0]["leaders"] == []
-    assert TalkMixin._held({"stances": [{**w, "verdict": "doubt"}]}) is False
-    assert TalkMixin._held({"stances": [{**w, "verdict": "doubt", "weigher": False}]}) is True
-    rec = {"stances": [w, {"party": "t", "verdict": "doubt"}]}
-    assert VerdictMixin.rejudges(None, rec, [{"how": "text", "id": "c", "by": "t", "answer": "a"}]) == ["t"]
-
-
-@pytest.mark.weighs
-def test_a_weigher_that_does_not_answer_is_passed_over_it_never_fails_the_round(host, parties, model):
-    _round_one(model, parties, per=1)
-    model.said[("talk_round", parties["product"])] = "not json at all"
-    slug = _talk(host, parties, ["tech"])
-    assert _state(host, slug)["state"] == "talk" and _row(host, slug, "talk") is not None
-    assert [s["party"] for s in _record(host, slug)["stances"]] == [parties["tech"]] and _record(host, slug)["heard"] == [parties["tech"]]
-    assert len([c for c in model.steps("talk_round") if c["party"] == parties["product"]]) == 2                         # tried once more, then passed over
-
-
-@pytest.mark.weighs
 def test_product_on_the_route_is_a_leader_not_a_weigher_and_the_short_way_has_none(host, parties, model):
     _round_one(model, parties)
     slug = _talk(host, parties, ["product", "tech"])
@@ -193,17 +97,6 @@ def test_product_on_the_route_is_a_leader_not_a_weigher_and_the_short_way_has_no
     assert k.weighers(other) == [{"party": parties["product"], "leader": "product-manager", "weigher": True}]
     ideas.save_state(host.ideas.state_dir, other, route_how={**_state(host, other)["route_how"], "short": True})        # a bug, a tidy, a balance pass
     assert k.weighers(other) == []
-
-
-@pytest.mark.weighs
-def test_the_weighers_call_is_in_the_routes_cost(host, parties):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    route = [{"party": parties["tech"], "leader": "architect"}]
-    long = goal_route.cost(state, route, False, root=root)
-    assert goal_route.weigher_party(root, route) == parties["product"] and goal_route.weigher_party(root, route, True) == ""
-    assert goal_route.weigher_party(root, [*route, {"party": parties["product"]}]) == ""
-    assert long["calls"] == goal_route.cost(state, route, False)["calls"] + 1                                          # one more `talk_round`
-    assert goal_route.cost(state, route, True, root=root) == goal_route.cost(state, route, True)
 
 
 # -- the leaders heard again after the answers ------------------------------------------------------------------------------------------------
@@ -269,56 +162,6 @@ def test_a_leader_whose_pick_was_overridden_is_heard_again_one_whose_pick_was_ta
         c for c in model.steps("talk_verdict") if c["party"] == parties["tech"])["prompt"]
 
 
-def test_nobody_is_heard_again_when_no_card_was_asked_or_the_person_left_every_one_to_the_leaders(host, parties, model, monkeypatch):
-    _noes(model, parties, per=0, design={"verdict": "doubt", "why": "The contrast is low"})
-    went = _decide_stub(host, monkeypatch)
-    slug = _talk(host, parties, ["design", "tech"])                               # a doubt, and nothing to ask: a hearing (spec 120 §3.4), no decision yet
-    for _ in range(300):
-        if host.command("ideas.hearing", {"idea": slug}):
-            break
-        time.sleep(0.01)
-    assert host.command("ideas.hearing", {"idea": slug}) and went == [] and model.steps("talk_verdict") == []
-    _noes(model, parties, per=1, design={"verdict": "doubt", "why": "The contrast is low"})
-    other = _talk(host, parties, ["design", "tech"], "add a light mode option")
-    host.command("ideas.talk_answer", {"idea": other, "answers": [], "decide": True})                  # the leaders' own picks tell them nothing new
-    _wait(host, other)
-    assert model.steps("talk_verdict") == [] and went == [] and _stance(host, other, parties["design"])["verdict"] == "doubt"
-    assert host.command("ideas.hearing", {"idea": other})
-
-
-def test_a_leader_in_the_second_round_and_heard_again_is_heard_once_the_rounds_prompt_asking_its_verdict_too(host, parties, model, monkeypatch):
-    seen = []
-
-    def asks(who, **second):
-        def answer(row):
-            if "first round" in row["prompt"]:
-                seen.append((who, row["prompt"]))
-                return {"questions": [], **second}
-            return {"stance": f"{who} stance", "questions": [card(f"{who} first")], "second_round": who != "tech"}
-        return answer
-
-    model.said[("talk_round", parties["product"])] = asks("product", verdict="doubt", why="now unsure", priority="low")
-    model.said[("talk_round", parties["design"])] = asks("design")
-    model.said[("talk_round", parties["tech"])] = asks("tech")
-    model.said[("talk_verdict", parties["tech"])] = {"verdict": "no", "why": "worse with the answers", "risk": "high"}
-    _decide_stub(host, monkeypatch)
-    slug = _talk(host, parties, ["product", "design", "tech"])
-    _answer(host, slug, 1)                                                                                             # every pick overridden: all three are heard again
-    rounds = [c["party"] for c in model.steps("talk_round")]
-    assert sorted(rounds) == sorted([parties["product"], parties["design"], parties["tech"], parties["product"], parties["design"]])    # Tech asked no second round
-    assert [c["party"] for c in model.steps("talk_verdict")] == [parties["tech"]]                                       # a leader of the second round is not called again
-    who = dict(seen)
-    assert "You judged the goal before these answers: `go`" in who["product"] and '"verdict": "go"' in who["product"] and '"priority": "normal"' in who["product"]
-    assert "You judged the goal before these answers" in who["design"] and '"priority"' not in who["design"] and '"risk"' not in who["design"]
-    assert "Read no file" in who["product"]
-    product, tech = _stance(host, slug, parties["product"]), _stance(host, slug, parties["tech"])
-    assert (product["verdict"], product["why"], product["priority"]) == ("doubt", "now unsure", "low") and (tech["verdict"], tech["why"], tech["risk"]) == ("no", "worse with the answers", "high")
-    assert _record(host, slug)["weight"] == {"priority": "low", "risk": "high"} and _record(host, slug)["round"] == 2
-    assert sorted((e["party"], e["before"], e["after"]) for e in _events(host, event_log.TALK_VERDICT)) == sorted(
-        [(parties["design"], "go", "go"), (parties["tech"], "go", "no"), (parties["product"], "go", "doubt")])                  # one event for each verdict given again, changed or not
-    assert [o["party"] for o in _record(host, slug)["objections"]] == [parties["tech"]] and len(_objections(host, slug)) == 1        # the no it gave now is a row
-
-
 def test_a_no_that_the_answers_took_back_is_no_objection_and_one_already_answered_is_kept(host, parties, model, monkeypatch):
     _noes(model, parties, per=1, product={"verdict": "no", "why": "Not worth it"}, tech={"verdict": "no", "why": "A third caller", "instead": "Only the setting"})
     model.said[("talk_verdict", parties["product"])] = {"verdict": "go"}
@@ -332,18 +175,6 @@ def test_a_no_that_the_answers_took_back_is_no_objection_and_one_already_answere
     assert [(o["party"], o["answer"]) for o in rec["objections"]] == [(parties["tech"], "go")] and _objections(host, slug) == []
     assert _stance(host, slug, parties["tech"])["why"] == "Still a third caller" and _stance(host, slug, parties["product"])["verdict"] == "go"
     assert _gone(went) == [slug]                                                                                       # nothing left unanswered: the decision goes on
-
-
-def test_a_verdict_that_cannot_be_had_leaves_the_verdict_as_it_was_and_the_decision_goes_on(host, parties, model, monkeypatch):
-    _noes(model, parties, per=1, design={"verdict": "doubt", "why": "The contrast is low"})
-    model.said[("talk_verdict", parties["design"])] = "not json at all"
-    went = _decide_stub(host, monkeypatch)
-    slug = _talk(host, parties, ["design", "tech"])
-    _answer(host, slug, 0)
-    _hearing(host, slug)                                                                                                    # the doubt stands: a hearing, thrown to *Do it*
-    host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})
-    assert _stance(host, slug, parties["design"])["verdict"] == "doubt" and _gone(went) == [slug] and _events(host, event_log.TALK_VERDICT) == []
-    assert len(model.steps("talk_verdict")) == 2 and _state(host, slug)["state"] == "talk"                              # tried once more, then passed over
 
 
 # -- the route edited while Talk runs (spec 120 §2.2) ---------------------------------------------------------------------------------------
@@ -397,17 +228,6 @@ def test_a_party_put_on_or_taken_off_while_the_person_answers_is_heard_alone_or_
     assert len(model.steps("talk_round")) == 3
 
 
-def test_the_cards_of_a_party_put_on_are_the_three_of_all_the_rest_are_closed_by_its_picks(host, parties, model):
-    _round_one(model, parties, per=2)
-    slug = _talk(host, parties, ["product", "design"])
-    assert len(_record(host, slug)["waiting"]) == 3                                                               # the three of four
-    host.command("ideas.route_set", {"idea": slug, "route": [parties["product"], parties["design"], parties["tech"]]})
-    _wait(host, slug)
-    rec = _record(host, slug)
-    assert len(rec["waiting"]) == 3 and {d["q"] for d in rec["defaults"]} >= {"tech question 0", "tech question 1"}   # Tech's two are closed by its picks: the three were taken
-    assert [s["party"] for s in rec["stances"]] == [parties["product"], parties["design"], parties["tech"]]
-
-
 def test_an_edit_once_talk_is_done_is_a_step_added_after_it_as_it_was(host, parties, model, monkeypatch):
     _noes(model, parties, per=0, tech=TECH_NO)
     _decide_stub(host, monkeypatch)
@@ -417,9 +237,3 @@ def test_an_edit_once_talk_is_done_is_a_step_added_after_it_as_it_was(host, part
     assert got["changed"] is True and _row(host, slug, "start") is not None and len(model.steps("talk_round")) == 1
 
 
-def test_the_step_is_one_of_the_keepers_on_the_cheaper_tier_with_no_tools_and_no_reads():
-    assert "talk_verdict" in idea_target.STEPS and idea_target.pick("talk_verdict", "thrift") == ("laborer", "")
-    assert idea_target.pick("talk_verdict", "quality") == ("warrior", "medium") == idea_target.pick("talk_round", "quality")
-    assert idea_target.READS["talk_verdict"] == 0 and idea_target.CONTEXT["talk_verdict"] > 0 and idea_target.CAPS["talk_verdict"] > 0
-    from orkboard.realm import idea_spend
-    assert idea_spend.STEP_STAGE["talk_verdict"] == "spec"

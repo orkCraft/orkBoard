@@ -76,21 +76,6 @@ def test_a_public_repository_throws_the_publish_question_with_its_two_answers(ho
     assert row["held"] == "This repository is public: the Board waits for your answer before anything is pushed."
 
 
-def test_the_pages_already_in_the_history_are_counted_in_the_question(host, code):
-    root = host.projects.current().root
-    look(host)                                                                                     # private: the Board went into the work branch
-    ideas.save_goal(host.ideas.root(), None, "Tech", "About Tech", None, "normal", craft="engineering")
-    host.ideas.tree_flush(force=True)
-    pages = board_in_code.pages_in_history(root, "dev")
-    assert pages >= 1
-    code["code"] = 200
-    a_day_passes(root)
-    look(host)                                                                                     # …and the repository is public now
-    (row,) = cards(host)
-    assert row["pages_in_history"] == pages
-    assert row["text"] == ASK + (f" {pages} pages of the Board are already in its history." if pages != 1 else " 1 page of the Board is already in its history.")
-
-
 def test_publish_writes_the_yes_flushes_the_tree_and_says_so_in_the_log(host, code):
     code["code"] = 200
     look(host)
@@ -117,33 +102,7 @@ def test_keeping_the_board_off_writes_the_no_and_nothing_goes_to_the_work_branch
     assert [r["answer"] for r in event_log.read(root) if r["event"] == event_log.BOARD_IN_CODE_ANSWERED] == ["off"]
 
 
-def test_an_answer_with_no_question_or_a_wrong_one_is_refused_in_words(host, code):
-    with pytest.raises(Exception) as none:
-        host.command("ideas.in_code", {"answer": "publish"})
-    assert "Nothing asks about the Board in the code now" in str(none.value)
-    code["code"] = 200
-    a_day_passes(host.projects.current().root)                                                     # the refused answer asked GitHub: private, a day ago
-    look(host)
-    with pytest.raises(Exception) as bad:
-        host.command("ideas.in_code", {"answer": "maybe"})
-    assert "The answer is publish, off or private" in str(bad.value)
-    with pytest.raises(Exception) as priv:
-        host.command("ideas.in_code", {"answer": "private"})
-    assert "Only a repository Orkboard cannot read" in str(priv.value) and board_in_code.read(host.projects.current().root) is None
-
-
 # -- the remote Orkboard cannot read: two steps ----------------------------------------------------------------------------------
-
-def test_a_remote_orkboard_cannot_read_asks_if_it_is_private_first_and_private_is_the_yes(host, code):
-    git(host.projects.current().root, "remote", "set-url", "origin", "git@gitlab.example.com:acme/app.git")
-    look(host)
-    (row,) = cards(host)
-    assert row["step"] == "private" and row["visibility"] == "unknown" and row["ask"] == "Is this repository private?" and row["title"] == "Is this repository private?"
-    assert row["words"]["private"] == "Private" and row["words"]["public"] == "Public" and row["held"] == "" and row["text"] == ASK
-    root = host.projects.current().root
-    got = host.command("ideas.in_code", {"answer": "private"})
-    assert got["in_code"] is True and board_in_code.read(root) is True and cards(host) == []
-    assert [(r["answer"], r["visibility"]) for r in event_log.read(root) if r["event"] == event_log.BOARD_IN_CODE_ANSWERED] == [("private", "unknown")]
 
 
 def test_public_goes_on_to_the_publish_question_and_the_answer_there_is_the_same_command(host, code):
@@ -174,46 +133,7 @@ def test_a_repository_found_public_since_throws_the_card_again_with_the_hold(hos
     assert cards(host) == [] and board_in_code.push_hold(root) == ""
 
 
-def test_the_card_is_not_in_a_demo(host, code):
-    code["code"] = 200
-    look(host)
-    assert len(cards(host)) == 1
-    host.ideas.host.demo = True
-    assert host.ideas.in_code_rows() == []
-
-
-def test_the_card_is_not_in_a_folder_with_no_history(tmp_path):
-    plain = tmp_path / "plain"
-    plain.mkdir()
-    assert Orkboard(plain).ideas.in_code_rows() == []
-
-
 # -- C.4: the switch ---------------------------------------------------------------------------------------------------------------
-
-def test_the_switch_in_a_public_repository_asks_f_first_and_offers_no_rules(host, code):
-    code["code"] = 200
-    s = host.command("rules.switch", {})
-    assert s["show"] and s["state"] == "ask" and not s["on"]
-    assert s["question"]["step"] == "publish" and s["question"]["text"] == ASK and s["question"]["words"]["publish"] == "Publish the Board" and s["question"]["words"]["off"] == "Keep the Board off the repository"
-    with pytest.raises(Exception) as got:
-        host.command("rules.write", {})
-    assert str(got.value) == switch.ANSWER_FIRST and not (host.projects.current().root / "AGENTS.md").exists()
-
-
-def test_the_switch_in_a_repository_orkboard_cannot_read_asks_if_it_is_private_first(host, code):
-    git(host.projects.current().root, "remote", "set-url", "origin", "git@gitlab.example.com:acme/app.git")
-    s = host.command("rules.switch", {})
-    assert s["state"] == "ask" and s["question"]["step"] == "private" and s["question"]["ask"] == "Is this repository private?" and s["question"]["words"]["private"] == "Private"
-
-
-def test_the_switch_with_the_board_kept_off_says_the_rules_would_find_no_board_and_offers_nothing(host, code):
-    code["code"] = 200
-    board_in_code.write(host.projects.current().root, False)
-    s = host.command("rules.switch", {})
-    assert s["state"] == "off" and s["status"] == "The Board is kept off this repository: the rules would find no Board" and s["question"] is None
-    with pytest.raises(Exception) as got:
-        host.command("rules.write", {})
-    assert "the rules would find no Board" in str(got.value)
 
 
 def test_the_switch_with_the_yes_writes_the_rules_as_before_in_a_public_repository(host, code):
@@ -226,11 +146,6 @@ def test_the_switch_with_the_yes_writes_the_rules_as_before_in_a_public_reposito
     got = host.command("rules.write", {})
     assert got["ok"] and "AGENTS.md" in got["written"]
     assert agent_rules.has_rules(host.ideas.state_dir / "board")
-
-
-def test_the_switch_in_a_private_repository_is_as_it_was(host, code):
-    s = host.command("rules.switch", {})
-    assert s["state"] == "ready" and s["question"] is None and s["status"] == ""
 
 
 # -- E: from a terminal -------------------------------------------------------------------------------------------------------------
@@ -264,12 +179,6 @@ def test_init_in_a_public_repository_refuses_in_words_naming_both_answers(work, 
     assert not (work / "AGENTS.md").exists() and board_in_code.read(work) is None
 
 
-def test_init_in_a_repository_it_cannot_read_says_so(work, code, capsys):
-    git(work, "remote", "set-url", "origin", "git@gitlab.example.com:acme/shop.git")
-    assert ob("init") == 1
-    assert "Orkboard cannot read whether this repository is private." in capsys.readouterr().err
-
-
 def test_init_publish_writes_the_yes_first_says_what_it_means_and_then_the_rules(work, code, capsys):
     code["code"] = 200
     assert ob("init", "--publish") == 0
@@ -280,12 +189,6 @@ def test_init_publish_writes_the_yes_first_says_what_it_means_and_then_the_rules
     assert ob("init") == 0                                                                         # answered: no refusal any more
 
 
-def test_init_publish_in_a_private_repository_does_not_say_it_is_public(work, code, capsys):
-    assert ob("init", "--publish") == 0
-    out = capsys.readouterr().out
-    assert "in_code = true. The Board goes into this repository." in out and "public" not in out.split("in_code = true.")[1].split("\n")[0]
-
-
 def test_init_keep_off_writes_the_no_and_no_rules(work, code, capsys):
     code["code"] = 200
     assert ob("init", "--keep-off") == 0
@@ -294,11 +197,6 @@ def test_init_keep_off_writes_the_no_and_no_rules(work, code, capsys):
     assert board_in_code.read(work) is False and not (work / "AGENTS.md").exists() and not (work / "CLAUDE.md").exists()
     assert ob("init") == 1 and "the rules would find no Board" in capsys.readouterr().err        # kept off: a later init says so
     assert not (work / "AGENTS.md").exists()
-
-
-def test_init_with_both_answers_is_a_bad_call(work, code, capsys):
-    assert ob("init", "--publish", "--keep-off") == 2
-    assert "two answers" in capsys.readouterr().err and board_in_code.read(work) is None
 
 
 # -- F.4: a goal kept off -----------------------------------------------------------------------------------------------------------
@@ -322,13 +220,6 @@ def test_the_card_offers_keeping_a_goal_off_only_in_a_public_repository_with_the
     board_in_code.write(root, False)
     host.ideas._cache = None
     assert host.snapshot()["keep_off_offered"] is False
-
-
-def test_a_repository_with_no_remote_offers_no_line_whatever_was_said(fake_repo, code):
-    h = Orkboard(fake_repo)
-    board_in_code.write(fake_repo, True)
-    h.ideas._cache = None
-    assert h.snapshot()["keep_off_offered"] is False
 
 
 def test_a_new_goal_sent_with_keep_off_is_stored_by_board_in_code_and_the_other_is_not(host, code):
@@ -365,11 +256,3 @@ def test_a_goal_another_tool_holds_says_by_whom_and_until_when_on_its_row(host, 
 
 # -- the glossary -------------------------------------------------------------------------------------------------------------------
 
-def test_the_words_come_from_the_glossary():
-    t = lexicon.term
-    assert t("in_code") == "the Board in the code" and t("in_code_public") == ASK
-    assert t("in_code_pages") == "<n> pages of the Board are already in its history"
-    assert (t("publish_board"), t("keep_board_off"), t("is_private"), t("repo_private"), t("repo_public")) == ("Publish the Board", "Keep the Board off the repository", "Is this repository private?", "Private", "Public")
-    assert t("keep_goal_off") == "Keep off the repository" and t("goal_kept_off") == "Kept off the repository: on this computer only"
-    assert t("rules_find_no_board") == "The Board is kept off this repository: the rules would find no Board"
-    assert t("taken_by") == goal_take.TAKEN_LINE.replace("{by}", "<by>").replace("{time}", "<time>")

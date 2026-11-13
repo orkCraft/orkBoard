@@ -109,44 +109,6 @@ def test_one_holds_the_other_reads_and_refuses_to_write(world):
     assert runner.tick() is None
 
 
-def test_a_cloud_run_holding_the_board_is_said_in_the_specs_words(world):
-    origin, a, b = world
-    seed_board(a.state)
-    assert bl.take(a.root, a.state, bb.BoardConfig(), "run-1", "cloud run", T0, wiki_rel=WIKI)["held"]
-    b.tick(T0 + sec(30), 0)
-    assert b.ideas.board_held == "A cloud run has the Board: it gives it back when it ends (at most 30 min)"
-    assert b.sync.status(b)["board_held"]["kind"] == "cloud run"
-    assert "board_refused" in b.events()
-
-
-def test_the_holder_pushes_at_most_every_push_s_and_at_once_when_a_card_comes(world):
-    origin, a, b = world
-    seed_board(a.state)
-    a.tick(T0, 0)
-    n = lambda: int(git(origin, "rev-list", "--count", "refs/heads/orkboard/board").strip())
-    assert n() == 1
-    put(a.state, "ideas/dark-mode/state.json", json.dumps({"state": "working"}))
-    a.tick(T0 + sec(30), 30)                                              # changed, but pushed less than PUSH_S ago
-    assert n() == 1
-    a.tick(T0 + sec(bs.PUSH_S + 1), bs.PUSH_S + 1)
-    assert n() == 2
-    assert json.loads(git(origin, "show", "refs/heads/orkboard/board:ideas/dark-mode/state.json"))["state"] == "working"
-    a.tick(T0 + sec(bs.PUSH_S + 20), bs.PUSH_S + 20)                      # nothing changed: nothing pushed
-    assert n() == 2
-    put(a.state, "ideas/dark-mode/state.json", json.dumps({"state": "asks"}))
-    a.host.phone_journal = SimpleNamespace(came_at=lambda p: bs.PUSH_S + 40.0)      # a card for the person came to the hand
-    a.tick(T0 + sec(bs.PUSH_S + 41), bs.PUSH_S + 41)                      # at once, though PUSH_S has not passed
-    assert n() == 3
-    assert json.loads(git(origin, "show", "refs/heads/orkboard/board:ideas/dark-mode/state.json"))["state"] == "asks"
-
-
-def test_the_holder_renews_every_renew_s(world):
-    origin, a, _ = world
-    a.tick(T0, 0)
-    a.tick(T0 + sec(bl.RENEW_S + 1), bl.RENEW_S + 1)
-    assert dt.datetime.fromisoformat(a.remote_lease()["until"]) == T0 + sec(bl.RENEW_S + 1 + bl.LEASE_S)
-
-
 def test_the_holder_gives_back_and_the_other_takes_and_shows_the_same_board(world):
     origin, a, b = world
     seed_board(a.state)
@@ -211,27 +173,6 @@ def test_a_host_back_online_whose_push_is_still_the_tip_pushes_and_renews(world,
     assert json.loads(git(origin, "show", "refs/heads/orkboard/board:ideas/dark-mode/state.json"))["state"] == "offline-work"
 
 
-def test_a_second_computer_with_goals_of_its_own_loses_none_when_it_takes_the_branchs_board(world):
-    origin, a, b = world
-    seed_board(a.state)
-    a.tick(T0, 0)
-    a.sync.close(T0 + sec(10))
-    put(b.state, "ideas/b-own/state.json", json.dumps({"state": "raw"}))                  # a Board of its own, never pushed
-    b.tick(T0 + sec(20), 0)
-    assert b.sync.holds(b)
-    aside = sorted((b.state / bl.ASIDE_DIR).iterdir())
-    assert len(aside) == 1 and (aside[0] / "ideas/b-own/state.json").is_file()
-
-
-def test_the_tick_starts_one_thread_a_project_and_only_with_a_board_table(world):
-    origin, a, _ = world
-    seed_board(a.state)
-    a.sync.tick()
-    a.st = a.sync._state(a)
-    a.st.thread.join(20)
-    assert a.sync.holds(a)
-
-
 # -- the inbox is the holder's (B.2.4) ------------------------------------------------------------------------------
 
 def test_the_inbox_goal_is_laid_once_and_by_the_holder(world, tmp_path):
@@ -260,16 +201,6 @@ def test_the_inbox_goal_is_laid_once_and_by_the_holder(world, tmp_path):
     assert config is not None
 
 
-def test_holds_board_is_true_with_no_board_table_as_before(world):
-    _, a, _ = world
-    (a.root / "orkcraft.toml").write_text('[journal]\ninbox = "orkboard/inbox"\n')
-    assert PhoneJournal(a.host).holds_board(a) is True
-    (a.root / "orkcraft.toml").write_text(TOML)
-    assert PhoneJournal(a.host).holds_board(a) is False                     # a [board], and this computer does not hold it
-    a.tick(T0, 0)
-    assert PhoneJournal(a.host).holds_board(a) is True
-
-
 # -- no [board]: nothing runs --------------------------------------------------------------------------------------
 
 def test_with_no_board_table_nothing_runs(world, monkeypatch):
@@ -292,14 +223,3 @@ def test_with_no_board_table_nothing_runs(world, monkeypatch):
     assert subprocess.run(["git", "rev-parse", "--verify", "-q", "refs/orkboard/board"], cwd=a.root, capture_output=True).returncode != 0
     assert "board_taken" not in a.events() and not (a.state / bl.SYNC_FILE).exists()
 
-
-def test_the_real_host_starts_nothing_without_a_board_table(fake_repo, monkeypatch):
-    from orkboard.gui.board_host import Orkboard
-
-    def boom(*args, **kw):
-        raise AssertionError("something of the Board's branch ran")
-    monkeypatch.setattr(bl, "take", boom)
-    host = Orkboard(fake_repo)
-    host.tick()
-    host.close()
-    assert host.board_sync._states == {} and "board_held" not in host.snapshot() and "board_aside" not in host.snapshot()

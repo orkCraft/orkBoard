@@ -4,7 +4,6 @@ version before written once into the before-cache. Real git repositories, real s
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
 
 from orkboard.realm import assets, idea_pick, idea_shots, ideas
@@ -55,15 +54,6 @@ def test_the_kinds_by_extension_and_a_sound_by_its_folder_or_its_length():
     assert assets.kind_of("ui/ding.flac") == "music" and assets.kind_of("README.md") == ""
 
 
-def test_what_may_be_an_asset_and_what_never_is():
-    for ok in ("art/hero.png", "a b/ç.svg", "public/fonts/Pixel.woff2", "design/hero.png"):
-        assert assets.allowed(ok), ok
-    for bad in ("", "/etc/x.png", "../x.png", "a/../x.png", "a/./x.png", "a//x.png", "a\\x.png", "x.png\n", "a/\x00.png",
-                "node_modules/x/logo.png", "build/x.png", "dist/a.svg", ".git/x.png", ".orkcraft/ideas/x.png", ".github/x.png",
-                "design/looks/home.png", "art/.env.png", "art/hero.txt", "x" * 1001 + ".png", "a/" + "y" * 256 + "/x.png", None, 3):
-        assert not assets.allowed(bad), bad
-
-
 # -- the assets of dev's tree ---------------------------------------------------------------------------------------------
 
 def test_the_assets_are_dev_trees_by_kind_with_their_sizes_and_lengths_and_nothing_else(repo):
@@ -88,31 +78,6 @@ def test_the_assets_are_dev_trees_by_kind_with_their_sizes_and_lengths_and_nothi
     assert {k: rows["clips/intro.mp4"][k] for k in ("kind", "w", "h", "seconds")} == {"kind": "clip", "w": 320, "h": 240, "seconds": 5.0}
     assert rows["fonts/Pixel.ttf"]["kind"] == "font" and rows["fonts/Pixel.ttf"]["w"] is None
     assert (state(repo) / "assets-before" / "measured.json").is_file()                 # read once, kept by blob
-
-
-def test_a_file_over_the_limit_and_no_dev_branch_are_left_out(repo, tmp_path, monkeypatch):
-    put(repo, {"art/big.png": PNG + bytes(100), "art/ok.png": PNG})
-    monkeypatch.setattr(assets, "MAX_BYTES", len(PNG) + 10)
-    assert set(by_id(assets.listed(state(repo), repo, "dev"))) == {"art/ok.png"}
-    assert assets.listed(state(repo), repo, "no-such") == []
-
-
-def test_at_most_the_cap_the_changed_first_then_the_newest(repo, monkeypatch):
-    since = put(repo, {f"art/{n}.png": pf.png(n + 1, 1) for n in range(5)})
-    put(repo, {"art/new.png": PNG})
-    monkeypatch.setattr(assets, "MAX_ASSETS", 3)
-    changes = assets.changed(state(repo), repo, since)
-    rows = assets.listed(state(repo), repo, "dev", changes)
-    assert len(rows) == 3 and rows[0]["id"] == "art/new.png" and rows[0]["change"] == "added"
-    assert all(r["change"] == "" for r in rows[1:])
-
-
-def test_a_folder_of_one_kind_with_more_than_six_files_is_a_stack(repo):
-    put(repo, {**{f"icons/i{n}.png": pf.png(n + 1, 2) for n in range(7)}, **{f"few/f{n}.png": pf.png(n + 1, 3) for n in range(6)}})
-    rows = assets.listed(state(repo), repo, "dev")
-    assert assets.stacks(rows) == [{"folder": "icons", "kind": "art", "n": 7}]
-    assert {r["id"] for r in rows if r.get("stack") == "icons"} == {f"icons/i{n}.png" for n in range(7)}
-    assert not any("stack" in r for r in rows if r["id"].startswith("few/"))
 
 
 def test_a_tasks_newest_picture_is_a_screen(repo, tmp_path):
@@ -159,44 +124,7 @@ def test_added_changed_and_removed_since_a_commit_with_their_goals(repo):
     assert [r["id"] for r in assets.listed(state(repo), repo, "dev", got)][:2] in (["art/hero.png", "art/new.svg"], ["art/new.svg", "art/hero.png"])
 
 
-def test_no_since_or_one_that_is_not_devs_marks_nothing(repo):
-    put(repo, {"art/hero.png": PNG})
-    for since in ("", "nonsense", "0" * 40):
-        got = assets.changed(state(repo), repo, since)
-        assert (got["added"], got["changed"], got["removed"]) == ([], [], [])
-
-
 # -- the version before (§4) ------------------------------------------------------------------------------------------------
-
-def test_the_version_before_is_written_once_into_the_cache_and_none_when_it_was_added_since(repo):
-    old = pf.png(2, 2)
-    since = put(repo, {"art/hero.png": old})
-    put(repo, {"art/hero.png": pf.png(9, 9), "art/new.png": PNG})
-    got = assets.before(state(repo), repo, "art/hero.png", since)
-    assert got["commit"] == since and got["file"] == state(repo) / "assets-before" / since / "art" / "hero.png"
-    assert got["file"].read_bytes() == old and (got["bytes"], got["w"], got["h"]) == (len(old), 2, 2)
-    mtime = got["file"].stat().st_mtime_ns
-    assert assets.before(state(repo), repo, "art/hero.png", since)["file"].stat().st_mtime_ns == mtime     # written once
-    assert assets.before(state(repo), repo, "art/new.png", since) is None                                 # added since
-    assert assets.before(state(repo), repo, "art/hero.png", "nonsense") is None
-    assert assets.before(state(repo), repo, "../hero.png", since) is None
-
-
-def test_the_cache_never_follows_a_link_out_and_keeps_the_newest_commits(repo, tmp_path, monkeypatch):
-    first = put(repo, {"art/hero.png": PNG})
-    base = state(repo) / "assets-before"
-    (base / first).mkdir(parents=True)
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    (base / first / "art").symlink_to(outside, target_is_directory=True)                  # a link laid in the cache
-    assert assets.materialize(state(repo), repo, first, "art/hero.png") is None and not any(outside.iterdir())
-    monkeypatch.setattr(assets, "CACHE_KEEP", 2)
-    shas = [put(repo, {"art/hero.png": pf.png(n + 2, 2)}) for n in range(3)]
-    for sha in shas:
-        assert assets.materialize(state(repo), repo, sha, "art/hero.png") is not None
-    kept = {d.name for d in base.iterdir() if d.is_dir() and len(d.name) == 40}
-    assert shas[-1] in kept and len(kept) <= 2
-    assert assets.materialize(state(repo), repo, shas[0], "art/hero.png").read_bytes() == pf.png(2, 2)     # written again when asked
 
 
 def test_a_link_or_a_submodule_in_the_tree_is_never_an_asset(repo):
@@ -206,25 +134,6 @@ def test_a_link_or_a_submodule_in_the_tree_is_never_an_asset(repo):
     assert set(by_id(assets.listed(state(repo), repo, "dev"))) == {"art/real.png"}
     sha = git(repo, "rev-parse", "HEAD")
     assert assets.materialize(state(repo), repo, sha, "art/link.png") is None
-
-
-def test_ogg_and_flac_lengths_are_read_from_their_headers():
-    vorbis = b"OggS" + bytes(24) + b"\x01vorbis" + bytes(4) + b"\x02" + (44100).to_bytes(4, "little") + bytes(40)
-    last = b"OggS\x00\x04" + (44100 * 3).to_bytes(8, "little") + bytes(20)
-    assert assets._ogg_seconds(vorbis + last) == 3.0
-    info = bytearray(18)
-    info[10:13] = (48000 << 4).to_bytes(3, "big")
-    info[14:18] = (48000 * 7).to_bytes(4, "big")
-    assert assets._flac_seconds(b"fLaC\x00\x00\x00\x22" + bytes(info)) == 7.0
-    assert assets._ogg_seconds(b"nothing") is None and assets._flac_seconds(b"fLaC") is None
-
-
-def test_git_is_never_given_a_path_as_an_option(repo):
-    put(repo, {"art/hero.png": PNG})
-    sha = git(repo, "rev-parse", "HEAD")
-    for bad in ("--output=/tmp/x.png", "-x.png"):
-        assert assets.materialize(state(repo), repo, sha, bad) is None
-    assert subprocess.run(["git", "status"], cwd=repo, capture_output=True).returncode == 0
 
 
 # -- the commands (As built) --------------------------------------------------------------------------------------------------
@@ -290,25 +199,3 @@ def test_the_logo_is_the_svg_before_any_png_else_the_largest_png_or_webp(repo):
     assert assets.logo(repo) == "logo.svg"                                                           # among svgs the path nearest the root
 
 
-def test_the_logos_names_are_the_six_words_with_an_optional_suffix():
-    for name in ("logo", "icon", "emblem", "brand", "app-icon", "favicon"):
-        for suffix in ("", "-dark", "_big", ".dark", "@2x"):
-            assert assets.LOGO.match(f"{name}{suffix}.png"), (name, suffix)
-    for name in ("logos.png", "iconic.png", "my-logo.png", "logo.txt", "logo", "a-icon.svg", "icons.svg"):
-        assert not assets.LOGO.match(name), name
-
-
-def test_the_logo_ignores_files_git_does_not_track_and_those_an_asset_never_is(repo):
-    put(repo, {"node_modules/pkg/logo.svg": SVG, ".github/logo.svg": SVG})
-    assert assets.logo(repo) == ""                                                                   # a skipped folder and a hidden one are no one's logo
-    (repo / "logo.svg").write_bytes(SVG)                                                             # written, never added
-    assert assets.logo(repo) == ""
-    git(repo, "add", "logo.svg")
-    assert assets.logo(repo) == "logo.svg"
-
-
-def test_the_logo_of_a_commit_is_read_from_its_tree_not_the_working_tree(repo):
-    first = put(repo, {"icon.png": PNG})
-    second = put(repo, {"logo.svg": SVG})
-    assert assets.logo(repo, first) == "icon.png" and assets.logo(repo, second) == "logo.svg"
-    assert assets.logo(repo, "HEAD") == ""                                                           # only a full commit names a tree

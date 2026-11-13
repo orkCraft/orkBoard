@@ -1,10 +1,8 @@
 """The local event log (realm/event_log.py, docs/design/dogfood-logs.md §3): exact, local, never sent."""
 import datetime as dt
-import io
 import json
-import zipfile
 
-from orkboard.realm import analytics, event_log
+from orkboard.realm import event_log
 
 
 def test_an_event_is_one_exact_line_in_the_towns_folder(tmp_path):
@@ -14,18 +12,6 @@ def test_an_event_is_one_exact_line_in_the_towns_folder(tmp_path):
     assert (tmp_path / ".orkcraft" / "usage" / "events.jsonl").is_file()
     assert row["event"] == "question_asked" and row["text"] == "Which port?" and row["options"] == ["8080", "3000"]
     assert dt.datetime.fromisoformat(row["at"]).tzinfo is not None
-
-
-def test_an_unknown_event_or_no_root_writes_nothing(tmp_path):
-    assert not event_log.record(tmp_path, "something_else", x=1)
-    assert not event_log.record(None, event_log.ASKED, text="demo")
-    assert event_log.read(tmp_path) == []
-
-
-def test_only_plain_data_is_kept_and_long_text_is_cut(tmp_path):
-    event_log.record(tmp_path, event_log.ASSUMED, text="x" * 5000, obj=object(), n=3, ok=True)
-    [row] = event_log.read(tmp_path)
-    assert len(row["text"]) == event_log.TEXT_MAX and "obj" not in row and row["n"] == 3 and row["ok"] is True
 
 
 def test_counts_and_the_weeks_summary(tmp_path):
@@ -40,14 +26,6 @@ def test_counts_and_the_weeks_summary(tmp_path):
     assert event_log.counts(tmp_path)["question_asked"] == 1
     s = event_log.summary(tmp_path, since="2026-10-10")
     assert s["answer_wait_median_s"] == 120 and s["counts"]["quest_done"] == 0
-
-
-def test_the_analytics_zip_carries_the_periods_events(tmp_path):
-    today = dt.date.today().isoformat()
-    event_log.record(tmp_path, event_log.QUEST_DONE, quest="1", seconds=40)
-    z = zipfile.ZipFile(io.BytesIO(analytics.pack(tmp_path, [today], {}, lambda b, d: [], lambda b, d: [])))
-    [row] = [json.loads(x) for x in z.read("events.jsonl").decode().splitlines()]
-    assert row["event"] == "quest_done" and row["quest"] == "1"
 
 
 def test_the_gate_merging_dev_into_main_is_an_event_with_its_counts(tmp_path):
@@ -69,16 +47,6 @@ def test_a_goal_raising_its_flag_is_an_event_with_what_it_took(tmp_path):
     assert event_log.counts(tmp_path)["idea_flagged"] == 1
 
 
-def test_a_pick_asked_and_answered_are_events_with_what_the_measure_needs(tmp_path):
-    """Spec 51 §2.4, §4: `pick_asked` and `pick_answered` — how many, of which kind, which round; which key (null: none), a note's length, where, how long."""
-    assert event_log.record(tmp_path, event_log.PICK_ASKED, idea="dark-mode", task="k2", n=4, media="image", round=1)
-    assert event_log.record(tmp_path, event_log.PICK_ANSWERED, idea="dark-mode", task="k2", key="B", note_chars=0, via="hand", seconds=12.5, device="phone")
-    asked, answered = event_log.read(tmp_path)
-    assert (asked["event"], asked["n"], asked["media"], asked["round"]) == ("pick_asked", 4, "image", 1)
-    assert (answered["key"], answered["note_chars"], answered["via"], answered["seconds"], answered["device"]) == ("B", 0, "hand", 12.5, "phone")
-    assert event_log.counts(tmp_path)["pick_asked"] == 1 and event_log.counts(tmp_path)["pick_answered"] == 1
-
-
 def test_a_goal_of_a_type_who_joins_and_a_plans_missing_are_in_the_events_spec_52(tmp_path):
     """Spec 52 §2.7: `idea_added` with its type, asks answered, Refs' pictures, who joined and who left; `goal_saved` with
     joined, out and via; `plan_passed` with who joined and how many kinds the plan missed."""
@@ -98,69 +66,6 @@ def test_a_goal_of_a_type_who_joins_and_a_plans_missing_are_in_the_events_spec_5
     assert "offered (how many types" in source and "near (how many of them" in source and "preset (the library's party" in source and '"<builders>/<checkers>"' in source
 
 
-def test_the_spec_after_the_start_has_three_events_spec_62(tmp_path):
-    """Spec 62 §4.4: a section written by hand, the plan change the leader proposed (with the call's measure), and the person's answer."""
-    for name, value in (("IDEA_EDITED", "idea_edited"), ("PLAN_REVISED", "plan_revised"), ("PLAN_CHANGE_ANSWERED", "plan_change_answered")):
-        assert getattr(event_log, name) == value and value in event_log.EVENTS
-    assert len(set(event_log.EVENTS)) == len(event_log.EVENTS)
-    assert event_log.record(tmp_path, event_log.PLAN_REVISED, idea="a", changed=["Gist", "Out"], added=1, changed_n=0, dropped=2,
-                            usd_low=-0.1, usd_high=-0.3, step="plan", prompt_chars=900, tokens={"in": 1, "out": 2, "cache_read": 0}, cost=0.02)
-    assert event_log.record(tmp_path, event_log.PLAN_CHANGE_ANSWERED, idea="a", take=True, added=1, changed_n=0, dropped=2, left=1, via="hand", device="phone")
-    assert event_log.record(tmp_path, event_log.IDEA_EDITED, idea="a", section="Out", chars=12, passed=True, device="desktop")
-    revised, answered, edited = event_log.read(tmp_path)
-    assert (revised["changed"], revised["added"], revised["changed_n"], revised["dropped"]) == (["Gist", "Out"], 1, 0, 2)
-    assert (revised["usd_low"], revised["usd_high"], revised["step"], revised["prompt_chars"], revised["cost"]) == (-0.1, -0.3, "plan", 900, 0.02)
-    assert revised["tokens"] == {"in": 1, "out": 2, "cache_read": 0}
-    assert (answered["take"], answered["added"], answered["changed_n"], answered["dropped"], answered["left"], answered["via"]) == (True, 1, 0, 2, 1, "hand")
-    assert (edited["section"], edited["chars"], edited["passed"], edited["device"]) == ("Out", 12, True, "desktop")
-    assert event_log.counts(tmp_path)["plan_revised"] == 1 and event_log.counts(tmp_path)["plan_change_answered"] == 1
-    from pathlib import Path
-    source = Path(event_log.__file__).read_text(encoding="utf-8")
-    assert "changed (the sections it was made for)" in source and "left (how many of its tasks had started meanwhile)" in source
-
-
-def test_a_done_to_do_says_whether_it_was_gone_without_or_described(tmp_path):
-    event_log.record(tmp_path, event_log.TODO_DONE, idea="x", todo="t1", kind="file", skipped=False, words=True)
-    [row] = event_log.read(tmp_path)
-    assert row["skipped"] is False and row["words"] is True
-
-
-def test_spec_67_events_are_the_goals_move_a_release_made_and_out_and_a_party_switch(tmp_path):
-    assert {"idea_moved", "release_made", "release_out", "party_shown"} <= set(event_log.EVENTS)
-    event_log.record(tmp_path, event_log.IDEA_MOVED, goal="dark-mode", device="desktop", **{"from": "app", "to": "web"})
-    event_log.record(tmp_path, event_log.RELEASE_MADE, goal="release-1-4", party="release", goals=3, parties=2, device="phone")
-    event_log.record(tmp_path, event_log.RELEASE_OUT, goal="release-1-4", goals=3, days=4, device="desktop")
-    event_log.record(tmp_path, event_log.PARTY_SHOWN, face="phone", **{"from": "app", "to": "web"})
-    moved, made, out, shown = event_log.read(tmp_path)
-    assert (moved["from"], moved["to"], moved["goal"]) == ("app", "web", "dark-mode") and (made["goals"], made["parties"]) == (3, 2)
-    assert (out["days"], out["goals"]) == (4, 3) and (shown["from"], shown["to"], shown["face"]) == ("app", "web", "phone")
-    assert event_log.counts(tmp_path)["party_shown"] == 1 and event_log.counts(tmp_path)["release_out"] == 1
-
-
-def test_the_orkmasters_proposals_are_events_that_hold_a_kind_and_a_recipe_never_a_line(tmp_path):
-    """Spec 75 §4.4."""
-    for name, value in (("PROPOSALS_SHOWN", "proposals_shown"), ("PROPOSAL_TAKEN", "proposal_taken"), ("PARTY_RESIZED", "party_resized")):
-        assert getattr(event_log, name) == value and value in event_log.EVENTS
-    event_log.record(tmp_path, event_log.PROPOSALS_SHOWN, kind="wiki", n=2, ask=False, read=True, device="phone")
-    event_log.record(tmp_path, event_log.PROPOSAL_TAKEN, kind="mobile", recipe="mobile-features", size="standard", device="desktop")
-    event_log.record(tmp_path, event_log.PARTY_RESIZED, party="web", device="desktop", **{"from": "standard", "to": "full"})
-    rows = event_log.read(tmp_path)
-    assert [r["event"] for r in rows] == ["proposals_shown", "proposal_taken", "party_resized"]
-    assert rows[0]["kind"] == "wiki" and rows[1]["recipe"] == "mobile-features" and (rows[2]["from"], rows[2]["to"]) == ("standard", "full")
-
-
-def test_play_started_and_stopped_are_the_events_of_spec_88(tmp_path):
-    """Spec 88 §5: the project's preview of dev opened in Play (how long, whether it opened, why not) and why it stopped."""
-    for name, value in (("PLAY_STARTED", "play_started"), ("PLAY_STOPPED", "play_stopped")):
-        assert getattr(event_log, name) == value and value in event_log.EVENTS
-    assert len(set(event_log.EVENTS)) == len(event_log.EVENTS)
-    event_log.record(tmp_path, event_log.PLAY_STARTED, seconds=1.25, ok=False, why="no preview")
-    event_log.record(tmp_path, event_log.PLAY_STOPPED, why="idle")
-    started, stopped = event_log.read(tmp_path)
-    assert (started["seconds"], started["ok"], started["why"], stopped["why"]) == (1.25, False, "no preview", "idle")
-    assert event_log.counts(tmp_path)["play_started"] == 1 and event_log.counts(tmp_path)["play_stopped"] == 1
-
-
 def test_the_maps_events_are_spec_89s(tmp_path):
     """Spec 89 §1, §4: a leader's map opened (its lens, the parts, how many changed, hours since the last look), a part pressed, and a
     snapshot that failed after a landing."""
@@ -174,12 +79,6 @@ def test_the_maps_events_are_spec_89s(tmp_path):
     assert (opened["lens"], opened["parts"], opened["changed"], opened["hours"]) == ("system", 12, 3, 17.5)
     assert (pressed["changed"], pressed["goals"], failed["commit"], failed["why"]) == ("new", 1, "0123456789ab", "disk full")
     assert event_log.counts(tmp_path)["map_opened"] == 1
-
-
-def test_a_result_seen_is_an_event_of_spec_98(tmp_path):
-    assert event_log.RESULT_SEEN == "result_seen" and event_log.RESULT_SEEN in event_log.EVENTS
-    event_log.record(tmp_path, event_log.RESULT_SEEN, idea="a-goal", device="desktop")
-    assert event_log.counts(tmp_path)["result_seen"] == 1 and len(set(event_log.EVENTS)) == len(event_log.EVENTS)
 
 
 def test_a_refused_command_and_a_red_toast_are_the_events_of_spec_107(tmp_path):

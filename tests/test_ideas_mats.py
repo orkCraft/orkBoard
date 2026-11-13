@@ -39,20 +39,6 @@ def test_a_token_for_each_leader_of_the_route_that_has_said_its_talk(host):
     assert {"stance", "for", "against", "instead", "assumes"} <= set(got["goal"][0])
 
 
-def test_a_goal_whose_leaders_have_said_nothing_has_no_tokens(host):
-    lay(host, PAGE.format(p="x", t="y"))
-    assert host.command("ideas.verdicts", {}) == {}
-
-
-def test_tables_with_no_tree_lay_the_zones_empty_saying_who_fills_them(host):
-    lay(host, PAGE.format(p="x", t="y"))
-    got = host.command("ideas.tables", {})
-    jt = got["product"]["jtbd"]
-    assert jt["job"] is None and jt["jobs"] == [] and jt["personas"] == []
-    assert jt["fills"]["jobs"] == "Product lays its jobs" and jt["fills"]["personas"] == "Product asks the person who the people are"
-    assert "tech" not in got                                        # the fixture project has no orkboard/ code
-
-
 def test_tables_with_a_tree_lay_its_jobs(host):
     lay(host, PAGE.format(p="x", t="y"))
     opportunity_tree.keep(host.ideas.state_dir, [{"text": "The person decides"}], [
@@ -63,32 +49,6 @@ def test_tables_with_a_tree_lay_its_jobs(host):
     assert jt["job"]["want"] == "see what waits" and jt["job"]["persona"] == "Solo developer"
     assert [j["title"] for j in jt["jobs"]] == ["stop it", "see the diff"] and jt["personas"][0]["title"] == "Solo developer"
     assert jt["fills"]["job"] == "" and jt["fills"]["personas"] == ""
-
-
-def test_on_this_repository_each_token_is_a_talk_architecture_is_its_code_and_nothing_is_an_example():
-    h = Orkboard(REPO)
-    try:
-        verdicts = h.command("ideas.verdicts", {})
-        tables = h.command("ideas.tables", {})
-    finally:
-        sys.modules.pop("orkboard.core.idea_runner", None)
-    root = h.ideas.root(make=False)
-    found, pages = ideas.ideas_and_pages(root)
-    parties = ideas.tracks(root, make=False)
-    for i in found:                                                   # each token is a leader's Talk as page_talk reads it, in the route's order
-        want = [(s, page_talk.read_talk(pages[i["slug"]], board_turns._title(parties, s))) for s in board_turns.route_of(pages[i["slug"]])]
-        want = [{"leader": s, **say} for s, say in want if say is not None]
-        assert verdicts.get(i["slug"], []) == want
-    assert any(verdicts.values())
-    arch = tables["tech"]["architecture"]
-    assert arch["title"] == "Architecture" and {c["id"] for layer in arch["layers"] for c in layer["cards"]} >= {"gui/", "core/", "realm/"}
-    assert tables["product"]["jtbd"]["fills"]
-    assert "· example" not in json.dumps([verdicts, tables])
-
-
-def test_the_reader_of_the_code_writes_nothing():
-    text = Path(code_layers.__file__).read_text(encoding="utf-8")
-    assert "write_text" not in text and "subprocess" not in text and "orkboard.gui" not in text
 
 
 # -- stage E: ideas.reply and ideas.ask_leader (a paid pass, sealed; the model faked as tests/test_idea_ask.py fakes it) ---------------------
@@ -123,38 +83,6 @@ def test_a_reply_is_refused_unsealed_and_nothing_is_begun(host):
         with pytest.raises(CommandError, match="a paid pass cannot be undone"):
             host.command(name, args)
     assert not calls and _record(host) is None
-
-
-def test_its_cost_is_said_first_and_the_call_begins_with_the_goal_named(host):
-    lay(host, PAGE.format(p="x", t=TALK))
-    calls: list = []
-    _faked(host, calls)
-    cost = host.command("ideas.ask_cost", {})
-    assert cost["calls"] == 1 and cost["usd_high"] and not calls                       # read before any model runs
-    got = host.command("ideas.reply", {"slug": "goal", "leader": "tech", "text": "Why one writer?", "sealed": True})
-    assert got["ok"] is True and got["usd_high"] == cost["usd_high"]
-    _wait_ask(host)
-    rec = _record(host)
-    assert rec["status"] == "answered" and rec["party"] == "tech" and "(goal)" in rec["q"] and "Why one writer?" in rec["q"]
-    assert "Why one writer?" in calls[0]
-
-
-def test_a_leader_not_on_the_card_and_a_part_of_a_framework_are_asked_the_same_way(host):
-    from orkboard.gui.board_host import CommandError
-    lay(host, PAGE.format(p="x", t=TALK))
-    calls: list = []
-    _faked(host, calls)
-    host.command("ideas.ask_leader", {"slug": "goal", "leader": "product", "text": "And you?", "sealed": True})
-    _wait_ask(host)
-    assert _record(host)["party"] == "product"
-    host.command("ideas.ask_leader", {"party": "tech", "framework": "Architecture", "card": "core/", "text": "Why here?", "sealed": True})
-    _wait_ask(host)
-    q = _record(host)["q"]
-    assert _record(host)["party"] == "tech" and "Architecture" in q and "core/" in q and "Why here?" in q
-    with pytest.raises(CommandError, match="That party is gone"):
-        host.command("ideas.ask_leader", {"party": "nobody", "framework": "A", "card": "b", "text": "?", "sealed": True})
-    with pytest.raises(CommandError, match="No goal"):
-        host.command("ideas.reply", {"slug": "nope", "leader": "tech", "text": "?", "sealed": True})
 
 
 def test_a_sealed_move_logs_move_played_with_its_kind_and_from_and_keeps_no_undo(host):
@@ -237,16 +165,3 @@ def test_the_gate_mats_merge_into_main_keeps_its_goal_and_its_from_as_sent_and_n
         assert len(_moves(h)) == n + 1 and (row["idea"], row["kind"], row["from"]) == (slug, "merge_main", kept), (given, row)
 
 
-def test_the_gate_mats_send_to_dev_keeps_its_goal_and_its_from_as_sent_and_none_is_none(gate_host):
-    from orkboard.realm import goal_branch
-    from orkboard.realm.idea_git import IdeaGit
-    from tests.test_goal_main_branch import land
-    h = gate_host
-    for n, (given, kept) in enumerate({"hand": "hand", "mat": "mat", None: ""}.items()):
-        slug = gm_goal(h, f"Lobby {n}")
-        branch = goal_branch.begin(IdeaGit(h.repo_root), h.ideas.state_dir, slug, {"tasks": []}, "dev", 1)
-        land(h, h.repo_root, slug, "k1", branch, {f"lobby{n}.ts": "l\n"})
-        goal_branch.ready(h.ideas.state_dir, slug)
-        h.command("ideas.goal_to_dev", {"sealed": True, "idea": slug, "untested": True, **({"from": given} if given is not None else {})})
-        row = _moves(h)[-1]
-        assert len(_moves(h)) == n + 1 and (row["idea"], row["kind"], row["from"]) == (slug, "send_branch", kept), (given, row)

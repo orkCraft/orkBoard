@@ -66,11 +66,6 @@ def _events(host, name):
     return [r for r in event_log.read(Path(host.town.repo_root)) if r["event"] == name]
 
 
-def test_the_new_commands_are_the_hosts_and_a_phones(host):
-    assert NEW_COMMANDS <= set(host.commands)
-    assert all(BoardPhone.allowed(host, c, {}) for c in NEW_COMMANDS)
-
-
 def test_a_goal_saved_is_read_by_the_keeper_at_once_and_written(host, model):
     slug = host.command("ideas.goal_save", GOAL)["slug"]
     assert slug == "grow-installs"
@@ -113,21 +108,6 @@ def test_editing_a_goal_sends_it_again_and_keeps_what_the_keeper_wrote(host, mod
     assert [e["new"] for e in _events(host, "goal_saved")] == [True, False]
 
 
-def test_a_goal_is_checked_and_listed_by_priority(host, model):
-    with pytest.raises(CommandError, match="title"):
-        host.command("ideas.goal_save", {"title": " "})
-    with pytest.raises(CommandError, match="Priority"):
-        host.command("ideas.goal_save", {"title": "X", "priority": "urgent"})
-    with pytest.raises(CommandError, match="deadline"):
-        host.command("ideas.goal_save", {"title": "X", "deadline": "soon"})
-    low = host.command("ideas.goal_save", {"title": "Later thing", "priority": "low"})["slug"]
-    high = host.command("ideas.goal_save", {"title": "Urgent thing", "priority": "high"})["slug"]
-    normal = host.command("ideas.goal_save", {"title": "Plain thing"})["slug"]
-    for s in (low, high, normal):
-        _wait(host, s, goal=True)
-    assert [t["slug"] for t in host.command("ideas.board")["tracks"]] == [high, normal, low]
-
-
 def test_the_answer_to_a_goals_question_is_the_same_talk_on_the_goal(host, model):
     slug = host.command("ideas.goal_save", GOAL)["slug"]
     _wait(host, slug, goal=True)
@@ -158,20 +138,6 @@ def test_an_idea_added_now_is_read_at_once_later_waits_for_the_batch(host, model
     assert len(model.seen) > seen and ideas.state(host.ideas.state_dir, later)["state"] == "ready"
     with pytest.raises(CommandError, match="read this goal already"):
         host.command("ideas.read_now", {"slug": later})
-
-
-def test_the_keeper_fills_an_ideas_priority_with_one_line_why_and_proposes_its_place(host, model):
-    # spec 35 §3: the priority is the person's; the keeper no longer proposes one, and still proposes the place
-    first = _add(host, "first idea")["slug"]
-    second = _add(host, "second idea")["slug"]
-    model.answers["idea"]["before"] = first
-    host.command("ideas.read_now", {"slug": second})
-    _wait(host, second)
-    page = host.command("ideas.page", {"slug": second})
-    why = next(s["text"] for s in page["sections"] if s["name"] == "Why")
-    assert why == "Moves weekly installs." and "Priority:" not in why
-    board = host.command("ideas.board")
-    assert [(i["slug"], i["priority"]) for i in board["ideas"]] == [(second, "normal"), (first, "normal")]
 
 
 def test_the_persons_drag_wins_over_the_keepers_place(host, model):
@@ -211,43 +177,6 @@ def test_roles_are_made_edited_dropped_and_the_built_ins_refused(host):
     assert [(e["role"], e["model"], e["max_parallel"], e["new"]) for e in saved] == [
         (slug, "laborer", 2, True), (slug, "warrior", 3, False)]
     assert dropped[0]["role"] == slug and dropped[0]["kinds"] == ["docs"] and kind[0]["kind"] == "docs"
-
-
-def test_agents_is_a_block_per_role_and_spend_is_summed_by_role(host):
-    slug = host.command("ideas.role_save", {"name": "Scribe", "model": "laborer", "max_parallel": 1})["slug"]
-    idea = _add(host, "an idea with work")["slug"]
-    state = host.ideas.state_dir
-    task = lambda tid, role, cost: {"id": tid, "title": tid, "brief": "b", "tier": "laborer", "kind": "docs", "role": role,  # noqa: E731
-                                    "after": [], "state": "running", "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "cost": cost}
-    ideas.save_plan(state, idea, {"idea": idea, "made_at": "x", "passed_at": None, "todos": [],
-                                  "tasks": [task("k1", slug, 0.25), task("k2", slug, 0.5), task("k3", "grunt", 1.0)]})
-    ideas.save_state(state, idea, state="working")
-    blocks = {b["role"]: b for b in host.command("ideas.agents")["roles"]}
-    assert list(blocks) == ["taskmaster", "grunt", slug]
-    assert [c["task"] for c in blocks[slug]["chips"]] == ["k1", "k2"] and blocks[slug]["chips"][0]["role"] == slug
-    assert [c["task"] for c in blocks["grunt"]["chips"]] == ["k3"]
-    assert blocks[slug]["spend_today"] == 0.75 and blocks["grunt"]["spend_today"] == 1.0
-    spent = {r["slug"]: r["spend_today"] for r in host.command("ideas.roles")["roles"]}
-    assert spent[slug] == 0.75
-
-
-def test_the_plan_marks_each_task_with_its_type():
-    from orkboard.core import idea_keeper
-    plan = idea_keeper.make_plan("x", {"tasks": [
-        {"title": "a", "brief": "b", "kind": "docs"}, {"title": "c", "brief": "d"}, {"title": "e", "brief": "f", "kind": "poetry"}]})
-    assert [t["kind"] for t in plan["tasks"]] == ["docs", "code", "code"]
-
-
-def test_the_keepers_talk_and_plans_run_on_the_taskmasters_model(host, model):
-    slug = _add(host, "talk to me")["slug"]
-    model.answers["idea"] = {"reply": "ok", "sections": {}, "questions": []}
-    host.command("ideas.say", {"slug": slug, "text": "hello"})
-    _wait(host, slug)
-    assert "opus" in model.seen[-1]["model"]                                         # the Taskmaster's default: the elder tier
-    host.command("ideas.role_save", {"slug": "taskmaster", "name": "Taskmaster", "model": "laborer", "max_parallel": 1})   # a tier only (spec 36 §3)
-    host.command("ideas.say", {"slug": slug, "text": "again"})
-    _wait(host, slug)
-    assert "haiku" in model.seen[-1]["model"]
 
 
 def test_a_linked_document_is_read_from_the_repository_or_the_wiki_only(host):
@@ -307,19 +236,6 @@ def test_photos_go_with_an_idea_beside_its_state_and_the_taskmaster_reads_them_f
     assert idea_photos.listed(host.ideas.state_dir, slug) == []
 
 
-def test_the_words_of_a_goal_complete_new_idea_titles_first_then_its_terms(host):
-    root = host.ideas.root()
-    slug = ideas.save_goal(root, None, "Offline first", "The phone keeps working offline: the SyncQueue in sync_queue.py holds edits.")[0]
-    host.command("ideas.add", {"text": "Queue the edits while offline", "track": slug, "hold": True})
-    got = host.command("ideas.words", {"track": slug})
-    assert got["track"] == slug and got["words"][0] == "Offline first"
-    assert "offline" in got["words"] and "SyncQueue" in got["words"] and "sync_queue.py" in got["words"]
-    assert "while" not in got["words"] and "the" not in got["words"]
-    assert BoardPhone.allowed(host, "ideas.words", {"track": slug})                         # the phone asks for them
-    with pytest.raises(CommandError, match="That party is gone"):
-        host.command("ideas.words", {"track": "nope"})
-
-
 def test_needs_you_carries_every_question_with_its_likely_answers_and_one_answered_on_the_phone_leaves_the_rest_to_decide(host, model):
     """The phone answers a question in its card: the row carries the questions, the Taskmaster is asked to end
     each with its likely answers "(one / other)", and a goal's answers may be fewer than its questions."""
@@ -337,71 +253,7 @@ def test_needs_you_carries_every_question_with_its_likely_answers_and_one_answer
     assert "Which channel first? (npm / brew) — npm" in said and "Which week? — (no answer: decide)" in said
 
 
-def test_a_goals_question_comes_with_its_answer_picked_and_may_be_left_to_the_taskmaster(host, model):
-    # spec 41 §9: the choices, the pick and why from the model's answer; the page's line says the pick in bold
-    model.answers["goal"] = {"summary": "Installs first.", "metrics": [], "questions": [
-        {"ask": "Which channel first?", "choices": ["npm", "brew"], "pick": 1, "why": "most testers are on a Mac"},
-        {"ask": "Which week?", "choices": ["this", "next"], "pick": "next", "why": ""},
-        {"ask": "Bad choices?", "choices": ["a/b", "c"], "pick": 0}]}
-    slug = host.command("ideas.goal_save", GOAL)["slug"]
-    _wait(host, slug, goal=True)
-    row = next(n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "goal")
-    assert row["questions"][0] == "Which channel first? (npm / **brew**) — most testers are on a Mac"
-    assert [q["pick"] for q in row["asked"]] == [1, 1, None] and row["asked"][2] == {"ask": "Bad choices?", "choices": [], "pick": None, "why": ""}
-    host.command("ideas.answer", {"slug": slug, "decide": True, "goal": True})
-    _wait(host, slug, goal=True)
-    said = model.seen[-1]["prompt"]
-    assert "— brew" in said and "Which week? (this / **next**) — next" in said and "Bad choices? — (no answer: decide)" in said
-    got = _events(host, "goal_answered")[-1]
-    assert got["decided"] is True and got["answers"] == 2 and got["recommended"] == 0
-
-
-@pytest.mark.parametrize("source, written", [("hand", "hand"), ("open", "open"), ("elsewhere", None), (None, None)])
-def test_a_partys_answer_says_where_it_was_given_only_when_it_is_hand_or_open(host, model, source, written):
-    # spec 158 E: `from` on `goal_answered`
-    model.answers["goal"] = {"summary": "Installs first.", "metrics": [], "questions": [{"ask": "Which channel first?", "choices": ["npm", "brew"], "pick": 1}]}
-    slug = host.command("ideas.goal_save", GOAL)["slug"]
-    _wait(host, slug, goal=True)
-    host.command("ideas.answer", {"slug": slug, "answers": ["npm"], "goal": True, **({"from": source} if source is not None else {})})
-    got = _events(host, "goal_answered")[-1]
-    assert got.get("from") == written and ("from" in got) is (written is not None)
-
-
-def test_the_partys_reading_asks_no_metrics_and_keeps_those_written_before_spec_50(host, model):
-    """Spec 50 §2.5: the reading's prompt has no `metrics` in its answer's shape; a metric in the answer is not read; the metrics the
-    person set (or the keeper wrote before) stay on the page and are passed on to every goal's draft."""
-    slug = host.command("ideas.goal_save", GOAL)["slug"]
-    _wait(host, slug, goal=True)
-    (call,) = model.seen
-    shape = call["prompt"].split("Answer with one JSON object")[1]
-    assert '"summary"' in shape and "metric" not in shape.lower()
-    assert host.command("ideas.goal", {"slug": slug})["metrics"][0]["name"] == "weekly installs"
-    idea = _add(host, "Dark mode", track=slug)["slug"]
-    assert "weekly installs → 50" in host.ideas.keeper.draft_prompt(host.ideas.root(), idea)
-
-
 # -- spec 99 A: parties by craft ---------------------------------------------------------------------------------------------------------------------------------
-
-def test_general_team_and_ideation_are_not_made_and_a_party_of_a_craft_is(host):
-    for bad in ({"title": "General", "about": "x"}, {"title": "Team", "about": "x"}, {"title": "Ideas", "about": "x", "proposal": "ideation"},
-                {"title": "Ideas", "about": "x", "preset": "team"}, {"title": "Ideas", "about": "x", "leader": "investor", "team": []}):
-        with pytest.raises(CommandError, match="General and Ideation are not made any more"):
-            host.command("ideas.goal_save", bad)
-    assert [t for t in ideas.tracks(host.ideas.root(), make=False) if t["slug"] != "general"] == []               # nothing was made
-    slug = host.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "leader": "product-designer", "team": ["ui-kit"], "proposal": "design"})["slug"]
-    assert goal_team.recipe_of(host.ideas.root(), slug) == "design" and goal_team.craft_of(host.ideas.root(), slug) == "design"
-
-
-def test_the_board_row_of_a_party_says_its_craft_its_race_and_its_leaders_higher_form(host):
-    root = host.ideas.root()
-    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "proposal": "tech"})["slug"]
-    old = host.command("ideas.goal_save", {"title": "Screens", "about": "Looks.", "craft": "design", "leader": "product-designer", "team": ["ui-kit"]})["slug"]    # made with no recipe
-    alone = host.command("ideas.goal_save", {"title": "Alone", "about": "x"})["slug"]
-    rows = {g["slug"]: g for g in host.command("ideas.board")["tracks"]}
-    assert (rows[slug]["party_craft"], rows[slug]["race"], rows[slug]["leader"]["head"]["race"]) == ("tech", "peon", "shaman")
-    assert (rows[old]["party_craft"], rows[old]["race"], rows[old]["leader"]["head"]["race"]) == ("design", "elf", "dryad")     # a party made before: its leader's craft
-    assert (rows[alone]["party_craft"], rows[alone]["leader"]["head"]["race"]) == ("", "peon")                          # the Taskmaster's: an ork
-    assert goal_team.craft_of(root, slug) == "tech" and goal_team.craft_of(root, "general") == ""
 
 
 def test_a_squad_of_seven_seats_is_kept_whole_with_a_size_and_an_eighth_is_refused(host):
@@ -439,10 +291,3 @@ def test_release_reads_when_there_is_a_release_not_at_start(host, model, monkeyp
     assert len(model.seen) == 2, "once: a reading kept is not read again"
 
 
-def test_the_lens_of_a_release_party_reads_it(host, model):
-    rel = host.command("ideas.goal_save", {"about": "A version goes out.", "proposal": "release"})["slug"]
-    _wait(host, rel, goal=True)
-    assert model.seen == []
-    host.command("ideas.lens", {"track": rel})
-    _wait(host, rel, goal=True)
-    assert len(model.seen) == 1

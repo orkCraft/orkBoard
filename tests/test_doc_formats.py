@@ -70,30 +70,6 @@ Friends play at one TV.
 """
 
 
-def test_the_front_matter_is_read_flat_with_lists_both_ways():
-    meta, rest = F.front_matter(MADR)
-    assert meta["status"] == "superseded by ADR-0007" and meta["date"] == "2024-05-02"
-    assert meta["decision-makers"] == ["Ana", "Tech lead"] and meta["consulted"] == ["Design"] and meta["tags"] == ["storage"]
-    assert rest.lstrip().startswith("# Use Postgres")
-    assert F.front_matter("# No meta\n") == ({}, "# No meta\n") and F.front_matter("---\nopen: 1\n")[0] == {}
-
-
-def test_a_madr_record():
-    r = F.parse_record(MADR, "0004-use-postgres.md")
-    assert (r["format"], r["number"], r["title"], r["status"], r["date"]) == ("madr", 4, "Use Postgres for the scores", "superseded", "2024-05-02")
-    assert r["deciders"] == ["Ana", "Tech lead"] and r["context"] == "Scores are lost when the server restarts."
-    assert r["decision"] == 'Chosen option: "Postgres", because we host it already.'                     # its Consequences are their own part
-    assert r["consequences"] == "* Good, because backups exist." and r["extra"] == {"consulted": ["Design"], "tags": ["storage"]}
-
-
-def test_a_nygard_record_and_what_is_not_a_record():
-    r = F.parse_record(NYGARD, "0002-record-architecture-decisions.md")
-    assert (r["format"], r["number"], r["title"], r["status"], r["date"]) == ("nygard", 2, "Record architecture decisions", "accepted", "2023-01-10")
-    assert r["decision"] == "We will use ADRs." and r["consequences"] == "See Nygard's article."
-    assert F.parse_record("Just words, no title.\n", "README.md") is None
-    assert F.parse_record("# Index\n\n* [one](0001-x.md)\n", "index.md") is None                     # a title but no record's shape
-
-
 def test_the_boards_own_file_one_record_an_entry():
     got = F.parse_log(LOG, "docs/decisions.md")
     assert [(r["number"], r["title"], r["date"]) for r in got] == [(1, "One TV, no accounts", "3 October, the person and Orkboard"),

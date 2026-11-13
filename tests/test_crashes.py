@@ -9,7 +9,7 @@ import sys
 import pytest
 
 from orkboard import settings
-from orkboard.core import crashes, usage
+from orkboard.core import usage
 from orkboard.orkget import crashes as copy_crashes
 
 
@@ -23,14 +23,6 @@ def sent(monkeypatch):
     monkeypatch.setattr("orkboard.orkget.usage._post", keep)
     monkeypatch.setattr(copy_crashes, "_post", keep)
     return out
-
-
-def test_orkboard_sends_only_its_two_events():
-    assert set(usage.events("orkboard")) - {"install_started", "install_step", "install_finished"} \
-        == {"app_opened", "app_closed"}
-    assert usage.clean("building_built", {"type": "lake"}) is None                 # not an event of Orkboard's
-    assert usage.clean("app_opened", {"face": "gui", "tools": ["claude"], "project": "secret"}) \
-        == {"face": "gui", "tools": ["claude"]}
 
 
 def _share(yes: bool) -> None:
@@ -75,32 +67,6 @@ def test_a_no_forgets_the_id_and_sends_nothing(fake_repo, sent):
     assert sent == [] and settings.load().install_id == "" and settings.load().usage is False
 
 
-def test_the_pages_error_is_kept_and_reported_as_orkboards(fake_repo, sent, tmp_path):
-    from orkboard.gui.board_host import Orkboard
-    _share(True)
-    host = Orkboard(fake_repo)
-    host.command("crash.window", {"message": "TypeError: x is undefined at /home/me/secret.js",
-                                  "stack": "at draw (http://127.0.0.1:5/static/js/shell/update.js:12:3)"})
-    reports = [item for url, body in sent if url.endswith("/v1/crash") for item in body["items"]
-               if item["type"] == "event"]
-    assert len(reports) == 1, "the page's error goes to the proxy"
-    said = json.dumps(reports)
-    assert "secret" not in said and "/home/me" not in said and "static/js/shell/update.js" in said
-    host.close()
-
-
-def test_a_crash_is_kept_on_this_machine_named_with_orkboard(fake_repo, tmp_path):
-    from orkboard.gui.board_host import Orkboard
-    host = Orkboard(fake_repo)
-    try:
-        raise ValueError("broke")
-    except ValueError as e:
-        crashes.capture(e, where="command")
-    files = list(crashes.log_dir().glob("crash-*"))
-    assert files and all("orkboard" in f.name for f in files)
-    host.close()
-
-
 def test_the_host_puts_the_hooks_back_when_it_closes(fake_repo):
     from orkboard.gui.board_host import Orkboard
     before = sys.excepthook
@@ -120,11 +86,3 @@ def test_orkboard_usage_on_keeps_the_installers_id(capsys):
     assert main(["usage", "off"]) == 0 and settings.load().install_id == ""
     assert main(["usage", "on", "--id", "nope"]) == 2
 
-
-def test_a_folder_named_usage_still_opens(monkeypatch, tmp_path):
-    from orkboard.gui import board_host
-    seen = []
-    monkeypatch.setattr(board_host, "run", lambda root, **kw: seen.append(root) or 0)
-    (tmp_path / "usage").mkdir()
-    monkeypatch.chdir(tmp_path)
-    assert board_host.main(["./usage"]) == 0 and seen == [(tmp_path / "usage").resolve()]

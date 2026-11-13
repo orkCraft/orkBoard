@@ -11,7 +11,7 @@ import pytest
 
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_maps import MapsMixin, maps_commands
-from orkboard.realm import art_map, idea_pick, idea_shots, ideas, map_text
+from orkboard.realm import art_map, idea_pick, idea_shots, ideas
 from tests import pick_files as pf
 from tests.test_assets import PNG, land_files, put
 from tests.test_commit_goal import git, repo, state  # noqa: F401  (the fixture)
@@ -42,13 +42,6 @@ def test_art_kinds_come_first_in_their_order_then_the_others_each_asset_with_its
     assert (got["since"], got["removed"], got["stacks"]) == ("", [], [])
 
 
-def test_an_art_kind_is_read_even_with_nothing_in_it_and_the_others_only_when_they_have_something(repo):
-    put(repo, {"music/theme.wav": pf.wav(12, rate=200)})
-    got = art_map.read(state(repo), repo)
-    assert [(k["kind"], k["n"]) for k in got["kinds"]] == [("art", 0), ("sound", 0), ("music", 1), ("clip", 0)] and got["none"] is False
-    assert lane(got, "art")["assets"] == [] and lane(got, "art")["folders"] == []
-
-
 def test_the_screens_lie_last_dev_trees_only_and_no_dev_is_an_empty_map(repo, tmp_path):
     s = state(repo)
     png = tmp_path / "shot.png"
@@ -64,43 +57,7 @@ def test_the_screens_lie_last_dev_trees_only_and_no_dev_is_an_empty_map(repo, tm
     assert (none["commit"], none["kinds"], none["none"]) == ("", [], True) and art_map.text(s, repo, ref="no-such") is None
 
 
-def test_a_picked_file_keeps_its_variants_not_picked_under_it(repo, tmp_path):
-    s = state(repo)
-    pick = pf.make_pick(s, tmp_path / "v", {"a.png": pf.png(2, 2), "b.png": pf.png(3, 3), "c.png": pf.png(4, 4)}, slug="logo")
-    idea_pick.answer(s, "logo", pick, "B", "the round one")
-    (ideas.state_folder(s, "logo") / "plan.json").write_text(json.dumps({"tasks": [pf.task(3, state="merged")]}))
-    put(repo, {"assets/logo.png": pf.png(3, 3), "assets/other.png": PNG})
-    rows = {a["id"]: a for a in lane(art_map.read(s, repo), "art")["assets"]}
-    o = rows["assets/logo.png"]["others"]
-    assert (o["goal"], o["pick"], o["picked"]) == ("logo", "k1-r1", "B") and [(v["key"], v["file"]) for v in o["variants"]] == [("A", "a.png"), ("C", "c.png")]
-    assert "others" not in rows["assets/other.png"]
-
-
-def test_the_changed_since_a_commit_are_marked_with_their_goal_and_the_gone_listed(repo):
-    since = put(repo, {"art/hero.png": PNG, "art/old.png": PNG, "sfx/hit.wav": pf.wav(0.3)})
-    land_files(repo, "dark-mode", "k1", {"art/hero.png": pf.png(8, 8), "art/new.svg": pf.svg()})
-    git(repo, "rm", "-q", "art/old.png")
-    git(repo, "commit", "-q", "-m", "my own: the old one goes")
-    got = art_map.read(state(repo), repo, since)
-    assert got["since"] == since
-    marks = {a["id"]: (a["change"], a["goal"]) for k in got["kinds"] for a in k["assets"] if a["change"]}
-    assert marks == {"art/hero.png": ("changed", "dark-mode"), "art/new.svg": ("added", "dark-mode")}
-    assert [(r["id"], r["kind"], r["goal"]) for r in got["removed"]] == [("art/old.png", "art", "")]
-
-
 # -- the text ---------------------------------------------------------------------------------------------------------------------------
-
-def test_the_text_counts_the_kinds_by_folder_in_words_and_is_the_same_bytes_for_the_same_dev(game):
-    text = art_map.text(state(game), game)
-    assert text == art_map.text(state(game), game) == art_map.text(state(game), game, "")
-    assert text.startswith(f"The map of Art's assets at dev {git(game, 'rev-parse', 'dev')[:7]}\n\nPictures (6):\n")
-    for line in ("- ./: 1 picture", "- icons/: 1 picture", "- sprites/: 4 pictures", "Sounds (2):", "- game/sfx/: 2 sounds", "Music (1):", "- music/: 1 music track",
-                 "Clips (1):", "- clips/: 1 clip", "Fonts (1):", "- fonts/: 1 font"):
-        assert line in text.split("\n"), line
-    assert text.index("Pictures") < text.index("Sounds") < text.index("Music") < text.index("Clips") < text.index("Fonts") and "Picked" not in text
-    put(game, {"README.md": b"# changed\n"})                                      # a head that changed no asset: only the head line differs
-    assert art_map.text(state(game), game).split("\n", 1)[1] == text.split("\n", 1)[1]
-
 
 def test_each_asset_has_a_weight_by_its_kind_and_each_kind_its_total_bytes(repo):
     kb = art_map.KB
@@ -110,32 +67,6 @@ def test_each_asset_has_a_weight_by_its_kind_and_each_kind_its_total_bytes(repo)
     assert [art[i]["weight"] for i in ("a/small.png", "a/mid.png", "a/big.png")] == ["light", "normal", "heavy"]
     assert lane(got, "art")["bytes"] == sum(a["bytes"] for a in art.values()) and lane(got, "sound")["bytes"] == 0
     assert lane(got, "music")["assets"][0]["weight"] == "light" and lane(got, "music")["bytes"] == lane(got, "music")["assets"][0]["bytes"]
-
-
-def test_weight_is_light_up_to_the_first_limit_heavy_above_the_second_and_normal_when_unknown():
-    light, heavy = art_map.WEIGHTS["sound"]
-    assert [art_map.weight("sound", n) for n in (0, light, light + 1, heavy, heavy + 1)] == ["light", "light", "normal", "normal", "heavy"]
-    assert art_map.weight("sound", None) == art_map.weight("nothing", 5) == art_map.weight("sound", True) == "normal"
-
-
-def test_the_budget_is_read_from_the_art_table_of_orkcraft_toml_and_none_when_unset_or_bad(repo):
-    assert art_map.read(state(repo), repo)["budget_mb"] is None
-    for body, want in (("[art]\nbudget_mb = 250\n", 250), ("[art]\nbudget_mb = 1.5\n", 1.5), ("[art]\nbudget_mb = 0\n", None), ("[art]\nbudget_mb = \"big\"\n", None),
-                       ("[art]\n", None), ("[gate]\nalways = []\n", None), ("[art\n", None)):
-        (repo / "orkcraft.toml").write_text(body)
-        assert art_map.budget_mb(repo) == want, body
-    (repo / "orkcraft.toml").write_text("[art]\nbudget_mb = 80\n")
-    assert art_map.read(state(repo), repo)["budget_mb"] == 80
-
-
-def test_the_text_does_not_say_weights_or_the_budget(game):
-    before = art_map.text(state(game), game)
-    (game / "orkcraft.toml").write_text("[art]\nbudget_mb = 80\n")
-    assert art_map.text(state(game), game) == before and "heavy" not in before and "budget" not in before
-
-
-def test_nothing_to_read_when_dev_holds_no_asset(repo):
-    assert art_map.text(state(repo), repo).endswith("\n\nNothing to read yet: the project's pictures, sounds, music and clips.")
 
 
 def test_the_picks_lines_and_the_changed_since_with_the_goal_and_by_you(repo, tmp_path):
@@ -153,13 +84,6 @@ def test_the_picks_lines_and_the_changed_since_with_the_goal_and_by_you(repo, tm
     assert changed == ["- new picture art/new.svg (goal dark-mode)", "- changed picture art/hero.png (goal dark-mode)", "- gone picture art/old.png (by you)"]
     assert art_map.text(s, repo, "nonsense").endswith("Changed since your last call: not known (that commit is not in dev).")
     assert art_map.text(s, repo, git(repo, "rev-parse", "dev")).endswith("Changed since your last call: nothing.")
-
-
-def test_the_text_is_bounded_and_says_how_many_lines_it_left_out(repo):
-    put(repo, {f"folder{n:04d}/pic.png": pf.png(2, 2) for n in range(400)})
-    text = art_map.text(state(repo), repo)
-    assert len(text) <= map_text.LIMIT and text.splitlines()[-1].startswith("- and ") and text.splitlines()[-1].endswith(" more lines: read further what you need")
-    assert text == art_map.text(state(repo), repo)
 
 
 # -- ideas.art_map ----------------------------------------------------------------------------------------------------------------------

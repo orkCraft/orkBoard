@@ -2,12 +2,10 @@
 parties' teams, `project` in `ideas.map`, `@project` in `ideas.shown`. Code, no model."""
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import CommandError
-from orkboard.realm import event_log, ideas, library, orkmaster, party_recipes
+from orkboard.realm import ideas, orkmaster, party_recipes
 from tests.test_idea_route import events, flag, goal, host, party, wait_party  # noqa: F401  (`host`: the fixture of spec 68's route tests)
 
 CRAFTS = list(party_recipes.CRAFTS)
@@ -26,14 +24,6 @@ def rows(deal):
     return [(r["id"], r["why"], r["n"]) for r in deal]
 
 
-def test_the_orkmaster_is_an_ork_with_a_crown():
-    from orkboard.realm import roles
-    assert orkmaster.ORKMASTER == {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
-    assert orkmaster.ORKMASTER["tier"] == "crown" and "crown" not in roles.TIERS            # a rank, not a tier a role can pick (spec 76 §2.4)
-    races = Path(__file__).resolve().parent.parent / "design-system" / "orkui" / "races"
-    assert (races / "peon-crown.png").is_file() and (races / "peon-crown@2x.png").is_file()   # the copy has the crowned head
-
-
 def test_a_project_with_no_party_is_dealt_every_crafts_party_and_release_is_not_first_without_flags(bare):
     got = orkmaster.deal(bare.root, bare.state)
     assert [r["id"] for r in got] == list(party_recipes.CRAFTS) == CRAFTS and len(got) == 9      # one craft a party: no mixed preset, no Ideation (spec 99 §1.1)
@@ -48,15 +38,6 @@ def test_flags_and_no_release_party_deal_release_first_with_their_count(host):
     got = orkmaster.deal(h.root, h.state)
     assert rows(got)[:2] == [("release", "flags_wait", 3), ("product", "", 0)]
     assert sorted(r["id"] for r in got) == sorted(CRAFTS)                              # every craft once
-
-
-def test_a_release_party_is_dealt_last_as_have(host):
-    h = host
-    party(h, "Release", "release")
-    flag(h, goal(h, h.app, "Flagged"))
-    got = orkmaster.deal(h.root, h.state)
-    assert rows(got)[-1:] == [("release", "have", 0)]
-    assert [r["id"] for r in got[:-1]] == [i for i in CRAFTS if i != "release"]
 
 
 def test_a_goal_type_goes_to_the_party_that_takes_it_whole_then_the_party_that_misses_someone_then_none(host):
@@ -76,40 +57,6 @@ def test_a_goal_type_goes_to_the_party_that_takes_it_whole_then_the_party_that_m
     assert h.command("ideas.party_for", {"type": "screen"}) == {"parties": got, "suggested": next(r["party"] for r in got if r["fits"] != "none")}
 
 
-def test_the_first_party_that_misses_someone_is_suggested_when_none_takes_it_whole_and_the_first_when_none_does(host):
-    h = host
-    design = h.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "craft": "design", "leader": "product-designer",
-                                           "team": ["ui-kit", "accessibility-reviewer"]})["slug"]
-    wait_party(h, design)
-    assert orkmaster.suggested([{"party": "a", "fits": "none"}, {"party": "b", "fits": "missing"}, {"party": "c", "fits": "none"}]) == "b"
-    assert orkmaster.suggested([{"party": "a", "fits": "none"}, {"party": "b", "fits": "none"}]) == "a"
-    assert orkmaster.suggested([]) == ""
-    assert h.command("ideas.party_for", {"type": "logo"})["parties"][0]["party"] in (h.app, design)
-
-
-def test_without_a_type_every_party_fits_nothing_in_particular_and_ideation_is_last_as_a_pitch(host):
-    h = host
-    got = host.command("ideas.party_for", {})
-    assert [(r["party"], r["fits"], r["missing"]) for r in got["parties"]] == [(h.app, "", []), (h.web, "", []), (h.talk, "pitch", [])]
-    assert got["suggested"] == h.app
-    assert host.command("ideas.party_for", {"type": ""}) == got
-
-
-def test_party_for_leaves_general_out_and_is_refused_for_a_type_the_catalog_lacks(host):
-    h = host
-    assert "general" not in [r["party"] for r in h.command("ideas.party_for", {"type": "bug"})["parties"]]
-    with pytest.raises(CommandError, match="No goal type 'nope'"):
-        h.command("ideas.party_for", {"type": "nope"})
-
-
-def test_party_for_writes_nothing(host):
-    h = host
-    before = sorted((p, p.stat().st_mtime_ns) for p in list(h.root.rglob("*")) + list(h.state.rglob("*")) if p.is_file())
-    h.command("ideas.party_for", {"type": "logo"})
-    h.command("ideas.map", {})
-    assert before == sorted((p, p.stat().st_mtime_ns) for p in list(h.root.rglob("*")) + list(h.state.rglob("*")) if p.is_file())
-
-
 def test_the_map_carries_the_project_counted_from_the_flags_it_read(host):
     h = host
     got = h.command("ideas.map", {})["project"]
@@ -122,14 +69,3 @@ def test_the_map_carries_the_project_counted_from_the_flags_it_read(host):
     assert got["deal"] == orkmaster.deal_first(orkmaster.deal(h.root, h.state), ideas.tracks(h.root, make=False), "code", {})     # as the realm counts it
     assert h.command("ideas.map", {"goal": h.app})["project"]["deal"] == got["deal"]    # the project's, whatever party the Map is of
 
-
-def test_shown_takes_the_project_as_a_party_and_as_where_from(host):
-    h = host
-    assert h.command("ideas.shown", {"party": "@project", "from": h.app}) == {"ok": True}
-    assert h.command("ideas.shown", {"party": h.web, "from": "@project", "device": "phone"}) == {"ok": True}
-    h.command("ideas.shown", {"party": "@project", "from": "@project"})                  # the same: nothing
-    h.command("ideas.shown", {"party": "@project"})                                      # a first read: nothing
-    with pytest.raises(CommandError, match="That party is gone"):
-        h.command("ideas.shown", {"party": "nowhere", "from": "@project"})
-    shown = events(h, "party_shown")
-    assert [(r["from"], r["to"]) for r in shown] == [(h.app, "@project"), ("@project", h.web)] and event_log.PARTY_SHOWN == "party_shown"

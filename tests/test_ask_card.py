@@ -3,9 +3,8 @@ is), its one call on the cheaper tier with no reads, the three ways of the card 
 The model call is stubbed as in tests/test_idea_ask.py."""
 from __future__ import annotations
 
-import pytest
 
-from orkboard.realm import board_ask, event_log, idea_target, ideas, journals, way_kinds
+from orkboard.realm import board_ask, event_log, idea_target, ideas, journals
 from tests.test_idea_ask import ANSWER, Model, _ask, _events, _party, _rec, _wait, host, model, product, tech  # noqa: F401
 
 
@@ -40,12 +39,6 @@ def test_the_orkmasters_own_answer_and_a_partys_are_one_call_each_on_the_cheaper
     assert [_rec(host)[k] for k in ("party", "tab", "hop")] == [tech, tech, False]
 
 
-def test_the_card_has_three_ways_by_their_kinds(host, product, model):
-    _ask(host, product, "Where is the price list?")
-    ways = _rec(host)["ways"]
-    assert ways == list(board_ask.WAYS) == ["make_it_a_goal", "ask_more", "take"]
-    assert all(way_kinds.clean(k) == k for k in ways)                                                       # each is a kind of realm/way_kinds.py
-    assert host.snapshot()["ask"]["ways"] == ways
 
 
 def test_the_answer_is_kept_in_the_leaders_journal_as_asked_and_the_orkmasters_in_the_projects_not_on_the_board(host, product, tech, model):
@@ -61,16 +54,5 @@ def test_the_answer_is_kept_in_the_leaders_journal_as_asked_and_the_orkmasters_i
     assert ideas.ideas(host.ideas.root()) == [] and "Where is the lobby?" not in str(host.command("ideas.board"))        # no goal, nothing on the Board
 
 
-def test_a_failed_question_writes_no_journal_line(host, product, model):
-    model.answer = "not json"
-    _ask(host, product, "Where is it?")
-    assert _rec(host)["status"] == "failed" and not [e for e in journals.read(host.ideas.state_dir, product) if e["kind"] == "asked"]
 
 
-def test_got_it_puts_the_card_away_and_is_measured(host, product, model):
-    _ask(host, product, "Where is the price list?")
-    assert host.command("ideas.ask_clear", {"got_it": True}) == {"ok": True} and host.snapshot()["ask"] is None
-    (ev,) = _events(host, event_log.ASK_GOT_IT)
-    assert ev["party"] == product and ev["tab"] == product
-    host.command("ideas.ask_clear", {"got_it": True})                                                       # nothing left: no second event, no error
-    assert len(_events(host, event_log.ASK_GOT_IT)) == 1

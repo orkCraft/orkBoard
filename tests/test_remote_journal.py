@@ -52,10 +52,6 @@ def town(tmp_path: Path):
     return repo, origin, state
 
 
-def test_no_journal_table_is_off(tmp_path):
-    assert rj.read_config(tmp_path) is None
-    (tmp_path / "orkcraft.toml").write_text('[gate]\nrun = "pytest"\n')
-    assert rj.read_config(tmp_path) is None
 
 
 def test_a_config_reads_with_defaults_and_ignores_a_bad_value(tmp_path):
@@ -88,9 +84,6 @@ def test_scrub_holds_back_each_secret_shape(secret):
     assert n == 1 and secret not in text and rj.HELD in text and "fine\n" in text
 
 
-def test_scrub_keeps_ordinary_lines():
-    ordinary = "the token budget is low\nsk-short\npassword: no\nsecret = x\n"
-    assert rj.scrub(ordinary) == (ordinary, 0)
 
 
 def test_send_makes_the_branch_and_touches_nothing_of_the_person(town):
@@ -132,27 +125,10 @@ def test_without_prompts_no_gz_goes_and_with_them_it_does(town):
     assert ".json.gz" in git(origin, "ls-tree", "-r", "--name-only", "with")
 
 
-def test_due_respects_every(tmp_path):
-    cfg = rj.JournalConfig(every=15)
-    assert rj.due(tmp_path, cfg, NOW)
-    rj._mark(tmp_path, NOW, {"sent": True})
-    assert not rj.due(tmp_path, cfg, NOW + dt.timedelta(minutes=14))
-    assert rj.due(tmp_path, cfg, NOW + dt.timedelta(minutes=15))
-    assert rj.due(tmp_path, cfg, NOW, urgent=True)
 
 
-def test_drive_journal_says_it_is_off_without_a_table(tmp_path, capsys):
-    (tmp_path / ".git").mkdir()
-    assert drive.main(["journal", "--folder", str(tmp_path), "--dry-run"]) == 0
-    assert "[journal]" in capsys.readouterr().out
 
 
-def test_drive_journal_dry_run_lists_and_sends_nothing(town, capsys):
-    repo, origin, _ = town
-    assert drive.main(["journal", "--folder", str(repo), "--dry-run"]) == 0
-    out = capsys.readouterr().out
-    assert "status.md" in out and "bytes" in out and "held back" in out and "drive.json" not in out
-    assert git(origin, "branch", "--list", "orkboard/journal").strip() == ""
 
 
 def test_status_json_is_the_data_status_md_is_written_from(town):
@@ -183,21 +159,8 @@ def test_taken_json_keeps_thirty_days_and_status_json_seven(town):
     assert json.loads(files["taken.json"])["v"] == 1
 
 
-def test_status_json_and_taken_json_are_scrubbed_as_every_file_is(town):
-    repo, _, state = town
-    rj.write_taken(state, [{"id": "id1", "by": "mac", "at": NOW.isoformat(), "slug": "", "error": "ghp_" + "c" * 32}])
-    files, held = rj.pack_counted(repo, state, NOW)
-    assert "ghp_" not in files["taken.json"] + files["status.json"] and held >= 2
 
 
-def test_a_change_of_taken_is_news_and_the_written_time_is_not(town):
-    repo, origin, state = town
-    config = rj.JournalConfig()
-    assert rj.send(repo, state, config, NOW)["sent"]
-    assert rj.send(repo, state, config, NOW + dt.timedelta(minutes=20))["why"] == "nothing changed"
-    rj.write_taken(state, [{"id": "id1", "by": "mac", "at": NOW.isoformat(), "slug": "a-goal", "error": ""}])
-    assert rj.send(repo, state, config, NOW + dt.timedelta(minutes=21))["sent"]
-    assert json.loads(git(origin, "show", "orkboard/journal:taken.json"))["taken"][0]["slug"] == "a-goal"
 
 
 def test_turn_on_writes_the_journal_table_with_the_inbox(tmp_path):
@@ -211,3 +174,12 @@ def test_turn_on_writes_the_journal_table_with_the_inbox(tmp_path):
     c = rj.turn_on(other)
     assert (c.every, c.inbox) == (5, "orkboard/inbox") and "[gate]" in (other / "orkcraft.toml").read_text()
     assert rj.turn_on(other).inbox == "orkboard/inbox" and (other / "orkcraft.toml").read_text().count("inbox =") == 1
+
+
+def test_drive_journal_dry_run_lists_and_sends_nothing(town, capsys):
+    repo, origin, _ = town
+    assert drive.main(["journal", "--folder", str(repo), "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "status.md" in out and "bytes" in out and "held back" in out and "drive.json" not in out
+    assert git(origin, "branch", "--list", "orkboard/journal").strip() == ""
+

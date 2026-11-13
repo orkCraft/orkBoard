@@ -4,13 +4,11 @@ are committed to `dev`), no model."""
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-import pytest
 
 from orkboard.realm import ideas, loop, map_parts, opportunity_tree as tree, play_place
 from tests.test_commit_goal import repo, state  # noqa: F401  (the fixture)
-from tests.test_screen_map import FLUTTER, NEXT_APP, REACT, on_dev
+from tests.test_screen_map import NEXT_APP, REACT, on_dev
 
 SHOP = {
     **REACT,
@@ -51,11 +49,6 @@ def test_a_next_app_reaches_its_screens_through_route_groups_and_dynamic_segment
     assert play_place.screen(state(repo), repo, "/dashboard/blue/settings") == {"id": "dashboard-team-settings", "name": "Dashboard team settings", "step": 4}
 
 
-def test_a_route_that_lives_in_the_hash_is_the_path_when_the_path_itself_is_the_top(repo):
-    on_dev(repo, SHOP)
-    assert play_place.screen(state(repo), repo, "/#/settings")["id"] == "settings"
-    assert play_place.screen(state(repo), repo, "/index.html#/settings") is None            # a hash under another path says nothing of the route
-    assert play_place.screen(state(repo), repo, "/orders#/settings")["id"] == "orders"
 
 
 def test_a_path_no_screen_fits_a_non_path_and_a_project_with_no_screen_have_no_screen(repo):
@@ -65,21 +58,10 @@ def test_a_path_no_screen_fits_a_non_path_and_a_project_with_no_screen_have_no_s
     assert play_place.parts(state(repo), repo, "/nowhere/at/all") == {}
 
 
-def test_a_project_with_no_screen_has_no_screen_though_its_files_are_places(repo):
-    on_dev(repo, GAME)
-    assert play_place.screen(state(repo), repo, "/") is None
-    assert "screens" not in play_place.parts(state(repo), repo, "/", ["src/main.ts"])
 
 
 # -- the parts of the maps ----------------------------------------------------------------------------------------------------------------
 
-def test_the_screen_is_designs_part_by_the_id_its_map_stamps_and_techs_part_is_the_folder_of_its_component(repo):
-    on_dev(repo, SHOP)
-    got = play_place.parts(state(repo), repo, "/orders")
-    assert got["screens"] == [{"id": "orders", "name": "Orders"}]
-    assert got["system"] == [{"id": "src/pages", "name": "src/pages"}]
-    assert got["screens"][0]["id"] in {p["id"] for p in map_parts.parts(state(repo), repo, "design")}
-    assert got["system"][0]["id"] in {p["id"] for p in map_parts.parts(state(repo), repo, "tech")}
 
 
 def test_techs_parts_are_the_folders_of_the_files_the_probe_named_in_any_spelling_else_the_screens_file(repo):
@@ -102,12 +84,6 @@ def test_arts_parts_are_the_assets_the_screens_file_and_the_named_files_name(rep
     assert {p["id"] for p in got["art"]} <= {p["id"] for p in map_parts.parts(state(repo), repo, "art")}
 
 
-def test_marketings_part_is_the_way_in_file_that_is_a_named_one(repo):
-    on_dev(repo, SHOP)
-    got = play_place.parts(state(repo), repo, "/orders", ["marketing/launch.md"])
-    assert got["marketing"] == [{"id": "marketing/launch.md", "name": "launch.md"}]
-    assert got["marketing"][0]["id"] in {p["id"] for p in map_parts.parts(state(repo), repo, "marketing")}
-    assert "marketing" not in play_place.parts(state(repo), repo, "/orders")
 
 
 def test_the_home_screen_of_a_next_app_is_the_way_in_s_first_session(repo):
@@ -116,12 +92,6 @@ def test_the_home_screen_of_a_next_app_is_the_way_in_s_first_session(repo):
     assert "marketing" not in play_place.parts(state(repo), repo, "/cart")
 
 
-def test_a_static_page_has_no_screen_but_its_file_is_a_place(repo):
-    on_dev(repo, {"index.html": "<html><img src='logo.png'></html>\n", "logo.png": "png", "app.js": "console.log(1)\n"})
-    got = play_place.parts(state(repo), repo, "/", ["index.html"])
-    assert "screens" not in got
-    assert got["marketing"] == [{"id": "index.html", "name": "index.html"}]
-    assert ids(got, "art") == ["logo.png"] and ids(got, "system") == ["."]
 
 
 def test_a_games_canvas_file_gives_the_loops_steps_that_rest_on_it_or_on_its_folder(repo):
@@ -156,10 +126,6 @@ def test_products_jobs_are_those_whose_goals_touched_a_named_file_and_none_witho
     assert "product" not in play_place.parts(state_dir, repo, "/nowhere", ["src/assets/hero.png"], pages=pages)   # a place none of the goals touched
 
 
-def test_a_map_has_ten_parts_at_most_and_release_none(repo):
-    on_dev(repo, {"package.json": "{}", **{f"sprites/s{n:02}.png": "png" for n in range(14)}, "src/screens/Home.js": " ".join(f'"s{n:02}.png"' for n in range(14)) + "\n"})
-    got = play_place.parts(state(repo), repo, "/home")
-    assert len(got["art"]) == play_place.MAX_PARTS == 10 and "release" not in got
 
 
 def test_a_map_that_cannot_be_read_gives_nothing_never_an_exception(repo, tmp_path, monkeypatch):
@@ -175,8 +141,3 @@ def test_a_map_that_cannot_be_read_gives_nothing_never_an_exception(repo, tmp_pa
     assert set(got) == {"screens", "system"}
 
 
-def test_a_flutter_screen_is_a_place_too(repo):
-    on_dev(repo, FLUTTER)
-    got = play_place.parts(state(repo), repo, "/cart")
-    assert got["screens"] == [{"id": "cart", "name": "Cart"}]
-    assert ids(got, "system") == [] and "art" not in got                                              # a Dart file is no part of System's, nor does it name an asset

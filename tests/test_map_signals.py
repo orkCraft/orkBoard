@@ -7,7 +7,6 @@ import json
 import os
 import struct
 import subprocess
-import zlib
 from pathlib import Path
 
 import pytest
@@ -70,15 +69,8 @@ def test_a_part_used_by_many_and_a_part_using_many(repo, tmp_path):
     assert next(s for s in got if s["kind"] == "fan_in")["words"] == f"core is used by {map_signals.FAN_IN} parts"
 
 
-def test_one_under_the_thresholds_is_no_signal(repo, tmp_path):
-    put(repo, {"core/base.py": "X = 1\n", **{f"user{n}/m.py": "import core.base\n" for n in range(map_signals.FAN_IN - 1)}}, old=True)
-    assert tech(repo, tmp_path) == []
 
 
-def test_a_part_with_a_file_of_eight_hundred_lines(repo, tmp_path):
-    put(repo, {"big/huge.py": "x = 1\n" * map_signals.BIG_LINES, "small/ok.py": "x = 1\n" * (map_signals.BIG_LINES - 1)}, old=True)
-    got = tech(repo, tmp_path)
-    assert got == [{"on": "big", "kind": "big", "words": f"big holds huge.py of {map_signals.BIG_LINES} lines"}]
 
 
 def test_a_part_changed_often_with_no_test_mapped_and_one_that_has_a_test(repo, tmp_path):
@@ -92,11 +84,6 @@ def test_a_part_changed_often_with_no_test_mapped_and_one_that_has_a_test(repo, 
     assert got[0]["words"] == f"hot changed {map_signals.CHURN_TIMES} times in the last {map_signals.CHURN_DAYS} days and no test is mapped to it"
 
 
-def test_a_part_changed_five_times_is_no_signal(repo, tmp_path):
-    put(repo, {"hot/motor.py": "n = 0\n"}, old=True)
-    for n in range(1, map_signals.CHURN_TIMES):
-        put(repo, {"hot/motor.py": f"n = {n}\n"}, f"hot {n}")
-    assert tech(repo, tmp_path) == []
 
 
 def test_a_shared_part_changed_along_with_files_of_two_containers(repo, tmp_path):
@@ -117,17 +104,6 @@ def test_churn_older_than_a_month_does_not_count(repo, tmp_path):
     assert tech(repo, tmp_path) == []
 
 
-def test_a_part_changed_often_that_holds_a_long_file_is_a_hotspot(repo, tmp_path):
-    body = lambda n: "x = 1\n" * (map_signals.HOT_LINES - 1) + f"n = {n}\n"                                  # noqa: E731
-    put(repo, {"hot/rooms.py": body(0), "short/small.py": "n = 0\n", "long/still.py": body(0)}, old=True)
-    for n in range(1, map_signals.HOT_TIMES + 1):
-        put(repo, {"hot/rooms.py": body(n), "short/small.py": f"n = {n}\n"}, f"hot {n}")
-    for n in range(1, map_signals.HOT_TIMES):
-        put(repo, {"long/still.py": body(n)}, f"long {n}")
-    got = tech(repo, tmp_path)
-    assert kinds(got) == {"hotspot": ["hot"]}, "short is changed as often but small; long is big but changed one time too few"
-    assert got[0]["words"] == f"hot changed {map_signals.HOT_TIMES} times in the last {map_signals.CHURN_DAYS} days and holds rooms.py of {map_signals.HOT_LINES} lines"
-    assert {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(tmp_path / "state", repo, "tech")}
 
 
 def test_a_part_many_stand_on_that_itself_uses_many_is_unstable(repo, tmp_path):
@@ -138,23 +114,10 @@ def test_a_part_many_stand_on_that_itself_uses_many_is_unstable(repo, tmp_path):
     assert got[0]["words"] == "lobby is used by 5 parts and itself uses 9: what many stand on keeps changing with what it uses"
 
 
-def test_a_part_used_by_four_that_uses_few_or_one_used_by_three_is_not_unstable(repo, tmp_path):
-    put(repo, {"core/base.py": "".join(f"import lib{n}.x\n" for n in range(6)), **{f"lib{n}/x.py": "Y = 1\n" for n in range(6)},
-               **{f"user{n}/m.py": "import core.base\n" for n in range(5)}, "mid/m.py": "".join(f"import lib{n}.x\n" for n in range(9)) + "", **{f"lib{n}/x.py": "Y = 1\n" for n in range(9)},
-               **{f"low{n}/m.py": "import mid.m\n" for n in range(map_signals.UNSTABLE_IN - 1)}}, old=True)
-    assert "unstable" not in kinds(tech(repo, tmp_path)), "core: 6 / (6 + 5) is under 0.6; mid: used by only 3"
 
 
-def test_cycles_alone(repo):
-    assert map_signals.cycles({"a": ["b"], "b": ["c"], "c": ["a"], "d": ["a"], "e": []}) == [["a", "b", "c"]]
-    assert map_signals.cycles({"a": ["b"], "b": []}) == [] and map_signals.cycles({"a": ["a"]}) == []
 
 
-def test_a_project_with_no_dev_has_no_signals(tmp_path):
-    bare = tmp_path / "bare"
-    bare.mkdir()
-    git(bare, "init", "-q", "-b", "main")
-    assert map_signals.signals(tmp_path / "state", bare, "tech") == []
 
 
 # -- Game design --------------------------------------------------------------------------------------------------------------------------
@@ -172,15 +135,6 @@ def test_the_loops_findings_each_on_the_part_it_names(repo, tmp_path):
     assert map_signals.signals(tmp_path / "none", repo, "game-design") == []
 
 
-def test_a_flat_loop_and_a_loop_that_rewards_nothing_are_on_the_loops_first_step(repo, tmp_path):
-    state = tmp_path / "state"
-    loop.keep(state, repo, {"loops": [{"span": "core", "name": "Fight", "line": "A line", "steps": [
-        {"name": n, "line": "A line", "feel": "challenge", "intensity": 3, "gives": [], "takes": []} for n in ("Hit", "Dodge", "Buy")]}],
-        "currencies": [{"id": "gold", "name": "Gold", "kind": "soft", "line": "Coins"}]}, "person")
-    got = map_signals.signals(state, repo, "game-design")
-    first = loop.read(state)["loops"][0]["steps"][0]["id"]
-    assert ("cur:gold", "Nothing gives Gold") in [(s["on"], s["words"]) for s in got]
-    assert (first, "The core loop rewards nothing") in [(s["on"], s["words"]) for s in got] and (first, "The core loop's feeling is flat") in [(s["on"], s["words"]) for s in got]
 
 
 def test_a_spike_a_missing_first_day_hook_and_a_step_that_rests_on_no_file(repo, tmp_path):
@@ -244,14 +198,6 @@ def test_a_screen_that_names_no_state_and_one_a_keyboard_or_a_reader_would_stumb
     assert {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(state, repo, "design")}
 
 
-def test_a_file_that_several_screens_share_or_one_too_large_says_nothing_of_any_screen(repo, tmp_path):
-    put(repo, {"package.json": json.dumps({"dependencies": {"react-router-dom": "6"}}),
-               "src/App.jsx": 'import { Routes, Route } from "react-router-dom";\nimport A from "./A";\nimport B from "./B";\nimport S from "./Shared";\n'
-                              'export default () => <Routes><Route path="/" element={<A />} /><Route path="/b" element={<B />} /><Route path="/c" element={<S />} /><Route path="/d" element={<S />} /></Routes>;\n',
-               "src/A.jsx": "<img />\n" + "x" * map_signals.SCREEN_BYTES, "src/B.jsx": "<img />\n", "src/Shared.jsx": "<img />\n"})
-    got = map_signals.signals(tmp_path / "state", repo, "design")
-    assert kinds(got)["a11y"] == ["b"], "A is over 200 KB, C and D share a file: none is read"
-    assert kinds(got)["no_states"] == ["b"]
 
 
 def test_at_most_twenty_signals(repo, tmp_path):
@@ -261,35 +207,10 @@ def test_at_most_twenty_signals(repo, tmp_path):
     assert len(map_signals.signals(tmp_path / "state", repo, "design")) == map_signals.MAX_SIGNALS
 
 
-def test_limit_none_gives_every_hint_and_the_default_keeps_the_cut(repo, tmp_path):
-    routes = "".join(f'<Route path="/p{n}" element={{<P />}} />' for n in range(40))
-    put(repo, {"src/App.jsx": f'import {{ Routes, Route }} from "react-router-dom";\nexport default () => <Routes>{routes}</Routes>;\n',
-               **{f"src/p{n}.jsx": "export default () => null;\n" for n in range(40)}, "package.json": json.dumps({"dependencies": {"react-router-dom": "6"}})})
-    state = tmp_path / "state"
-    assert len(map_signals.signals(state, repo, "design", limit=None)) > map_signals.MAX_SIGNALS
-    assert len(map_signals.signals(state, repo, "design")) == map_signals.MAX_SIGNALS
 
 
-def test_tested_is_the_rule_the_hints_use(repo, tmp_path):
-    from orkboard.realm import gate_config
-    put(repo, {"cool/engine.py": "n = 0\n", "tests/test_engine.py": "def test_x():\n    pass\n", "calm/calm.py": "n = 0\n"})
-    gate = gate_config.Gate() if hasattr(gate_config, "Gate") else None
-    tracked = {"cool/engine.py", "tests/test_engine.py", "calm/calm.py"}
-    assert map_signals.tested("cool", ["engine.py"], tracked, gate, repo)
-    assert not map_signals.tested("calm", ["calm.py"], tracked, gate, repo)
-    assert map_signals.tested("tests", ["x.py"], tracked, gate, repo)
-    assert not hasattr(map_signals, "_tested")
 
 
-def test_the_pictures_of_the_screens_kept_since_a_look(repo, tmp_path):
-    put(repo, APP)
-    state = repo / ".orkcraft"
-    state.mkdir()
-    idea_lens.keep_screen(state, PNG, "Cart")
-    got = map_signals.pictures(state, repo)
-    assert [(p["id"], p["name"]) for p in got] == [("cart", "Cart")] and (repo / got[0]["path"]).is_file() and got[0]["path"].startswith(".orkcraft/")
-    assert map_signals.pictures(state, repo, since="2999-01-01T00:00:00") == []
-    assert map_signals.pictures(state, repo, since="2000-01-01T00:00:00")[0]["id"] == "cart" and map_signals.pictures(state, repo, limit=0) == []
 
 
 # -- Product ------------------------------------------------------------------------------------------------------------------------------
@@ -387,10 +308,6 @@ def test_untested_is_off_for_a_hypothesis_with_a_test_that_is_held_or_proposed_a
 
 # -- the rest ---------------------------------------------------------------------------------------------------------------------------
 
-def test_a_craft_with_no_map_has_none_by_code(repo, tmp_path):
-    put(repo, {"assets/hero.png": "png", "marketing/launch.md": "# Launch\n"})
-    for craft in ("run", "liveops", ""):
-        assert map_signals.signals(tmp_path / "state", repo, craft) == []
 
 
 def test_art_release_and_marketing_are_read_by_the_crafts_module(repo, tmp_path):

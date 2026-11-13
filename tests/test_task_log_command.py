@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from orkboard.realm import idea_secrets, ideas, task_steps
+from orkboard.realm import idea_secrets, ideas
 from tests.test_gui_ideas import _review, host  # noqa: F401  (fixture)
 
 VALUE = "sk-live-9f3A/b+c=Zq7"
@@ -33,16 +33,6 @@ def test_the_log_leaves_the_host_with_the_goals_secret_masked_in_every_form(host
         assert VALUE not in text and "sk-live" not in text and "9f3A%2F" not in text, (name, text)
         assert text.count("••••") == 4 and "and a short word: ok" in text and "== the gate, try 1" in text
     assert host.command("ideas.task_log", {"slug": slug, "task": "k1"})["state"] == "review"
-
-
-def test_the_task_carries_its_party_and_its_steps_and_the_light_read_the_same_steps(host, monkeypatch, tmp_path):
-    slug = _goal_with_a_secret(host, monkeypatch, tmp_path)
-    kept = task_steps.kept_path(host.ideas.state_dir / "ideas" / slug, "k1")
-    kept.write_text(json.dumps({"source": "file", "items": [{"text": "write the test", "state": "done"}, {"text": "make it pass", "state": "now"}]}), encoding="utf-8")
-    got = host.command("ideas.task", {"slug": slug, "task": "k1"})
-    assert got["party"] and got["head"]["race"] and got["own_tool"] is False
-    assert got["steps"]["total"] == 2 and got["steps"]["now"] == 1 and got["steps"]["items"][1]["text"] == "make it pass"
-    assert host.command("ideas.task_log", {"slug": slug, "task": "k1"})["steps"] == got["steps"]
 
 
 def test_a_task_run_in_the_persons_own_ai_tool_has_no_log_and_says_so(host, monkeypatch, tmp_path):

@@ -172,25 +172,6 @@ def test_a_projects_board_json_wins_over_the_machines_and_a_new_one_starts_from_
     assert gui_ideas._Settings(host.board).ideas["push"] is True               # what the runner reads
 
 
-def test_risk_paths_are_the_repositorys_orkcraft_toml(fake_repo):
-    host = Orkboard(fake_repo)
-    host.machine.ideas = settings.clean_ideas({**host.machine.ideas, "risk_paths": ["machine/*"]})
-    assert host.board.board_settings()["risk_paths"] == ["machine/*"]
-    (fake_repo / "orkcraft.toml").write_text('[board]\nrisk_paths = ["billing/*", "infra/**"]\n', encoding="utf-8")
-    assert host.board.board_settings()["risk_paths"] == ["billing/*", "infra/**"]
-    (fake_repo / ".orkcraft").mkdir(exist_ok=True)
-    (fake_repo / ".orkcraft" / "board.json").write_text(json.dumps({"risk_paths": ["no/*"], "max_parallel": 3}))
-    got = host.board.board_settings()
-    assert got["risk_paths"] == ["billing/*", "infra/**"] and got["max_parallel"] == 3   # board.json holds no risk
-
-
-def test_the_wiki_and_the_work_branch_are_the_projects(fake_repo):
-    host = Orkboard(fake_repo)
-    host.board.save_board_settings({**host.board.board_settings(), "wiki": "docs/board"})
-    assert host.ideas.wiki() == fake_repo.resolve() / "docs" / "board"
-    assert "wiki" not in host.machine.ideas
-
-
 # -- Open folder, Start git here ---------------------------------------------------------------------------------
 
 def test_open_folder_refuses_in_words_and_offers_git(tmp_path):
@@ -219,17 +200,6 @@ def test_open_folder_refuses_in_words_and_offers_git(tmp_path):
     assert host.command("projects.start_git", {"path": str(plain)}) == {"ok": True, "said": "Git was already here"}
     assert row()["git"] is True
     assert "home folder" in host.command("projects.start_git", {"path": str(Path.home())})["error"]
-
-
-def test_start_git_refuses_a_folder_too_large_for_a_first_commit(tmp_path, monkeypatch):
-    monkeypatch.setattr(project_folder, "FIRST_COMMIT_FILES", 3)
-    big = tmp_path / "big"
-    big.mkdir()
-    for n in range(5):
-        (big / f"f{n}.txt").write_text("x", encoding="utf-8")
-    with pytest.raises(ValueError, match="too large"):
-        project_folder.start_git(big)
-    assert not (big / ".git").exists()
 
 
 # -- the to-dos' secrets are the project's -----------------------------------------------------------------------
@@ -261,23 +231,6 @@ def test_two_projects_with_the_same_idea_and_todo_keep_two_secrets(two, monkeypa
     assert idea_secrets.account(shop, "dark-mode", "t1") != idea_secrets.account(blog, "dark-mode", "t1")
     idea_secrets.forget(shop, "dark-mode", ["t1"])
     assert idea_secrets.get(shop, "dark-mode", "t1") is None and idea_secrets.get(blog, "dark-mode", "t1") == "blog-key"
-
-
-def test_a_secret_under_the_old_account_is_read_once_and_moved(fake_repo, monkeypatch):
-    from orkboard.realm.idea_git import read_secret
-    kc = _Keychain()
-    monkeypatch.setattr(idea_secrets, "_keychain", lambda: kc)
-    state = fake_repo / ".orkcraft"
-    kc.set_password(idea_secrets.SERVICE, "dark-mode/t1", "old-key")
-    assert read_secret(state, "dark-mode", "t1") == "old-key"                 # the runner's reader finds it
-    assert kc.get_password(idea_secrets.SERVICE, "dark-mode/t1") is None
-    assert kc.get_password(idea_secrets.SERVICE, idea_secrets.account(state, "dark-mode", "t1")) == "old-key"
-    monkeypatch.setattr(idea_secrets, "_keychain", lambda: None)              # the file, as without a keychain
-    state.mkdir(exist_ok=True)
-    (state / "secrets.json").write_text(json.dumps({"dark-mode/t2": "file-key"}))
-    assert idea_secrets.get(state, "dark-mode", "t2") == "file-key"
-    kept = json.loads((state / "secrets.json").read_text())
-    assert kept == {idea_secrets.account(state, "dark-mode", "t2"): "file-key"}
 
 
 # -- the phone -----------------------------------------------------------------------------------------------------

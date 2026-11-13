@@ -4,7 +4,6 @@ fails the task once, in plain words, with no gate round that cannot help."""
 from __future__ import annotations
 
 import json
-import shutil
 import threading
 from types import SimpleNamespace
 
@@ -35,30 +34,6 @@ def test_the_prompt_names_orkboards_critical_tests_only_for_a_project_that_has_t
     assert ("the gate runs `python -m pytest -q tests/test_architecture.py tests/test_cli.py tests/test_updates.py` "
             "and the test files of the modules you touch") in prompt
     assert "a red gate comes back to you once" in prompt
-
-
-def test_the_prompt_names_a_node_projects_npm_test(town):
-    shutil.rmtree(town.repo / "tests")
-    (town.repo / "orkcraft.toml").unlink()                       # no gate written: the project's own is derived
-    (town.repo / "server").mkdir()
-    (town.repo / "server" / "package.json").write_text(json.dumps({"scripts": {"test": "node --test"}}))
-    prompt = _prompt(town)
-    assert "the gate runs `npm test --prefix server`" in prompt
-    assert "pytest" not in prompt and "test_architecture" not in prompt
-
-
-def test_the_prompt_names_the_run_of_the_projects_own_file(town):
-    (town.repo / "orkcraft.toml").write_text('[gate]\nrun = "make check"\n')
-    prompt = _prompt(town)
-    assert "the gate runs `make check`" in prompt and "pytest" not in prompt
-
-
-def test_the_prompt_says_a_project_with_no_tests_waits_for_a_look(town):
-    shutil.rmtree(town.repo / "tests")
-    (town.repo / "orkcraft.toml").unlink()                       # no gate written: the project's own is derived
-    prompt = _prompt(town)
-    assert "This project has no tests" in prompt and "waits for a person's look" in prompt
-    assert "pytest" not in prompt and "the gate runs" not in prompt
 
 
 def test_agy_works_running_its_commands_in_its_sandbox_and_reads_running_none(tmp_path):

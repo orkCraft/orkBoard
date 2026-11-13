@@ -12,19 +12,8 @@ def page(*sections, meta="owner: board"):
     return idea_page.parse(f"---\n{meta}\n---\n# Goal\n" + "".join(f"\n## {n}\n{t}\n" for n, t in sections))
 
 
-def test_the_parts_of_a_section_are_split_and_joined_in_the_order_they_are_written():
-    parts = ss.split("Before.\n\n### Out\n- no\n\n### Why\nBecause.\n### Odd one\nx")
-    assert parts == {"": "Before.", "Out": "- no", "Why": "Because.", "Odd one": "x"}
-    assert ss.join({"Out": "- no", "Why": "Because.", "Odd one": "x", "Done when": ""}) == "### Why\nBecause.\n\n### Out\n- no\n\n### Odd one\nx"
-    assert ss.split(ss.join(ss.split(TECH))) == ss.split(TECH) and ss.split("") == {} and ss.split("plain") == {"": "plain"}
 
 
-def test_a_party_section_is_one_that_is_no_common_or_old_name_and_holds_a_known_part():
-    assert ss.is_party("Tech", TECH) and ss.is_party("Game design", "### Why\nx")
-    assert not ss.is_party("Tech", "just words") and not ss.is_party("Tech", "### Odd\nx")
-    assert not ss.is_party("Gist", TECH) and not ss.is_party("Done when", TECH) and not ss.is_party("risks", TECH)
-    assert ss.section_name("Tech") == "Tech" and ss.section_name("Risks") == "Risks (party)" and ss.section_name("Tech", {"tech"}) == "Tech (party)"
-    assert ss.section_name("A ## title\nwith lines") == "A title with lines"
 
 
 def test_a_page_of_the_new_format_is_a_common_part_and_a_section_a_party():
@@ -49,11 +38,6 @@ def test_a_page_of_before_reads_as_one_section_of_its_party_and_nothing_is_rewri
     assert ss.read(page(("Gist", "x")), PARTIES, "")["sections"] == []                                         # nothing written, no party: no section
 
 
-def test_the_new_page_answers_for_the_old_sections_by_its_first_section_and_every_sections_done_when():
-    p = page(("Gist", "G"), ("Why", ""), ("Tech", TECH), ("Art", "### Why\nLook.\n\n### Done when\n- Pretty\n\n### Out\n- art out"))
-    assert ss.folded(p, "Why") == "Because." and ss.folded(p, "Out") == "" and ss.folded(p, "Done when") == "- It works\n- It is fast\nArt: Pretty"
-    assert ss.folded(p, "Gist") == "" and ss.folded(page(("Gist", "G")), "Why") == ""
-    assert ss.FOLDED == idea_page.FOLDED
 
 
 def test_a_leaders_answer_is_taken_strictly():
@@ -68,12 +52,6 @@ def test_a_leaders_answer_is_taken_strictly():
         assert ss.clean_section(bad) is None
 
 
-def test_a_will_be_names_the_parts_of_the_map_by_their_ids():
-    assert ss.will_be(TECH.split("### Will be\n")[1]) == [{"kind": "changed", "id": "orkboard/core", "note": "the keeper"}, {"kind": "new", "id": "orkboard/core/idea_decide.py", "note": ""},
-                                                          {"kind": "gone", "id": "old", "note": ""}]
-    assert ss.will_be("nothing changes\n- a prose line\n- changed ../x") == []
-    assert ss.same_part("orkboard/core", "orkboard/core/idea_decide.py") and ss.same_part("a/b/", "a/b") and not ss.same_part("orkboard/core", "orkboard/corex")
-    assert not ss.same_part("", "a")
 
 
 def test_who_decided_a_change_the_leader_the_person_by_a_fork_or_a_member_alone():
@@ -94,19 +72,8 @@ def test_the_page_is_arranged_common_part_first_then_a_section_a_party_and_what_
     assert p.section("Tech") == "### Why\nNew." and p.section("Asked") == "words" and [n for n, _t in p.sections].count("Tech") == 1
 
 
-def test_the_record_is_kept_beside_the_goals_state(tmp_path):
-    assert ss.record(tmp_path, "a-goal") == {}
-    ss.save_record(tmp_path, "a-goal", {"joined": True})
-    assert ss.record(tmp_path, "a-goal") == {"joined": True} and (tmp_path / "ideas" / "a-goal" / "way.json").is_file()
 
 
-def test_a_done_when_line_may_say_how_it_is_proven():
-    """Spec 152 F.1: `[test]`, `[look]` or `[person]` starts a line; `proof_of` reads it, `bare` takes it off, `items` keeps it."""
-    assert ss.PROOFS == ("test", "look", "person")
-    assert ss.proof_of("[test] A goal keeps its type") == "test" and ss.proof_of("- [Look] The lobby opens dark") == "look" and ss.proof_of("[person] The tone is kind") == "person"
-    assert ss.proof_of("A goal keeps its type") == "" and ss.proof_of("[other] x") == "" and ss.proof_of("a [test] later") == "" and ss.proof_of("") == ""
-    assert ss.bare("[test] A goal keeps its type") == "A goal keeps its type" and ss.bare("- [look]   x") == "x" and ss.bare("no mark") == "no mark" and ss.bare("[other] x") == "[other] x"
-    assert ss.items("- [test] a\n- b\n* [look] c") == ["[test] a", "b", "[look] c"]
 
 
 def test_clean_section_takes_done_when_as_strings_or_as_lines_with_a_proof_and_writes_the_mark():

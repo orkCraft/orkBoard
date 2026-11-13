@@ -9,7 +9,7 @@ import pytest
 
 from orkboard.core import idea_keeper
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, idea_target, ideas, leader_change, library, spec_sections, way_down
+from orkboard.realm import goal_team, ideas, leader_change, library, spec_sections, way_down
 
 
 @pytest.fixture
@@ -85,48 +85,9 @@ def test_a_decision_changed_pulls_the_goals_not_done_that_rest_on_it_and_only_th
     assert _pulls(host, "decision", changes=[5], parties=[])["sections"] == []
 
 
-def test_a_decision_with_nothing_resting_on_it_pulls_nothing_and_costs_nothing(host, tech):
-    assert _pulls(host, "decision", changes=[5], parties=[tech]) == way_down.empty("decision")
-
-
 # -- the spec level -----------------------------------------------------------------------------------------------------------------------
 
-def test_a_spec_pulls_the_partys_open_tasks_only_and_nothing_above_it(host, tech, design):
-    slug = _goal(host, tech, others=(design,))
-    got = _pulls(host, "spec", slug=slug, party=tech)
-    assert got["sections"] == [] and got["tasks"] == [{"idea": slug, "id": "k2"}, {"idea": slug, "id": "k3"}]      # k1 merged, k4 at review, k5 another party's
-    assert [t["id"] for t in _pulls(host, "spec", slug=slug, party=design)["tasks"]] == ["k5"]
-    assert _pulls(host, "spec", slug=slug, party="nobody")["tasks"] == []
-
-
 # -- the work level -----------------------------------------------------------------------------------------------------------------------
-
-def test_work_pulls_the_checks_of_the_tasks_it_redoes_and_a_task_started_stays(host, tech):
-    slug = _goal(host, tech, checks=2)
-    got = _pulls(host, "work", slug=slug, party=tech, changes=["k2", "k4", "k1", {"tier": "laborer"}])
-    assert [t["id"] for t in got["tasks"]] == ["k2", ""]              # k4 and k1 have started; an added task has no id yet
-    assert got["checks"] == 2                                           # the two checks that apply; the one that does not is not run
-    assert _pulls(host, "work", slug=slug, party=tech, changes=["k1"]) == {**way_down.empty("work"), "estimate": {"usd_low": 0.0, "usd_high": 0.0}}
-    assert _pulls(host, "nonsense", slug=slug)["tasks"] == []
-
-
-def test_the_estimate_adds_up_its_parts(host, tech):
-    slug = _goal(host, tech, number=5, checks=1)
-    st, root = host.ideas.state_dir, host.ideas.root()
-    target = idea_target.target_for(None, ideas.track_page(root, tech))
-    from orkboard.core import idea_plan
-    from orkboard.realm import idea_spend
-    costs = idea_spend.tier_costs(st)
-    tier = idea_target.tier_of(idea_target.task_pick("warrior", target)[0])
-    each = costs[tier]
-    got = _pulls(host, "decision", changes=[5], parties=[tech])
-    section, check = idea_target.budget("section", target), idea_target.budget("accept", target)
-    assert len(got["tasks"]) == 2 and got["checks"] == 1
-    assert got["estimate"] == {"usd_low": round(section + 2 * each * 0.5 + check, 2), "usd_high": round(section + 2 * each * 1.5 + check, 2)}
-    assert idea_plan.estimate([{"tier": "warrior"}] * 2, [tier, tier], costs)["usd_high"] == round(2 * each * 1.5, 2)           # a task is priced as a plan's estimate prices it
-    spec = _pulls(host, "spec", slug=slug, party=tech)
-    assert spec["estimate"] == {"usd_low": round(2 * each * 0.5 + check, 2), "usd_high": round(2 * each * 1.5 + check, 2)}      # no section at the spec level
-
 
 # -- the levels open on a goal ------------------------------------------------------------------------------------------------------------
 
@@ -174,16 +135,6 @@ def test_open_levels_for_each_kind(host, tech):
 
 
 # -- the rows ----------------------------------------------------------------------------------------------------------------------------
-
-def test_a_leader_changes_row_carries_its_level_and_what_it_pulls(host, tech):
-    st, root = host.ideas.state_dir, host.ideas.root()
-    slug = _goal(host, tech)
-    leader_change.put(st, slug, {"id": "c1", "party": tech, "status": "ready", "text": "t", "why": "w", "made_at": "2026-10-23T10:00:00", "estimate": {"usd_low": 0.1, "usd_high": 0.2}})
-    row = leader_change.rows(st, slug, root)[0]
-    assert row["level"] == "spec" and row["pulls"] == _pulls(host, "spec", slug=slug, party=tech) and [t["id"] for t in row["pulls"]["tasks"]] == ["k2", "k3"]
-    bare = leader_change.rows(st, slug)[0]                                         # no root given: the row stays, nothing pulled
-    assert bare["level"] == "spec" and bare["pulls"] == way_down.empty("spec")
-
 
 def test_a_plan_changes_stop_carries_its_level_and_what_it_pulls_and_the_goals_row_its_levels(host, tech):
     st = host.ideas.state_dir

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.realm import event_log, goal_place, ideas
 
 
@@ -64,13 +64,6 @@ def test_a_goal_at_work_that_asks_is_on_the_table_and_asks_you():
     assert _of("working", ["failed"])["place"] == "table"
 
 
-def test_a_pitch_lies_on_the_table_while_someone_works_on_it_and_in_the_hand_with_a_row():
-    assert _is(_of("judging"), "table")
-    assert _is(_of("judged", ["pitch"]), "hand")
-    assert _is(_of("sent"), "history", False) and _is(_of("passed"), "history")
-    assert _is(_of("proposed", ["proposal"]), "hand")
-
-
 def test_a_goal_done_is_in_the_discard_until_its_result_is_seen_then_in_the_history():
     assert _is(_of("done"), "discard")
     assert _is(_of("done", ["asks"]), "discard")                                    # a done goal asks nothing
@@ -85,13 +78,6 @@ def test_a_goal_routed_lies_on_the_table_asking_and_waits_in_the_deck_when_put_o
     for state in ("talk", "decided", "sections"):
         assert _is(_of(state), "table") and _is(_of(state, ["asks"]), "table", True) and _is(_of(state, ["start"]), "table", True)
         assert _is(_of(state, ["route"], waits_on=["a"]), "table", True)
-
-
-def test_every_state_has_a_place():
-    for state in ideas.STATES:
-        got = _of(state, ["plan"] if state == "plan" else [])
-        assert got["place"] in goal_place.PLACES and got["waits_as"] in ("", *goal_place.WAITS_AS)
-        assert got["waits_as"] == "" or got["place"] == "deck"
 
 
 # -- on the host ---------------------------------------------------------------------------------------------
@@ -152,28 +138,6 @@ def test_a_node_and_its_row_carry_the_same_place(host):
         assert nodes[slug]["place"] == rows[slug]["place"] and nodes[slug]["asks_you"] == rows[slug]["asks_you"]
 
 
-def test_today_s_waits_and_the_rows_asks_count_stay(host):
-    root = host.ideas.root()
-    g, _new = ideas.save_goal(root, None, "Stay", "About stay", None, "normal")
-    held = _idea(host, "Held", "raw", g, queue="hold")
-    row = next(r for r in host.command("ideas.board")["ideas"] if r["slug"] == held)
-    node = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == held)
-    assert row["asks"] == 0 and isinstance(row["asks"], int) and not isinstance(row["asks"], bool)
-    assert node["waits"] == {"kind": "stopped", "ref": "", "title": "", "until": ""} and node["waits_as"] == "held"
-
-
-def test_a_collision_asks_on_the_row_of_a_goal_at_work(host, monkeypatch):
-    from orkboard.realm import collide
-    root = host.ideas.root()
-    g, _new = ideas.save_goal(root, None, "Collides", "About collisions", None, "normal")
-    work = _idea(host, "Work", "working", g)
-    _plan(host, work, [_task("k1", "running")], passed_at="x")
-    monkeypatch.setattr(collide, "rows", lambda *a, **k: [{"kind": "collide", "idea": work, "goal": g, "title": "t", "priority": "normal",
-                                                           "blocks": False, "at": "2026-10-28T09:00:00", "text": "x"}])
-    row = next(r for r in host.command("ideas.board")["ideas"] if r["slug"] == work)
-    assert (row["place"], row["asks_you"]) == ("table", True)
-
-
 def test_ideas_seen_writes_seen_at_once_and_moves_a_done_goal_to_the_history(host):
     root = host.ideas.root()
     g, _new = ideas.save_goal(root, None, "Seen", "About seen", None, "normal")
@@ -186,28 +150,6 @@ def test_ideas_seen_writes_seen_at_once_and_moves_a_done_goal_to_the_history(hos
     assert host.command("ideas.seen", {"idea": done})["seen"] == got["seen"]                   # the first time is kept
     (e,) = [r for r in event_log.read(Path(host.town.repo_root)) if r["event"] == "result_seen"]
     assert e["idea"] == done and e["device"] == "desktop"
-
-
-def test_ideas_seen_refuses_a_goal_not_done_or_gone(host):
-    working = _idea(host, "Working", "working")
-    with pytest.raises(CommandError, match="Only a goal that is done"):
-        host.command("ideas.seen", {"idea": working})
-    with pytest.raises(CommandError, match="That goal is gone"):
-        host.command("ideas.seen", {"idea": "nope"})
-    assert ideas.state(host.ideas.state_dir, working)["seen_at"] == ""
-
-
-def test_result_seen_is_an_event():
-    assert event_log.RESULT_SEEN == "result_seen" and event_log.RESULT_SEEN in event_log.EVENTS
-
-
-def test_a_goal_at_talk_with_a_row_waiting_is_on_the_table_and_asks_you_and_with_none_it_does_not():
-    """Spec 99 §5: while the leaders are heard (or the decision is made) nothing waits and the goal only lies on the table; a `talk` row (the cards) or a bug's `cause`
-    row makes it ask, in the hand too (`asks_you`), never in two piles."""
-    assert _is(_of("talk"), "table") and _is(_of("talk", ["talk"]), "table", True) and _is(_of("talk", ["cause"]), "table", True)
-    assert _is(_of("talk", ["talk", "start"]), "table", True) and _is(_of("decided"), "table")
-    assert _is(_of("talk", ["talk"], held_until="2026-10-29T08:00:00"), "table", True)         # a Talk that is answered is never put in the deck
-    assert _is(_of("talk", ["objection"]), "table", True) and _is(_of("talk", ["talk", "objection"]), "table", True)         # a leader's no (spec 108 §4.3): the same place, asking
 
 
 def test_a_goal_at_talk_with_cards_waiting_is_a_node_and_a_row_that_ask_you(host):

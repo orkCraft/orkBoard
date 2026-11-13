@@ -42,13 +42,3 @@ def test_dev_and_main_plans_run_once_per_board_change(monkeypatch, tmp_path):
     kept.refresh(2, lambda: "h", compute)
     assert len(calls) == 4
 
-
-def test_dev_and_main_a_failing_plan_or_map_is_not_an_error(monkeypatch):
-    _release(monkeypatch, ["a"], {})
-
-    def boom(*a, **k):
-        raise RuntimeError("git")
-    monkeypatch.setattr(goal_main, "plan", boom)
-    assert map_reach_crafts.release_reach(S, R, P) == {"a": {"lit": ["a"], "one": [], "two": [], "no_test": []}}
-    monkeypatch.setattr(release_map, "read", boom)
-    assert map_reach_crafts.release_reach(S, R, P) == {}

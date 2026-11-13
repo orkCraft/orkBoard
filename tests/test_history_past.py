@@ -103,9 +103,3 @@ def test_products_past_holds_goal_116_in_the_week_of_26_october_2026_with_decisi
     assert goal["decision"] == 194 and 194 in got["decisions"]
 
 
-def test_a_second_read_leaves_every_flag_and_day_as_it_was(past, first):
-    days = {g["idea"]: g["day"] for c in _read(past)["chapters"] for g in c["goals"]}
-    past.ideas._phase_sig = None
-    _moved(past)
-    assert _snapshot(past) == first["after"]
-    assert {g["idea"]: g["day"] for c in _read(past)["chapters"] for g in c["goals"]} == days

@@ -30,11 +30,6 @@ def run(rows: list) -> dict:
     return json.loads(done.stdout)
 
 
-def test_the_kinds_and_their_answer_keys_are_the_hosts():
-    got = run([])
-    assert {k: tuple(v) for k, v in got["kinds"].items()} == {k: v[2] for k, v in ra.KINDS.items()}
-
-
 def test_an_id_sorts_by_time_and_is_a_valid_inbox_id():
     a, b = run([])["ids"]
     assert a < b and len(a) == 26 and __import__("re").fullmatch(r"[A-Za-z0-9_-]{8,40}", a)

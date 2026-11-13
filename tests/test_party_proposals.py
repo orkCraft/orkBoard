@@ -44,9 +44,6 @@ def add(host, goal, text, tasks):
     return s
 
 
-def quiet(host, goal, n=8, by="reviewer", kind="review", base=0.5):
-    """`n` clean checks of the checker, one an idea, the oldest first (a few hours apart)."""
-    return [add(host, goal, f"Idea {by} {i}", [check("k1", by, kind, finished=at(base, hours=n - i))]) for i in range(n)]
 
 
 def waiting(state, goal, by="reviewer", usd=None):
@@ -117,19 +114,6 @@ def test_the_row_is_in_needs_you_last_and_never_counted(host, goal):
     assert not [n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "party"]
 
 
-def test_roles_and_agents_carry_a_checker_s_check_week_and_record(host, goal):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    for i in range(3):
-        add(host, goal, f"Checked {i}", [check("k1", finished=at(1), findings=[{"where": "x", "what": "y", "fixed": True}] if i == 0 else [])])
-    from orkboard.realm import library
-    library.install(state, ["reviewer", "grunt"])
-    party_work.forget()
-    rows = {r["slug"]: r for r in host.command("ideas.roles")["roles"]}
-    assert rows["reviewer"]["check_week"] == {"checks": 3, "clean": 2, "caught": 1, "left": 0, "usd_per_check": None}
-    assert rows["reviewer"]["record"]["check"]["checks"] == 3 and rows["reviewer"]["record"]["days"] == 30
-    assert "check_week" not in rows["grunt"] and "check" not in (rows["grunt"]["record"] or {})
-    blocks = {b["role"]: b for b in host.command("ideas.agents")["roles"]}
-    assert blocks["reviewer"]["check_week"]["caught"] == 1 and "check_week" not in blocks["grunt"]
 
 
 

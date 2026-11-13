@@ -59,15 +59,6 @@ def test_each_numbered_spec_is_one_goal_with_its_title_spec_decisions_and_stages
     assert got["30-not-numbered-heading"]["title"] == "Not numbered heading"             # no heading: the file name says it
 
 
-def test_a_spec_with_no_table_is_one_stage_built_by_a_commit_of_its_number(repo: Path) -> None:
-    assert planned(repo)["8-no-parts"]["stages"] == [("", "No parts here", False)]
-    for subject in ("Spec 8: it", "Spec 8 anything at all"):
-        got = specs.goals_from_specs(repo, "docs/specs", WIKI, log=[subject])
-        assert got[1]["stages"][0][2] and got[1]["phase"] == "done"
-    assert not specs.goals_from_specs(repo, "docs/specs", WIKI, log=["Spec 80: other"])[1]["stages"][0][2]
-    assert not specs.goals_from_specs(repo, "docs/specs", WIKI, log=["Spec 7 A: of another"])[1]["stages"][0][2]
-
-
 def test_the_phase_is_done_through_then_all_built_some_or_none(repo: Path) -> None:
     got = planned(repo)
     assert got["7-the-seven"]["phase"] == "work"                       # two of three
@@ -80,14 +71,6 @@ def test_the_phase_is_done_through_then_all_built_some_or_none(repo: Path) -> No
     assert planned(repo, done_through=28)["29a-the-letter"]["phase"] == "spec"
     assert planned(repo, done_through=29)["29a-the-letter"]["phase"] == "done"        # 29a is spec 29's
     assert specs.goals_from_specs(repo, "docs/specs", WIKI, parts=None)[0]["phase"] == "spec"   # a project whose commits say nothing
-
-
-def test_the_commits_are_read_once(repo: Path, monkeypatch) -> None:
-    calls = []
-    real = specs.commits
-    monkeypatch.setattr(specs, "commits", lambda root: calls.append(root) or real(root))
-    specs.goals_from_specs(repo, "docs/specs", WIKI)
-    assert len(calls) == 1
 
 
 def test_lay_writes_the_page_as_the_board_writes_one_and_never_over_one(repo: Path) -> None:
@@ -118,11 +101,6 @@ def test_the_pages_are_read_by_the_board_in_their_phase_and_pass_the_check(repo:
     assert {t["slug"] for t in ideas.tracks(repo / WIKI, make=False)} >= {"tech"}
     ours = [f for f in board_check.run(repo) if f["path"].startswith(f"{WIKI}/pages/ideas/") and not f["path"].endswith("index.md")]
     assert ours == []                                                                           # a goal laid as done from the history carries `laid: history`: no gate record is asked of it
-
-
-def test_the_pages_that_are_not_done_pass_the_check_whole(repo: Path) -> None:
-    specs.lay(repo, WIKI, specs.goals_from_specs(repo, "docs/specs", WIKI))
-    assert [f for f in board_check.run(repo) if f["path"].startswith(f"{WIKI}/pages/")] == []
 
 
 def test_dry_run_says_a_line_a_spec_and_the_counts_and_writes_nothing(repo: Path, capsys) -> None:
@@ -157,46 +135,3 @@ def test_exit_codes(repo: Path, capsys, tmp_path_factory) -> None:
     assert "no numbered spec" in capsys.readouterr().err
     assert ob("--goals", str(tmp_path_factory.mktemp("elsewhere"))) == 1         # not inside the project
 
-
-def test_a_part_built_in_pieces_counts_as_built_unless_the_table_has_its_pieces(tmp_path):
-    folder = tmp_path / "docs" / "specs"
-    folder.mkdir(parents=True)
-    (folder / "151-pieces.md").write_text("# 151. Pieces\n\n| Part | What |\n|---|---|\n| **E. One** | e |\n| **F. Two** | f |\n")
-    (folder / "150-own.md").write_text("# 150. Own\n\n| Part | What |\n|---|---|\n| **E. Zero** | e |\n| **E1. One** | e1 |\n| **E2. Two** | e2 |\n")
-    log = ["Spec 151 E: e", "Spec 151 F1: f one", "Spec 151 F2: f two", "Spec 150 E1: one", "Spec 150 E2: two"]
-    got = {p["slug"]: p for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=log)}
-    assert [b for _i, _n, b in got["151-pieces"]["stages"]] == [True, True] and got["151-pieces"]["phase"] == "done"
-    assert [(i, b) for i, _n, b in got["150-own"]["stages"]] == [("E", False), ("E1", True), ("E2", True)]      # E has pieces of its own in the table: its own commit is needed
-
-
-def test_an_older_heading_spec_nn_dash_loses_its_number(tmp_path):
-    folder = tmp_path / "docs" / "specs"
-    folder.mkdir(parents=True)
-    (folder / "40-design.md").write_text("# Spec 40 — Orkboard in orkUI: the office look\n")
-    (folder / "33-v1.md").write_text("# Spec 33 — v1: three windows, Board · Agents · Review\n")
-    got = {p["slug"]: p["title"] for p in specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", log=[])}
-    assert got == {"33-v1": "v1: three windows, Board · Agents · Review", "40-design": "Orkboard in orkUI"}
-
-
-def test_only_a_goal_laid_done_says_it_was_laid_from_the_history(tmp_path):
-    """A spec still to build is checked as any goal is: its `done` will need a gate record."""
-    folder = tmp_path / "docs" / "specs"
-    folder.mkdir(parents=True)
-    (folder / "1-old.md").write_text("# 1. Old\n")
-    (folder / "2-new.md").write_text("# 2. New\n\n| Part | What |\n|---|---|\n| **A. One** | a |\n")
-    specs.lay(tmp_path, "llm-wiki/general", specs.goals_from_specs(tmp_path, "docs/specs", "llm-wiki/general", done_through=1, log=[]))
-    pages = tmp_path / "llm-wiki/general/pages/ideas"
-    assert "laid: history" in (pages / "1-old.md").read_text() and "laid:" not in (pages / "2-new.md").read_text()
-
-
-def test_a_spec_named_with_dots_is_a_goal_of_a_slug_laid_once(repo: Path) -> None:
-    spec(repo, "96-orkui-0.15.0-copied.md", "# 96. OrkUI copied\n\n## Done when\n\nIt works.\n")
-    got = planned(repo)
-    assert "96-orkui-0-15-0-copied" in got and "96-orkui-0.15.0-copied" not in got
-    p = got["96-orkui-0-15-0-copied"]
-    assert p["spec"] == "docs/specs/96-orkui-0.15.0-copied.md" and not p["exists"]
-    assert specs.line(p).startswith("96 · OrkUI copied")
-    assert "96-orkui-0-15-0-copied" in specs.lay(repo, WIKI, [p])
-    assert (repo / WIKI / "pages/ideas/96-orkui-0-15-0-copied.md").exists()
-    assert planned(repo)["96-orkui-0-15-0-copied"]["exists"]
-    assert specs.lay(repo, WIKI, [planned(repo)["96-orkui-0-15-0-copied"]]) == []

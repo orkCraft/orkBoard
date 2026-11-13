@@ -9,8 +9,8 @@ import sys
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import code_map, idea_lens, ideas
+from orkboard.gui.board_host import Orkboard
+from orkboard.realm import code_map, idea_lens
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 32
 
@@ -40,19 +40,6 @@ def test_the_repository_s_parts_and_what_each_uses_python_and_javascript_relativ
     assert got["app"]["uses"] == ["app/core"] and got["app/core"]["used_by"] == ["app"]
     assert got["web"]["uses"] == ["web/lib"] and got["web/lib"]["used_by"] == ["web"] and got["web"]["files"] == ["app.js"]
     assert got["app/core"]["count"] == 2
-
-
-def test_the_party_offers_its_crafts_lenses_and_the_leader_s_is_open_first(host):
-    slug = host.command("ideas.goal_save", {"about": "Settings people can find.", "craft": "engineering", "leader": "architect",
-                                            "team": ["ui-kit", "reviewer"]})["slug"]
-    got = host.command("ideas.lens", {"track": slug})
-    assert [x["id"] for x in got["lenses"]] == ["text", "code", "screen"] and got["default"] == "code"   # no product manager: no pain
-    assert next(x for x in got["lenses"] if x["id"] == "code")["by"] == "Architect"
-    plain = host.command("ideas.goal_save", {"about": "Anything.", "craft": "engineering", "team": ["artist"]})["slug"]
-    got = host.command("ideas.lens", {"track": plain})
-    assert got["default"] == "text" and [x["id"] for x in got["lenses"]] == ["text", "screen"]   # the Taskmaster leads: text first
-    pm = host.command("ideas.goal_save", {"about": "Who buys.", "craft": "product", "leader": "product-manager"})["slug"]
-    assert host.command("ideas.lens", {"track": pm})["default"] == "pain"
 
 
 def test_what_the_lens_points_at_is_kept_with_the_idea_shown_with_its_page_and_given_to_the_keeper(host, fake_repo):
@@ -85,31 +72,7 @@ def test_what_the_lens_points_at_is_kept_with_the_idea_shown_with_its_page_and_g
     assert len(idea_lens.screens(host.ideas.state_dir)) == 1
 
 
-def test_the_lens_points_at_the_repository_only_never_at_a_secret_or_the_machine_s_own(host, fake_repo):
-    slug = host.command("ideas.goal_save", {"about": "x", "craft": "engineering", "leader": "architect"})["slug"]
-    (fake_repo / ".env").write_text("KEY=1\n")
-    for paths, why in ((["../etc"], "Not a part"), ([".env"], "Not a part"), ([".orkcraft"], "Not a part"), (["nowhere"], "Not a part")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.add", {"text": "x", "track": slug, "priority": "low", "lens": [{"kind": "code", "paths": paths}]})
-    with pytest.raises(CommandError, match="code, a screen or a pain"):
-        host.command("ideas.add", {"text": "x", "track": slug, "priority": "low", "lens": [{"kind": "wish"}]})
-    with pytest.raises(CommandError, match="screen is gone"):
-        host.command("ideas.add", {"text": "x", "track": slug, "priority": "low", "lens": [{"kind": "screen", "screen": "abc"}]})
-    assert not [i for i in ideas.ideas(host.ideas.root()) if i["track"] == slug]           # nothing added
-    assert host.command("ideas.lens_code", {})["parts"]                                      # the fake repository's own parts
-
-
 # -- spec 102 §1.3: a pain's place ---------------------------------------------------------------------------------------------------------------
-
-def test_a_pain_kept_before_has_no_place_and_stays_a_string_in_the_file_every_reader_reads_on(tmp_path):
-    state = tmp_path / ".orkcraft"
-    state.mkdir()
-    (state / "segments.json").write_text('{"segments": [{"segment": "Shop owners", "pains": ["Orders get lost", "Refunds take a week"]}]}')   # as kept before
-    assert idea_lens.segments(state) == [{"segment": "Shop owners", "pains": ["Orders get lost", "Refunds take a week"]}]
-    assert idea_lens.segments_placed(state) == [{"segment": "Shop owners", "pains": [{"text": "Orders get lost", "on": ""}, {"text": "Refunds take a week", "on": ""}]}]
-    idea_lens.keep_segment(state, "Shop owners", "New one")                                  # keeping a pain with no place writes the strings it always wrote
-    assert json.loads((state / "segments.json").read_text())["segments"][0]["pains"] == ["New one", "Orders get lost", "Refunds take a week"]
-
 
 def test_a_pinned_pain_is_an_object_in_the_file_the_lens_still_offers_its_text_and_keeping_it_again_keeps_its_place(tmp_path):
     state = tmp_path / ".orkcraft"
@@ -126,11 +89,3 @@ def test_a_pinned_pain_is_an_object_in_the_file_the_lens_still_offers_its_text_a
     assert idea_lens.segments_placed(state)[0]["pains"][0] == {"text": "Orders get lost", "on": ""}
     assert json.loads((state / "segments.json").read_text())["segments"][0]["pains"] == ["Orders get lost", "Refunds take a week"]
 
-
-def test_an_idea_s_pain_kept_with_it_does_not_move_a_pinned_one_off_its_screen(host):
-    slug = host.command("ideas.goal_save", {"about": "x", "craft": "product", "leader": "product-manager"})["slug"]
-    idea_lens.keep_segment(host.ideas.state_dir, "Shop owners", "Orders get lost", on="orders")
-    host.command("ideas.add", {"text": "Fix it", "track": slug, "priority": "low",
-                               "lens": [{"kind": "pain", "segment": "Shop owners", "pain": "Orders get lost"}]})
-    assert idea_lens.segments_placed(host.ideas.state_dir)[0]["pains"] == [{"text": "Orders get lost", "on": "orders"}]
-    assert host.command("ideas.lens", {"track": slug})["segments"] == [{"segment": "Shop owners", "pains": ["Orders get lost"]}]

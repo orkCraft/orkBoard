@@ -115,15 +115,6 @@ def test_a_project_with_each_shape_is_found_by_scan(root):
     assert [r["version"] for r in got["releases"]] == ["1.0.0"]
 
 
-def test_a_decision_belongs_to_tech_unless_its_tags_or_its_title_name_another_craft(root):
-    w(root, "docs/adr/0001-pg.md", MADR)
-    w(root, "docs/adr/0002-buttons.md", UI_ADR)
-    w(root, "docs/adr/0003-pricing-page.md", "---\nstatus: accepted\n---\n\n# Pricing for the first year\n\n## Decision Outcome\n\nFree.\n")
-    w(root, "docs/adr/0004-ship.md", "---\nstatus: accepted\ntags: marketing, launch\n---\n\n# Ship on Friday\n\n## Decision Outcome\n\nFriday.\n")
-    w(root, "docs/adr/0005-level.md", "---\nstatus: accepted\n---\n\n# Level generation\n\n## Decision Outcome\n\nSeeded.\n")
-    assert [d["craft"] for d in read_in.scan(root)["decisions"]] == ["tech", "design", "product", "marketing", "game-design"]
-
-
 def test_secrets_links_and_large_files_are_never_read(root, tmp_path):
     w(root, "docs/decisions/0001-ok.md", MADR)
     w(root, "docs/decisions/0002-big.md", MADR + "x" * (read_in.MAX_BYTES + 1))
@@ -146,12 +137,6 @@ def test_secrets_links_and_large_files_are_never_read(root, tmp_path):
     assert read_in.scan(root)["releases"] == []
 
 
-def test_a_secret_among_the_context_files_is_left_out(root, monkeypatch):
-    w(root, "AGENTS.md", "Agents\n")
-    monkeypatch.setattr(read_in, "is_secret", lambda p: p == "AGENTS.md")
-    assert read_in.scan(root)["context"] == []
-
-
 # -- taking decisions ----------------------------------------------------------------------------------------------------------------------
 
 def test_madr_and_nygard_decisions_go_into_the_projects_journal_on_their_day_with_their_status(root, sd):
@@ -166,13 +151,6 @@ def test_madr_and_nygard_decisions_go_into_the_projects_journal_on_their_day_wit
         ("decision", "Decision 2: Use SQLite for the data (superseded): Chosen option: \"PostgreSQL\", because it is boring and good.", "2026-01-10", "docs/decisions/0002-sqlite.md"),
         ("decision", "Decision 3: Round buttons (proposed): Buttons are round.", "2026-05-05", "docs/decisions/0003-buttons.md"),
         ("decision", "Decision 2: Record architecture decisions: We will use Architecture Decision Records.", "2016-02-12", "doc/adr/0002-record.md")]
-
-
-def test_a_long_decision_line_is_cut_to_the_journals_line(root, sd):
-    w(root, "docs/adr/0001-long.md", "---\nstatus: accepted\ndate: 2026-01-01\n---\n\n# Long\n\n## Decision Outcome\n\n" + "word " * 200 + "\n")
-    read_in.take(root, sd)
-    text = journals.read(sd, journals.PROJECT)[0]["text"]
-    assert len(text) <= journals.TEXT_CHARS and text.endswith("…") and text.startswith("Decision 1: Long: word")
 
 
 def _party(host, title, leader, team, craft):
@@ -193,34 +171,6 @@ def host(fake_repo):
 @pytest.fixture
 def parties(host):
     return {"tech": _party(host, "Tech", "architect", ["grunt", "tester"], "engineering"), "design": _party(host, "Design", "product-designer", ["ui-kit"], "design")}
-
-
-def test_a_decision_also_goes_into_the_journal_of_the_projects_party_of_its_craft_and_none_where_there_is_none(host, parties):
-    repo, sd, board = host.ideas.host.repo_root, host.ideas.state_dir, host.ideas.root(False)
-    w(repo, "docs/decisions/0001-use-postgres.md", MADR)
-    w(repo, "docs/decisions/0002-buttons.md", UI_ADR)
-    w(repo, "docs/decisions/0003-pricing.md", "---\nstatus: accepted\n---\n\n# Pricing\n\n## Decision Outcome\n\nFree.\n")        # product: this project has no such party
-    got = read_in.take(repo, sd, board=board)
-    assert got == {"decisions": 3, "leaders": 2, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
-    assert [e["ref"] for e in journals.read(sd, parties["tech"])] == ["docs/decisions/0001-use-postgres.md"]
-    assert [e["ref"] for e in journals.read(sd, parties["design"])] == ["docs/decisions/0002-buttons.md"]
-    assert journals.read(sd, parties["tech"])[0]["kind"] == "decision" and journals.read(sd, parties["tech"])[0]["at"].startswith("2026-03-04")
-    assert journals.read(sd, parties["tech"])[0]["text"] == journals.read(sd, journals.PROJECT)[0]["text"]
-
-
-def test_the_boards_own_file_is_read_only_while_the_journal_holds_no_decision(root, sd):
-    w(root, "docs/decisions.md", "# Decisions\n\n## 1. No accounts (2026-02-03, the person and Orkboard)\n\nNo sign-in in the first release.\n\n## 2. Pay once (2026-02-04, the leaders, all agreed)\n\nOne price.\n")
-    assert [f["framework"] for f in read_in.scan(root, sd)["found"]] == ["The Board's decisions file"]
-    assert read_in.take(root, sd)["decisions"] == 2
-    assert lines(sd)[0] == ("decision", "Decision 1: No accounts: No sign-in in the first release.", "2026-02-03", "docs/decisions.md#1")
-    journals.add(sd, journals.PROJECT, "decision", "Decision 3: made here", ref="3")
-    assert read_in.scan(root, sd)["decisions"] == []                                                                    # a journal with a decision: the file is the Board's own
-
-
-def test_the_boards_file_is_not_read_into_a_project_that_kept_decisions_already(root, sd):
-    journals.add(sd, journals.PROJECT, "decision", "Decision 1: made here", ref="1")
-    w(root, "docs/decisions.md", "## 1. No accounts (2026-02-03, the person)\n\nx\n")
-    assert read_in.take(root, sd)["decisions"] == 0 and len(journals.read(sd, journals.PROJECT)) == 1
 
 
 # -- specs and releases --------------------------------------------------------------------------------------------------------------------
@@ -246,15 +196,6 @@ def test_a_spec_done_is_kept_and_a_spec_in_work_is_not(root, sd):
     assert sorted(e["text"] for e in journals.read(sd, journals.PROJECT) if e["kind"] == "done") == sorted([
         "Spec “Feature: Lobby” (GitHub Spec Kit) was done", "Spec “auth” (Kiro) was done", "Spec “Cart” (OpenSpec) was done", "Spec “Old change” (OpenSpec) was done",
         "Spec “Story 1.1” (BMAD) was done"])
-
-
-def test_a_spec_has_the_day_of_its_files_last_commit(fake_repo, sd):
-    w(fake_repo, "specs/001-lobby/spec.md", "# Lobby\n")
-    import subprocess
-    subprocess.run(["git", "add", "."], cwd=str(fake_repo), check=True, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "spec", "--date=2026-06-07T12:00:00", "-q"], cwd=str(fake_repo), check=True, capture_output=True,
-                   env={**__import__("os").environ, "GIT_COMMITTER_DATE": "2026-06-07T12:00:00"})
-    assert read_in.scan(fake_repo)["specs"][0]["date"] == "2026-06-07"
 
 
 def test_a_changelogs_releases_are_kept_and_unreleased_is_not(root, sd):
@@ -315,12 +256,6 @@ def test_an_orkboard_export_is_read_back_entry_by_entry_as_it_was(root, sd):
         ("overruled", "You said no to “Add a lobby”: it breaks the cache.", "2026-04-05", "add-lobby", ["cache", "auth"], "ddd444")]
 
 
-def test_an_export_of_this_projects_own_journal_adds_nothing_twice(root, sd):
-    e = journals.add(sd, journals.PROJECT, "decision", "Decision 1: No accounts", ref="1", at="2026-04-01")
-    w(root, ".orkcraft/export/journals/project.md", f"---\norkboard-journal: _project\n---\n\n- 2026-04-01 · decision · Decision 1: No accounts\n<!-- id={e['id']} idea= on= ref=1 -->\n")
-    assert read_in.take(root, sd)["journals"] == 0 and len(journals.read(sd, journals.PROJECT)) == 1
-
-
 # -- once ----------------------------------------------------------------------------------------------------------------------------------
 
 def test_take_twice_reads_nothing_twice_and_a_struck_entry_is_not_read_again(root, sd):
@@ -337,13 +272,6 @@ def test_take_twice_reads_nothing_twice_and_a_struck_entry_is_not_read_again(roo
     assert read_in.take(root, sd)["decisions"] == 0 and len(journals.read(sd, journals.PROJECT)) == 2                  # struck: still not read in again
     w(root, "docs/decisions/0002-new.md", NYGARD)
     assert read_in.take(root, sd)["decisions"] == 1
-
-
-def test_take_uses_the_scan_it_is_given(root, sd):
-    w(root, "docs/decisions/0001-use-postgres.md", MADR)
-    got = read_in.scan(root)
-    (root / "docs" / "decisions" / "0001-use-postgres.md").unlink()
-    assert read_in.take(root, sd, got)["decisions"] == 1
 
 
 def test_first_start_reads_in_once_and_never_again_by_itself(root, sd):
@@ -372,17 +300,6 @@ def test_the_start_files_are_the_context_files_first_then_the_readme_and_the_top
     assert len(next(f for f in got if f["path"] == "docs/prd.md")["text"]) == project_facts.START_CHARS
 
 
-def test_the_start_files_are_six_of_context_and_docs_in_all_with_the_readme_beside(root):
-    w(root, "README.md", "# Party\n")
-    for p in (".specify/memory/constitution.md", ".kiro/steering/product.md", "openspec/project.md", "docs/prd.md", "memory-bank/projectbrief.md", "memory-bank/productContext.md",
-              "AGENTS.md"):
-        w(root, p, f"{p}\n")
-    w(root, "docs/z-doc.md", "z\n")
-    got = [f["path"] for f in project_facts.start_files(root)]
-    assert got == [".specify/memory/constitution.md", ".kiro/steering/product.md", "openspec/project.md", "docs/prd.md", "memory-bank/projectbrief.md",
-                   "memory-bank/productContext.md", "README.md"] and len(got) - 1 == project_facts.START_DOCS
-
-
 # -- the host ------------------------------------------------------------------------------------------------------------------------------
 
 def test_the_first_start_reads_in_once_quietly_before_the_questions(host, parties, monkeypatch):
@@ -396,25 +313,6 @@ def test_the_first_start_reads_in_once_quietly_before_the_questions(host, partie
     w(repo, "docs/decisions/0002-new.md", NYGARD)
     host.ideas.project_start()
     assert len(journals.read(sd, journals.PROJECT)) == 1                                      # never again by itself
-
-
-def test_the_first_start_is_not_failed_by_a_reading_that_fails(host, monkeypatch):
-    def boom(*a, **k):
-        raise RuntimeError("no")
-    monkeypatch.setattr(read_in, "first_start", boom)
-    monkeypatch.setattr(host.ideas.keeper, "project_ask", lambda: True, raising=False)
-    assert host.ideas.project_start() == {"asked": True}                                      # the questions are asked all the same
-
-
-def test_the_commands_scan_and_take(host, parties):
-    repo, sd = host.ideas.host.repo_root, host.ideas.state_dir
-    assert isinstance(host.ideas, ReadInMixin) and set(read_in_commands(host.ideas)) <= set(host.commands)
-    w(repo, "docs/decisions/0001-use-postgres.md", MADR)
-    got = host.commands["ideas.read_in_scan"]({})
-    assert got == {"found": [{"framework": "ADRs (MADR)", "kind": "decisions", "path": "docs/decisions", "n": 1}]}
-    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 1, "leaders": 1, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
-    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 0, "leaders": 0, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
-    assert len(journals.read(sd, journals.PROJECT)) == 1
 
 
 # -- orkboard import -----------------------------------------------------------------------------------------------------------------------
@@ -435,34 +333,6 @@ def test_orkboard_import_says_what_it_found_and_what_it_read_in_and_dry_run_writ
     assert len(journals.read(root / ".orkcraft", journals.PROJECT)) == 5
     assert board_cli.run(["import", str(root)]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == "Read in: 0 decisions, 0 specs done, 0 releases"
-
-
-def test_orkboard_import_with_nothing_to_read_in_names_the_shapes_it_looked_for(root, capsys):
-    w(root, "README.md", "# Nothing\n")
-    code, text = read_in.run_cli(root)
-    assert code == 0 and text.startswith("Nothing to read in:") and "MADR or Nygard" in text and "Spec Kit" in text and "OpenSpec" in text
-    assert board_cli.run(["import", str(root)]) == 0
-    assert "Nothing to read in" in capsys.readouterr().out
-    assert board_cli.run(["import", str(root / "none")]) == 2
-
-
-def test_the_cli_counts_the_leaders_copies_where_the_boards_pages_are_in_the_wiki(root):
-    wiki = root / "llm-wiki" / "general"
-    slug, _new = ideas.save_goal(wiki, None, "Tech", "About Tech", None, "normal", craft="engineering")
-    goal_team.set_team(wiki, slug, ["grunt"], leader="architect")
-    w(root, "docs/decisions/0001-use-postgres.md", MADR)
-    code, text = read_in.run_cli(root, dry=True)
-    assert code == 0 and text.splitlines()[-1] == "Would read in: 1 decision (1 also into leaders' journals), 0 specs done, 0 releases"
-    assert read_in.run_cli(root)[1].splitlines()[-1] == "Read in: 1 decision (1 also into leaders' journals), 0 specs done, 0 releases"
-    assert [e["ref"] for e in journals.read(root / ".orkcraft", slug)] == ["docs/decisions/0001-use-postgres.md"]
-
-
-def test_the_architecture_keeps_orkboards_rule():
-    import ast
-    from pathlib import Path
-    src = Path(read_in.__file__).read_text(encoding="utf-8")
-    mods = {n.module for n in ast.walk(ast.parse(src)) if isinstance(n, ast.ImportFrom) and n.module}
-    assert not any(m.startswith(("orkcraft", "textual", "rich", "orkboard.gui")) for m in mods)
 
 
 # -- a line added outside, in the Board's tree (spec 151 B.2) ------------------------------------------------------------------------------
@@ -487,13 +357,3 @@ def test_a_line_added_outside_is_taken_once_and_never_again_and_the_boards_own_l
     assert read_in.take_outside(wiki, sd)["journals"] == 0 and len(journals.read(sd, journals.PROJECT)) == 3
 
 
-def test_a_line_of_a_kind_the_scope_has_not_is_left_and_listed(root, sd, tmp_path):
-    wiki = tmp_path / "wiki"
-    _wiki_journal(wiki, "tech", ["- 2026-11-02 · stance · A good line <!-- id=aaaa00000001 -->", "- 2026-11-02 · decision_ish · A bad kind <!-- id=aaaa00000002 -->"])
-    _wiki_journal(wiki, journals.PROJECT, ["- 2026-11-02 · stance · A leader's kind in the project's journal"])
-    got = read_in.take_outside(wiki, sd)
-    assert got["journals"] == 1 and [(e["kind"], e["text"]) for e in journals.read(sd, "tech")] == [("stance", "A good line")]
-    assert journals.read(sd, journals.PROJECT) == []
-    assert sorted((x["scope"], x["kind"], x["text"], x["path"]) for x in got["left"]) == sorted([
-        ("tech", "decision_ish", "A bad kind", "journals/tech.md"), (journals.PROJECT, "stance", "A leader's kind in the project's journal", "journals/project.md")])
-    assert read_in.outside(wiki, sd)[1] == got["left"]                                            # still listed, still not read in

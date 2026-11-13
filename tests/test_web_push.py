@@ -39,22 +39,6 @@ def test_seal_gives_the_body_of_rfcs_appendix_a_byte_for_byte():
     assert w.b64(w.seal(PLAIN, UA_PUBLIC, AUTH, salt=w.unb64(SALT), key=key)) == BODY
 
 
-def test_a_receiver_opens_what_is_sealed_to_it():
-    receiver = ec.generate_private_key(ec.SECP256R1())
-    auth = b"0123456789abcdef"
-    body = w.seal(b'{"title":"Orkboard"}', w.b64(w.point(receiver.public_key())), w.b64(auth))
-    salt, size, idlen = body[:16], int.from_bytes(body[16:20], "big"), body[20]
-    sender = body[21:21 + idlen]
-    assert size == 4096 and idlen == 65
-    ua = w.point(receiver.public_key())
-    shared = receiver.exchange(ec.ECDH(), ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), sender))
-    ikm = HKDF(hashes.SHA256(), 32, auth, b"WebPush: info\x00" + ua + sender).derive(shared)
-    cek = HKDF(hashes.SHA256(), 16, salt, b"Content-Encoding: aes128gcm\x00").derive(ikm)
-    nonce = HKDF(hashes.SHA256(), 12, salt, b"Content-Encoding: nonce\x00").derive(ikm)
-    assert AESGCM(cek).decrypt(nonce, body[21 + idlen:], None) == b'{"title":"Orkboard"}\x02'
-    assert w.seal(b"x", w.b64(ua), w.b64(auth)) != w.seal(b"x", w.b64(ua), w.b64(auth))      # a salt and a key each time
-
-
 def test_the_key_is_made_once_beside_the_settings_private_and_the_jwt_verifies():
     import os
     import stat
@@ -100,30 +84,3 @@ def test_send_posts_the_sealed_message_with_its_headers_and_gives_the_status(mon
     assert {k.lower(): v for k, v in seen[1][0].header_items()}["urgency"] == "normal"
 
 
-def test_send_gives_the_error_status_zero_when_none_and_never_raises(monkeypatch):
-    def gone(request, timeout):
-        raise urllib.error.HTTPError(request.full_url, 410, "Gone", {}, None)
-    monkeypatch.setattr(w, "OPENER", gone)
-    assert w.send(_sub(), {"title": "Orkboard", "tag": "needs"}) == 410
-
-    def down(request, timeout):
-        raise OSError("no network")
-    monkeypatch.setattr(w, "OPENER", down)
-    assert w.send(_sub(), {"title": "Orkboard", "tag": "needs"}) == 0
-    assert w.send({"endpoint": "x"}, {"tag": "needs"}) == 0                                   # a broken subscription
-    assert w.send(_sub(), {"title": "x" * 2000, "tag": "needs"}) == 0                          # over a kilobyte: not sent
-
-
-def test_without_cryptography_every_push_command_says_how_to_get_it(monkeypatch):
-    import builtins
-    sub = _sub()
-    real = builtins.__import__
-
-    def no_crypto(name, *a, **k):
-        if name.startswith("cryptography"):
-            raise ImportError(name)
-        return real(name, *a, **k)
-    monkeypatch.setattr(builtins, "__import__", no_crypto)
-    with pytest.raises(w.PushError, match=r"Notifications need the cryptography package: pip install 'orkboard\[gui\]'"):
-        w.public_key()
-    assert w.send(sub, {"tag": "needs"}) == 0

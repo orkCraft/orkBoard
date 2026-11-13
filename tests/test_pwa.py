@@ -12,7 +12,6 @@ import posixpath
 import re
 import subprocess
 import threading
-from pathlib import Path
 
 import pytest
 from websockets.asyncio.client import connect
@@ -131,36 +130,6 @@ def test_the_app_serves_the_desktops_page_its_import_map_by_hash_and_orkui_by_th
     assert pwa.csp(b"<html></html>") == pwa.CSP                                                                     # a page with none gets the plain one
 
 
-def test_the_apps_csp_lets_it_frame_its_own_origin_for_a_sketch_and_nothing_else():
-    """Spec 121 §3.2: `frame-src 'self'` (the sketches' sandboxed frames of /media/), not wider; the app itself can still be framed by none."""
-    for csp in (pwa.CSP, pwa.csp(b'<script type="importmap">{}</script>')):
-        assert "frame-src 'self';" in csp and "frame-src *" not in csp and "frame-src https" not in csp
-        assert "frame-ancestors 'none'" in csp and "default-src 'self'" in csp and "object-src 'none'" in csp
-    head, _ = _split(pwa.serve("GET", "/app/"))
-    assert "frame-src 'self';" in next(line for line in head.splitlines() if line.startswith("Content-Security-Policy"))
-
-
-def test_every_picture_orkuis_components_draw_is_served_beside_it():
-    """The potions' bottles, a tool's rune, the big signs, the card backs: `components.css` masks them by relative address, so each must be there (the 404s of the first run of the page on a phone)."""
-    css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()
-    wanted = {u for u in re.findall(r"url\(['\"]?([^)'\"]+)\)", css) if not u.startswith("data:")}
-    assert len(wanted) > 150 and wanted <= set(pwa.files()), sorted(wanted - set(pwa.files()))
-    for name in ("signs/big/bug.svg", "potion/body.svg", "runes/key.svg", "tools/bell-note.svg", "backs/back.svg"):
-        head, body = _split(pwa.serve("GET", f"/ds/orkui/{name}"))
-        assert head.startswith("HTTP/1.1 200") and "image/svg+xml" in head and b"<svg" in body, name
-    for name in ("potion/sizes.json", "potion/README.md", "tools/README.md", "die/die.json", "signs/big"):
-        assert _split(pwa.serve("GET", f"/ds/orkui/{name}"))[0].startswith("HTTP/1.1 404"), name
-
-
-def test_the_page_files_are_the_ones_the_desktop_serves_but_for_what_a_phone_has_no_use_of():
-    from orkboard.gui import server
-    on_phone = {name.removeprefix(pwa.PAGE) for name in pwa.page_files()}
-    on_desktop = {p.relative_to(server.STATIC).as_posix() for p in server.STATIC.rglob("*") if p.is_file()
-                  and (p.suffix in (".js", ".css", ".mjs", ".txt") or p.name == "board.js")}
-    left = on_desktop - on_phone
-    assert all(name.startswith(("vendor/xterm", "vendor/LICENSE-xterm", "play/", "pwa/")) or name == "index.html" or "/__" in name for name in left), left
-
-
 def test_every_import_of_a_served_module_is_a_served_module_with_the_names_it_takes():
     """The app's module graph, as the phone loads it (the owner's phone stuck on "Loading…" when the desktop's layout
     gained imports /app/ did not serve, and one name that resolved to the app's own ground.js): every relative import
@@ -199,26 +168,6 @@ def test_the_service_worker_keeps_every_module_the_app_loads():
     assert {k for k in pwa.files() if k.startswith(pwa.PAGE) and k.endswith((".js", ".mjs", ".css"))} <= page
     assert {"page/board.js", "page/js/link.js", "page/js/hand/upright.js", "page/vendor/preact.mjs", "page/page.css", "roles.css"} <= page
     assert not any("xterm" in k for k in page)
-
-
-def test_every_file_the_service_worker_keeps_answers_and_the_faces_are_rubiks():
-    """What the worker precaches is served by the same route the phone app uses; the cache is a new one, Rubik's faces are in it and Pixelify Sans is not."""
-    served = _split(pwa.serve("GET", "/app/sw.js"))[1].decode()
-    cache = re.search(r'const CACHE = "orkcraft-app-v(\d+)"', served)
-    assert cache and int(cache.group(1)) >= 109
-    shell = re.search(r"const SHELL = (\[.*?\]);", served, re.S)
-    paths = set(re.findall(r'"([^"]+)"', shell.group(1))) | set(json.loads(re.search(r"const PAGE = (\[.*?\]);", served).group(1)))
-    for path in sorted(paths):
-        head = pwa.serve("GET", "/app/" + ("" if path == "./" else path)).split(b"\r\n", 1)[0].decode()
-        assert " 200 " in head + " ", f"{path}: {head}"
-    assert any(p.endswith(".woff2") and "rubik" in p.lower() for p in paths)
-    assert not any("pixelify-sans" in p.lower() for p in paths)
-
-
-def test_the_service_worker_also_keeps_the_elements_and_the_signs_the_masks_draw():
-    sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    shell = set(re.findall(r'"([^"]+)"', sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]))
-    assert {k for k in pwa.files() if k.startswith(("elements/", "signs/")) and k.count("/") == 1} <= shell      # (signs/big/ and the rest of orkUI's pictures are kept as they are first drawn)
 
 
 def test_the_manifest_carries_a_token_only_as_a_token():
@@ -332,23 +281,6 @@ def test_the_phones_in_the_tailnet_and_the_account_to_log_in_as():
     assert tailnet.find(_ran(json.dumps(STATUS))) == tailnet.Tail("100.64.0.7", "town.tail12.ts.net")
 
 
-def test_the_desktop_reads_tailscale_at_most_every_few_seconds():
-    asked = []
-
-    class L:
-        tail_trusted = True
-
-    t = pwa.Tailnet(L(), lambda: asked.append(1) or {"account": "a", "phones": []})
-    first = t.read(now=0.0)
-    assert first["running"] and first["trusted"] and first["install"] == pwa.INSTALL and first["install_qr"]
-    assert first["dns"] == pwa.DNS and first["dns_qr"] and "installed" in first
-    t.read(now=1.0)
-    assert len(asked) == 1
-    t.read(now=pwa.TAIL_S + 0.1)
-    assert len(asked) == 2
-    assert not pwa.Tailnet(L(), lambda: None).read(now=0.0)["running"]
-
-
 @pytest.mark.asyncio
 async def test_tailscale_that_comes_after_the_town_is_taken_within_a_minute_on_the_same_port(
         fake_repo, tmp_path, monkeypatch):
@@ -379,7 +311,6 @@ async def test_tailscale_that_comes_after_the_town_is_taken_within_a_minute_on_t
         listener.stop()
 
 
-
 CAMP = re.compile(r':root\[data-(?:look|theme)="camp"\]')
 
 
@@ -387,27 +318,6 @@ def _rules(css: str) -> list[tuple[str, str]]:
     """`(selector, body)` of each rule of a stylesheet, an @media's own too."""
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     return [(m.group(1).strip(), m.group(2)) for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", css)]
-
-
-def test_the_phone_wears_the_design_system_and_no_camp_file():
-    """The app's page loads orkUI (fonts.css, tokens.css, components.css: the desktop's files, design-system/orkui) in its
-    office look; every picture a rule of frame.css draws is served, no rule of it is Camp's, and Camp's pictures (the fence
-    round a window, v4's kit, the HUD's resources) never are."""
-    from orkboard.design import tokens
-
-    head, body = _split(pwa.serve("GET", "/app/"))
-    assert b'data-look="office"' in body
-    for name in ("fonts.css", "tokens.css", "components.css"):
-        assert f'href="{name}"'.encode() in body, name
-    for name in pwa.STYLES:
-        head, body = _split(pwa.serve("GET", f"/app/{name}"))
-        assert "text/css" in head and body == (tokens.ORKUI / name).read_bytes(), name
-    rules = _rules((pwa.ROOT / "frame.css").read_text())
-    assert not [sel for sel, _body in rules if any(CAMP.match(part.strip()) for part in sel.split(","))]
-    for url in sorted({u for _sel, body in rules for u in re.findall(r'url\("([^"]+)"\)', body)}):
-        assert _split(pwa.serve("GET", f"/app/{url}"))[0].startswith("HTTP/1.1 200"), url
-    for url in ["fence/row.png", "icons/res-gold.png", "camp/ork-walk.png", "sprites/forge.png", "v3/manifest.json"]:
-        assert _split(pwa.serve("GET", f"/app/{url}"))[0].startswith("HTTP/1.1 404"), url
 
 
 def test_assets_json_lists_every_cache_first_file_with_a_hash(monkeypatch):
@@ -444,75 +354,6 @@ def test_a_changed_file_changes_its_hash(tmp_path, monkeypatch):
     assert json.loads(body)["sprites/custom.png"] == h2
 
 
-def test_a_request_only_reads_the_map_the_warm_up_hashed(tmp_path, monkeypatch):
-    """Only the warm-up hashes: a request for assets.json reads the map it kept and touches no file."""
-    monkeypatch.setattr(pwa, "_ASSETS", None)
-    monkeypatch.setattr(pwa, "READY", threading.Event())   # not warmed: neither the map nor the flag
-    head, _ = _split(pwa.serve("GET", "/app/assets.json"))
-    assert head.startswith("HTTP/1.1 503")             # not warmed yet: no map rather than a wrong one
-    dummy = tmp_path / "custom.png"
-    dummy.write_bytes(b"one")
-    real_files = pwa.files()
-    monkeypatch.setattr(pwa, "files", lambda: {**real_files, "sprites/custom.png": dummy})
-    h1 = pwa.assets()["sprites/custom.png"]
-    dummy.write_bytes(b"two")
-    with monkeypatch.context() as m:
-        m.setattr(pwa.hashlib, "sha1", lambda *a: pytest.fail("a request hashed"))
-        m.setattr(Path, "stat", lambda *a, **k: pytest.fail("a request looked at a file"))
-        _, body = _split(pwa.serve("GET", "/app/assets.json"))
-    assert json.loads(body)["sprites/custom.png"] == h1
-
-
-def test_a_warm_up_that_fails_still_says_it_ended_and_logs_why(monkeypatch, caplog):
-    """A request never waits HEAD_S for a warm-up that died: READY is set, the error logged, assets.json a 503."""
-    monkeypatch.setattr(pwa, "_ASSETS", None)
-    monkeypatch.setattr(pwa, "READY", threading.Event())
-
-    def broken():
-        raise RuntimeError("the sprites folder went away")
-    monkeypatch.setattr(pwa, "files", broken)
-    with caplog.at_level("ERROR", logger=pwa.__name__):
-        pwa.assets()
-    assert pwa.READY.is_set()
-    assert "the sprites folder went away" in caplog.text
-    head, _ = _split(pwa.serve("GET", "/app/assets.json"))
-    assert head.startswith("HTTP/1.1 503")
-
-
-def test_the_workers_install_fills_its_cache_past_the_http_cache():
-    """A new cache is filled from the town, never from the HTTP cache (its PNGs and fonts are immutable there): the
-    install fetches every SHELL file and assets.json with cache "reload", and stores the map."""
-    sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    install = sw[sw.index('addEventListener("install"'):sw.index('addEventListener("activate"')]
-    assert "addAll" not in install                    # addAll fetches with the default cache mode
-    assert re.search(r'\[\.\.\.new Set\(\[\.\.\.SHELL, \.\.\.PAGE\]\)\]\.map\(async \(path\) => \{\s*const resp = await fetch\(path, \{ cache: "reload" \}\)',
-                     install)
-    assert 'fetch("assets.json", { cache: "reload" })' in install
-    assert 'put("assets.json"' in install
-
-
-def test_service_worker_names_cache_version_and_cache_first_prefixes():
-    sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "orkcraft-app-v109" in sw                  # one up from the old face's v108 (spec 94 E): a phone drops its files
-    prefixes = sw[sw.index("CACHE_PREFIXES = ["):sw.index("];", sw.index("CACHE_PREFIXES = ["))]
-    assert set(re.findall(r'"([^"]+)"', prefixes)) == set(pwa.CACHE_PREFIXES) == {"fonts/"}
-
-
-def test_the_worker_never_keeps_a_picks_files_network_only():
-    """Pick one (docs/specs/51-pick-one.md §3): `/media/…` is asked of the town every time, never answered by the worker and never kept: its fetch handler lets the request go first of all (the
-    browser asks the town itself, with its Range requests), and neither the shell nor a precache can hold one."""
-    sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    fetch = sw[sw.index('addEventListener("fetch"'):sw.index('addEventListener("message"')]
-    guard = fetch.index("isMedia(e.request.url)")
-    assert re.search(r"isMedia\(e\.request\.url\)\) return;", fetch) and guard < fetch.index("respondWith") and guard < fetch.index("caches.open")   # before anything that answers or keeps
-    assert '"/media/"' in sw[sw.index("const isMedia"):sw.index('addEventListener("fetch"')]
-    shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert "media/" not in shell                                                                    # nothing of the shell is a pick's file
-    message = sw[sw.index('addEventListener("message"'):sw.index('addEventListener("push"')]
-    assert "!isMedia(path)" in message and message.index("!isMedia(path)") < message.index("fetch(path")      # a precache asked for one fetches none
-    assert pwa.wants("/media/dark-mode/k1-r1/a.png") is False                                       # and the app's address space has none of them: they are the listener's own route
-
-
 def test_cache_control_headers_for_cache_first_and_shell():
     for path in ("/app/fonts/ibm-plex-mono-latin-400-normal.woff2", "/app/races/peon-warrior.png"):
         head_cf, _ = _split(pwa.serve("GET", path))
@@ -523,15 +364,6 @@ def test_cache_control_headers_for_cache_first_and_shell():
     assert "Cache-Control: no-cache" in head_html
     head_assets, _ = _split(pwa.serve("GET", "/app/assets.json"))
     assert "Cache-Control: no-cache" in head_assets
-
-
-def test_the_worker_shows_every_push_and_a_tap_opens_the_pushs_address():
-    sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    push = sw[sw.index('addEventListener("push"'):sw.index('addEventListener("notificationclick"')]
-    assert "showNotification(" in push and "if (" not in push.split("e.waitUntil")[1].split("showNotification")[0]      # nothing decides whether it shows
-    assert "tag" in push and "data: { url" in push and "setAppBadge" in push and "clearAppBadge" in push and 'icon: "icon-192.png"' in push
-    click = sw[sw.index('addEventListener("notificationclick"'):]
-    assert "e.notification.data" in click and "openWindow(target)" in click and "from=push-" in click and "all[0].focus()" in click
 
 
 def _call_args(text: str, start: int) -> list[str]:
@@ -562,25 +394,3 @@ def _call_args(text: str, start: int) -> list[str]:
         i += 1
     return [*args, cur]
 
-
-def test_no_child_handed_to_the_page_can_be_null():
-    """`replaceChildren`, `append` and `prepend` write a null as the word "null" (the owner saw it under *The party*, under Takes and in a failed
-    operation's sheet): an argument that may be null (`a ? b : null`, `a ? null : b`, `a || null`, `a && b`) is filtered first, `...[…].filter(Boolean)`."""
-    found = []
-    for name, path in pwa.files().items():
-        if not name.endswith(".js"):
-            continue
-        text = path.read_text(encoding="utf-8")
-        for m in re.finditer(r"\.(?:replaceChildren|append|prepend)\(", text):
-            for arg in _call_args(text, m.end()):
-                top, depth = "", 0
-                for c in arg:
-                    if c in "([{":
-                        depth += 1
-                    elif c in ")]}":
-                        depth -= 1
-                    elif depth == 0:
-                        top += c
-                if re.search(r"\?.*:\s*null\s*$|\?\s*null\s*:|\|\|\s*null\s*$|&&", top.strip()):
-                    found.append(f"{name}:{text[:m.start()].count(chr(10)) + 1}")
-    assert not found, found

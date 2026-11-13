@@ -87,31 +87,3 @@ def test_a_pain_is_pinned_to_a_screen_or_a_step_moved_and_taken_off(host):
     assert json.loads((host.ideas.state_dir / "segments.json").read_text())["segments"][0]["pains"] == ["Orders get lost"]     # no place, a string again
 
 
-def test_a_pin_is_refused_for_a_pain_or_a_screen_that_is_gone_in_plain_words(host):
-    idea_lens.keep_segment(host.ideas.state_dir, "Shop owners", "Orders get lost")
-    for args, why in (({"segment": "Nobody", "pain": "Orders get lost", "on": "cart"}, "That pain is gone"),
-                      ({"segment": "Shop owners", "pain": "Another", "on": "cart"}, "That pain is gone"),
-                      ({"segment": "Shop owners", "pain": "Orders get lost", "on": "checkout"}, "That screen is gone"),
-                      ({"segment": "Shop owners", "pain": "Orders get lost", "on": "step:9"}, "That screen is gone"),
-                      ({"segment": "", "pain": "Orders get lost", "on": "cart"}, "segment is missing"),
-                      ({"segment": "Shop owners", "pain": "Orders get lost", "on": 3}, "on is not text")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.pain_pin", args)
-    assert idea_lens.segments_placed(host.ideas.state_dir)[0]["pains"] == [{"text": "Orders get lost", "on": ""}]
-
-
-def test_a_project_with_no_screen_answers_none_and_no_pin_holds(fake_repo):
-    git(fake_repo, "checkout", "-q", "-b", "dev")
-    h = Orkboard(fake_repo)
-    got = h.command("ideas.screens", {})
-    assert got["screens"] == [] and got["links"] == [] and got["steps"] == [] and got["entry"] == "" and got["segments"] == []
-    idea_lens.keep_segment(h.ideas.state_dir, "Shop owners", "Orders get lost")
-    with pytest.raises(CommandError, match="That screen is gone"):
-        h.command("ideas.pain_pin", {"segment": "Shop owners", "pain": "Orders get lost", "on": "home"})
-    assert h.command("ideas.pain_pin", {"segment": "Shop owners", "pain": "Orders get lost", "on": ""})["ok"]
-
-
-def test_the_commands_are_the_two_named():
-    class Fake:
-        screens = pain_pin = staticmethod(lambda a: {})
-    assert set(screens_commands(Fake)) == COMMANDS

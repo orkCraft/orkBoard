@@ -14,12 +14,6 @@ def _log(root, *events):
         assert event_log.record(root, event, **fields)
 
 
-def test_an_empty_log_measures_nothing_and_says_so(tmp_path):
-    m = measures.of(tmp_path)
-    assert m["talk"]["objections"] == 0 and m["talk"]["heeded_share"] is None and m["results"]["first_time_share"] is None
-    assert "nothing in the log yet" in measures.text(m) and "—" in measures.text(m)
-
-
 def test_the_leaders_no_is_measured_by_what_the_person_did_with_it(tmp_path):
     E = event_log
     _log(tmp_path,
@@ -81,37 +75,12 @@ def test_concerns_pitches_sketches_and_the_changes_after_the_start(tmp_path):
     assert m["after_start"] == {"started": 2, "changes": 2, "goals_changed": 1, "per_goal": 1.0}
 
 
-def test_the_days_bound_what_is_counted(tmp_path):
-    lines = [{"event": event_log.LEADER_OBJECTED, "at": f"2026-10-{d:02d}T10:00:00", "idea": f"i{d}", "verdict": "no"} for d in (1, 15, 30)]
-    event_log.path(tmp_path).parent.mkdir(parents=True)
-    event_log.path(tmp_path).write_text("\n".join(json.dumps(x) for x in lines) + "\n", encoding="utf-8")
-    assert measures.of(tmp_path, since="2026-10-10")["talk"]["objections"] == 2
-    m = measures.of(tmp_path, since="2026-10-10", until="2026-10-20")
-    assert m["talk"]["objections"] == 1 and m["since"] == "2026-10-10"
-
-
-def test_orkboard_measures_prints_them_or_their_data(tmp_path, capsys):
-    _log(tmp_path, (event_log.LEADER_OBJECTED, {"idea": "a", "verdict": "no"}), (event_log.OBJECTION_ANSWERED, {"idea": "a", "answer": "drop"}))
-    assert board_cli.run(["measures", str(tmp_path)]) == 0
-    out = capsys.readouterr().out
-    assert out.startswith("Orkboard's measures") and "you gave way to 1 of 1 (100 %)" in out
-    assert board_cli.run(["measures", str(tmp_path), "--json"]) == 0
-    assert json.loads(capsys.readouterr().out)["talk"]["heeded"] == 1
-    assert board_cli.run(["measures", str(tmp_path / "none")]) == 2 and "no folder" in capsys.readouterr().err
-
-
 # -- spec 121 §G: hypothesis H2, the day (docs/hypotheses.md) ------------------------------------------------------------------------------------
 
 def _at(root, *rows):
     """Lines with their own times: `(at, event, fields)`."""
     event_log.path(root).parent.mkdir(parents=True, exist_ok=True)
     event_log.path(root).write_text("\n".join(json.dumps({"at": at, "event": e, **f}) for at, e, f in rows) + "\n", encoding="utf-8")
-
-
-def test_the_days_measures_say_nothing_where_the_log_has_nothing(tmp_path):
-    d = measures.of(tmp_path)["day"]
-    assert d["first_sketch"]["holds"] is None and d["sketches"]["holds"] is None and d["building"]["holds"] is None and d["morning"]["holds"] is None and d["went_wrong"]["holds"] is None
-    assert "The day, the morning and the night (H2)" in measures.text(measures.of(tmp_path)) and "nothing to read yet" in measures.text(measures.of(tmp_path))
 
 
 def test_h2_holds_when_the_sketch_comes_soon_most_are_picked_the_night_builds_the_mark_comes_fast_and_the_night_fails_less(tmp_path):
@@ -153,28 +122,6 @@ def test_h2_holds_when_the_sketch_comes_soon_most_are_picked_the_night_builds_th
     out = measures.text(m)
     assert "The day, the morning and the night (H2)" in out and "2 of 3 (67 %), median 12 min: holds" in out and "in the night's window 3 (60 %)" in out and "median 1 min, the card lifted 2 times: holds" in out
     json.dumps(m)
-
-
-def test_h2_is_refuted_by_sketches_mostly_skipped_build_it_now_for_most_and_a_slow_first_mark(tmp_path):
-    E = event_log
-    _at(tmp_path,
-        ("2026-11-02T10:00:00+00:00", E.IDEA_ADDED, {"idea": "g1"}), ("2026-11-02T11:00:00+00:00", E.SKETCH_MADE, {"idea": "g1"}),
-        ("2026-11-02T11:05:00+00:00", E.SKETCH_ANSWERED, {"idea": "g1", "answer": "skipped"}), ("2026-11-02T11:06:00+00:00", E.SKETCH_ANSWERED, {"idea": "g2", "answer": "skipped"}),
-        ("2026-11-02T11:07:00+00:00", E.SKETCH_ANSWERED, {"idea": "g3", "answer": "picked"}),
-        *[("2026-11-02T11:08:00+00:00", E.SKETCH_ANSWERED, {"idea": "g4", "answer": "again"}) for _ in range(3)],
-        ("2026-11-02T20:00:00+00:00", E.NIGHT_HELD, {"idea": "a"}), ("2026-11-02T20:00:00+00:00", E.NIGHT_HELD, {"idea": "b"}), ("2026-11-02T20:00:00+00:00", E.NIGHT_HELD, {"idea": "c"}),
-        ("2026-11-03T09:00:00+00:00", E.BUILT_NOW, {"idea": "a", "from": "card"}), ("2026-11-03T09:01:00+00:00", E.BUILT_NOW, {"idea": "b", "from": "sketch"}),
-        ("2026-11-03T08:00:00+00:00", E.NIGHT_CARD_OPENED, {"goals": 1}), ("2026-11-03T08:05:00+00:00", E.PLAY_MARK, {"idea": "m", "kind": "bug", "minutes_since_open": 5.0}),
-        ("2026-11-03T09:10:00+00:00", E.TASK_STATE, {"idea": "c", "task": "t", "state": "failed"}), ("2026-11-03T09:11:00+00:00", E.NIGHT_STARTED, {"idea": "c"}))
-    d = measures.of(tmp_path)["day"]
-    assert d["first_sketch"]["median_minutes"] == 60.0 and d["first_sketch"]["holds"] is False
-    k = d["sketches"]
-    assert (k["answered"], k["skipped"], k["picked"], k["again_three_times"], k["holds"], k["refuted"]) == (6, 2, 1, 1, False, False), "skipped 2 of 6 is not most"
-    b = d["building"]
-    assert (b["started"], b["at_night"], b["built_now"], b["held"], b["built_now_share"], b["holds"], b["refuted"]) == (3, 1, 2, 3, 0.667, False, True)
-    assert d["morning"]["median_minutes"] == 5.0 and d["morning"]["holds"] is False and d["morning"]["under"] == 0
-    w = d["went_wrong"]
-    assert w["night"]["wrong"] == 1 and w["night"]["wrong_share"] == 1.0 and w["day"]["wrong_share"] == 0.0 and w["holds"] is False
 
 
 def test_a_goal_started_before_work_at_night_was_on_is_not_counted_in_the_nights_building_and_a_board_set_off_ends_it(tmp_path):

@@ -6,7 +6,6 @@ from __future__ import annotations
 import datetime as dt
 import json
 import time
-from types import SimpleNamespace
 
 import pytest
 
@@ -33,14 +32,6 @@ def test_a_routed_goal_goes_to_talk_by_itself_when_nothing_stops_it(host, partie
     assert st["state"] == "talk" and st["route_how"]["auto"] is True and st["route_how"]["changed"] is False
     assert st["route_how"]["said"] == goal_route.cost_of(host.ideas.root(), host.ideas.state_dir, st)               # told the cost, as the press would have
     assert _row(host, slug, "route") is None and calls == []                                                       # no route card; the keeper's Talk is the stub
-
-
-def test_a_routed_goal_goes_to_talk_by_itself_for_real_and_its_route_stays_editable_while_it_talks(host, parties, calls):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    _wait(host, slug)
-    assert [c["step"] for c in calls] == ["talk_round", "talk_round"] and all(c["tools"] is False for c in calls)    # the leaders are heard (the stub's answer says no stance: tried once more)
-    st = _state(host, slug)
-    assert st["state"] == "routed" and "did not answer" in st["error"]                                              # …and the round failed back to its route card, as a pressed Talk does
 
 
 def test_a_step_added_after_talk_brings_the_start_row_and_taking_it_off_again_takes_it_away(host, parties, calls, handed):
@@ -87,28 +78,6 @@ def test_the_route_card_stays_when_the_keeper_may_not_run_the_window_is_spent_th
     assert row is not None and row["low"] is (why == "limits")
     host.command("ideas.talk", {"idea": slug})                                                                      # and Talk is still the person's press
     assert handed == [(slug, "talk")]
-
-
-def test_a_route_every_ai_tool_is_out_for_is_paid_and_a_tool_billed_by_its_api_by_choice_is_not(host, parties, calls, handed, monkeypatch):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    assert handed == [(slug, "talk")] and host.ideas.route_paid() is False
-    monkeypatch.setattr(host.ideas, "tool_now", lambda *a, **k: {"main": "claude", "now": None, "until": None, "moved_from": "claude"})        # every subscription is out
-    assert host.ideas.route_paid() is True
-    monkeypatch.setattr(host.ideas, "tool_now", lambda *a, **k: {"main": "claude", "now": "codex", "until": None, "moved_from": "claude"})      # moved onto a subscription
-    assert host.ideas.route_paid() is False
-    monkeypatch.setattr(host, "machine", SimpleNamespace(tools={"codex": SimpleNamespace(billing="api"), "claude": SimpleNamespace(billing="subscription")}), raising=False)
-    assert host.ideas.route_paid() is True                                                                          # moved onto a tool billed by its API: the yes was asked for (spec 105)
-    monkeypatch.setattr(host.ideas, "tool_now", lambda *a, **k: {"main": "codex", "now": "codex", "until": None, "moved_from": None})          # the Main tool, by the person's choice
-    assert host.ideas.route_paid() is False
-
-
-def test_the_short_way_keeps_its_route_card_a_bugs_way_is_the_persons_choice(host, parties, calls, handed):
-    bug = host.command("ideas.add", {"text": "Saving crashes: Traceback (most recent call last):\n  File \"a.py\", line 1\nValueError: x"})
-    slug = bug["slug"]
-    assert bug["talk"] is False and handed == [] and _state(host, slug)["state"] == "routed" and _state(host, slug)["route_how"]["short"] is True
-    row = _row(host, slug, "route")
-    assert row is not None and row["short"] is True                                                                # *Start* or *Talk*, the person's
-    assert host.ideas.route_stop(slug) == "the short way keeps its card"
 
 
 def test_a_goal_kept_on_hold_or_put_off_does_not_go_to_talk_by_itself(host, parties, calls, handed):

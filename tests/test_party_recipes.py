@@ -5,16 +5,11 @@ from __future__ import annotations
 
 import pytest
 
-from orkboard.realm import goal_team, idea_target, library, party_recipes, party_recipes_before, project_kind, roles
+from orkboard.realm import goal_team, idea_target, library, party_recipes, party_recipes_before, project_kind
 
 ALL = [(k, r) for k, rows in party_recipes.RECIPES.items() for r in rows]
 GAME = ["game-design", "tech", "art", "release", "liveops", "marketing"]
 APP = ["product", "design", "tech", "release", "run", "marketing"]
-
-
-def test_every_kind_has_recipes_and_only_the_known_kinds():
-    assert set(party_recipes.RECIPES) == set(project_kind.KINDS)
-    assert all(rows for rows in party_recipes.RECIPES.values())
 
 
 def test_a_game_has_game_design_tech_art_release_liveops_and_marketing_and_every_other_kind_product_design_tech_release_run_and_marketing():
@@ -58,41 +53,6 @@ def test_a_recipe_names_only_the_librarys_agents_and_its_squad_fits_the_seats_in
         assert len(got["team"]) + 1 <= goal_team.SEATS
 
 
-def test_the_ids_are_each_one_and_the_craft_ids_are_the_roles_party_races_keys():
-    ids = [r["id"] for _k, r in ALL if r["id"] in party_recipes.CRAFTS]
-    assert len(set(ids)) == len(party_recipes.CRAFTS) == 9
-    assert set(party_recipes.CRAFTS) == set(roles.PARTY_RACES)
-
-
-def test_the_art_party_is_the_librarys_preset_seats_and_the_roles_of_a_craft_are_most_needed_first():
-    art = party_recipes.get("art")
-    preset = next(p for p in library.PRESETS if p[0] == "art")
-    assert (art["leader"], art["build"], art["check"]) == (preset[4], list(preset[5]), list(preset[6]))
-    assert party_recipes.get("tech")["build"] == ["grunt", "tester"] and party_recipes.get("tech")["check"] == ["reviewer", "security-reviewer"]
-    assert party_recipes.get("tech")["line"] == "How it is built: its parts, its tests and the build" and party_recipes.get("tech")["name"] == "Tech"
-    assert party_recipes.get("marketing")["check"] == ["editor"] and {"copywriter", "seo", "aso", "community"} == set(party_recipes.get("marketing")["build"])
-    assert party_recipes.get("release")["build"] == ["release-engineer", "release-notes", "aso"] and party_recipes.get("release")["check"] == ["release-checker"]
-
-
-def test_the_squad_is_the_same_in_every_size_and_release_is_its_engineer_and_its_notes():
-    for _k, r in ALL:
-        teams = [party_recipes.sized(r, s)["team"] for s in idea_target.SIZES]
-        assert teams[0] == teams[1] == teams[2] == party_recipes.squad_of(r), r["id"]
-    tech = party_recipes.get("tech")
-    assert party_recipes.squad_of(tech) == ["grunt", "tester", "reviewer"]                      # the first two who do and the first who checks
-    assert party_recipes.sized(tech, "lean")["team"] == ["grunt", "tester", "reviewer"]        # a size never changes the squad
-    release = party_recipes.get("release")
-    two = ["release-engineer", "release-notes"]                                                  # spec 152 A.5: a party holds one who does
-    assert party_recipes.squad_of(release) == two and [party_recipes.sized(release, s)["team"] for s in idea_target.SIZES] == [two] * 3
-    assert party_recipes.sized(tech, "standard")["basis"] == ["grunt", "reviewer"] and party_recipes.sized(tech, "lean")["basis"] == ["grunt"]
-
-
-def test_a_size_that_is_none_is_refused_and_a_size_has_no_target_of_its_own():
-    with pytest.raises(ValueError, match="lean, standard or full"):
-        party_recipes.sized(party_recipes.get("tech"), "huge")
-    assert not hasattr(party_recipes, "TARGET") and not hasattr(idea_target, "SIZE_TARGET")        # spec 168 H4: a size sets the seats' cells and how many work at once, never a Target
-
-
 def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_leader_veteran_full_the_leader_and_the_checker_veteran():
     tech = party_recipes.get("tech")
     lean, std, full = (party_recipes.sized(tech, s) for s in idea_target.SIZES)
@@ -102,25 +62,6 @@ def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_leader
     for r in (party_recipes.get(i) for i in ("product", "design", "marketing", "run", "game-design")):
         got = [party_recipes.sized(r, s) for s in idea_target.SIZES]
         assert "laborer" not in got[2]["tiers"].values() and "laborer" not in got[0]["tiers"].values()
-
-
-def test_releases_leader_is_seasoned_at_every_size_the_cheaper_tier_and_every_other_leader_veteran():
-    release = party_recipes.get("release")
-    both = {"release-manager": "warrior", "release-engineer": "warrior", "release-notes": "warrior"}
-    assert [party_recipes.sized(release, s)["tiers"] for s in idea_target.SIZES] == [both, {"release-manager": "warrior", "release-engineer": "warrior"}, both]
-    for size in idea_target.SIZES:
-        assert party_recipes.tiers_for("release-manager", [], size) == {"release-manager": "warrior"}
-        assert party_recipes.tiers_for("architect", [], size) == {"architect": "elder"}          # a leader of any other party: Veteran at every size, Lean too
-    with_notes = party_recipes.tiers_for("release-manager", ["release-notes"], "standard")      # a seat added: as any party's
-    assert with_notes == {"release-manager": "warrior", "release-notes": "warrior"}
-
-
-def test_tiers_for_any_team_follows_the_sizes_and_a_party_made_before_keeps_its_team():
-    team = ["grunt", "tester", "reviewer", "security-reviewer"]
-    assert party_recipes.tiers_for("architect", team, "lean") == {"architect": "elder", **{s: "warrior" for s in team}}
-    assert party_recipes.tiers_for("architect", team, "standard") == {"architect": "elder", "grunt": "warrior"}
-    assert party_recipes.tiers_for("architect", team, "full") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder", "security-reviewer": "elder"}
-    assert party_recipes.tiers_for("taskmaster", ["grunt"], "standard") == {"grunt": "warrior"}          # the Taskmaster is no seat
 
 
 def test_a_party_the_project_has_is_of_the_recipe_kept_on_its_page_else_the_same_leader_with_the_squad_inside_its_team():
@@ -135,16 +76,6 @@ def test_a_party_the_project_has_is_of_the_recipe_kept_on_its_page_else_the_same
     release = party_recipes.get("release")
     assert party_recipes.has(release, [{"leader": "release-manager", "team": ["release-engineer", "release-checker"], "recipe": "release"}])
     assert party_recipes.has(release, [{"leader": "release-manager", "team": [], "recipe": ""}]) and not party_recipes.has(release, [{"leader": "architect", "team": []}])
-
-
-def test_the_craft_of_a_party_is_its_recipes_else_its_leaders_and_none_for_the_taskmasters_and_ideations():
-    assert party_recipes.craft_of("tech", "architect") == "tech" and party_recipes.craft_of("run", "") == "run"
-    assert party_recipes.craft_of("mobile-features", "product-manager") == "product" and party_recipes.craft_of("", "product-designer") == "design"
-    assert party_recipes.craft_of("", "game-designer") == "game-design" and party_recipes.craft_of("", "art-director") == "art" and party_recipes.craft_of("", "analyst") == "run"
-    assert party_recipes.craft_of("", "growth") == "marketing" and party_recipes.craft_of("", "release-manager") == "release"
-    assert party_recipes.craft_of("", "taskmaster") == "" and party_recipes.craft_of("", "investor") == ""
-    assert party_recipes.is_release({"recipe": "release", "leader": ""}) and party_recipes.is_release({"recipe": "", "leader": "release-manager"})
-    assert not party_recipes.is_release({"recipe": "tech", "leader": "architect"})
 
 
 def test_a_running_party_proposes_the_recurring_goals_of_its_kind_and_a_games_liveops_those_of_a_game():

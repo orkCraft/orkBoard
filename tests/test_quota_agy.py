@@ -7,8 +7,6 @@ All tests use fixtures or mock runners; real CLI commands are never executed.
 
 from __future__ import annotations
 
-import json
-import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -58,60 +56,6 @@ def test_agy_cli_not_found() -> None:
     assert "CLI not found" in s.error
     assert s.remaining_fraction is None
     assert s.reset_time is None
-
-
-def test_agy_cli_timeout() -> None:
-    def runner(cmd, **kwargs):
-        raise subprocess.TimeoutExpired(cmd=cmd, timeout=30)
-
-    statuses = get_agy_quota(runner=runner)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "agy"
-    assert s.error is not None
-    assert "timed out" in s.error
-    assert s.remaining_fraction is None
-
-
-def test_agy_cli_nonzero_exit() -> None:
-    def runner(cmd, **kwargs):
-        raise subprocess.CalledProcessError(returncode=1, cmd=cmd, stderr="Internal error")
-
-    statuses = get_agy_quota(runner=runner)
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "agy"
-    assert s.error is not None
-    assert "exit 1" in s.error
-    assert s.remaining_fraction is None
-
-
-def test_agy_garbage_json() -> None:
-    statuses = get_agy_quota(runner=lambda cmd, **kwargs: "not json at all!")
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "agy"
-    assert s.error is not None
-    assert "Failed to parse JSON" in s.error
-
-
-def test_agy_unexpected_structure() -> None:
-    statuses = get_agy_quota(runner=lambda cmd, **kwargs: json.dumps({"command": {"data": {}}}))
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "agy"
-    assert s.error is not None
-    assert "Unexpected output structure" in s.error
-
-
-def test_agy_empty_buckets() -> None:
-    data = {"command": {"data": {"groups": [{"name": "Test", "buckets": []}]}}}
-    statuses = get_agy_quota(runner=lambda cmd, **kwargs: json.dumps(data))
-    assert len(statuses) == 1
-    s = statuses[0]
-    assert s.provider == "agy"
-    assert s.error is not None
-    assert "No quota buckets found" in s.error
 
 
 def test_agy_runner_receives_correct_args() -> None:

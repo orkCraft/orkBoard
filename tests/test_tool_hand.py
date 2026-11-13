@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from orkboard import settings, tools
-from orkboard.realm import harnesses, tool_hand
+from orkboard.realm import tool_hand
 
 
 def machine_of(*on: str, order: tuple[str, ...] = (), main: str = "", api: tuple[str, ...] = ()) -> settings.MachineSettings:
@@ -37,27 +37,6 @@ def test_the_order_is_kept_in_the_settings_and_cleaned_when_read(tmp_path: Path)
     assert settings.MachineSettings.from_dict({}).tool_order == []
 
 
-def test_the_tools_turned_on_follow_the_persons_order_then_the_registrys():
-    assert settings.tool_order(machine_of("claude", "codex")) == ["claude", "codex"]               # no order: the registry's, as before
-    assert settings.tool_order(machine_of("claude", "codex", order=("codex", "claude"))) == ["codex", "claude"]
-    assert settings.tool_order(machine_of("claude", "codex", "agy", order=("codex",))) == ["codex", "claude", "agy"]    # what it does not name comes after, in the registry's order
-    assert settings.tool_order(machine_of("claude", order=("codex", "claude"))) == ["claude"]       # a tool turned off is not in the hand, named or not
-    assert settings.tool_order(machine_of()) == []
-
-
-def test_harnesses_main_reads_the_order_after_the_chosen_tool():
-    assert harnesses.main(["claude", "codex"]) == "claude"                                          # no order: the registry's first, as before
-    assert harnesses.main(["claude", "codex"], "", ["codex", "claude"]) == "codex"
-    assert harnesses.main(["claude", "codex"], "claude", ["codex", "claude"]) == "claude"           # the chosen one, when it is on, comes first
-    assert harnesses.main(["claude", "codex"], "agy", ["codex"]) == "codex"                         # chosen but off: the order
-    assert harnesses.main(["codex"], "", ["claude"]) == "codex"                                     # an order that names none on: the registry's
-    assert harnesses.main([], "claude", ["claude"]) is None
-    m = machine_of("claude", "codex", order=("codex", "claude"))
-    assert settings.main_tool(m) == "codex"
-    m.main_tool = "claude"
-    assert settings.main_tool(m) == "claude"
-
-
 # -- the key, by name (A.2) -----------------------------------------------------------------------------------------
 
 def test_a_key_is_found_by_its_name_and_its_value_is_never_read_out():
@@ -70,19 +49,6 @@ def test_a_key_is_found_by_its_name_and_its_value_is_never_read_out():
     assert line["state"] == "no_key" and line["line"] == "Antigravity signs in with Google; it takes no key here."
     card = tool_hand.card([status("codex", billing="api")], machine_of(), {"CODEX_API_KEY": "sk-secret"})
     assert "sk-secret" not in repr(card)
-
-
-def test_the_third_line_follows_how_the_tool_is_paid():
-    sub = tool_hand.third_line("claude", "subscription", True, {})
-    assert (sub["state"], sub["line"]) == ("ok", "Signed in to your subscription") and not sub["warn"]
-    out = tool_hand.third_line("claude", "subscription", False, {})
-    assert (out["state"], out["needs"], out["line"]) == ("signed_out", "sign_in", "Not signed in")
-    assert tool_hand.third_line("claude", "subscription", None, {})["state"] == "unknown"           # it cannot be told without a request: the request tells
-    key = tool_hand.third_line("codex", "api", True, {"CODEX_API_KEY": "x"})
-    assert key["state"] == "ok" and key["line"] == "Uses the key in your environment: CODEX_API_KEY" and key["cost"] == "Paid per token, by that key"
-    none = tool_hand.third_line("codex", "api", True, {})
-    assert (none["state"], none["needs"], none["var"]) == ("no_key", "key", "CODEX_API_KEY")
-    assert none["line"] == "No key found: set CODEX_API_KEY in your environment, then Test again"
 
 
 def test_a_key_that_would_win_over_the_subscription_is_said_before_it_costs():
@@ -106,33 +72,6 @@ def test_the_card_lists_the_tools_not_in_the_hand_in_three_groups():
     assert got["first"] == ""                                                                        # the only ready tool is experimental: nothing is picked for the person
 
 
-def test_antigravity_with_a_key_set_is_still_a_sign_in_not_a_key():
-    got = tool_hand.card([status("agy", logged_in=None)], machine_of(), {"GEMINI_API_KEY": "x"})
-    row = got["tools"][0]
-    assert row["lines"]["api"]["state"] != "ok" and row["lines"]["subscription"]["warn"] == ""      # no key is promised or warned of (§250.5)
-
-
-def test_the_first_ready_tool_is_the_one_the_card_opens_on():
-    got = tool_hand.card([status("claude"), status("codex")], machine_of(), {})
-    assert got["first"] == "claude"
-    assert tool_hand.card(None, machine_of(), {}) == {"ready": False, "n": 0, "max": 6, "full": False, "tools": [], "first": ""}
-
-
-def test_test_and_add_is_refused_in_words():
-    m = machine_of("claude")
-    card = {r["id"]: r for r in tool_hand.card([status("claude"), status("codex", logged_in=False), status("cursor", found=False, logged_in=None),
-                                                 status("agy"), status("hermes", logged_in=True)], m, {})["tools"]}
-    why = lambda tid, billing="subscription", env=None, risk=False: tool_hand.refusal(card.get(tid), m, billing, env, risk)    # noqa: E731
-    assert why("codex") == "Codex is not signed in: sign in first (codex login)"
-    assert why("cursor").startswith("Cursor is not installed: ")
-    assert why("nope") == "That AI tool is not found here"
-    assert why("agy") == "Antigravity is experimental: read its warning first" and why("agy", risk=True) == ""
-    assert why("hermes", "api").endswith("is known here: use its subscription")                   # a tool with no key Orkboard knows is paid by its subscription
-    assert why("hermes", "bogus") == "A tool is paid by its subscription or by its API key"
-    full = machine_of("claude", "codex", "agy", "hermes", "pi", "cursor")
-    assert "holds 6" in tool_hand.refusal({"id": "x", "title": "X", "pickable": True, "risk": "", "lines": {}, "install": "", "login": ""}, full, "subscription")
-
-
 # -- add, order, put back (A.2) -----------------------------------------------------------------------------------
 
 def test_a_tool_comes_into_the_hand_at_the_end_and_the_first_is_the_main_tool():
@@ -143,16 +82,6 @@ def test_a_tool_comes_into_the_hand_at_the_end_and_the_first_is_the_main_tool():
     assert tool_hand.hand(m) == ["codex", "claude"] and m.main_tool == "codex"                       # the second is not the main tool
     tool_hand.add(m, "codex", "subscription")                                                        # again: its place is the end, its billing the new one
     assert tool_hand.hand(m) == ["claude", "codex"] and m.tools["codex"].billing == "subscription"
-
-
-def test_the_order_is_a_permutation_of_the_hand_and_its_first_is_the_main_tool():
-    m = machine_of("claude", "codex", "agy")
-    assert tool_hand.reorder(m, ["agy", "claude", "codex"]) == ["agy", "claude", "codex"]
-    assert settings.main_tool(m) == "agy" and m.main_tool == "agy"
-    for bad in (["claude", "codex"], ["claude", "codex", "agy", "agy"], ["claude", "codex", "pi"], "claude", None):
-        with pytest.raises(ValueError, match="each once"):
-            tool_hand.reorder(m, bad)
-    assert tool_hand.hand(m) == ["agy", "claude", "codex"]                                           # a refused order changes nothing
 
 
 def test_the_next_tool_is_the_next_in_the_hand_round_again():

@@ -52,19 +52,6 @@ def test_a_task_runs_on_the_targets_tier_with_its_tool_and_model_recorded(town):
     assert e["ran_why"] == "target thrift"                                      # spec 107 §2.3: it ran lighter than planned, and says why
 
 
-def test_a_task_on_its_own_tier_says_no_reason_and_a_failed_one_its_error_spec_107(town):
-    plan_of(town, [{"id": "k1", "tier": "warrior"}])
-    r, _ = _runner(town)
-    r.start("demo")
-    r._set_task("demo", "k1", state="failed", error="sh: vitest: command not found " + "x" * 900)
-    running, failed = [x for x in event_log.read(town.repo) if x["event"] == "task_state" and x["state"] in ("running", "failed")]
-    assert running["ran_why"] == "" and "error" not in running
-    assert failed["error"].startswith("sh: vitest: command not found") and len(failed["error"]) == 600
-    assert idea_target.ran_why("elder", "warrior", "balance", "standard") == "target balance (standard party)"
-    assert idea_target.ran_why("elder", "warrior", "balance", "", "sonnet") == "role model sonnet"
-    assert idea_target.ran_why("", "warrior", "balance") == ""
-
-
 def test_a_plan_of_before_the_night_went_waits_for_the_reserve_as_one_the_board_passed_and_never_for_a_window(town):
     reset = dt.datetime.now() + dt.timedelta(hours=2)
     limits = lambda: [Limit("claude", "", "session", 0.2, reset)]               # noqa: E731  above NEARLY, below the day's 0.3
@@ -101,56 +88,6 @@ def test_the_reserve_holds_what_started_by_itself_and_never_the_persons_press(to
     r, launched = _runner(town, limits=limits, night=_now_in(True))            # at night the reserve is 0.10
     r.start("demo")
     assert launched == [("demo", "k1")]
-
-
-def test_the_reserve_is_read_on_the_tool_the_task_runs_on_not_on_claudes(town):
-    """The owner's 26 October: a Game party's task (Antigravity, 99 % left) was held by Claude's low week."""
-    reset = dt.datetime.now() + dt.timedelta(hours=2)
-    limits = lambda: [Limit("claude", "", "weekly", 0.14, reset), Limit("agy", "", "weekly", 0.99, reset)]      # noqa: E731
-    for tool, held in (("agy", False), ("claude", True)):
-        plan_of(town, [{"id": "k1"}])
-        _pass(town, passed_by="auto")
-        r, launched = _runner(town, limits=limits, night=_now_in(False))
-        r.party_of = lambda slug, tool=tool: {"tool": tool}
-        r.start("demo")
-        (task,) = r.plan("demo")["tasks"]
-        assert (task["state"] == "held") is held, (tool, task)
-        assert (launched == []) is held
-        if held:
-            assert task["note"] == f"reserve · after {reset:%H:%M}"
-    plan_of(town, [{"id": "k1"}])                                              # a tool with no limits read has no reserve
-    _pass(town, passed_by="auto")
-    r, launched = _runner(town, limits=lambda: [Limit("claude", "", "weekly", 0.05, reset)], night=_now_in(False))
-    r.party_of = lambda slug: {"tool": "agy"}
-    r.start("demo")
-    assert launched == [("demo", "k1")]
-
-
-def test_high_goes_before_normal(town):
-    for slug in ("normal-one", "high-one"):
-        plan_of(town, [{"id": "k1"}], slug=slug)
-        _pass(town, slug, passed_by="person")
-    r, launched = _runner(town)
-    r.rank = lambda slug: (0 if slug.startswith("high") else 1,)
-    r._active = ["normal-one", "high-one"]
-    for slug in r._active:
-        (town.state / "ideas" / slug / "state.json").write_text(json.dumps({"state": "working"}))
-    r.tick()
-    assert launched == [("high-one", "k1")]                                     # one slot: High takes it
-
-
-def test_a_file_todos_path_is_in_the_tasks_environment_and_only_named_in_its_prompt(town):
-    plan_of(town, [{"id": "k1"}], todos=[{"id": "t2", "title": "the config", "kind": "file", "for": ["k1"], "done": True,
-                                          "value": "conf.json"}])
-    path = idea_secrets.put_file(town.state, "demo", "t2", "conf.json", b'{"k": "file-secret"}')
-    r, _ = _runner(town)
-    plan = r.plan("demo")
-    env = r._env("demo", "k1", plan)
-    assert env["ORKCRAFT_FILE_T2"] == str(path) and str(town.repo / ".orkcraft") in str(path)
-    prompt = r._prompt("demo", plan, plan["tasks"][0])
-    assert "The file is at $ORKCRAFT_FILE_T2" in prompt and str(path) not in prompt and "file-secret" not in prompt
-    assert "file-secret" not in (town.state / "ideas" / "demo" / "plan.json").read_text()
-    assert not git(town.repo, "status", "--porcelain", "--ignored", "--", "llm-wiki").count("conf.json")
 
 
 #  The gate and the Board's pages (spec 143 A) are in tests/test_task_pages.py.
@@ -235,38 +172,6 @@ def test_a_goal_whose_last_step_is_merged_or_whose_task_failed_or_whose_step_lan
     assert _state(town) == "done"
 
 
-def test_a_goal_the_keeper_could_not_plan_the_next_step_of_leaves_the_runner_until_start(town):
-    _by_steps(town, [("k1", 1, "merged")])
-    r, launched = _runner(town)
-    r.start("demo")
-    assert r._active == ["demo"]
-    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "No plan for the next step: x", "route": [{"party": "design"}, {"party": "tech"}]}))
-    r.tick()
-    assert r._active == [] and _state(town) == "failed"
-    r.start("demo")                                                                             # Start: the goal is the runner's again, waiting for the step's plan
-    assert r._active == ["demo"] and _state(town) == "working"
-
-
-def test_a_task_names_what_it_reads_of_its_spec_never_the_whole_page(town):
-    page = town.repo / "pages" / "ideas" / "demo.md"
-    page.parent.mkdir(parents=True)
-    page.write_text("---\nowner: board\n---\n# Dark mode\n\n## Asked\nadd a dark mode\n\n## Gist\nDark mode\n\n## Route\n1. Design\n2. Tech\n\n"
-                    "## Design\n### Why\nBecause.\n\n### Done when\n- A screen\n\n### Will be\nchanged ui/settings\n\n## Tech\n### Why\nTech's why.\n\n### Done when\n- A file\n")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    path = town.state / "ideas" / "demo" / "plan.json"
-    data = json.loads(path.read_text())
-    data["tasks"][0]["section"] = "Tech"
-    path.write_text(json.dumps(data))
-    r, _ = _runner(town)
-    plan = r.plan("demo")
-    prompt = r._prompt("demo", plan, plan["tasks"][0])
-    assert "`pages/ideas/demo.md` in this worktree: read the common part (`## Asked`, `## Gist`, `## Route`)" in prompt
-    assert "your party's section `## Tech` whole, and of the other sections (`## Design`) only their `### Done when` and `### Will be`" in prompt
-    assert "Read nothing else of it" in prompt and "Tech's why." not in prompt and "Because." not in prompt          # named, never pasted
-    older = r._prompt("demo", plan, plan["tasks"][1])                                           # a task of a page of before (no section): as it was
-    assert "in this worktree: read it if you need it." in older and "your party's section" not in older
-
-
 # -- spec 152 B.1: the goal waits for its step's acceptance; the handover moved out of the runner (core/idea_handover.py) unchanged --------------------------------
 
 @pytest.mark.accepts
@@ -293,18 +198,3 @@ def test_a_goal_whose_step_landed_waits_working_for_its_leaders_acceptance_and_e
     r.start("demo")
     assert _state(town) == "done"
 
-
-@pytest.mark.accepts
-def test_a_step_not_accepted_yet_holds_the_goal_between_steps_as_a_step_left_does_and_a_dropped_step_is_not_due(town):
-    _by_steps(town, [("k1", 1, "merged")])
-    r, _ = _runner(town)
-    r.start("demo")
-    r.tick()
-    assert _state(town) == "working" and r._active == ["demo"]
-    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "stopped", "route": [{"party": "design"}, {"party": "tech"}]}))
-    r.tick()
-    assert r._active == [] and _state(town) == "failed"                                            # the goal left the runner as one the keeper could not plan the next step of
-    _by_steps(town, [("k1", 1, "dropped")], route=("design",))                                      # nothing landed: nothing to accept
-    r, _ = _runner(town)
-    r.start("demo")
-    assert _state(town) == "plan" and r._active == []

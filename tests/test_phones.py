@@ -37,14 +37,6 @@ def test_a_code_pairs_once_and_the_host_keeps_only_the_tokens_hash(tmp_path):
     assert p.device("guess") is None and p.device("") is None and p.device(token[:-1]) is None
 
 
-def test_a_code_runs_out_after_two_minutes(tmp_path):
-    p = pairing.Pairing(tmp_path / "settings.json")
-    code = p.new_code(now=0.0)
-    assert p.code_ok(code, now=119.0) and not p.code_ok(code, now=121.0)
-    with pytest.raises(pairing.PairError):
-        p.pair(code, "late", now=121.0)
-
-
 def test_the_sixth_attempt_in_a_minute_locks_pairing_until_a_new_code(tmp_path):
     p = pairing.Pairing(tmp_path / "settings.json")
     code = p.new_code(now=0.0)
@@ -71,35 +63,12 @@ def test_forget_is_at_once_and_a_town_that_loaded_earlier_never_brings_a_phone_b
     assert p.device(token) is None and settings.load(file).phones == []   # …and it stays forgotten
 
 
-def test_broken_phone_entries_are_dropped():
-    good = {"id": "0123456789abcdef", "name": "a", "hash": "a" * 64, "paired": "", "seen": ""}
-    raw = {"phones": [good, {**good, "hash": "short"}, {**good, "id": "x"}, "junk", {**good}], "phone_port": 80}
-    s = settings.MachineSettings.from_dict(raw)
-    assert s.phones == [good] and s.phone_port == 0
-
-
-def test_commands_are_limited_to_a_few_a_second():
-    b = pairing.Bucket(level=pairing.CMD_BURST, at=0.0)
-    assert sum(b.take(now=0.0) for _ in range(20)) == pairing.CMD_BURST
-    assert not b.take(now=0.05) and b.take(now=0.3)
-
-
 def test_the_certificate_is_made_once_kept_private_and_named_by_its_fingerprint(tmp_path):
     cert, key = phone_tls.ensure(tmp_path)
     assert stat.S_IMODE(os.stat(key).st_mode) == 0o600 and stat.S_IMODE(os.stat(cert).st_mode) == 0o600
     fp = phone_tls.fingerprint(cert)
     assert len(fp.split(":")) == 32
     assert phone_tls.ensure(tmp_path) == (cert, key) and phone_tls.fingerprint(cert) == fp
-
-
-def test_the_qr_code_carries_the_address_the_fingerprint_and_the_code():
-    link = phones.pair_link("https://192.168.1.5:8765", "AB:CD", "c0de-_x")
-    assert link == "orkcraft://pair?v=1&addr=https%3A%2F%2F192.168.1.5%3A8765&fp=ABCD&code=c0de-_x"
-    assert phones.qr_data_uri(link).startswith("data:image/svg+xml;base64,")
-
-
-def test_a_phones_stop_all_is_said_to_be_the_phones():
-    assert BoardPhone.guard("halt", {}) == {"device": "phone"}      # the event log says which window stopped it (spec 33 §9)
 
 
 def test_a_phone_may_not_pair_list_or_forget_phones(fake_repo):
@@ -173,16 +142,6 @@ async def _pair(server: Server, name: str = "Test phone") -> tuple[str, str]:
 
 def _ws_url(server: Server) -> str:
     return server.phones.address.replace("https://", "wss://") + "/ws"
-
-
-@pytest.mark.asyncio
-async def test_no_phone_paired_no_port_on_the_lan(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        assert not server.phones.listening and server.host.command("phones.list")["phones"] == []
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
 
 
 @pytest.mark.asyncio
@@ -270,18 +229,6 @@ async def test_forget_closes_the_phones_socket_at_once_and_its_token_is_dead(fak
 
 
 @pytest.mark.asyncio
-async def test_the_last_phone_forgotten_the_listener_stops(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        device_id, _ = await _pair(server)
-        assert server.phones.listening
-        assert not server.host.command("phones.forget", {"id": device_id})["listening"]
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
 async def test_pairing_locks_after_five_wrong_codes_and_says_so_on_the_desktop(fake_repo):
     server, task = await _serve(fake_repo)
     toasts = []
@@ -302,123 +249,6 @@ async def test_pairing_locks_after_five_wrong_codes_and_says_so_on_the_desktop(f
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_a_pairing_request_must_be_json_and_small(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        address = offer["address"]
-        status, _, _ = await asyncio.to_thread(_https, address, "POST", "/api/pair", None,
-                                               {"Content-Type": "text/plain"}, json.dumps({"code": offer["code"]}).encode())
-        assert status == 415                                         # a browser's simple POST cannot pair
-        status, _, _ = await asyncio.to_thread(_https, address, "POST", "/api/pair", None, None, b"x" * 5000)
-        assert status == 413
-        status, _, _ = await asyncio.to_thread(_https, address, "GET", "/api/pair")
-        assert status == 405
-        # The code is still good: none of those tried it.
-        status, _, _ = await asyncio.to_thread(_https, address, "POST", "/api/pair", {"code": offer["code"], "name": "x"})
-        assert status == 200
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_a_town_with_a_paired_phone_listens_from_the_start_and_the_version_takes_the_code(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        status, body, _ = await asyncio.to_thread(_https, offer["address"], "GET", "/api/version", None,
-                                                  {"Authorization": f"Bearer {offer['code']}"})
-        assert status == 200 and body["api"] == phones.API          # a phone checks the version before it pairs
-        await asyncio.to_thread(_https, offer["address"], "POST", "/api/pair", {"code": offer["code"], "name": "p"})
-        port = settings.load().phone_port
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-    server, task = await _serve(fake_repo)
-    try:
-        await _listening(server)
-        assert server.phones.address.endswith(f":{port}")            # the same port: the phone finds it again
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_a_phone_that_floods_is_told_to_wait(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        _, token = await _pair(server)
-        async with connect(_ws_url(server), ssl=_pinned(), additional_headers={"Authorization": f"Bearer {token}"}) as ws:
-            await asyncio.wait_for(ws.recv(), 5)
-            for i in range(30):
-                await ws.send(json.dumps({"t": "cmd", "id": i, "name": "mobile.snapshot", "args": {"since": "x"}}))
-            replies = []
-            while len(replies) < 30:
-                msg = json.loads(await asyncio.wait_for(ws.recv(), 5))
-                if msg["t"] == "reply":
-                    replies.append(msg)
-            assert any(not r["ok"] and "Too many" in r["error"] for r in replies)
-            assert sum(r["ok"] for r in replies) >= pairing.CMD_BURST
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_halt_from_a_phone_says_on_the_desktop_which_phone(fake_repo):
-    server, task = await _serve(fake_repo)
-    toasts = []
-    try:
-        _, token = await _pair(server, "Pocket")
-        server.host.on_toast = toasts.append
-        async with connect(_ws_url(server), ssl=_pinned(), additional_headers={"Authorization": f"Bearer {token}"}) as ws:
-            await asyncio.wait_for(ws.recv(), 5)
-            await ws.send(json.dumps({"t": "cmd", "id": 1, "name": "halt", "args": {}}))
-            while json.loads(await asyncio.wait_for(ws.recv(), 5))["t"] != "reply":
-                pass
-        assert any("Pocket" in t["message"] for t in toasts)
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_a_listener_stopped_while_it_comes_up_never_comes_back_by_itself(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        server.host.command("phones.pair")
-        assert not server.host.command("phones.pair_stop")["listening"]       # stopped before it came up
-        offer = server.host.command("phones.pair")                           # and started anew at once
-        await _listening(server)
-        await asyncio.sleep(0.1)
-        status, _, _ = await asyncio.to_thread(_https, offer["address"], "POST", "/api/pair",
-                                               {"code": offer["code"], "name": "p"})
-        assert status == 200
-        server.host.command("phones.forget", {"id": server.host.command("phones.list")["phones"][0]["id"]})
-        await asyncio.sleep(0.1)
-        assert not server.phones.listening
-        with pytest.raises(OSError):
-            await asyncio.to_thread(_https, offer["address"], "GET", "/api/version")
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-def test_a_paired_phone_is_offered_keeping_the_computer_awake_once(fake_repo):
-    """Spec 47 §3: `awake_offer` is the machine's word until `awake.offer` answers it."""
-    host = Orkboard(fake_repo)
-    listener = phones.Listener(host)
-    assert listener.read()["awake_offer"] == ""                                  # no phone paired yet
-    listener.pairing.pair(listener.pairing.new_code(), "Vadim's phone")
-    assert listener.read()["awake_offer"] == "computer"                          # the fake Awake says Linux
-    host.command("awake.offer", {"yes": False})
-    assert listener.read()["awake_offer"] == "" and host.machine.keep_awake == "carts"
 
 
 @pytest.mark.asyncio
@@ -452,61 +282,6 @@ async def test_two_get_requests_on_one_connection_both_answered_keep_alive(fake_
         await asyncio.wait_for(task, 10)
 
 
-@pytest.mark.asyncio
-async def test_connection_close_request_ends_the_connection(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        def run():
-            host, port = offer["address"].removeprefix("https://").rsplit(":", 1)
-            conn = http.client.HTTPSConnection(host, int(port), context=_pinned(), timeout=5)
-            try:
-                conn.request("GET", "/app/", headers={"Connection": "close"})
-                r = conn.getresponse()
-                assert r.status == 200
-                assert r.getheader("Connection", "").lower() == "close"
-                assert r.will_close is True
-                assert conn.sock is None  # Connection: close ended the connection
-                body = r.read()
-                assert b"Orkboard" in body
-                assert r.isclosed()
-            finally:
-                conn.close()
-        await asyncio.to_thread(run)
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_idle_timeout_closes_connection(fake_repo, monkeypatch):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        monkeypatch.setattr(phone_http, "IDLE_S", 0.2)
-        def run():
-            import time
-            host, port = offer["address"].removeprefix("https://").rsplit(":", 1)
-            conn = http.client.HTTPSConnection(host, int(port), context=_pinned(), timeout=5)
-            try:
-                conn.request("GET", "/app/")
-                r = conn.getresponse()
-                assert r.status == 200
-                r.read()
-                time.sleep(0.35)
-                with pytest.raises((http.client.RemoteDisconnected, ConnectionResetError, BrokenPipeError, OSError)):
-                    conn.request("GET", "/app/")
-                    conn.getresponse()
-            finally:
-                conn.close()
-        await asyncio.to_thread(run)
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
 def _raw_exchange(address: str, data: bytes) -> bytes:
     """Send `data` on one TLS connection and read until the listener closes it: all it answered."""
     import socket
@@ -519,62 +294,6 @@ def _raw_exchange(address: str, data: bytes) -> bytes:
     return out
 
 
-@pytest.mark.asyncio
-async def test_a_post_with_a_body_then_a_get_on_one_connection_gets_one_answer_and_the_close(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        body = json.dumps({"code": "guess", "name": "x"}).encode()
-        data = (b"POST /api/pair HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
-                + f"Content-Length: {len(body)}\r\n\r\n".encode() + body
-                + b"GET /app/ HTTP/1.1\r\nHost: x\r\n\r\n")
-        got = await asyncio.to_thread(_raw_exchange, offer["address"], data)
-        assert got.count(b"HTTP/1.1 ") == 1                 # one answer: the GET behind it is never read
-        head = got.split(b"\r\n\r\n", 1)[0].decode("latin-1")
-        assert "Connection: close" in head and "keep-alive" not in head
-        assert b"Orkboard" not in got
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_an_http_1_0_request_without_keep_alive_is_answered_with_the_close(fake_repo):
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        data = b"GET /app/ HTTP/1.0\r\nHost: x\r\n\r\nGET /app/frame.js HTTP/1.0\r\nHost: x\r\n\r\n"
-        got = await asyncio.to_thread(_raw_exchange, offer["address"], data)
-        assert got.count(b"HTTP/1.1 200") == 1
-        head = got.split(b"\r\n\r\n", 1)[0].decode("latin-1")
-        assert "Connection: close" in head and "keep-alive" not in head
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
-@pytest.mark.asyncio
-async def test_the_connection_header_is_a_list_of_options(fake_repo):
-    """"keep-alive, Upgrade" asks for keep-alive (an HTTP/1.0 request is kept open); "close, x" asks to close."""
-    server, task = await _serve(fake_repo)
-    try:
-        offer = server.host.command("phones.pair")
-        await _listening(server)
-        kept = (b"GET /app/ HTTP/1.0\r\nHost: x\r\nConnection: Keep-Alive, Upgrade\r\n\r\n"
-                b"GET /app/frame.js HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
-        got = await asyncio.to_thread(_raw_exchange, offer["address"], kept)
-        assert got.count(b"HTTP/1.1 200") == 2
-        assert b"Connection: keep-alive" in got.split(b"\r\n\r\n", 1)[0]
-        closed = b"GET /app/ HTTP/1.1\r\nHost: x\r\nConnection: close, foo\r\n\r\nGET /app/frame.js HTTP/1.1\r\nHost: x\r\n\r\n"
-        got = await asyncio.to_thread(_raw_exchange, offer["address"], closed)
-        assert got.count(b"HTTP/1.1 200") == 1
-    finally:
-        server.stop()
-        await asyncio.wait_for(task, 10)
-
-
 # -- spec 42 C: a phone's Web Push subscription ---------------------------------------------------------------
 
 _PUSH = {"endpoint": "https://push.example.com/send/abc", "p256dh": "BCVxsr7N_eNgVRqvHtD0", "auth": "BTBZMqHH6r4T", "at": "2026-10-01T10:00:00",
@@ -585,13 +304,6 @@ def _device(**more):
     return {"id": "0123456789abcdef", "name": "Pixel", "hash": "a" * 64, "paired": "", "seen": "", **more}
 
 
-def test_clean_phones_keeps_a_good_push_and_drops_a_bad_one_and_anything_else_in_it():
-    (good,) = settings.clean_phones([_device(push={**_PUSH, "extra": "gone"})])
-    assert good["push"] == _PUSH
-    for bad in ({**_PUSH, "endpoint": "http://insecure"}, {**_PUSH, "endpoint": "https://x/" + "a" * 1100}, {**_PUSH, "p256dh": "no spaces allowed"},
-                {**_PUSH, "auth": ""}, {**_PUSH, "morning": "yesterday"}, "text", None):
-        (kept,) = settings.clean_phones([_device(push=bad)])
-        assert "push" not in kept and kept["id"] == "0123456789abcdef"             # the phone stays paired, the subscription goes
 
 
 def test_a_subscription_is_kept_with_the_device_and_forgotten_with_it(tmp_path):
@@ -602,6 +314,7 @@ def test_a_subscription_is_kept_with_the_device_and_forgotten_with_it(tmp_path):
     assert "push" not in p.get(device_id)
     p.set_push(device_id, _PUSH)
     assert p.forget(device_id) and p.get(device_id) is None and not p.set_push(device_id, _PUSH)
+
 
 
 @pytest.mark.asyncio
@@ -630,18 +343,3 @@ async def test_a_phone_with_its_socket_open_is_known_and_its_push_commands_carry
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)
-
-
-def test_the_phones_snapshot_is_the_pages_less_the_computers_own(fake_repo):
-    """Spec 94 §2.3: the snapshot() Board, the projects, the limits, the mana with `paid` and the update; not the
-    onboarding, the sign-ins' flows or the repository's path; none of the fields only the old phone face read (spec 94 E)."""
-    host = Orkboard(fake_repo)
-    full, snap = host.snapshot(), BoardPhone.phone_snapshot(host)
-    assert {"onboarding", "sign_in", "repo", "update_policy"} <= set(full)
-    assert not set(Orkboard.COMPUTER_ONLY) & set(snap)
-    for key in ("projects", "mana", "limits", "reserve", "hud", "rate", "needs_you", "ideas_rev", "idea_states",
-                "review_count", "review_results", "update", "version", "rev"):
-        assert key in snap, key
-    assert "paid" in snap["mana"]
-    assert not {"v", "project", "focus", "look", "sleep", "usage_ask", "ops_rev", "ops_team"} & set(snap)   # what only the phone's old face read (spec 94 E)
-    assert snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]

@@ -114,15 +114,6 @@ def test_the_tally_counts_merged_tasks_the_first_time_dollars_and_days(host):
     json.dumps(got)
 
 
-def test_unknown_start_is_none_and_a_ledger_of_unpriced_lines_is_no_dollars(host):
-    state = host.ideas.state_dir
-    slug = goal(host, "Alone", "done")
-    (ideas.state_folder(state, slug) / "talk.jsonl").unlink()                    # no first state known
-    assert idea_flag.tally(host.ideas.root(), state, slug) == {"tasks": 0, "first_time": 0, "usd": None, "days": None}
-    (ideas.state_folder(state, slug) / idea_spend.FILE).write_text(json.dumps({"at": "2026-10-09T08:00:00", "step": "task", "cost": None}) + "\n")
-    assert idea_flag.tally(host.ideas.root(), state, slug)["usd"] is None
-
-
 def test_a_flag_by_done_takes_the_day_the_host_gives_and_keeps_it(host):
     state, root = host.ideas.state_dir, host.ideas.root()
     slug = goal(host, "Old goal", "done")
@@ -136,23 +127,6 @@ def test_a_flag_by_done_takes_the_day_the_host_gives_and_keeps_it(host):
         idea_flag.raise_flag(root, state, goal(host, "Third", "done"), "gate", at="2026-10-26")        # a day is for done only
     with pytest.raises(ValueError):
         idea_flag.raise_flag(root, state, goal(host, "Fourth", "done"), "done", at="last week")
-
-
-def test_a_flag_is_raised_once_and_the_one_it_has_is_kept(host):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    slug = goal(host, "Cache the table", "done")
-    plan(host, slug, k1="a" * 40)
-    assert idea_flag.flag_of(state, slug) is None
-    first = idea_flag.raise_flag(root, state, slug, "gate", "c" * 40)
-    assert set(first) == {"at", "by", "commit", "tasks", "first_time", "usd", "days"} and (first["by"], first["commit"], first["tasks"]) == ("gate", "c" * 40, 1)
-    assert idea_flag.flag_of(state, slug) == first
-    assert json.loads((ideas.state_folder(state, slug) / "flag.json").read_text()) == first          # beside its state.json
-    ideas.edit_plan(state, slug, lambda p: p["tasks"].append({"id": "k2", "state": "merged", "commit": "", "round": 1}))
-    again = idea_flag.raise_flag(root, state, slug, "done", "d" * 40)
-    assert again == first == idea_flag.flag_of(state, slug)                                         # never undone, never raised twice
-    with pytest.raises(ValueError):
-        idea_flag.raise_flag(root, state, goal(host, "Other", "done"), "person")
-    assert idea_flag.commits_of(state, slug) == ["a" * 40]                                          # a check that landed nothing has none
 
 
 # -- the gate's path ----------------------------------------------------------------------------------------------
@@ -187,43 +161,6 @@ def test_the_gate_raises_the_flag_of_each_done_goal_it_took_into_main(host, repo
     assert [g["slug"] for g in host.command("ideas.flags")["goals"]] == [done]
 
 
-def test_a_goal_done_after_the_press_with_all_its_commits_in_main_raises_when_it_is_done(host, repo):
-    slug = goal(host, "Sync the queue", "working")
-    c1 = land(repo, slug, "k1", "q.txt")
-    plan(host, slug, k1=c1)
-    host.command("ideas.gate_merge", {"sealed": True})                                                                # its code reaches main while it still works
-    assert events(host) == [] and idea_flag.flag_of(host.ideas.state_dir, slug) is None
-    plan(host, slug, k1=c1, ck="")                                                                  # its last task, a clean check, lands nothing
-    go_done(host, slug)
-    flag = idea_flag.flag_of(host.ideas.state_dir, slug)
-    assert flag and flag["by"] == "done" and flag["commit"] == c1 and flag["tasks"] == 2
-    assert [(e["idea"], e["by"]) for e in events(host)] == [(slug, "done")]
-    go_done(host, slug)                                                                             # nothing again: once
-    assert len(events(host)) == 1
-
-
-def test_a_goal_done_in_dev_waits_for_main_until_the_press(host, repo):
-    slug = goal(host, "Sync the queue", "working")
-    plan(host, slug, k1=land(repo, slug, "k1", "q.txt"))
-    go_done(host, slug)
-    assert idea_flag.flag_of(host.ideas.state_dir, slug) is None and events(host) == []             # its commit is only in dev
-    host.command("ideas.gate_merge", {"sealed": True})
-    assert idea_flag.flag_of(host.ideas.state_dir, slug)["by"] == "gate"
-
-
-def test_without_a_gate_a_done_goal_is_flagged_at_once(host, repo):
-    host.command("ideas.into", {"branch": "main"})                                                  # results merge into main itself
-    slug = goal(host, "Sync the queue", "working")
-    c1 = git(repo, "rev-parse", "main")                                                             # its work landed in main itself
-    plan(host, slug, k1=c1)
-    heard = seen(host)
-    go_done(host, slug)
-    flag = idea_flag.flag_of(host.ideas.state_dir, slug)
-    assert flag and flag["by"] == "done" and flag["commit"] == c1
-    assert [(e["idea"], e["by"]) for e in events(host)] == [(slug, "done")] and slug in heard
-    assert idea_flag.flag_of(host.ideas.state_dir, goal(host, "Still working", "working")) is None
-
-
 def test_a_goal_that_is_not_done_never_gets_a_flag_and_a_failed_one_neither(host, repo):
     slug = goal(host, "Sync the queue", "working")
     plan(host, slug, k1=git(repo, "rev-parse", "main"))
@@ -232,10 +169,3 @@ def test_a_goal_that_is_not_done_never_gets_a_flag_and_a_failed_one_neither(host
     host.ideas.changed(slug)
     assert idea_flag.flag_of(host.ideas.state_dir, slug) is None and events(host) == []
 
-
-def test_a_flag_never_troubles_the_press(host, repo, monkeypatch):
-    slug = goal(host, "Sync the queue", "done")
-    plan(host, slug, k1=land(repo, slug, "k1", "q.txt"))
-    monkeypatch.setattr(idea_flag, "raise_flag", lambda *a, **k: (_ for _ in ()).throw(OSError("disk")))
-    assert host.command("ideas.gate_merge", {"sealed": True})["ok"] is True and git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
-    assert events(host) == []

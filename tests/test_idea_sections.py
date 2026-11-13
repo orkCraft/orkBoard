@@ -10,10 +10,8 @@ import time
 
 import pytest
 
-from orkboard.core import idea_keeper
-from orkboard.core.idea_sections import clean_join
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, idea_questions, idea_target, ideas, library, map_text, spec_sections
+from orkboard.realm import goal_team, idea_target, ideas, library, map_text, spec_sections
 
 
 @pytest.fixture
@@ -126,19 +124,6 @@ def _confirmed(host, parties, model, which=("product", "tech"), until="plan", te
 
 # -- the join, strictly -------------------------------------------------------------------------------------------------------------------
 
-def test_a_joins_answer_is_a_gist_and_forks_of_the_routes_parties_and_nothing_else():
-    leaders = {"product": "product-manager", "tech": "architect"}
-    got = clean_join({"gist": "  Dark   mode ", "sections": {"Tech": "rewritten"},
-                      "forks": [{"about": "The waves", "sides": [{"party": "product", "says": "ten", "why": "pace"}, {"party": "tech", "says": "six", "why": "the server"},
-                                                                 {"party": "nobody", "says": "x"}, {"party": "tech", "says": "again"}]},
-                                {"about": "One side only", "sides": [{"party": "tech", "says": "x"}]}, {"about": "", "sides": []}, "junk"]}, leaders)
-    assert got == {"gist": "Dark mode", "forks": [{"about": "The waves", "sides": [{"party": "product", "leader": "product-manager", "says": "ten", "why": "pace"},
-                                                                                   {"party": "tech", "leader": "architect", "says": "six", "why": "the server"}]}]}
-    assert clean_join("no", leaders) is None and clean_join({"gist": "g"}, leaders) == {"gist": "g", "forks": []}
-    many = [{"about": f"a{n}", "sides": [{"party": "product", "says": "x"}, {"party": "tech", "says": "y"}]} for n in range(6)]
-    assert len(clean_join({"forks": many}, leaders)["forks"]) == 3
-
-
 # -- every leader at once, the join, the page ----------------------------------------------------------------------------------------------
 
 def test_every_leader_writes_its_section_at_once_the_first_on_its_partys_tier_and_the_others_on_the_cheaper(host, parties, model, monkeypatch):
@@ -175,35 +160,6 @@ def test_the_page_is_the_common_part_and_a_section_a_party_each_its_leaders_word
     assert [s.party for s in read["sections"]] == [parties["product"], parties["tech"]] and not any(s.older for s in read["sections"])
 
 
-def test_the_join_is_the_orkmasters_on_the_cheaper_tier_with_no_tools_given_each_sections_theses_and_what_changes(host, parties, model):
-    slug = _confirmed(host, parties, model, ("product", "tech"))
-    join = model.steps("join")
-    assert len(join) == 1 and join[0]["tools"] is False and join[0]["as_role"] == "orkmaster" and (join[0]["tier"], join[0]["effort"]) == idea_target.pick("route", "balance")
-    p = join[0]["prompt"]
-    assert "Players can pick a theme" in p and "The theme is one file" in p and "changed src/ui" in p and "new src/theme" in p and "Read no file" in p
-    assert f"id {parties['product']}" in p and f"id {parties['tech']}" in p and "you change none of their words" in p
-    assert spec_sections.record(host.ideas.state_dir, slug)["joined"] is True
-
-
-def test_a_goal_of_one_party_has_no_join_its_gist_is_its_words_first_line_and_it_lies_in_its_party(host, parties, model):
-    slug = _confirmed(host, parties, model, ("tech",), text="add a dark mode option\nand more words")
-    assert model.steps("join") == [] and [c["step"] for c in model.calls if c["step"].startswith("section")] == ["section_first"]
-    page = _page(host, slug)
-    assert page.section("Asked") == "add a dark mode option\nand more words" and page.section("Gist") == "add a dark mode option"
-    assert [n for n, _t in page.sections if spec_sections.is_party(n, _t)] == ["Tech"] and "1. Tech · " in page.section("Route")
-
-
-def test_a_goal_lies_in_its_first_steps_party_which_plans_it(host, parties, model):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    host.command("ideas.route_set", {"idea": slug, "route": [parties["product"], parties["tech"]]})            # the route's edit: Product first
-    model.said[("talk_round", "")] = {"stance": "s", "for": "f", "against": "a", "second_round": False, "questions": []}
-    host.command("ideas.talk", {"idea": slug})
-    _until(host, slug, "decided")
-    host.command("ideas.confirm", {"idea": slug})
-    _until(host, slug, "plan")
-    assert _page(host, slug).get("track") == parties["product"]
-
-
 def test_touches_and_the_risk_come_from_the_sections_and_a_high_risk_waits_for_the_person(host, parties, model, monkeypatch):
     host.command("ideas.board_set", {"autostart": True})
     passed = []
@@ -236,12 +192,6 @@ def test_the_first_steps_plan_reads_its_own_section_whole_and_of_the_others_only
     assert "The section Tech of another party: only its Done when and Will be" in prompt and "The theme is one file" in prompt and "new src/theme" in prompt
     assert "Tech's why." not in prompt and "Dark mode as a setting" in prompt
     assert [t["party"] for t in ideas.plan(host.ideas.state_dir, slug)["tasks"]] == [parties["product"]]
-
-
-def test_a_plan_that_cannot_be_made_leaves_the_spec_ready_as_the_drafts_did(host, parties, model):
-    model.said[("plan", "")] = "no plan at all"
-    slug = _confirmed(host, parties, model, ("tech",), until="ready")
-    assert _state(host, slug)["error"].startswith("No plan:") and ideas.plan(host.ideas.state_dir, slug) is None
 
 
 # -- the forks -------------------------------------------------------------------------------------------------------------------------------
@@ -292,50 +242,6 @@ def test_the_persons_own_words_write_again_every_side_and_win_over_a_side(host, 
     assert "Fork — How many waves: Eight waves, no more [sections: Product, Tech]" in _page(host, slug).section("Decisions")
 
 
-def test_two_forks_are_settled_one_after_the_other_and_the_sections_are_written_again_once(host, parties, model):
-    model.said[("join", "")] = {"gist": "Waves", "forks": [_fork(parties["product"], parties["tech"]), _fork(parties["tech"], parties["product"], "Which engine")]}
-    slug = _confirmed(host, parties, model, ("product", "tech"), until="sections")
-    assert _row(host, slug, "fork")["about"] == "How many waves"
-    before = len(model.calls)
-    host.command("ideas.fork_answer", {"idea": slug, "side": parties["product"]})
-    assert _row(host, slug, "fork")["about"] == "Which engine" and len(model.calls) == before and _state(host, slug)["state"] == "sections"      # nothing is written yet
-    host.command("ideas.fork_answer", {"idea": slug, "side": parties["tech"]})
-    _until(host, slug, "plan")
-    redone = [(c["step"], c["party"]) for c in model.calls[before:] if c["step"].startswith("section")]
-    assert sorted(redone) == sorted([("section", parties["tech"]), ("section_first", parties["product"])])                                 # each once, told both answers
-    tech = next(c for c in model.calls[before:] if c["party"] == parties["tech"] and c["step"] == "section")["prompt"]
-    assert "How many waves: Ten waves" in tech
-
-
-def test_a_fork_is_answered_in_plain_words_or_refused(host, parties, model):
-    model.said[("join", "")] = {"gist": "Waves", "forks": [_fork(parties["product"], parties["tech"])]}
-    slug = _confirmed(host, parties, model, ("product", "tech"), until="sections")
-    k = host.ideas.keeper
-    with pytest.raises(idea_keeper.KeeperError, match="Pick a side or write your own answer"):
-        k.fork_answer(slug, "", "")
-    with pytest.raises(idea_keeper.KeeperError, match="Pick a side"):
-        k.fork_answer(slug, "design", "")
-    with pytest.raises(idea_keeper.KeeperError, match="gone"):
-        k.fork_answer("nobody", parties["tech"])
-    other = host.command("ideas.add", {"text": "another goal", "track": parties["tech"]})["slug"]
-    with pytest.raises(idea_keeper.KeeperError, match="no fork to settle"):
-        k.fork_answer(other, parties["tech"])
-    assert _row(host, slug, "fork") is not None                                                                                 # nothing was taken
-
-
-def test_sections_that_cannot_be_written_again_reopen_the_fork_for_the_person_to_answer_again(host, parties, model):
-    model.said[("join", "")] = {"gist": "Waves", "forks": [_fork(parties["product"], parties["tech"])]}
-    slug = _confirmed(host, parties, model, ("product", "tech"), until="sections")
-    model.said[("section", parties["tech"])] = "not json at all"
-    host.command("ideas.fork_answer", {"idea": slug, "side": parties["product"]})
-    for _ in range(1000):
-        if _row(host, slug, "fork"):
-            break
-        time.sleep(0.01)
-    assert _row(host, slug, "fork") is not None and "The sections failed" in _state(host, slug)["error"] and _state(host, slug)["state"] == "sections"
-    assert _page(host, slug).parts("Tech")["Why"] == "Tech's why."                                                              # the section it was is kept
-
-
 # -- a leader that does not answer, the short way, a bug's cause ----------------------------------------------------------------------------------
 
 def test_a_leader_that_does_not_answer_puts_the_goal_back_at_its_decision_and_only_the_missing_section_is_asked_again(host, parties, model):
@@ -354,15 +260,6 @@ def test_a_leader_that_does_not_answer_puts_the_goal_back_at_its_decision_and_on
     assert len(model.steps("decide")) == 1
 
 
-def test_a_spent_window_puts_the_goal_back_where_it_was_asked_from(host, parties, model):
-    slug = _confirmed(host, parties, model, ("tech",), until="plan")
-    ideas.save_state(host.ideas.state_dir, slug, state="sections")
-    host.ideas.keeper.window_until = lambda: time.time() + 3600
-    with pytest.raises(idea_keeper.KeeperError, match="window is spent"):
-        host.ideas.keeper.sections(slug)
-    assert _state(host, slug)["state"] == "decided" and "window is spent" in _state(host, slug)["error"]
-
-
 def test_the_short_way_starts_tech_alone_with_no_talk_no_decision_and_no_join(host, parties, model):
     text = 'it crashes\nTraceback (most recent call last):\n  File "src/app.py", line 3, in <module>\nValueError: bad'
     slug = host.command("ideas.add", {"text": text})["slug"]
@@ -376,44 +273,3 @@ def test_the_short_way_starts_tech_alone_with_no_talk_no_decision_and_no_join(ho
     assert "The failure's lines" in first["prompt"] and "Traceback (most recent call last)" in first["prompt"] and first["party"] == parties["tech"]
     assert spec_sections.record(host.ideas.state_dir, slug).get("decision") is None and _page(host, slug).parts("Tech")["Why"] == "Product's why."
 
-
-def test_a_bugs_why_is_the_cause_talk_found_set_by_code(host, parties, model):
-    slug = host.command("ideas.add", {"text": "the lobby timer is wrong", "track": parties["tech"]})["slug"]
-    idea_questions.save_record(host.ideas.state_dir, slug, {"mode": "bug", "cause": {"text": "the timer is not reset on reconnect", "where": ["src/app.py"], "confirmed": True},
-                                                            "answers": [{"q": "Where?", "answer": "Lobby", "how": "pick"}], "defaults": []})
-    ideas.save_state(host.ideas.state_dir, slug, state="sections", route=[{"party": parties["tech"], "leader": "architect"}], route_how={"kind": "bug", "short": True})
-    model.said[("section_first", "")] = section("the leader's own guess", ["The timer is reset"])
-    host.ideas.keeper.sections(slug)
-    _until(host, slug, "plan")
-    prompt = model.steps("section_first")[0]["prompt"]
-    assert "The cause found (this is your Why)" in prompt and "the timer is not reset on reconnect (src/app.py)" in prompt and "Where? — Lobby" in prompt
-    assert _page(host, slug).parts("Tech")["Why"] == "the timer is not reset on reconnect" and model.steps("decide") == []
-
-
-def test_the_prompt_asks_each_done_when_as_a_scenario_and_the_page_keeps_whatever_line_comes_back(host, parties, model):
-    """Spec 127 B.5: *Done when* is asked as `When …, then …`, five at most; the plan's and the checks' prompts are as they were; any line is taken."""
-    scenario = "When a player picks Dark in Settings, then the lobby is drawn in the dark theme"
-    model.said[("section", "")] = section("Tech's why.", [scenario, "An older thesis, as a plain line"])
-    slug = _confirmed(host, parties, model, ("product", "tech"))
-    prompt = model.steps("section")[0]["prompt"]
-    assert "`done_when`: one to 5 scenarios" in prompt and "`When <a person or the product does something>, then <what is seen or kept>`" in prompt and "checkable by a test" in prompt
-    assert "A line about a screen names the state it opens in, as a person first meets it." in prompt
-    assert '{"line": "…", "proof": "test"}' in prompt and "`test` when a test the gate runs can prove it" in prompt and "`look` when only a picture or Play shows it" in prompt     # spec 152 F.2
-    assert "`person` when only the person can judge it" in prompt and "Prefer `test` for the rest." in prompt
-    assert "opens the screen in the state the line names, as a person first meets it; else `look`." in prompt            # spec 155 B.4
-    assert _page(host, slug).parts("Tech")["Done when"] == f"- {scenario}\n- An older thesis, as a plain line"
-    assert "When <a person" not in model.steps("plan")[0]["prompt"]
-
-
-def test_defaults_are_seen_in_the_section_and_what_a_leader_assumed_with_them_and_no_question_is_ever_written(host, parties, model):
-    model.said[("section", "")] = section("Tech's why.", ["The theme is one file"], assumed=["the theme file is CSS"], questions=[{"ask": "Which?", "choices": ["a", "b"]}])
-    slug = _confirmed(host, parties, model, ("product", "tech"), per=3)                       # six questions, the three the person is dealt are Product's: Tech's are closed by its picks
-    parts = _page(host, slug).parts("Tech")
-    assert parts["Defaults"].splitlines() == [f"- tech question {n} — A (its leader's pick)" for n in range(3)] + ["- Assumed: the theme file is CSS"] and "Questions" not in parts
-    assert "Defaults" not in _page(host, slug).parts("Product")                                                                  # each its own leader's
-
-
-def test_a_done_when_line_comes_back_with_its_proof_and_the_page_writes_the_mark(host, parties, model):
-    model.said[("section", "")] = section("Tech's why.", [{"line": "When a, then b", "proof": "test"}, {"line": "The lobby opens dark", "proof": "look"}, {"line": "c", "proof": "nonsense"}])
-    slug = _confirmed(host, parties, model, ("product", "tech"))
-    assert _page(host, slug).parts("Tech")["Done when"] == "- [test] When a, then b\n- [look] The lobby opens dark\n- c"

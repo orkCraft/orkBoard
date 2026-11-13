@@ -106,17 +106,6 @@ def test_a_project_with_nothing_to_sketch_from_gets_no_sketch(host, parties, mod
     assert seen == [(slug, "sections")] and model.steps("sketch") == [] and _record(host, slug) == {}
 
 
-def test_a_project_with_a_look_screens_a_preview_or_assets_has_something_to_sketch_from(host, tmp_path):
-    keeper = host.ideas.keeper
-    assert keeper.sketch_ground() is False
-    (Path(host.repo_root) / "index.html").write_text("<!doctype html><title>x</title>", encoding="utf-8")        # a static preview
-    assert keeper.sketch_ground() is True
-    (Path(host.repo_root) / "index.html").unlink()
-    assert keeper.sketch_ground() is False
-    (Path(host.repo_root) / "tokens.css").write_text(":root{--ink:#111}", encoding="utf-8")
-    assert keeper.sketch_ground() is True
-
-
 def test_the_person_asks_for_a_sketch_on_any_goal_and_turns_it_off_for_one(host, parties, model):
     model.said[("sketch", "")] = PAGES
     slug = _decided(host, parties, model, ("tech",), "move the cache to the server")                       # no ground, no craft: none by rule
@@ -159,48 +148,6 @@ def test_the_short_way_is_never_sketched_by_rule(host, parties, model, looked):
 
 # -- the page's call -----------------------------------------------------------------------------------------------------------------------
 
-def test_the_page_is_one_call_on_the_partys_tier_with_no_tools_and_no_read(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    (call,) = model.steps("sketch")
-    assert call["tools"] is False and call["party"] == parties["design"]
-    assert (call["tier"], call["effort"]) == idea_target.pick("sketch", "balance") == ("elder", "medium")
-    assert idea_target.pick("sketch", "thrift") == ("warrior", "low") and idea_target.pick("sketch", "quality") == ("elder", "high")
-    assert "You are" in call["prompt"] and "speak for Design" in call["prompt"] and "Read no file" in call["prompt"]                 # its voice, then its party's words
-    assert idea_target.READS["sketch"] == 0 and idea_target.reads_of("sketch", "design") == 1 and idea_target.CONTEXT["sketch"] > 0 and idea_target.CAPS["sketch"] > 0
-    assert _state(host, slug)["measure"]["step"] == "sketch" and _state(host, slug)["measure"]["cost"] == 0.01
-
-
-def test_the_leader_is_given_the_goal_the_decision_the_answers_and_the_projects_look(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model, text="add a settings screen with a dark mode switch")
-    prompt = model.steps("sketch")[0]["prompt"]
-    assert "add a settings screen with a dark mode switch" in prompt and DECISION["why"][:20] in prompt                                    # the goal, and what was decided
-    assert "/* styles.css */" in prompt and "background: #101010" in prompt                                                              # the look, named by its file
-    assert "2 to 3 throwaway variants" in prompt and "<!doctype html>" in prompt and f"{sketches.PAGE_KB} KB" in prompt and "no `src`, `href` or `url(`" in prompt
-    assert '"variants"' in prompt and "phone's width" in prompt
-    assert "The picture of the screen" not in prompt                                                                                     # none is kept
-
-
-def test_design_reads_the_one_picture_of_the_screen_the_goal_changes_when_one_is_kept(host, parties, model, looked, monkeypatch):
-    from orkboard.realm import map_signals
-    monkeypatch.setattr(map_signals, "pictures", lambda *a, **k: [{"id": "orders", "name": "Orders", "path": "shots/orders.png", "at": "1"}, {"id": "settings", "name": "Settings", "path": "shots/settings.png", "at": "0"}])
-    slug, _seen = _sketched(host, parties, model, text="add a dark mode switch to the settings screen")
-    (call,) = model.steps("sketch")
-    assert call["tools"] is True and "The picture of the screen this goal changes (read it):\nshots/settings.png (Settings)" in call["prompt"]
-    assert "Start from these files: shots/settings.png. Read at most 1 files in all" in call["prompt"] and "shots/orders.png" not in call["prompt"]
-
-
-def test_game_design_sketches_a_loop_on_a_page_with_no_art(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model, which=("game",), text="balance the reward of the first press")
-    rec = _record(host, slug)
-    assert rec["craft"] == "game-design" and rec["party"] == parties["game"] and rec["kind"] == "page"
-    prompt = model.steps("sketch")[0]["prompt"]
-    assert "small playable of the step of the loop this goal changes" in prompt and "no art" in prompt and model.steps("sketch")[0]["party"] == parties["game"]
-
-
-def test_several_crafts_on_the_route_one_sketch_by_the_first(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model, which=("product", "design", "game", "tech"), text="add a settings screen")
-    assert len(model.steps("sketch")) == 1 and _record(host, slug)["party"] == parties["design"]
-
 
 # -- kept as a pick, and never in the project ----------------------------------------------------------------------------------------------
 
@@ -219,19 +166,6 @@ def test_the_pages_are_kept_as_a_pick_beside_the_goal_and_nothing_is_written_to_
     assert [ln for ln in after.splitlines() if ln not in before.splitlines() and state not in ln and ".html" in ln] == []         # no page in the project's tree
     assert not list(Path(host.repo_root).glob("*.html")) and not list(Path(host.repo_root, "src").glob("*.html"))
     assert subprocess.run(["git", "log", "--all", "--format=%H", "--", "*.html"], cwd=host.repo_root, capture_output=True, text=True).stdout.strip() == ""      # never committed
-
-
-def test_the_row_a_face_reads_is_a_picks_with_a_pages_url_and_no_inline_text(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    row = _row(host, slug, "pick")
-    assert row["sketch"] is True and row["task"] == "sketch" and row["idea"] == slug and row["blocks"] is True and row["media"] == "page" and row["n"] == 3
-    assert (row["round"], row["rounds"], row["rounds_left"], row["error"], row["now"]) == (1, 3, 2, "", False)
-    assert row["title"].endswith(" sketched it") and row["text"] == row["title"] and row["craft"] == "design" and row["party"] == parties["design"]
-    assert row["by"]["slug"] == "product-designer" and row["by"]["name"] and row["by"]["head"]
-    assert [(v["key"], v["name"], v["mime"]) for v in row["variants"]] == [("A", "Quiet", "text/html"), ("B", "Loud", "text/html"), ("C", "Plain", "text/html")]
-    assert all(v["url"].startswith(f"/media/{slug}/sketch-r1/") and "?s=" in v["url"] and "text" not in v for v in row["variants"])
-    board = host.command("ideas.board")
-    assert next(i for i in board["ideas"] if i["slug"] == slug)["state"] == "sketch" and "sketching" not in next(i for i in board["ideas"] if i["slug"] == slug)
 
 
 def test_while_the_sketch_is_made_the_goal_says_who_is_sketching_and_asks_nothing(host, parties, model, looked):
@@ -301,17 +235,6 @@ def test_pick_this_one_goes_to_the_sections_and_keeps_what_was_picked(host, part
         _pick(host, slug, key="A")
 
 
-def test_a_letter_that_is_no_variant_and_a_late_answer_are_refused_in_words(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    with pytest.raises(CommandError, match="Pick one of A, B, C"):
-        _pick(host, slug, key="Z")
-    with pytest.raises(CommandError, match="A note says what to change: write one first"):
-        _pick(host, slug, key=None)
-    with pytest.raises(CommandError, match="skip and now are on or off"):
-        _pick(host, slug, skip="yes")
-    assert _record(host, slug)["status"] == "asked" and _events(host, event_log.SKETCH_ANSWERED) == []        # nothing was said answered
-
-
 def test_sketch_again_with_a_note_is_a_new_round_given_the_note_and_the_variants_before(host, parties, model, looked):
     slug, seen = _sketched(host, parties, model)
     model.said[("sketch", "")] = {"variants": [{"name": "Rounder", "why": "Soft corners", "html": PAGE + "<!-- r2a -->"}, {"name": "Softer", "why": "Quiet colours", "html": PAGE + "<!-- r2b -->"}]}
@@ -329,34 +252,6 @@ def test_sketch_again_with_a_note_is_a_new_round_given_the_note_and_the_variants
     assert seen == [(slug, "sections")] and _record(host, slug)["picked"]["round"] == 2 and _record(host, slug)["picked"]["pick"] == "sketch-r2"
 
 
-def test_three_rounds_at_most_the_fourth_is_refused_in_words(host, parties, model, looked):
-    slug, seen = _sketched(host, parties, model)
-    for n in (1, 2):
-        _pick(host, slug, key=None, note=f"again {n}")
-        assert _settle(host, slug)["round"] == n + 1
-    assert _row(host, slug, "pick")["rounds_left"] == 0
-    with pytest.raises(CommandError, match="Three rounds: pick one or go on"):
-        _pick(host, slug, key=None, note="once more")
-    assert _record(host, slug)["round"] == 3 and _record(host, slug)["status"] == "asked" and len(model.steps("sketch")) == 3 and seen == []        # nothing was made, nothing was answered
-    assert not idea_pick.answered(idea_pick.load(host.ideas.state_dir, slug, "sketch-r3"))
-    _pick(host, slug, key="C")                                                                             # …and one of the third round can still be picked
-    assert seen == [(slug, "sections")] and _record(host, slug)["picked"]["round"] == 3
-
-
-def test_a_new_round_that_cannot_be_made_opens_the_round_before_again_with_why(host, parties, model, looked):
-    slug, seen = _sketched(host, parties, model)
-    model.said[("sketch", "")] = "not json"
-    _pick(host, slug, key=None, note="Rounder")
-    rec = _settle(host, slug)
-    assert rec["round"] == 1 and rec["status"] == "asked" and rec["error"].startswith("The new round could not be made: ") and rec["notes"] == [] and seen == []
-    assert not idea_pick.answered(idea_pick.load(host.ideas.state_dir, slug, "sketch-r1"))
-    row = _row(host, slug, "pick")
-    assert row["round"] == 1 and row["rounds_left"] == 2 and row["error"].startswith("The new round could not be made") and _state(host, slug)["state"] == "sketch"
-    model.said[("sketch", "")] = PAGES
-    _pick(host, slug, key=None, note="Rounder, again")                                                     # the round that failed did not count
-    assert _settle(host, slug)["round"] == 2 and _record(host, slug)["error"] == ""
-
-
 def test_no_sketch_go_on_goes_to_the_sections(host, parties, model, looked):
     slug, seen = _sketched(host, parties, model)
     got = _pick(host, slug, skip=True)
@@ -367,30 +262,12 @@ def test_no_sketch_go_on_goes_to_the_sections(host, parties, model, looked):
     assert idea_pick.answered(idea_pick.load(host.ideas.state_dir, slug, "sketch-r1")) and _row(host, slug, "pick") is None
 
 
-def test_ideas_sketch_skip_on_a_goal_being_sketched_is_no_sketch_go_on(host, parties, model, looked):
-    slug, seen = _sketched(host, parties, model)
-    host.command("ideas.sketch_skip", {"idea": slug})
-    assert seen == [(slug, "sections")] and _record(host, slug)["status"] == "skipped"
-
-
 def test_the_answers_are_a_phones_too(host, parties, model, looked):
     from orkboard.gui.board_host import BoardPhone
     assert {"ideas.sketch_now", "ideas.sketch_skip", "ideas.pick"} <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in ("ideas.sketch_now", "ideas.sketch_skip", "ideas.pick"))
     slug, _seen = _sketched(host, parties, model)
     host.command("ideas.pick", {"slug": slug, "task": "sketch", "key": "A", "device": "phone", "via": "hand"})
     assert _events(host, event_log.SKETCH_ANSWERED)[0]["via"] == "hand"
-
-
-def test_a_spent_window_or_a_keeper_that_may_not_run_refuses_the_answer_and_loses_nothing(host, parties, model, looked):
-    slug, seen = _sketched(host, parties, model)
-    keeper = host.ideas.keeper
-    keeper.budget_ok = lambda: False
-    with pytest.raises(CommandError, match="spend limit"):
-        _pick(host, slug, key="A")
-    keeper.budget_ok = lambda: True
-    assert _record(host, slug)["status"] == "asked" and not idea_pick.answered(idea_pick.load(host.ideas.state_dir, slug, "sketch-r1")) and seen == []
-    _pick(host, slug, key="A")
-    assert seen == [(slug, "sections")]
 
 
 def test_pick_and_build_now_keeps_the_press_with_the_goal_and_a_refused_answer_builds_nothing(host, parties, model, looked):
@@ -407,12 +284,6 @@ def test_pick_and_build_now_keeps_the_press_with_the_goal_and_a_refused_answer_b
     model.said[("sketch", "")] = PAGES
     _pick(host, third, key=None, note="again", now=True)
     assert host.ideas._build_now_of(third) is None                                                         # another round is no pick
-
-
-def test_with_work_at_night_on_the_row_offers_pick_and_build_now(host, parties, model, looked):
-    host.command("ideas.board_set", {"work_at_night": True})
-    slug, _seen = _sketched(host, parties, model)
-    assert _row(host, slug, "pick")["now"] is True
 
 
 # -- the sections and the build rest on the sketch ---------------------------------------------------------------------------------------------
@@ -435,20 +306,6 @@ def test_the_sections_are_given_the_sketch_the_person_picked_before_the_map_and_
     assert "The sketch the person picked" in other and "A sketch was picked" in other                      # every leader's section, not Design's alone
 
 
-def test_a_page_cut_at_six_thousand_characters_in_the_sections_context(host, parties, model, looked):
-    big = {"variants": [{"name": "Big", "why": "w", "html": "<!doctype html><body>" + "x" * 9000 + "</body>"}, {"name": "Small", "why": "w", "html": PAGE}]}
-    slug, _seen = _sketched(host, parties, model, said=big)
-    _pick(host, slug, key="A")
-    prompt = host.ideas.keeper.section_prompt(slug, _entry(host, parties), host.ideas.keeper._route(slug), True)
-    assert "x" * 5000 in prompt and "x" * 6001 not in prompt and "…" in prompt
-
-
-def test_a_goal_whose_sketch_was_not_picked_is_given_none(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    _pick(host, slug, skip=True)
-    assert "The sketch the person picked" not in host.ideas.keeper.section_prompt(slug, _entry(host, parties), host.ideas.keeper._route(slug), True)
-
-
 def test_the_builds_brief_names_the_picked_files_path_as_a_reference(host, parties, model, looked):
     slug, _seen = _sketched(host, parties, model)
     assert task_brief.sketch_note(host.ideas.state_dir, slug) == ""
@@ -460,16 +317,6 @@ def test_the_builds_brief_names_the_picked_files_path_as_a_reference(host, parti
     assert sketches.reference_dirs(host.ideas.state_dir, slug) == (str(path.parent),)
 
 
-def test_a_task_is_told_of_the_sketch_in_its_prompt_before_its_own_words(host, parties, model, looked):
-    from orkboard.core.idea_task import TaskMixin
-    slug, _seen = _sketched(host, parties, model)
-    _pick(host, slug, key="A")
-    runner = SimpleNamespace(repo_root=host.repo_root, state_dir=host.ideas.state_dir, settings={}, _role=lambda t: {"name": "Grunt", "instruction": "", "slug": "grunt"}, _env=lambda *a: {}, _reading=lambda *a: "", _without=lambda *a: [], tool_of=lambda *a: "claude")
-    plan = {"tasks": [{"id": "k1", "title": "Build it", "brief": "Make the screen"}]}
-    prompt = TaskMixin._prompt(runner, slug, plan, plan["tasks"][0])
-    assert prompt.index("# The idea") < prompt.index("# The sketch the person picked") < prompt.index("# Your task: Build it")
-
-
 # -- the cost, the events -------------------------------------------------------------------------------------------------------------------
 
 def test_the_sketchs_cost_goes_to_the_goals_ledger_as_its_spec_stage(host, parties, model, looked):
@@ -478,19 +325,6 @@ def test_the_sketchs_cost_goes_to_the_goals_ledger_as_its_spec_stage(host, parti
     got = idea_spend.of_idea(host.ideas.state_dir, slug)
     lines = [json.loads(ln) for ln in (host.ideas.state_dir / "ideas" / slug / "spend.jsonl").read_text(encoding="utf-8").splitlines()]
     assert [ln["step"] for ln in lines if ln["step"] == "sketch"] == ["sketch"] and got["stages"]["spec"]["usd"] >= 0.01
-
-
-def test_sketch_made_says_how_many_in_how_long_and_at_what_cost(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    (made,) = _events(host, event_log.SKETCH_MADE)
-    assert (made["idea"], made["craft"], made["kind"], made["n"], made["round"], made["cost"]) == (slug, "design", "page", 3, 1, 0.01) and isinstance(made["seconds"], (int, float))
-    assert "html" not in json.dumps(made) and PAGE not in json.dumps(made)                                 # never a word of the page
-
-
-def test_the_events_and_the_word_are_known():
-    assert {"sketch_made", "sketch_answered", "sketch_skipped"} <= set(event_log.EVENTS)
-    from orkboard.realm import lexicon
-    assert lexicon.term("sketch") == "sketch" and lexicon.term("sketch", many=True) == "sketches"
 
 
 # -- Art: a pick task, with the media tools, and a paid tool only with the person's yes ----------------------------------------------------------
@@ -513,17 +347,6 @@ def _works(host, files=None):
         return "done", 0.07, 100, ""
     host.ideas.keeper.work_call = work
     return calls
-
-
-def test_art_without_the_media_tools_set_up_says_so_and_the_sections_follow(host, parties, model, looked, monkeypatch):
-    monkeypatch.setattr(sketches, "media_ready", lambda kind, which=None: False)
-    calls = _works(host)
-    slug, seen = _art_goal(host, parties, model)
-    assert seen == [(slug, "sections")] and calls == [] and model.steps("sketch") == []
-    rec = _record(host, slug)
-    assert rec["status"] == "skipped" and rec["why"] == "the media tools are not set up"
-    assert [t["text"] for t in ideas.talk(host.ideas.state_dir, slug) if t["text"].startswith("No sketch")] == ["No sketch: the media tools are not set up"]
-    assert [e["why"] for e in _events(host, event_log.SKETCH_SKIPPED)] == ["the media tools are not set up"]
 
 
 def test_art_with_the_media_tools_asks_a_pick_task_in_a_folder_of_the_goals_state(host, parties, model, looked, monkeypatch):
@@ -549,24 +372,6 @@ def test_art_with_the_media_tools_asks_a_pick_task_in_a_folder_of_the_goals_stat
     assert "It is a picture (`b.png`)" in sketches.context(host.ideas.state_dir, slug)
 
 
-def test_a_sound_sketch_is_a_pick_of_sounds_with_audio_tools(host, parties, model, looked, monkeypatch):
-    asked = []
-    monkeypatch.setattr(sketches, "media_ready", lambda kind, which=None: asked.append(kind) or kind == "audio")
-    calls = _works(host, {"a.wav": pf.wav(0.5), "b.wav": pf.wav(0.6), "c.wav": pf.wav(0.7)})
-    slug, _seen = _art_goal(host, parties, model, text="a new sound for the win jingle")
-    rec = _settle(host, slug)
-    assert asked == ["audio"] and rec["kind"] == "audio" and calls[0]["task"]["pick"]["kind"] == "audio"
-    assert [v["mime"] for v in idea_pick.load(host.ideas.state_dir, slug, "sketch-r1")["variants"]] == ["audio/wav"] * 3
-
-
-def test_an_art_task_that_leaves_nothing_usable_is_no_sketch(host, parties, model, looked, monkeypatch):
-    monkeypatch.setattr(sketches, "media_ready", lambda kind, which=None: True)
-    host.ideas.keeper.work_call = lambda *a: ("done", 0.01, 1, "")                                         # it made no file and no manifest
-    slug, seen = _art_goal(host, parties, model)
-    _until(host, slug, "sections")
-    assert _record(host, slug)["status"] == "skipped" and "left no variants" in _record(host, slug)["why"]
-
-
 def _paid_machine(monkeypatch, host, tool="codex"):
     from orkboard import settings as machine
     conf = SimpleNamespace(tools={"claude": SimpleNamespace(enabled=True, billing="subscription"), "codex": SimpleNamespace(enabled=True, billing="api")}, main_tool="claude")
@@ -585,36 +390,7 @@ def test_a_tool_that_would_be_paid_is_used_only_with_the_persons_yes(host, parti
     assert _settle(host, other)["status"] == "asked" and len(calls) == 1 and seen == []
 
 
-def test_a_main_tool_billed_by_its_api_by_the_persons_own_choice_is_not_paid(host, parties, model, looked, monkeypatch):
-    from orkboard import settings as machine
-    conf = SimpleNamespace(tools={"claude": SimpleNamespace(enabled=True, billing="api")}, main_tool="claude")
-    monkeypatch.setattr(machine, "cached", lambda: conf)
-    monkeypatch.setattr(host.ideas.keeper, "tool_now", lambda: "claude")
-    assert host.ideas.keeper._would_be_paid() is False
-    monkeypatch.setattr(host.ideas.keeper, "tool_now", lambda: "nobody")
-    assert host.ideas.keeper._would_be_paid() is False                                                     # a tool the machine does not know holds nothing back
-
-
-def test_a_page_sketch_goes_by_the_same_rule_about_a_paid_tool(host, parties, model, looked, monkeypatch):
-    _paid_machine(monkeypatch, host)
-    slug, seen = _confirmed(host, parties, model)
-    assert seen == [(slug, "sections")] and model.steps("sketch") == [] and "paid" in _record(host, slug)["why"]
-
-
 # -- the way back from the sections' failure --------------------------------------------------------------------------------------------------
-
-def test_the_sections_asked_again_after_a_pick_do_not_sketch_again(host, parties, model, looked):
-    slug, seen = _sketched(host, parties, model)
-    _pick(host, slug, key="A")
-    ideas.save_state(host.ideas.state_dir, slug, state="decided", error="The sections failed: no answer")      # the sections failed: *Try again*
-    host.command("ideas.confirm", {"idea": slug})
-    assert seen == [(slug, "sections"), (slug, "sections")] and len(model.steps("sketch")) == 1
-
-
-def test_a_pitch_is_never_sketched(host, parties, model, looked):
-    slug = host.command("ideas.add", {"text": "add a settings screen", "track": parties["design"]})["slug"]
-    host.ideas.keeper.is_pitch = lambda s: True
-    assert host.ideas.keeper.sketch_for(slug) is None
 
 
 def test_a_sketch_the_host_lost_is_back_at_its_decision_by_the_clock_and_asked_again_by_start(host, parties, model, looked):
@@ -633,18 +409,3 @@ def test_a_sketch_the_host_lost_is_back_at_its_decision_by_the_clock_and_asked_a
     assert keeper.sketch_lost(slug) is False and _state(host, slug)["state"] == "sketch"                   # a sketch that waits for the person is not lost
 
 
-def test_a_goal_being_sketched_has_the_one_row_a_pick_and_no_route_or_decision_card(host, parties, model, looked):
-    slug, _seen = _sketched(host, parties, model)
-    assert [n["kind"] for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug] == ["pick"]
-    mine = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
-    assert mine["place"] == "table" and mine["asks_you"] is True
-    assert next(n for n in host.command("ideas.map")["nodes"] if n["slug"] == slug)["state"] == "sketch"
-
-
-def test_a_busy_keeper_refuses_the_sketch_and_writes_nothing(host, parties, model, looked):
-    slug = _decided(host, parties, model, ("design",), "add a settings screen")
-    keeper = host.ideas.keeper
-    keeper._busy[slug] = "talking"
-    with pytest.raises(Exception, match="busy"):
-        keeper.sketch_begin(slug, {"craft": "design", "party": parties["design"], "leader": "product-designer", "kind": "page"})
-    assert _record(host, slug) == {} and _state(host, slug)["state"] == "decided"

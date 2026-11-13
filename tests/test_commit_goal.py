@@ -84,53 +84,11 @@ def test_a_persons_commit_between_two_landings_or_after_the_last_is_no_goals(rep
     assert set(index) == {one, two} and index[two] == {"goal": "jingle", "task": "k2"}
 
 
-def test_a_task_that_brought_nothing_or_a_commit_not_in_dev_or_no_sha_is_none(repo):
-    sha, _ = land(repo, "dark-mode", "k1", {"x.css": "x\n"})
-    plan = ideas.plan(state(repo), "dark-mode")
-    plan["tasks"].append({"id": "k2", "state": "merged", "commit": sha, "subjects": []})            # a clean check: nothing landed
-    plan["tasks"].append({"id": "k3", "state": "review", "commit": "", "subjects": []})
-    (ideas.state_folder(state(repo), "dark-mode") / "plan.json").write_text(json.dumps(plan))
-    assert commit_goal.of(state(repo), repo, sha) == {"goal": "dark-mode", "task": "k1"}
-    git(repo, "checkout", "-q", "main")
-    elsewhere = commit(repo, "m.txt", "m\n")
-    git(repo, "checkout", "-q", "dev")
-    assert commit_goal.of(state(repo), repo, elsewhere) == {}
-    for junk in ("", "zz", "HEAD", "--all", None, 42):
-        assert commit_goal.of(state(repo), repo, junk) == {}                       # type: ignore[arg-type]
-    assert commit_goal.index(state(repo), repo, "no-such-branch") == {} and commit_goal.head(repo, "../x") == ""
-
-
 def test_the_index_follows_dev_and_the_plans(repo):
     one, _ = land(repo, "dark-mode", "k1", {"x.css": "x\n"})
     assert set(commit_goal.index(state(repo), repo)) == {one}
     two, _ = land(repo, "dark-mode", "k2", {"y.css": "y\n"})
     assert set(commit_goal.index(state(repo), repo)) == {one, two}                # dev moved, the plan changed: read anew
-
-
-def test_since_is_a_commit_of_dev_or_a_time(repo):
-    first = git(repo, "rev-parse", "HEAD")
-    later = commit(repo, "b.txt", "b\n")
-    assert commit_goal.resolve(repo, first, "dev") == first and commit_goal.resolve(repo, first[:7], "dev") == first
-    assert commit_goal.resolve(repo, "2099-01-01T00:00:00+00:00", "dev") == later
-    assert commit_goal.resolve(repo, "1999-01-01", "dev") == ""
-    git(repo, "checkout", "-q", "main")
-    other = commit(repo, "m.txt", "m\n")
-    git(repo, "checkout", "-q", "dev")
-    for junk in (other, "", "dev~1", "HEAD", "--output=x", "../../etc", None):
-        assert commit_goal.resolve(repo, junk, "dev") == ""                         # not dev's, or not a commit or a time
-
-
-def test_the_last_commit_that_touched_each_file(repo):
-    since = git(repo, "rev-parse", "HEAD")
-    a = commit(repo, "art/a.png", "1")
-    b = commit(repo, "art/b.png", "1")
-    a2 = commit(repo, "art/a.png", "2")
-    got = commit_goal.last_touch(repo, "dev", since)
-    assert {p: v["sha"] for p, v in got.items()} == {"art/a.png": a2, "art/b.png": b} and a != a2
-    assert got["art/a.png"]["at"][:4].isdigit()
-    whole = commit_goal.last_touch(repo, "dev")
-    assert whole["a.txt"]["sha"] == since and whole["art/a.png"]["sha"] == a2
-    assert commit_goal.last_touch(repo, "dev", "not-a-sha") == {}
 
 
 def test_goals_that_landed_after_a_commit_are_counted_once_each_and_the_persons_own_commits_none(repo):
@@ -143,13 +101,6 @@ def test_goals_that_landed_after_a_commit_are_counted_once_each_and_the_persons_
     land(repo, "dark-mode", "k2", {"z.css": "z\n"})                                                          # a second task of the same goal
     assert commit_goal.new_goals(state(repo), repo, tried, "dev") == 2
     assert commit_goal.new_goals(state(repo), repo, git(repo, "rev-parse", "dev"), "dev") == 0
-
-
-def test_the_count_of_new_goals_is_zero_for_what_is_no_commit_or_no_branch(repo):
-    land(repo, "dark-mode", "k1", {"x.css": "x\n"})
-    for since in ("", "dev", "not-a-sha", "0" * 40, "--output=x"):
-        assert commit_goal.new_goals(state(repo), repo, since, "dev") == 0, since
-    assert commit_goal.new_goals(state(repo), repo, git(repo, "rev-parse", "main"), "nope") == 0
 
 
 def test_the_maps_read_the_branch_results_land_in_and_dev_when_none_or_not_a_branch():

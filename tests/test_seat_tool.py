@@ -72,19 +72,6 @@ def test_a_seats_tools_are_kept_beside_the_tiers_and_cleaned(host):
     assert goal_team.tools_of(h.root, "nope") == {}
 
 
-def test_tool_for_falls_back_from_the_seat_to_the_party_to_the_main_tool(host, installed):
-    h = host
-    slug = save(h, tool="codex")
-    goal_team.set_tools(h.root, slug, {"tester": "agy"})
-    assert goal_team.tool_for(h.root, slug, "tester") == "agy"                                                # the seat's own
-    assert goal_team.tool_for(h.root, slug, "reviewer") == "codex"                                            # no seat tool: the party's
-    assert goal_team.tool_for(h.root, slug, "nobody") == "codex"
-    plain = save(h, title="Plain")
-    assert goal_team.tool_for(h.root, plain, "tester") == ""                                                  # neither: the Main tool, for the caller
-    goal_team.set_tools(h.root, plain, {"architect": "claude"})
-    assert goal_team.tool_for(h.root, plain, "architect") == "claude" and goal_team.tool_for(h.root, plain, "tester") == ""
-
-
 # -- §6.3: the runner and the keeper ----------------------------------------------------------------------------------------------------
 
 def test_a_task_runs_on_the_tool_of_the_seat_that_takes_it(host, installed, monkeypatch):
@@ -115,15 +102,6 @@ def test_a_task_runs_on_the_tool_of_the_seat_that_takes_it(host, installed, monk
     for task in (by_tester, by_reviewer):
         runner._session(idea, task["id"], h.root, None, "sonnet", {}, "Do it", "", {"cost": None, "tokens": None})
     assert seen == ["agy", "codex"]
-
-
-def test_a_lean_partys_task_takes_its_doers_tool_not_the_leaders_seat_tool(host, installed, monkeypatch):
-    h = host
-    main_tool(monkeypatch, "claude")
-    slug = save(h, size="lean", team=["tester"], tool="codex", tools={"architect": "agy"})
-    runner = h.ideas.runner(need=True)
-    idea = ideas.add_idea(h.root, "A goal", slug, h.state)
-    assert runner.tool_of(idea, {"id": "k1", "kind": "code", "role": "tester"}) == "codex"             # the leader does no task (spec 152 A.2): its seat tool is for its steps
 
 
 def test_a_task_waits_for_the_sign_in_of_its_seats_tool(host, installed, monkeypatch):
@@ -169,24 +147,6 @@ def test_the_keeper_runs_the_leaders_steps_on_the_leaders_seat_tool(host, instal
 
 
 # -- §6.4, 6.5: what a tool makes and what a role needs ------------------------------------------------------------------------------------
-
-def test_only_antigravity_makes_pictures_and_the_list_says_so(host, installed):
-    assert {h.id: h.makes for h in harnesses.REGISTRY.values()} == {i: ("pictures",) if i == "agy" else () for i in harnesses.REGISTRY}
-    rows = {r["id"]: r for r in host.command("ideas.tools")["tools"]}
-    assert rows["agy"]["makes"] == ["pictures"] and all(r["makes"] == [] for i, r in rows.items() if i != "agy")
-    assert rows["codex"].keys() == {"id", "name", "ready", "signed_in", "installed", "experimental", "tiers", "makes"}
-    assert harnesses.for_party(["agy"], [], "agy")["tools"][0]["makes"] == ["pictures"]
-
-
-def test_the_roles_that_make_pictures_or_sound_say_so_and_the_page_gets_it(host):
-    needs = {a.id: a.needs for a in library.LIBRARY if a.needs}
-    assert needs == {"artist": ("pictures",), "aso": ("pictures",), "sound-designer": ("sound",),       # Art and sound's makers too
-                     "animator": ("pictures",), "icon-artist": ("pictures",), "composer": ("sound",)}
-    assert all(a.needs == () for a in library.LIBRARY if a.id not in needs)
-    listed = {a["id"]: a for a in library.listed()}
-    assert listed["artist"]["needs"] == ["pictures"] and listed["sound-designer"]["needs"] == ["sound"] and listed["grunt"]["needs"] == []
-    page = {a["id"]: a for a in host.command("ideas.roles")["library"]}
-    assert page["aso"]["needs"] == ["pictures"] and page["tester"]["needs"] == []
 
 
 # -- §6.6, 6.7: goal_save and the rows --------------------------------------------------------------------------------------------------

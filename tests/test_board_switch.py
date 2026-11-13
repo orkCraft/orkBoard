@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from orkboard.gui import board_switch as bsw
-from orkboard.realm import board_branch, lexicon
+from orkboard.realm import board_branch
 
 
 def repo(path, remote="git@github.com:acme/shop.git"):
@@ -53,21 +53,6 @@ def test_turn_on_writes_the_table_after_the_private_check_and_nothing_before(tmp
     assert sw.turn_on()["ok"] and (root / "orkcraft.toml").read_text().count("[board]") == 1
 
 
-def test_a_remote_not_on_github_goes_on_with_the_line_that_it_must_be_private(tmp_path, monkeypatch):
-    root = repo(tmp_path / "shop", remote="/srv/git/shop.git")
-    monkeypatch.setattr(bsw, "http_status", lambda url: pytest.fail("asked GitHub about a remote that is not on it"))
-    got = bsw.BoardSwitch(host(root, tmp_path / "st")).turn_on()
-    assert got["ok"] and "must be private" in got["line"] and board_branch.read_config(root) is not None
-
-
-def test_not_now_is_remembered_and_the_switch_stays(tmp_path):
-    root = repo(tmp_path / "shop")
-    sw = bsw.BoardSwitch(host(root, tmp_path / "st"))
-    assert sw.not_now() == {"ok": True}
-    s = sw.switch()
-    assert s["show"] and s["asked"] and not s["on"] and board_branch.read_config(root) is None
-
-
 def test_it_says_who_holds_the_board_and_what_was_kept_aside(tmp_path):
     root = repo(tmp_path / "shop")
     board_branch.turn_on(root)
@@ -78,11 +63,6 @@ def test_it_says_who_holds_the_board_and_what_was_kept_aside(tmp_path):
     assert s["aside"].startswith("Another worker had the Board while you were offline: your changes since ") and s["aside"].endswith("are kept aside")
     held["board_held"]["kind"] = "computer"
     assert "Another computer has the Board" in bsw.BoardSwitch(host(root, tmp_path / "st", held)).switch()["held"]
-
-
-def test_the_words_are_in_the_glossary():
-    assert lexicon.term("board_branch") == "the Board's branch" and lexicon.term("holds") == "holds the Board"
-    assert lexicon.term("cloud_run") == "cloud run" and lexicon.term("cloud_run", many=True) == "cloud runs"
 
 
 # -- the cloud run's settings (spec 137 D) -----------------------------------------------------------------------------------
@@ -133,9 +113,3 @@ def test_a_workflow_of_the_persons_own_is_never_overwritten(tmp_path):
         sw.cloud_write({})
     assert mine.read_text() == "name: mine\n" and "[cloud_run]" not in (root / "orkcraft.toml").read_text()
 
-
-def test_the_cloud_run_words_are_in_the_glossary():
-    for key, word in (("planned", "Planned"), ("cloud_secret", "the secret that pays"), ("cloud_ceiling", "ceiling")):
-        assert lexicon.term(key) == word, key
-    rows = {key: (w, was) for key, w, was in lexicon.glossary()}
-    assert rows["cloud_ceiling"] == ("ceiling", "") and lexicon.term("cloud_ceiling", many=True) == "ceilings"

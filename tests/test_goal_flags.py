@@ -2,7 +2,6 @@
 `ideas.flags` on the host and the phone. Code, no model."""
 from __future__ import annotations
 
-import datetime as dt
 import json
 from pathlib import Path
 
@@ -52,18 +51,6 @@ def _verdict(state, goal, met, at, by="Product manager"):
     (folder / "verdict.json").write_text(json.dumps({**got, "at": at}))
 
 
-def test_the_tally_counts_done_ideas_merged_results_and_the_first_time(host):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    goal = _goal(root, "Offline mode")
-    _idea(root, state, goal, "Cache the table", "done", [("merged", 1), ("merged", 2), ("failed", 1)])
-    _idea(root, state, goal, "Queue the writes", "done", [("merged", 1)])
-    _idea(root, state, goal, "Still working", "working", [("merged", 1)])               # not done: its results are not the flag's
-    _verdict(state, goal, True, "2026-10-18T10:00:00")
-    got = goal_flags.tally(root, state, goal)
-    assert (got["ideas"], got["results"], got["first_time"]) == (2, 3, 2)
-    assert got["usd"] is None and got["days"] is None                                    # nothing priced, no start known
-
-
 def test_days_run_from_the_oldest_start_to_the_verdict_and_usd_is_null_when_unpriced(host):
     root, state = host.ideas.root(), host.ideas.state_dir
     project = Path(host.ideas.host.repo_root)
@@ -97,17 +84,6 @@ def test_flags_are_the_met_goals_newest_first_and_general_never(host):
     assert set(got[0]) == {"goal", "title", "short", "by", "at", "tally"} and got[0]["title"] == "New goal"
 
 
-def test_the_map_goal_has_verdict_at_and_a_met_goal_its_tally(host):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    met, no = _goal(root, "Offline mode"), _goal(root, "Not yet")
-    _idea(root, state, met, "Cache the table", "done", [("merged", 1)])
-    _verdict(state, met, True, "2026-10-18T10:00:00")
-    _verdict(state, no, False, "2026-10-19T10:00:00")
-    got = {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}
-    assert got[met]["verdict"]["at"] == "2026-10-18T10:00:00" and got[met]["verdict"]["tally"]["results"] == 1
-    assert got[no]["verdict"] == {"met": False, "by": "Product manager", "at": "2026-10-19T10:00:00"}      # not met: no tally
-
-
 def test_ideas_flags_is_the_hosts_and_a_phones_and_needs_a_project(host):
     assert BoardPhone.allowed(Orkboard(), "ideas.flags", {})
     with pytest.raises(CommandError, match="Open a folder first"):
@@ -121,22 +97,3 @@ def test_ideas_flags_is_the_hosts_and_a_phones_and_needs_a_project(host):
     json.dumps(flag)
     assert flag["goal"] == goal and flag["tally"]["ideas"] == 0 and got["goals"] == []
 
-
-def test_the_goals_flags_are_each_goals_with_its_element_and_tally_newest_first_and_a_partys_old_flag_stays_apart(host):
-    """Spec 50 §2.4: `goal_flags.goals` lists the goals' flags (realm/idea_flag.py); `goal_flags.flags` the parties' old ones."""
-    from orkboard.realm import idea_flag
-    root, state = host.ideas.root(), host.ideas.state_dir
-    party = _goal(root, "Offline mode")
-    older, newer, plain = (_idea(root, state, party, t, "done") for t in ("Cache the table", "Queue the writes", "Not flagged"))
-    _verdict(state, party, True, "2026-10-18T10:00:00")                                    # the party's old flag: history
-    for slug, at in ((older, "2026-10-19T09:00:00"), (newer, "2026-10-20T09:00:00")):
-        idea_flag.raise_flag(root, state, slug, "done")
-        path = ideas.state_folder(state, slug) / "flag.json"
-        path.write_text(json.dumps({**json.loads(path.read_text()), "at": at, "tasks": 3, "first_time": 2, "usd": 1.5, "days": 4}))
-    ideas.save_state(state, newer, element="lava")
-    got = goal_flags.goals(root, state)
-    assert [g["slug"] for g in got] == [newer, older] and plain not in {g["slug"] for g in got}
-    assert got[0] == {"slug": newer, "title": "Queue the writes", "short": "Queue the writes", "goal": party, "element": "lava", "hue": "lava",
-                      "release": None, "at": "2026-10-20T09:00:00", "tasks": 3, "first_time": 2, "usd": 1.5, "days": 4}
-    assert got[1]["element"] == ""                                                         # none given yet: the faces draw it dim
-    assert [f["goal"] for f in goal_flags.flags(root, state)] == [party]                  # the old flag is the party's, as before

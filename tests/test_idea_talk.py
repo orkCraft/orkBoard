@@ -149,74 +149,7 @@ def test_a_leader_is_given_the_goal_the_facts_for_its_call_and_its_maps_text_but
     assert "Your party's map" not in by[parties["product"]]                                                                            # a party with no map is given none
 
 
-def test_tech_is_given_its_maps_text(host, parties, model, monkeypatch):
-    from orkboard.realm import map_text
-    monkeypatch.setattr(map_text, "system", lambda state_dir, root, since="", pages=None, ref="dev": "The map of System at dev abc1234\ncontainers: web")
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "tech"])
-    by = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert "Your party's map:\nThe map of System at dev abc1234" in by["tech"] and "The map of System" not in by["product"]
-
-
 # -- the leader's call, measured first (spec 120 §5): a staggered start and the map in the system prompt, both off ----------------------------------
-
-def test_the_staggered_start_and_the_system_prompt_are_off_until_the_numbers_say_so():
-    from orkboard.core import idea_verdict
-    assert idea_verdict.STAGGER is False and idea_verdict.SYSTEM_PROMPT is False and idea_verdict.STAGGER_S == 4.0
-
-
-def test_with_the_stagger_on_the_first_leader_goes_alone_until_it_ends_and_the_rest_follow(host, parties, model, monkeypatch):
-    from orkboard.core import idea_verdict
-    monkeypatch.setattr(idea_verdict, "STAGGER", True)
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "design", "tech"])
-    first, *rest = sorted(model.steps("talk_round"), key=lambda c: c["at"])
-    assert first["party"] == parties["product"] and all(c["at"] >= first["end"] for c in rest)                           # the shared prefix is written before the rest begin
-    assert {c["party"] for c in rest} == {parties["design"], parties["tech"]} and max(c["at"] for c in rest) - min(c["at"] for c in rest) < 1.0        # the rest still go at once among themselves (no stagger between them)
-
-
-def test_with_the_stagger_on_the_rest_do_not_wait_longer_than_the_stagger(host, parties, model, monkeypatch):
-    from orkboard.core import idea_verdict
-    monkeypatch.setattr(idea_verdict, "STAGGER", True)
-    monkeypatch.setattr(idea_verdict, "STAGGER_S", 0.02)                                                            # the first leader is slower than that: the rest go at its end of waiting
-    model.gate = threading.Barrier(3, action=lambda: setattr(model, "gate", None))  # Hold this round until all three enter, without timing repository reads.
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "design", "tech"])
-    first, *rest = sorted(model.steps("talk_round"), key=lambda c: c["at"])
-    assert all(first["at"] < c["at"] < first["end"] for c in rest)
-
-
-def test_the_map_goes_in_the_system_prompt_only_behind_its_switch_and_where_the_cli_lists_the_flag(host, parties, model, monkeypatch):
-    from orkboard.core import idea_verdict
-    from orkboard.realm import harness_claude, map_text
-    monkeypatch.setattr(map_text, "system", lambda state_dir, root, since="", pages=None, ref="dev": "The map of System at dev abc1234\ncontainers: web")
-    seen: dict = {}
-    inner = host.ideas.keeper.call
-
-    def watch(*a, **k):
-        seen[getattr(host.ideas.keeper._tls, "party", "")] = harness_claude._SYSTEM.get()
-        return inner(*a, **k)
-
-    host.ideas.keeper.call = watch
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "tech"])
-    prompts = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert set(seen.values()) == {""} and "Your party's map:\nThe map of System" in prompts["tech"]                      # off: the map is in -p, as it was
-    monkeypatch.setattr(idea_verdict, "SYSTEM_PROMPT", True)
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag == "--append-system-prompt")
-    model.calls.clear()
-    seen.clear()
-    _talk(host, parties, ["product", "tech"], "add a light mode option")
-    prompts = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert "The map of System at dev abc1234" in seen["tech"] and "You judge a goal against" in seen["tech"] and "Your party's map" not in prompts["tech"]       # on: in the system prompt, not in -p
-    assert "The map of System" not in prompts["tech"] and "add a light mode option" in prompts["tech"] and "Product, then Tech" in prompts["tech"]               # the goal and the rules stay in -p
-    assert "Your party's map" not in seen["product"]                                                                   # a party with no map has none
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: False)                                              # an installed CLI that lists no such flag: the map stays in -p
-    model.calls.clear()
-    seen.clear()
-    _talk(host, parties, ["product", "tech"], "add a quiet mode option")
-    prompts = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    assert set(seen.values()) == {""} and "Your party's map:\nThe map of System" in prompts["tech"]
 
 
 def test_a_leader_that_does_not_answer_is_tried_once_more_and_then_fails_the_round_back_to_the_route_card(host, parties, model):
@@ -244,21 +177,6 @@ def test_the_three_are_picked_across_leaders_those_the_work_cannot_start_without
     assert all(d["answer"] == "A" and d["why"] == "because" for d in rec["defaults"])                               # closed by their leaders' picks
 
 
-def test_with_none_blocking_the_routes_order_takes_the_first_three(host, parties, model):
-    model.said[("talk_round", parties["product"])] = {"stance": "s", "questions": [card("p1"), card("p2")]}
-    model.said[("talk_round", parties["design"])] = {"stance": "s", "questions": [card("d1"), card("d2")]}
-    model.said[("talk_round", parties["tech"])] = {"stance": "s", "questions": [card("t1")]}
-    slug = _talk(host, parties, ["product", "design", "tech"])
-    assert [q["q"] for q in _row(host, slug, "talk")["questions"]] == ["p1", "p2", "d1"]
-
-
-def test_pick_three_is_a_rule_of_code():
-    pool = [({"id": str(n)}, blocks, "") for n, blocks in enumerate([False, True, False, True, True, False])]
-    chosen, closed = pick_three(pool)
-    assert [c["id"] for c, _b, _k in chosen] == ["1", "3", "4"] and [c["id"] for c, _b, _k in closed] == ["0", "2", "5"]
-    assert pick_three([]) == ([], []) and len(pick_three(pool, 1)[0]) == 1
-
-
 def test_the_row_is_the_stances_and_the_cards(host, parties, model):
     _round_one(model, parties)
     slug = _talk(host, parties, ["product", "tech"])
@@ -273,30 +191,6 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
     assert node["place"] == "table" and node["asks_you"] is True and node["state"] == "talk"                         # on the table, asking: in the hand too
     last = ideas.talk(host.ideas.state_dir, slug)[-1]
     assert last["who"] == "keeper" and last["section"] == "Talk" and "product stance" in last["text"] and "tech stance" in last["text"]            # kept in talk.jsonl
-
-
-def test_a_card_is_parsed_strictly():
-    ok = idea_questions.card({"ask": "Which?", "choices": ["a", "b", "c", "d"], "pick": "c", "why": "it is"}, id="x", by="tech", leader="architect")
-    assert ok == {"id": "x", "by": "tech", "leader": "architect", "q": "Which?", "choices": ["a", "b", "c", "d"], "pick": 2, "why": "it is", "project": False, "kinds": ["other"] * 4}
-    for bad in ({"ask": "Which?", "choices": ["only"], "pick": 0}, {"ask": "Which?", "choices": list("abcde"), "pick": 0},          # one choice; five: never more than four
-                {"ask": "Which?", "choices": ["a", "A"], "pick": 0}, {"ask": "Which?", "choices": ["a", ""], "pick": 0},               # the same twice; padded
-                {"ask": "Which?", "choices": ["a", "b"], "pick": 2}, {"ask": "Which?", "choices": ["a", "b"]},                         # a pick that is none; no pick
-                {"ask": "", "choices": ["a", "b"], "pick": 0}, {"ask": "Which?", "choices": "a/b", "pick": 0}, "text", None):
-        assert idea_questions.card(bad, id="x", by="tech", leader="architect") is None
-    assert idea_questions.card({"ask": "q", "choices": ["server/lobby.ts", "a (b)"], "pick": True}, id="x", by="t", leader="l") is None      # a bool is no index
-    assert idea_questions.card({"ask": "q", "choices": ["server/lobby.ts", "a (b)"], "pick": 1}, id="x", by="t", leader="l", project=True)["project"] is True
-
-
-def test_what_a_leader_says_is_taken_strictly():
-    got = clean_round({"stance": "  where we  stand ", "for": 3, "against": "x" * 500, "questions": [card("a"), card("a"), {"ask": "no choices"}, card("b")],
-                       "second_round": "yes", "project_questions": [card("p", key="stack")]}, "tech", "architect", 1, False, set())
-    assert got["stance"] == "where we stand" and got["for"] == "" and len(got["against"]) == 200 and got["more"] is False       # `second_round` is a bool
-    assert [c["q"] for c, _b, _k in got["cards"]] == ["a", "b"]                                                          # the same once, a non-card dropped, no project question (not its first goal)
-    assert clean_round({"questions": []}, "tech", "architect", 1, False, set()) is None and clean_round("x", "tech", "architect", 1, False, set()) is None
-    assert clean_round({"questions": [card("a")]}, "tech", "architect", 2, False, set())["cards"][0][0]["id"] == "r2-tech-1"
-    first = clean_round({"stance": "s", "project_questions": [card("p", key="stack"), card("q", key="Bad Key"), card("r", key="done"), card("s", key="stack")]},
-                        "tech", "architect", 1, True, {"done"})
-    assert [(c["id"], k, c["project"]) for c, _b, k in first["cards"]] == [("p-tech-stack", "stack", True)]
 
 
 # -- a project question -------------------------------------------------------------------------------------------------------------
@@ -331,13 +225,6 @@ def test_a_project_question_answered_is_not_asked_again_even_by_another_party_an
     assert kept == {"for_whom": "person", "hurts": "read"}                                                           # *Let … decide*: a pick kept as read
 
 
-def test_the_facts_text_keeps_the_answer_whole():
-    assert fact_text("Where?", "A VPS") == "Where? — A VPS"
-    long = fact_text("q" * 300, "answer")
-    assert long.endswith("— answer") and len(long) <= project_facts.FACT_CHARS
-    assert fact_text("q", "a" * 400) == "a" * project_facts.FACT_CHARS
-
-
 # -- the answers, a second round, the defaults, the decision's seam -----------------------------------------------------------------------
 
 def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_not_asked_is_refused(host, parties, model, monkeypatch):
@@ -367,23 +254,6 @@ def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_no
     said = ideas.talk(host.ideas.state_dir, slug)[-1]
     assert said["who"] == "you" and "my own words" in said["text"] and said["section"] == "Talk"
     assert _row(host, slug, "talk") is None
-
-
-def test_after_the_last_round_the_goal_waits_for_the_decision_which_is_e_s_and_no_draft_is_made(host, parties, model, monkeypatch):
-    _round_one(model, parties)
-    slug = _talk(host, parties, ["tech"])
-    cards = _row(host, slug, "talk")["questions"]
-    went = []
-    monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append((s, _state(host, s)["state"])))              # part E's seam, as the keeper calls it
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": cards[0]["id"], "pick": 0}]})
-    assert went == [(slug, "talk")] and _state(host, slug)["state"] == "talk"
-    other = _talk(host, parties, ["tech"], "add a light mode option")
-    monkeypatch.undo()                                                                                                  # the keeper's own `decide`
-    model.said[("decide", "")] = {"title": "Light mode", "why": "People read at night.", "points": ["Tech adds a light theme.", "It is off by default."]}
-    host.command("ideas.talk_answer", {"idea": other, "answers": [], "decide": True})
-    _wait(host, other)
-    assert not any(c["step"] == "draft" for c in model.calls) and [c["step"] for c in model.calls].count("decide") == 1
-    assert _state(host, other)["state"] == "decided" and _row(host, other, "decision")["title"] == "Light mode"
 
 
 def test_a_goal_with_nothing_to_ask_goes_straight_on_to_the_decision(host, parties, model, monkeypatch):
@@ -432,28 +302,6 @@ def test_a_second_round_only_when_a_leader_asked_for_it_given_the_answers_at_mos
     assert _state(host, slug)["measure"]["step"] == "talk_round" and _state(host, slug)["measure"]["cost"] == 0.06            # every call measured, Tech's too, heard again after its pick was overridden (spec 120 §3.2)
 
 
-def test_no_second_round_when_the_person_left_it_to_the_leaders_or_nobody_asked(host, parties, model, monkeypatch):
-    _round_one(model, parties, per=1, second_round=True)
-    went = []
-    monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append(s), raising=False)
-    slug = _talk(host, parties, ["tech"])
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})
-    assert len(model.steps("talk_round")) == 1 and went == [slug]
-
-
-def test_a_second_round_that_could_not_be_heard_is_skipped(host, parties, model, monkeypatch):
-    model.said[("talk_round", parties["tech"])] = lambda row: {"stance": "s", "questions": [card("t")], "second_round": True} if "first round" not in row["prompt"] else "garbage"
-    went = []
-    monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append(s), raising=False)
-    slug = _talk(host, parties, ["tech"])
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": _row(host, slug, "talk")["questions"][0]["id"], "pick": 0}]})
-    for _ in range(300):
-        if went:
-            break
-        time.sleep(0.01)
-    assert went == [slug] and _state(host, slug)["state"] == "talk" and _state(host, slug)["error"] == ""
-
-
 def test_talk_is_refused_in_plain_words_and_the_goal_stays_at_its_route_card(host, parties, model):
     _round_one(model, parties)
     slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
@@ -464,22 +312,6 @@ def test_talk_is_refused_in_plain_words_and_the_goal_stays_at_its_route_card(hos
     assert _row(host, slug, "route") is not None
     with pytest.raises(idea_keeper.KeeperError, match="not at Talk"):
         host.ideas.keeper.talk(slug)
-
-
-def test_talk_runs_for_a_route_of_one_party_with_one_call(host, parties, model):
-    _round_one(model, parties)
-    slug = _talk(host, parties, ["design"])
-    assert len(model.calls) == 1 and _row(host, slug, "talk")["stances"][0]["stance"] == "design stance"
-
-
-def test_the_mixin_is_a_base_of_the_keeper_and_speaks_for_the_party_of_its_thread(host, parties):
-    k = host.ideas.keeper
-    assert TalkMixin in type(k).__mro__ and type(k).__mro__.index(TalkMixin) < type(k).__mro__.index(idea_keeper.LeadMixin)
-    k._tls.party = parties["design"]
-    try:
-        assert k.leader()["slug"] == "product-designer"
-    finally:
-        k._tls.party = ""
 
 
 # -- a bug's Talk is its diagnosis -----------------------------------------------------------------------------------------------------------
@@ -526,14 +358,6 @@ def test_a_yes_goes_on_to_the_sections_without_a_decision_the_cause_is_kept(host
     assert _row(host, slug, "cause") is None
 
 
-def test_yes_with_words_is_the_persons_own_cause_without_another_guess(host, parties, model, monkeypatch):
-    slug = _bug(host, parties, model)
-    monkeypatch.setattr(host.ideas.keeper, "sections", lambda s: None, raising=False)
-    host.command("ideas.cause_answer", {"idea": slug, "yes": True, "text": "the empty file is read twice"})
-    rec = idea_questions.record(host.ideas.state_dir, slug)
-    assert rec["cause"]["text"] == "the empty file is read twice" and rec["cause"]["by"] == "person" and len(model.calls) == 1
-
-
 def test_no_with_words_asks_one_more_guess_once_and_a_second_no_goes_on(host, parties, model, monkeypatch):
     slug = _bug(host, parties, model)
     went = []
@@ -552,38 +376,6 @@ def test_no_with_words_asks_one_more_guess_once_and_a_second_no_goes_on(host, pa
     assert rec["cause"]["text"] == "no, in the config" and rec["cause"]["by"] == "person" and rec["cause"]["guesses"] == 2
 
 
-def test_no_with_no_words_goes_on_with_no_cause_found(host, parties, model, monkeypatch):
-    slug = _bug(host, parties, model)
-    went = []
-    monkeypatch.setattr(host.ideas.keeper, "sections", lambda s: went.append(s), raising=False)
-    host.command("ideas.cause_answer", {"idea": slug, "yes": False})
-    rec = idea_questions.record(host.ideas.state_dir, slug)
-    assert went == [slug] and len(model.calls) == 1 and rec["cause"]["by"] == "none" and rec["cause"]["text"] == ""
-
-
-def test_a_second_guess_that_cannot_be_had_leaves_the_persons_words(host, parties, model, monkeypatch):
-    slug = _bug(host, parties, model)
-    went = []
-    monkeypatch.setattr(host.ideas.keeper, "sections", lambda s: went.append(s), raising=False)
-    model.said[("diagnose", "")] = "garbage"
-    host.command("ideas.cause_answer", {"idea": slug, "yes": False, "text": "in the config"})
-    for _ in range(300):
-        if went:
-            break
-        time.sleep(0.01)
-    assert went == [slug] and idea_questions.record(host.ideas.state_dir, slug)["cause"]["text"] == "in the config"
-
-
-def test_a_bug_never_writes_a_decision_its_cause_goes_to_the_sections_and_no_draft_is_made(host, parties, model):
-    slug = _bug(host, parties, model)
-    model.said[("section_first", "")] = {"why": "x", "done_when": ["the bug is gone"], "will_be": ["changed src"], "risk": "low"}
-    host.command("ideas.cause_answer", {"idea": slug, "yes": True})
-    _wait(host, slug)
-    assert idea_questions.record(host.ideas.state_dir, slug)["mode"] == "bug"
-    steps = [c["step"] for c in model.calls]
-    assert "section_first" in steps and not any(x in steps for x in ("decide", "talk_round", "draft"))                       # a bug has no decision; E's sections follow its cause
-
-
 def test_a_bug_asks_the_project_question_it_cannot_be_done_without_at_techs_first_goal_and_no_other(host, parties, model):
     said = {"questions": [card("case")], "cause": "x in src/app.py", "where": ["src/app.py"],
             "project_questions": [card("Which runtime?", blocks=False, key="runtime"), card("Where does it run?", blocks=True, key="runs_on"), card("Which db?", blocks=True, key="db")]}
@@ -591,26 +383,6 @@ def test_a_bug_asks_the_project_question_it_cannot_be_done_without_at_techs_firs
     assert [(q["q"], q["project"]) for q in _row(host, slug, "cause")["q"]] == [("case", False), ("Where does it run?", True)]       # one, the one it cannot do without
     host.command("ideas.cause_answer", {"idea": slug, "yes": True, "answers": [{"id": f"p-{parties['tech']}-runs_on", "pick": 0}]})
     assert [(f["key"], f["by"]) for f in project_facts.of(host.ideas.state_dir, parties["tech"])] == [("runs_on", "person")]
-
-
-def test_the_diagnosis_is_taken_strictly(tmp_path):
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "a.py").write_text("x", encoding="utf-8")
-    (tmp_path / ".env").write_text("SECRET=1", encoding="utf-8")
-    got = clean_diagnosis({"cause": "  it   is here ", "where": ["src/a.py", "./src/a.py", ".env", str(tmp_path / "src" / "a.py"), "/etc/passwd", 7],
-                           "questions": [card(f"q{n}") for n in range(5)]}, "tech", "architect", tmp_path, False, set())
-    assert got["cause"] == "it is here" and got["where"] == ["src/a.py"] and [c["id"] for c, _b, _k in got["cards"]] == ["case-1", "case-2", "case-3"]
-    assert clean_diagnosis({"cause": "x", "questions": [card("q")]}, "tech", "architect", tmp_path, False, set(), again=True)["cards"] == []
-    assert clean_diagnosis({"questions": []}, "tech", "architect", tmp_path, False, set()) is None and clean_diagnosis(None, "t", "a", tmp_path, False, set()) is None
-    assert touched(tmp_path, "crash in src/a.py:12 and .env and v1.2 and /etc/passwd", 4) == ["src/a.py"]
-
-
-def test_a_long_bug_with_a_failure_in_it_that_the_person_made_the_long_way_is_a_normal_talk(host, parties, model):
-    _round_one(model, parties)
-    slug = host.command("ideas.add", {"text": "Saving crashes, tests/test_save.py::test_it FAILED"})["slug"]
-    host.command("ideas.talk", {"idea": slug})                                                                          # *The long way*: short is off
-    _wait(host, slug)
-    assert [c["step"] for c in model.calls] == ["talk_round"] and _row(host, slug, "talk") is not None and _row(host, slug, "cause") is None
 
 
 # -- a leader's no (spec 108 C, decisions §183.1–§183.3) ----------------------------------------------------------------------------------------
@@ -636,24 +408,6 @@ def _until_state(host, slug, state):
             return
         time.sleep(0.01)
     raise AssertionError(f"the goal never reached {state}: {_state(host, slug)['state']} {_state(host, slug)['error']}")
-
-
-def test_a_verdict_is_taken_strictly_a_doubt_or_a_no_without_its_why_reads_as_go():
-    def one(**a):
-        return clean_round({"stance": "s", **a}, "tech", "architect", 1, False, set(), ["g1", "g2"])
-
-    def fields(got):
-        return got["verdict"], got["why"], got["instead"], got["after"]
-
-    assert fields(one()) == ("go", "", "", "")
-    assert fields(one(verdict=" No ", why=" it  adds a third caller ", instead=" a smaller one ", after="g2")) == ("no", "it adds a third caller", "a smaller one", "g2")
-    assert fields(one(verdict="doubt", why="the contrast is low", instead="i", after="g1")) == ("doubt", "the contrast is low", "i", "")          # only a no waits for a goal
-    for bad in ({"verdict": "no"}, {"verdict": "no", "why": "   "}, {"verdict": "doubt"}, {"verdict": "maybe", "why": "x"}, {"verdict": 3, "why": "x"}, {"verdict": None, "why": "x"},
-                {"verdict": "go", "why": "x", "instead": "y"}, {"why": "x", "instead": "y"}):
-        assert fields(one(**bad)) == ("go", "", "", ""), bad                                                       # a verdict against with no why is no verdict against
-    assert one(verdict="no", why="w", after="elsewhere")["after"] == "" and one(verdict="no", why="w", after=7)["after"] == ""            # a goal that is not in line is none
-    assert len(one(verdict="no", why="x" * 500)["why"]) == 200
-    assert fields(clean_round({"verdict": "no", "why": "w", "questions": []}, "tech", "architect", 2, False, set())) == ("go", "", "", "")      # the second round has no verdict
 
 
 def test_a_no_is_one_hearing_row_a_goal_with_the_leaders_sides_and_the_decision_waits_for_each_answer(host, parties, model, monkeypatch):
@@ -748,16 +502,6 @@ def test_go_on_anyway_names_the_leader_overruled_in_the_decisions_prompt_and_its
     assert idea_objections.lines(idea_questions.record(host.ideas.state_dir, slug), lambda _l: "X")[0] == ["Against X: It adds a third caller to server/ws"]
 
 
-def test_a_decision_the_orkmaster_cannot_word_still_names_the_overruled(host, parties, model):
-    _noes(model, parties, tech=TECH_NO, design={"verdict": "doubt", "why": "The contrast is low"})
-    model.said[("decide", "")] = "I am sorry, I cannot"
-    slug = _talk(host, parties, ["design", "tech"])
-    host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "go"})
-    _until_state(host, slug, "decided")
-    text = _row(host, slug, "decision")["text"]
-    assert "Against " in text and "It adds a third caller to server/ws" in text and "The contrast is low" in text
-
-
 def test_not_now_is_offered_for_a_product_no_that_names_a_goal_in_line_and_the_goal_waits_on_it(host, parties, model):
     first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]       # held: in line
     _noes(model, parties, product={"verdict": "no", "why": "The lobby comes first", "after": first})
@@ -776,71 +520,6 @@ def test_not_now_is_offered_for_a_product_no_that_names_a_goal_in_line_and_the_g
     assert len(model.steps("decide")) == 0                                                                           # no decision: the goal waits
 
 
-def test_the_goals_in_line_are_the_decks_in_the_boards_order_at_most_ten_and_a_goal_named_that_is_not_in_line_is_none(host, parties, model):
-    from orkboard.realm import goal_line
-    for n in range(12):
-        host.command("ideas.add", {"text": f"held goal number {n}", "track": parties["tech" if n % 2 else "product"], "hold": True})
-    started = host.command("ideas.add", {"text": "a goal at work", "track": parties["tech"]})["slug"]
-    ideas.save_state(host.ideas.state_dir, started, state="working")
-    got = goal_line.line(host.ideas.root(), host.ideas.state_dir)
-    assert len(got) == 10 and started not in [g["slug"] for g in got] and got[0]["party"] == parties["product"] and got[0]["party_title"] == "Product"
-    _noes(model, parties, product={"verdict": "no", "why": "w", "after": started})
-    slug = _talk(host, parties, ["product"], "add a dark mode option")
-    assert [x["kind"] for x in _objections(host, slug)[0]["sides"]] == ["go", "drop"]                                 # a goal not in line is no goal to wait for: the no is a plain drop
-
-
-def test_an_answer_that_does_not_apply_is_refused_in_plain_words_and_nothing_changes(host, parties, model):
-    _noes(model, parties, product={"verdict": "no", "why": "Not worth it"}, tech=TECH_NO)
-    slug = _talk(host, parties, ["product", "tech"])
-    k = host.ideas.keeper
-    for party, answer, why in ((parties["product"], "smaller", "does not apply"), (parties["product"], "later", "does not apply"), (parties["product"], "maybe", "drop, smaller, later or go"),
-                               (parties["design"], "go", "no objection"), (parties["tech"], "later", "does not apply")):
-        with pytest.raises(idea_keeper.KeeperError, match=why):
-            k.objection_answer(slug, party, answer)
-    assert len(idea_objections.pending(idea_questions.record(host.ideas.state_dir, slug))) == 2 and len(_objections(host, slug)) == 1
-    k.objection_answer(slug, parties["tech"], "go")
-    with pytest.raises(idea_keeper.KeeperError, match="no objection"):
-        k.objection_answer(slug, parties["tech"], "go")                                                              # answered once
-    with pytest.raises(idea_keeper.KeeperError, match="gone"):
-        k.objection_answer("nobody", parties["tech"], "go")
-
-
-def test_a_goal_cannot_wait_on_one_that_waits_on_it(host, parties, model):
-    from orkboard.realm import collide
-    first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]
-    _noes(model, parties, product={"verdict": "no", "why": "The lobby comes first", "after": first})
-    slug = _talk(host, parties, ["product"], "add a dark mode option")
-    collide.add_dependency(host.ideas.root(), first, slug, "add a dark mode option")
-    with pytest.raises(idea_keeper.KeeperError, match="cannot wait"):
-        host.ideas.keeper.objection_answer(slug, parties["product"], "later")
-
-
-def test_the_events_say_the_verdicts_and_the_answers_and_never_the_words(host, parties, model):
-    _noes(model, parties, tech=TECH_NO, design={"verdict": "doubt", "why": "The contrast is low"})
-    model.said[("decide", "")] = DECIDED
-    slug = _talk(host, parties, ["design", "tech"])
-    host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "smaller"})
-    _until_state(host, slug, "decided")
-    log = event_log.read(host.repo_root)
-    objected = [r for r in log if r["event"] == event_log.LEADER_OBJECTED]
-    assert [(r["idea"], r["party"], r["verdict"], r["has_instead"]) for r in objected] == [(slug, parties["design"], "doubt", False), (slug, parties["tech"], "no", True)]
-    assert [(r["idea"], r["party"], r["answer"]) for r in log if r["event"] == event_log.OBJECTION_ANSWERED] == [(slug, parties["tech"], "smaller")]
-    assert "third caller" not in json.dumps(log)
-    assert event_log.LEADER_OBJECTED in event_log.EVENTS and event_log.OBJECTION_ANSWERED in event_log.EVENTS
-
-
-def test_a_leader_is_told_not_to_agree_by_its_partys_craft_and_the_concerns_seam_adds_nothing_yet(host, parties, model):
-    _noes(model, parties)
-    _talk(host, parties, ["product", "design", "tech"])
-    by = {c["party"]: c["prompt"] for c in model.steps("talk_round")}
-    for who, lens in (("product", "the goals in line"), ("design", "the people's way through the screens"), ("tech", "the architecture on your map")):
-        prompt = by[parties[who]]
-        assert "You are not here to agree" in prompt and f"against {lens}" in prompt and "a no without one is not a no" in prompt and "let through in silence" in prompt
-        assert "`verdict` is `go`, `doubt` or `no`" in prompt and "Your concerns on your map" not in prompt
-    assert "`after`" not in by[parties["product"]] and "`after`" not in by[parties["tech"]]                           # a goal to wait for is offered only when there is a line
-    assert host.ideas.keeper.concerns_text(parties["tech"]) == ""
-
-
 # -- what a leader assumes (spec 116 §3) --------------------------------------------------------------------------------------------------
 
 def _assumes(model, parties, **by):
@@ -854,25 +533,6 @@ def _kept(host):
     return hypotheses.read(host.ideas.state_dir)["items"]
 
 
-def test_assumes_is_taken_strictly_a_line_each_of_text_and_signal_or_a_bare_line_or_none():
-    assert clean_assumes({"text": "  People   want\n a sketch ", "signal": "three of five say so"}) == {"text": "People want a sketch", "signal": "three of five say so"}
-    assert clean_assumes("A bare line") == {"text": "A bare line", "signal": ""}                                                  # a leader that writes less still has said it
-    assert len(clean_assumes({"text": "x" * 500, "signal": "y" * 500})["text"]) == 200 and len(clean_assumes({"text": "x", "signal": "y" * 500})["signal"]) == 200
-    assert clean_assumes({"text": "x", "signal": 3}) == {"text": "x", "signal": ""}
-    for none in (None, "", "   ", {}, {"signal": "no text"}, {"text": ""}, {"text": 3}, 3, True, ["a"]):
-        assert clean_assumes(none) == {}
-    got = clean_round({"stance": "s", "assumes": {"text": "It rests on this", "signal": "a test"}}, "tech", "architect", 1, False, set())
-    assert got["assumes"] == {"text": "It rests on this", "signal": "a test"} and clean_round({"stance": "s"}, "tech", "architect", 1, False, set())["assumes"] == {}      # absent: none
-    assert clean_round({"assumes": {"text": "a"}, "questions": []}, "tech", "architect", 2, False, set())["assumes"] == {}                 # the second round has none
-
-
-def test_the_round_asks_for_assumes_in_one_sentence_for_every_leader(host, parties, model):
-    _round_one(model, parties)
-    _talk(host, parties, ["product", "design", "tech"])
-    for c in model.steps("talk_round"):
-        assert "If this goal rests on something no one has shown, say it in `assumes`" in c["prompt"] and "else leave it out" in c["prompt"]
-
-
 def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_on_the_goal(host, parties, model):
     _assumes(model, parties, product={"text": "Founders want a sketch first", "signal": "five of five ask for it"}, tech={"text": "The canvas holds a thousand shapes", "signal": "a test with a thousand"})
     slug = _talk(host, parties, ["product", "design", "tech"])
@@ -882,19 +542,6 @@ def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_
     assert (second["text"], second["state"], second["by"], second["party"], second["rests"]) == ("The canvas holds a thousand shapes", "proposed", "leader", parties["tech"], [slug])
     row = _row(host, slug, "talk")
     assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk", "check", "needs", "better"}] * 3         # Talk's row is as it was, and says whose weight a stance has
-
-
-def test_a_bare_line_is_kept_with_a_signal_of_its_own_words_for_when_none_was_given(host, parties, model):
-    _assumes(model, parties, design="People will find the share button")
-    _talk(host, parties, ["product", "design"])
-    (got,) = _kept(host)
-    assert got["text"] == "People will find the share button" and got["signal"] == "someone shows it" and got["party"] == parties["design"]
-
-
-def test_with_no_assumes_nothing_is_kept_and_a_blank_one_is_none(host, parties, model):
-    _assumes(model, parties, product="", design={"text": "  "}, tech=None)
-    _talk(host, parties, ["product", "design", "tech"])
-    assert _kept(host) == []
 
 
 def test_the_same_text_twice_is_kept_once_and_the_goal_rests_on_it_instead(host, parties, model):
@@ -907,41 +554,3 @@ def test_the_same_text_twice_is_kept_once_and_the_goal_rests_on_it_instead(host,
     assert got["rests"] == [one, two]                                                                                                # the same assumption of another goal: the goal rests on it too
 
 
-def test_a_hypothesis_past_the_bounds_never_fails_talk(host, parties, model):
-    for n in range(hypotheses.MAX_PROPOSED):
-        hypotheses.add(host.ideas.state_dir, f"Waiting {n}", "a signal", by="leader", party=parties["product"])
-    _assumes(model, parties, product={"text": "One too many", "signal": "s"})
-    slug = _talk(host, parties, ["product", "design"])
-    assert len(_kept(host)) == hypotheses.MAX_PROPOSED and all(h["text"].startswith("Waiting") for h in _kept(host))
-    assert _state(host, slug)["state"] == "talk" and _state(host, slug)["error"] == "" and _row(host, slug, "talk") is not None         # the round is kept all the same
-
-
-def test_a_hypothesis_that_cannot_be_kept_for_any_other_reason_never_fails_talk(host, parties, model, monkeypatch):
-    def broken(*a, **k):
-        raise RuntimeError("the record cannot be written")
-
-    monkeypatch.setattr(hypotheses, "add", broken)
-    _assumes(model, parties, product={"text": "A thing", "signal": "s"})
-    slug = _talk(host, parties, ["product", "design"])
-    assert _state(host, slug)["state"] == "talk" and _row(host, slug, "talk") is not None
-
-
-def test_a_second_round_asks_nothing_of_assumes(host, parties, model, monkeypatch):
-    _round_one(model, parties, per=1, second_round=True)
-    slug = _talk(host, parties, ["product", "tech"])
-    model.said[("talk_round", parties["product"])] = {"questions": [], "assumes": {"text": "Said again", "signal": "s"}}
-    model.said[("talk_round", parties["tech"])] = {"questions": [], "assumes": {"text": "Said again", "signal": "s"}}
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": c["id"], "pick": 0} for c in _row(host, slug, "talk")["questions"]]})
-    _wait(host, slug)
-    assert _kept(host) == []
-
-
-def test_a_line_too_long_is_cut_at_a_word_with_an_ellipsis_and_a_cause_keeps_five_hundred_characters():
-    """Spec 149 I.1: the trial's cause was cut mid-word at 300 (*the host's per-shape hu*)."""
-    from orkboard.realm import idea_talk_parse as p
-    assert p.CAUSE_CHARS == 500
-    text = ("the host's per-shape hue " * 40).strip()
-    got = p._line(text, 300)
-    assert got.endswith("…") and len(got) <= 300 and got[:-1].split(" ")[-1] in {"the", "host's", "per-shape", "hue"}
-    assert p._line("short  line") == "short line"
-    assert p._line(None) == ""

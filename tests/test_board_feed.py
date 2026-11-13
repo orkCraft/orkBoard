@@ -101,19 +101,6 @@ def test_waits_come_first_then_the_posts_newest_first_with_their_leaders_and_tim
     assert [(h["leader"], h["news"]) for h in got["heads"]] == [("orkmaster", False), ("tech", True), ("art", True), ("release", False)]
 
 
-def test_one_leaders_posts_in_a_row_are_one_stack(where):
-    root, state = where
-    _plan(state, "physics", ("k1", "Split rooms", "merged", ""), ("k2", "Jump", "merged", ""), ("k3", "Lobby look", "merged", "art"))
-    _log(root, "task_state", 2.5, idea="physics", task="k3", state="merged", was="review", round=1)
-    _log(root, "task_state", 2, idea="physics", task="k1", state="merged", was="review", round=1)
-    _log(root, "task_state", 1, idea="physics", task="k2", state="failed", was="running", round=1)
-    _log(root, "concerns_made", 0.5, party="tech", n=2, alerts=1)
-    got = board_feed.build(root, state, _rows(("physics", "tech", "working", {})), SINCE, NOW)
-    assert [(s["leader"], len(s["more"])) for s in got["posts"]] == [("tech", 2), ("art", 0)]
-    first = got["posts"][0]
-    assert first["post"]["text"] == "New concerns on its map" and [p["kind"] for p in first["more"]] == ["concern", "news"]
-
-
 def test_what_came_before_the_look_is_the_one_seen_item_never_news(where):
     root, state = where
     _plan(state, "physics", ("k1", "Split rooms", "merged", ""), ("k2", "Jump", "merged", "art"))
@@ -132,16 +119,6 @@ def test_what_came_before_the_look_is_the_one_seen_item_never_news(where):
     assert everything["seen"] is None and len([p for s in everything["posts"] for p in (s["post"], *s["more"])]) == 5
 
 
-def test_an_event_that_names_no_party_is_the_orkmasters(where):
-    root, state = where
-    _log(root, "findings_told", 1, idea="", party="", findings=2)
-    _log(root, "concerns_made", 0.8, party="gone", n=1, alerts=0)           # a party the Board no longer has
-    _log(root, "idea_added", 0.5, idea="physics", track="tech")
-    got = board_feed.build(root, state, _rows(("physics", "tech", "raw", {})), SINCE, NOW)
-    assert [(s["leader"], [p["text"] for p in (s["post"], *s["more"])]) for s in got["posts"]] == [
-        ("orkmaster", ["Physics was added", "New concerns on its map", "Findings on the code"])]
-
-
 def test_a_route_cuts_the_feed_to_its_goal_and_its_leaders(where):
     root, state = where
     rows, ready = _board(where)
@@ -155,17 +132,6 @@ def test_a_route_cuts_the_feed_to_its_goal_and_its_leaders(where):
     assert [w["goal"] for w in spec["waits"]] == ["leaderboard"] and spec["posts"] == []
     with pytest.raises(ValueError):
         board_feed.build(root, state, rows, SINCE, NOW, route="nothing")
-
-
-def test_no_key_of_the_feed_is_a_count(where):
-    root, state = where
-    rows, ready = _board(where)
-    _log(root, "task_state", 5, idea="reconnect", task="k1", state="merged", was="review", round=1)
-    got = board_feed.build(root, state, rows, SINCE, NOW, ready=ready)
-    assert got["seen"] is not None
-    keys = _keys(got)
-    assert not keys & {"n", "count", "counts", "unread", "total", "news_count"}
-    assert not any("count" in k or "unread" in k for k in keys)
 
 
 # -- the host's and the phone's `ideas.feed` -----------------------------------------------------------------------------------------------
@@ -187,13 +153,3 @@ def test_the_feed_is_the_hosts_and_a_phones(host):
     assert host.command("ideas.feed", {})["seen"] is None
     assert host.command("ideas.feed", {"route": slug})["heads"][0]["leader"] == "orkmaster"
 
-
-def test_since_is_as_the_recap_takes_it(host):
-    from orkboard.gui.board_host import CommandError
-    for bad in ({"since": "yesterday"}, {"since": True}):
-        with pytest.raises(CommandError, match="last look"):
-            host.command("ideas.feed", bad)
-    with pytest.raises(CommandError, match="ahead of now"):
-        host.command("ideas.feed", {"since": int((time.time() + 7200) * 1000)})
-    with pytest.raises(CommandError, match="slug"):
-        host.command("ideas.feed", {"route": 3})

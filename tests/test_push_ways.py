@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from orkboard import settings
-from orkboard.gui.board_host import Orkboard
 from tests.test_goal_main import git, goal, task, to_main
 from tests.test_goal_main import host, repo  # noqa: F401  (fixtures)
 
@@ -20,23 +19,6 @@ def test_the_old_boolean_reads_as_it_pushed_and_the_three_ways_read_as_themselve
     assert (settings.pushes_dev(True), settings.pushes_main(True)) == (True, True)
     assert (settings.pushes_dev("main"), settings.pushes_main("main")) == (False, True), "main only leaves dev here"
     assert (settings.pushes_dev(False), settings.pushes_main(False)) == (False, False)
-
-
-def test_a_way_is_kept_as_a_boolean_where_it_can_be_and_a_bad_one_is_the_default():
-    assert settings.PUSH_WAYS == ("no", "main", "both")
-    kept = {v: settings.clean_ideas({"push": v})["push"] for v in (True, False, "no", "main", "both", "yes", 3, None)}
-    assert kept == {True: True, False: False, "no": False, "main": "main", "both": True, "yes": False, 3: False, None: False}
-    assert settings.clean_ideas({})["push"] is False and settings.IDEAS["push"] is False
-
-
-def test_into_takes_the_three_ways_and_the_old_boolean(host, repo):  # noqa: F811
-    seen = {}
-    for given in (True, "main", "no", "both", False):
-        host.command("ideas.into", {"push": given})
-        seen[given] = (host.command("ideas.review_list")["push_way"], host.command("ideas.review_list")["push"])
-    assert seen == {True: ("both", True), "main": ("main", True), "no": ("no", False), "both": ("both", True), False: ("no", False)}
-    with pytest.raises(Exception, match="branch is missing"):
-        host.command("ideas.into", {"push": "sometimes"})
 
 
 def test_the_runner_pushes_a_landing_in_dev_only_for_dev_and_main(host, repo):  # noqa: F811

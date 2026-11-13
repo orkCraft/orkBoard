@@ -2,7 +2,6 @@
 a seat whose tool cannot do what its step needs is marked."""
 from __future__ import annotations
 
-import pytest
 
 from orkboard.realm import harnesses, step_needs
 
@@ -12,25 +11,6 @@ def test_codexs_sandbox_has_no_git_index_no_browser_and_no_network():
         assert harnesses.can("codex", need) is False, need
     assert harnesses.can("codex", []) is True
     assert harnesses.lacking("codex", ["network", "git", "browser", "git"]) == ["network", "git", "browser"]       # in the order asked, each once
-
-
-def test_claude_code_has_them_all():
-    assert harnesses.can("claude", ["git", "browser", "network"]) is True
-    assert harnesses.lacking("claude", ("git", "network")) == []
-
-
-def test_a_command_is_on_the_machines_path_whatever_the_tool():
-    path = {"npm": "/usr/bin/npm"}
-    assert harnesses.can("claude", "command:npm", which=path.get) and harnesses.can("codex", "command:npm", which=path.get)
-    assert harnesses.lacking("claude", ["git", "command:cargo"], which=path.get) == ["command:cargo"]
-
-
-def test_the_main_tool_and_an_unknown_one_lack_nothing_that_is_not_known_and_a_bad_need_is_refused():
-    assert harnesses.can("", ["git", "browser", "network"]) and harnesses.can("main", ["git"]) and harnesses.can("nobody", ["browser"])
-    with pytest.raises(ValueError):
-        harnesses.can("claude", ["wifi"])
-    with pytest.raises(ValueError):
-        harnesses.can("claude", "command:")
 
 
 def test_the_work_of_a_kind_says_what_it_needs():

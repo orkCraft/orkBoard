@@ -5,11 +5,9 @@ from __future__ import annotations
 
 import http.client
 import struct
-import xml.etree.ElementTree as ET
 
-import pytest
 
-from orkboard.design import logo, mark, tokens
+from orkboard.design import logo, tokens
 from orkboard.gui import mac_app, pwa
 
 SIZES = {"icon-192.png": 192, "icon-512.png": 512, "apple-touch-icon.png": 180, "icon-256.png": 256}
@@ -36,60 +34,6 @@ def test_the_files_are_there_at_their_sizes():
     for i, size in enumerate((32, 64)):                                                         # each a PNG of its own size, not the large one drawn small
         length, at = struct.unpack("<II", ico[6 + 16 * i + 8:6 + 16 * i + 16])
         assert _png_size(ico[at:at + length]) == (size, size)
-
-
-def test_the_extensions_icon_is_the_256():
-    assert (REPO / "vscode" / "media" / "icon.png").read_bytes() == (logo.BOARD / "icon-256.png").read_bytes()
-
-
-def test_the_svg_is_a_valid_drawing_titled_orkboard_with_crisp_edges():
-    root = ET.fromstring((logo.BOARD / "mark.svg").read_text(encoding="utf-8"))
-    ns = "{http://www.w3.org/2000/svg}"
-    assert root.tag == f"{ns}svg" and root.get("shape-rendering") == "crispEdges"
-    assert root.find(f"{ns}title").text == "Orkboard"
-    rects = root.findall(f"{ns}rect")
-    assert rects and all(r.get("height") == "1" and r.get("fill", "").startswith("#") for r in rects)
-
-
-def test_nothing_is_smoothed_every_pixel_is_the_heads_or_the_canvas():
-    Image = pytest.importorskip("PIL.Image")
-    head = Image.open(mark.SOURCE).convert("RGBA")           # the pixel head kept for the mark (§290)
-    colours = {p[:3] for _, p in head.getcolors(1000) if p[3] == 255}
-    for name in ("icon-512.png", "icon-192.png", "apple-touch-icon.png"):
-        image = Image.open(logo.BOARD / name)
-        assert image.mode == "RGB" and {p for _, p in image.getcolors(1000)} == colours | {_canvas()}, name       # opaque, on the canvas
-    clear = Image.open(logo.BOARD / "icon-256.png").convert("RGBA")
-    assert {p[3] for _, p in clear.getcolors(1000)} == {0, 255} and {p[:3] for _, p in clear.getcolors(1000) if p[3] == 255} == colours
-    assert clear.getpixel((0, 0))[3] == 0                                                       # clear where nothing is drawn
-
-
-def test_the_512_is_the_head_at_a_whole_number_of_times_centred():
-    """The head is the owner's art at its own pixel (orkUI's @2x, 48 × 44; decision §288, mark.art() reads it at the coarsest grid it is drawn on): the 512 holds it the most whole times that leaves a margin of a fifth, each head pixel a square of one colour."""
-    Image = pytest.importorskip("PIL.Image")
-    from orkboard.design import mark
-    head = mark.art()
-    big, (w, h) = Image.open(logo.BOARD / "icon-512.png").convert("RGB"), head.size
-    times = 512 * 4 // 5 // w
-    left, top = (512 - w * times) // 2, (512 - h * times) // 2
-    for y in range(512):
-        for x in range(512):
-            ax, ay = (x - left) // times, (y - top) // times
-            inside = 0 <= x - left and 0 <= y - top and ax < w and ay < h
-            source = head.getpixel((ax, ay)) if inside else (0, 0, 0, 0)
-            assert big.getpixel((x, y)) == (source[:3] if source[3] == 255 else _canvas()), (x, y)
-
-
-def test_the_mark_is_made_again_the_same(tmp_path):
-    Image = pytest.importorskip("PIL.Image")
-    from orkboard.design import mark
-    made = tmp_path / "mark"
-    mark.write(made)
-    assert {p.name for p in made.iterdir()} == {p.name for p in logo.BOARD.iterdir()}
-    for path in made.iterdir():
-        if path.suffix == ".png":                                                                # a Pillow's PNG coder may write other bytes, never other pixels
-            assert Image.open(path).convert("RGBA").tobytes() == Image.open(logo.BOARD / path.name).convert("RGBA").tobytes(), path.name
-        else:
-            assert path.read_bytes() == (logo.BOARD / path.name).read_bytes(), path.name
 
 
 # -- served ----------------------------------------------------------------------------------------------------

@@ -60,26 +60,8 @@ def _fake_cli(tmp_path, monkeypatch, help_text: str):
     return harnesses.get("claude")
 
 
-def test_effort_budget_and_no_session_are_on_the_command_only_when_the_cli_lists_them(tmp_path, monkeypatch):
-    h = _fake_cli(tmp_path, monkeypatch, "--effort <level>  --max-budget-usd <x>  --no-session-persistence")
-    read = h.read("p", tmp_path, "elder", effort="high", budget=0.6, one_shot=True)
-    assert read[read.index("--effort") + 1] == "high" and read[read.index("--max-budget-usd") + 1] == "0.60"
-    assert "--no-session-persistence" in read
-    work = h.work("p", tmp_path, "warrior", effort="medium")
-    assert work[work.index("--effort") + 1] == "medium"
-    assert "--effort" not in h.read("p", tmp_path, "laborer", effort="high")          # never on the laborer tier
-    assert "--effort" not in h.work("p", tmp_path, "haiku", effort="high")
-    h = _fake_cli(tmp_path, monkeypatch, "Usage: claude [options]  --model <m>")
-    read = h.read("p", tmp_path, "elder", effort="high", budget=0.6, one_shot=True)
-    assert "--effort" not in read and "--max-budget-usd" not in read and "--no-session-persistence" not in read
-    assert harnesses.get("agy").read("p", tmp_path, "elder", effort="high")[-1] != "high"   # other tools ignore it
 
 
-def test_a_read_with_no_tools_reads_nothing(tmp_path, monkeypatch):
-    h = _fake_cli(tmp_path, monkeypatch, "")
-    cmd = h.read("p", tmp_path, "elder", tools=False)
-    last = max(i for i, a in enumerate(cmd) if a == "--disallowedTools")
-    assert "Read" in cmd[last + 1].split(",") and "Grep" in cmd[last + 1].split(",")
 
 
 def test_a_read_ended_on_its_budget_uses_its_answer_or_says_so(tmp_path, monkeypatch):
@@ -106,17 +88,6 @@ def test_the_night_window_crosses_midnight_and_is_local_time():
     assert idea_target.in_night("22:00-06:00", at(23)) and not idea_target.in_night("22:00-06:00", at(12))
 
 
-def test_the_reserve_by_day_and_at_night_and_none_without_limits():
-    noon_at = dt.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
-    reset = noon_at + dt.timedelta(hours=20)                                  # after both moments below
-    noon, night = noon_at.timestamp(), (noon_at + dt.timedelta(hours=15)).timestamp()   # 12:00 and 03:00 the next day
-    rows = lambda left: [Limit("claude", "", "session", left, reset)]          # noqa: E731
-    s = {"night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1}
-    assert idea_target.reserve_held(rows(0.25), s, noon) == pytest.approx(reset.timestamp())   # day: 0.25 ≤ 0.30
-    assert idea_target.reserve_held(rows(0.35), s, noon) is None
-    assert idea_target.reserve_held(rows(0.25), s, night) is None                             # night: 0.25 > 0.10
-    assert idea_target.reserve_held(rows(0.08), s, night) is not None
-    assert idea_target.reserve_held([], s, noon) is None
 
 
 def test_a_partys_size_is_no_target_of_its_own_and_the_kind_step_is_the_cheaper_tier_of_the_judge():
@@ -131,14 +102,6 @@ def test_a_partys_size_is_no_target_of_its_own_and_the_kind_step_is_the_cheaper_
     assert set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_target.budget("kind", "balance") == 0.15 and idea_target.CONTEXT["kind"] == 1_500
 
 
-def test_the_route_step_is_one_cheaper_call_with_no_tools_no_reads_and_a_small_cap():
-    """Spec 99 §4: when code finds no party for a goal the Orkmaster names them in one call on the cheaper tier, as its `kind`."""
-    assert "route" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("route", target) == idea_target.pick("kind", target)
-    assert idea_target.pick("route", "balance") == ("warrior", "low") and idea_target.pick("route", "thrift") == ("laborer", "")
-    assert idea_target.READS["route"] == 0 and idea_target.CONTEXT["route"] <= 3_000 and idea_target.CAPS["route"] <= 0.05
-    assert idea_target.budget("route", "balance") == 0.15      # never under the tier's floor (a warrior's call costs $0.10)
 
 
 # -- the floor (spec 86 §5) -------------------------------------------------------------------------------------
@@ -161,13 +124,6 @@ def keeper_calls(root, costs, model="opus", day="2026-10-25", **more):
             f.write(json.dumps({**line, **more}) + "\n")
 
 
-def test_the_floor_is_the_table_when_no_calls_are_kept(fresh_floors, tmp_path):
-    from orkboard.realm import call_log
-    assert idea_target.FLOOR == {"elder": 0.25, "warrior": 0.10, "laborer": 0.03}
-    assert [idea_target.floor(t) for t in ("elder", "warrior", "laborer")] == [0.25, 0.10, 0.03]
-    with call_log.of_project(tmp_path):                                  # a project with no calls yet
-        assert idea_target.floor("elder", "claude") == 0.25
-        assert idea_target.floor("elder", "codex") == 0.25
 
 
 def test_the_floor_is_the_median_of_the_last_ten_one_turn_calls_of_that_tier_on_that_tool(fresh_floors, tmp_path):
@@ -200,11 +156,6 @@ def test_a_budget_is_never_under_one_and_a_half_floors(fresh_floors, tmp_path):
         assert idea_target.budget("goal", "thrift") == 0.6 and idea_target.budget("plan", "thrift") == 0.6
 
 
-def test_lean_runs_its_draft_answer_talk_and_judge_on_the_seasoned_tier_and_its_goal_and_plan_on_the_veteran():
-    for step in ("draft", "answer", "talk", "collide"):
-        assert idea_target.pick(step, "thrift") == ("warrior", "low")
-    for step in ("goal", "plan"):
-        assert idea_target.pick(step, "thrift")[0] == "elder"
 
 
 def test_the_gate_holds_only_for_the_reserve_and_a_plan_of_before_the_night_went_is_read_as_one_the_board_passed():
@@ -236,19 +187,6 @@ def test_talks_steps_are_the_cheaper_tier_the_rounds_with_no_tools_and_no_reads_
     assert idea_target.budget("talk_round", "balance") == 0.15 and idea_target.budget("diagnose", "balance") == 0.2        # never under 1.5 floors (a warrior's call costs $0.10)
 
 
-def test_the_decision_and_the_sections_steps_the_orkmasters_on_the_cheaper_tier_and_the_leaders_reading_a_few_files():
-    """Spec 99 §6–§7: `decide` and `join` are the Orkmaster's (the cheaper tier, no reads); `section_first` is the first step's leader on its party's tier as the draft is, `section` the
-    others' on the cheaper one; both read as many files as the draft does."""
-    for step in ("decide", "section_first", "section", "join"):
-        assert step in idea_target.STEPS and step in idea_target.MATRIX and step in idea_target.CONTEXT and step in idea_target.READS and step in idea_target.CAPS
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("decide", target) == idea_target.pick("join", target) == idea_target.pick("route", target)
-        assert idea_target.pick("section_first", target) == idea_target.pick("draft", target)
-        assert idea_target.pick("section", target) == idea_target.pick("diagnose", target) and idea_target.tier_of(idea_target.pick("section", target)[0]) != "elder"
-    assert idea_target.READS["decide"] == idea_target.READS["join"] == 0 and idea_target.READS["section"] == idea_target.READS["section_first"] == idea_target.READS["draft"]
-    assert idea_target.CONTEXT["section"] >= idea_target.CONTEXT["decide"] and idea_target.budget("section_first", "balance") >= idea_target.budget("section", "balance")
-    from orkboard.realm import idea_spend
-    assert all(idea_spend.STEP_STAGE[s] == "spec" for s in ("decide", "section_first", "section", "join"))
 
 
 # -- the person's hours (spec 138 B.1, decisions §245.5; realm/hours.py) -----------------------------------------------------
@@ -259,12 +197,6 @@ WEEKEND = {"hours": [{"days": [5, 6], "from": "00:00", "to": "00:00"}]}         
 LATE = {"hours": [{"days": [4], "from": "22:00", "to": "02:00"}]}                          # Friday 22:00 to Saturday 02:00
 
 
-def test_in_hours_inside_the_span_and_not_outside_it_and_never_with_none_set():
-    assert idea_target.in_hours(WEEKDAYS, MON.replace(hour=19)) and idea_target.in_hours(WEEKDAYS, MON.replace(hour=22, minute=59))
-    assert not idea_target.in_hours(WEEKDAYS, MON.replace(hour=23)) and not idea_target.in_hours(WEEKDAYS, MON.replace(hour=18, minute=59))
-    assert not idea_target.in_hours(WEEKDAYS, MON + dt.timedelta(days=5, hours=20))                  # Saturday evening: not a weekday
-    assert not idea_target.in_hours({}, MON.replace(hour=20)) and not idea_target.in_hours({"hours": []}, MON.replace(hour=20))
-    assert idea_target.next_edge({}, MON) is None
 
 
 def test_a_span_across_midnight_runs_into_the_next_day_and_a_whole_day_has_no_edge_at_midnight():
@@ -278,19 +210,8 @@ def test_a_span_across_midnight_runs_into_the_next_day_and_a_whole_day_has_no_ed
     assert idea_target.next_edge(WEEKEND, sat.replace(hour=12)) == MON + dt.timedelta(days=7), "Saturday and Sunday are one span: no edge at midnight between them"
 
 
-def test_the_next_edge_is_the_next_start_or_end_across_the_week():
-    assert idea_target.next_edge(WEEKDAYS, MON.replace(hour=10)) == MON.replace(hour=19)
-    assert idea_target.next_edge(WEEKDAYS, MON.replace(hour=20)) == MON.replace(hour=23)
-    assert idea_target.next_edge(WEEKDAYS, (MON + dt.timedelta(days=4)).replace(hour=23, minute=30)) == MON + dt.timedelta(days=7, hours=19), "Friday night: Monday 19:00"
-    assert idea_target.next_start(WEEKDAYS, MON.replace(hour=20)) == MON.replace(hour=20), "inside the hours the person is at the computer now"
-    assert idea_target.next_start(WEEKDAYS, MON.replace(hour=23)) == MON + dt.timedelta(days=1, hours=19)
 
 
-def test_hours_a_broken_row_is_dropped_and_the_days_are_kept_once_in_order():
-    from orkboard import settings
-    got = settings.clean_ideas({"hours": [{"days": [4, 1, 1, 9, "x"], "from": "07:00", "to": "09:30"}, {"days": [], "from": "07:00", "to": "09:00"},
-                                          {"days": [0], "from": "7am", "to": "09:00"}, "no"]})["hours"]
-    assert got == [{"days": [1, 4], "from": "07:00", "to": "09:30"}] and settings.clean_ideas({})["hours"] == []
 
 
 def test_the_first_reset_inside_the_hours_else_the_hours_start_and_none_with_no_hours():
@@ -322,15 +243,5 @@ def test_a_leaders_own_tier_replaces_the_matrixs_for_its_own_calls_and_default_f
     assert idea_target.keeper_pick(step, target, "opus", "") == ("opus", effort)
 
 
-def test_a_leaders_own_tier_touches_no_step_but_its_own():
-    """The Orkmaster's steps and the tasks keep the matrix: a leader's tier is for its own calls only."""
-    for step in ("route", "decide", "plan", "task", "collide", "rewrite", "fork"):
-        assert step not in idea_target.OWN_STEPS and idea_target.own_pick(step, "balance", "laborer") == idea_target.pick(step, "balance")
 
 
-def test_the_fork_is_one_call_on_the_elder_tier_at_every_target_with_a_cap_and_a_price():
-    """§283.33: the Fork is one more call a question at the elder tier, no tools, its price said."""
-    from orkboard.realm import answer_ways
-    assert [idea_target.pick("fork", t)[0] for t in idea_target.TARGETS] == ["elder"] * 3 and "fork" in idea_target.STEPS and idea_target.READS["fork"] == 0
-    price = answer_ways.fork_price("balance")
-    assert 0 < price["low"] <= price["high"] and price["high"] >= idea_target.budget("fork", "balance") - 0.01

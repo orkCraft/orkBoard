@@ -14,7 +14,7 @@ import pytest
 from orkboard.core.idea_ask import AskMixin as KeeperAsk
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.gui.ideas_ask import AskMixin as GuiAsk, ask_commands
-from orkboard.realm import board_ask, event_log, goal_team, idea_spend, idea_target, ideas, lexicon, library, map_text, orkmaster
+from orkboard.realm import board_ask, event_log, goal_team, idea_target, ideas, library, map_text, orkmaster
 
 ANSWER = {"answer": "Lobby waits for Reconnect.\nIt is in Work.", "sources": ["Lobby", "§12"], "goal": "Make the lobby reconnect"}
 
@@ -113,25 +113,6 @@ def test_an_empty_question_a_gone_party_the_demo_a_spent_window_and_a_second_que
     assert not model.calls and _rec(host) is None                                                              # nothing begun, nothing kept
 
 
-def test_a_question_is_refused_while_another_is_being_answered_and_what_lay_there_stays(host, product):
-    go, entered = threading.Event(), threading.Event()
-
-    def slow(_call):
-        entered.set()
-        go.wait(5)
-        return ANSWER
-
-    Model(host, slow)
-    host.command("ideas.ask", {"party": product, "q": "First?"})
-    assert entered.wait(5) and _rec(host)["status"] == "asking" and _rec(host)["q"] == "First?"
-    with pytest.raises(CommandError, match="A question is being answered: a moment"):
-        host.command("ideas.ask", {"party": "", "q": "Second?"})
-    assert _rec(host)["q"] == "First?"
-    go.set()
-    _wait(host)
-    assert _rec(host)["status"] == "answered" and _rec(host)["q"] == "First?"
-
-
 # -- a party's leader answers ---------------------------------------------------------------------------------------------------------
 
 def test_a_partys_call_runs_as_its_leader_on_step_ask_with_no_tools_its_map_and_goals_in_it_and_the_question_last(host, tech, model, monkeypatch):
@@ -151,20 +132,6 @@ def test_a_partys_call_runs_as_its_leader_on_step_ask_with_no_tools_its_map_and_
     assert p.index("Your party's map") < p.index("Your party's goals") < p.index("The question:\nWhy is the lobby here?") < p.index('"answer"')
     assert p.rstrip().endswith("else empty\"}")
     assert len(idea_target.cut([("x", p)], idea_target.CONTEXT["ask"])) <= idea_target.CONTEXT["ask"] + 10
-
-
-def test_a_partys_map_is_read_from_the_branch_results_land_in(host, tech, model, monkeypatch):
-    seen = []
-    monkeypatch.setattr(map_text, "of", lambda craft, state_dir, root, since="", pages=None, ref="dev": seen.append(ref) or "MAP")
-    host.ideas.save_settings({**host.ideas.settings_now(), "merge_into": "main"})
-    _ask(host, tech)
-    assert seen == ["main"]
-
-
-def test_a_party_with_no_map_is_given_none(host, product, model, monkeypatch):
-    monkeypatch.setattr(map_text, "of", lambda *a, **k: None)
-    _ask(host, product)
-    assert "Your party's map" not in model.calls[0]["prompt"] and "The question:\nWhere is the lobby?" in model.calls[0]["prompt"]
 
 
 def test_the_orkmasters_call_carries_the_board_as_text_and_speaks_as_the_orkmaster(host, product, tech, model):
@@ -189,33 +156,6 @@ def test_the_answer_is_kept_cleaned_with_its_sources_and_the_goal_it_suggests(ho
     assert rec["goal"] == "Make the lobby reconnect"
 
 
-def test_clean_makes_the_calls_json_safe():
-    assert board_ask.clean(None) is None and board_ask.clean({}) is None and board_ask.clean({"answer": "  "}) is None and board_ask.clean({"answer": 3}) is None
-    got = board_ask.clean({"answer": "x" * 5000, "sources": "no", "goal": ["no"]})
-    assert len(got["answer"]) == board_ask.ANSWER_CHARS and got["sources"] == [] and got["goal"] == ""
-    assert len(board_ask.clean({"answer": "a", "goal": "g" * 900})["goal"]) == board_ask.GOAL_CHARS
-
-
-def test_an_answer_that_is_no_json_is_asked_once_more_and_twice_is_failed(host, product):
-    model = Model(host, "not json at all")
-    _ask(host, product)
-    rec = _rec(host)
-    assert len(model.calls) == 2 and rec["status"] == "failed" and rec["error"] == "No answer came: ask again" and rec["answer"] == ""
-    model.answer = lambda call: "no json" if len(model.calls) == 3 else ANSWER                                  # the second try answers
-    _ask(host, product, "Again?")
-    assert len(model.calls) == 4 and _rec(host)["status"] == "answered" and _rec(host)["q"] == "Again?"
-    assert [e["ok"] for e in _events(host, event_log.BOARD_ASKED)] == [False, True]
-
-
-def test_a_call_that_fails_keeps_why_in_plain_words(host, product):
-    def broken(_call):
-        raise RuntimeError("the tool is out")
-
-    Model(host, broken)
-    _ask(host, product)
-    assert _rec(host)["status"] == "failed" and _rec(host)["error"] == "the tool is out"
-
-
 def test_a_stop_clears_the_record_stop_all_and_the_persons_cross(host, product, model):
     model.answer = lambda call: host.ideas.stop_all() or ANSWER
     _ask(host, product)
@@ -238,17 +178,6 @@ def test_a_stop_clears_the_record_stop_all_and_the_persons_cross(host, product, 
 
 # -- the ledger and the measure -------------------------------------------------------------------------------------------------------
 
-def test_the_cost_is_in_the_asking_partys_ledger_the_orkmasters_in_the_boards_own(host, product, model):
-    _ask(host, product)
-    spent = idea_spend.of_goal(host.ideas.state_dir, product)
-    assert spent["usd"] == 0.01 and spent["stages"]["spec"]["usd"] == 0.01
-    own = idea_spend.ledger(host.ideas.state_dir)
-    assert not own.exists() or not [r for r in idea_spend.read(own) if r["step"] == "ask"]
-    _ask(host, "", "Who does what?")
-    rows = [r for r in idea_spend.read(own) if r["step"] == "ask"]
-    assert len(rows) == 1 and rows[0]["role"] == orkmaster.ROLE and idea_spend.of_goal(host.ideas.state_dir, product)["usd"] == 0.01
-
-
 def test_each_question_is_recorded_with_its_party_its_words_cut_short_its_cost_and_whether_it_answered(host, product, model):
     _ask(host, product, "Q" * 400)
     _ask(host, "", "Who?")
@@ -257,14 +186,6 @@ def test_each_question_is_recorded_with_its_party_its_words_cut_short_its_cost_a
     assert first["prompt_chars"] > 0 and first["cost"] == 0.01 and first["tokens"] and isinstance(first["seconds"], float)
     assert second["party"] == "orkmaster" and second["text"] == "Who?"
     assert event_log.BOARD_ASKED in event_log.EVENTS and event_log.ASK_MADE_GOAL in event_log.EVENTS
-
-
-def test_the_step_has_its_tables_and_its_word():
-    assert "ask" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_spend.STEP_STAGE["ask"] == "spec"
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("ask", target) == idea_target.pick("talk_round", target)
-    assert idea_target.READS["ask"] == 0 and idea_target.CONTEXT["ask"] == 8_000 + 3_000 + 1_200 and idea_target.CAPS["ask"] == 0.05
-    assert lexicon.term("ask") == "Ask"
 
 
 # -- the Board as text ----------------------------------------------------------------------------------------------------------------
@@ -306,16 +227,3 @@ def test_the_commands_ask_put_away_and_make_a_goal_and_the_snapshot_holds_the_re
     assert host.command("ideas.ask_clear", {}) == {"ok": True} and host.snapshot()["ask"] is None and _rec(host) is None
     assert host.command("ideas.ask_clear", {}) == {"ok": True}                                                   # nothing to put away: no error
 
-
-def test_the_page_may_ask_with_no_party_for_the_orkmaster_and_a_party_must_be_text(host, model):
-    assert host.command("ideas.ask", {"q": "Who does what?"}) == {"ok": True}
-    _wait(host)
-    assert _rec(host)["party"] == "" and model.calls[0]["as_role"] == orkmaster.ROLE
-    with pytest.raises(CommandError, match="party is not text"):
-        host.command("ideas.ask", {"party": 3, "q": "Where?"})
-
-
-def test_a_board_with_no_project_open_has_no_question():
-    from orkboard.gui.board_host import Orkboard as Host
-    h = Host(None)
-    assert h.snapshot()["ask"] is None

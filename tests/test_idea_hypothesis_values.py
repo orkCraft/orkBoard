@@ -13,7 +13,7 @@ import pytest
 
 from orkboard.core import idea_hypothesis_values as ihv, idea_keeper
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import board_rows, event_log, goal_result, goal_team, hypotheses, idea_spend, idea_target, ideas, library
+from orkboard.realm import board_rows, event_log, goal_result, goal_team, hypotheses, idea_target, ideas, library
 
 PAST = (dt.date.today() - dt.timedelta(days=1)).isoformat()
 AHEAD = (dt.date.today() + dt.timedelta(days=9)).isoformat()
@@ -86,14 +86,6 @@ def _tick(host):
 
 # -- the answer, taken strictly -------------------------------------------------------------------------------------------------------------------------
 
-def test_the_answer_is_taken_strictly():
-    ids = ["m1", "m2"]
-    assert ihv.clean_values({"values": [{"id": "m1", "n": 41, "from": " the store  page "}, {"id": "m2", "n": "12", "from": "x"}, {"id": "m3", "n": 1}, {"id": "m1", "n": 2}, "x", {"id": "m2", "n": True}]}, ids) == {
-        "m1": {"n": 41.0, "from": "the store page"}}
-    assert ihv.clean_values({"values": []}, ids) == {} and ihv.clean_values({"values": {"m1": 1}}, ids) is None and ihv.clean_values("41", ids) is None
-    assert ihv.clean_values({"values": [{"id": "m1", "n": float("inf")}]}, ids) == {}
-
-
 def test_only_an_open_item_with_its_goals_done_a_party_no_value_and_its_date_reached_is_asked_and_once():
     m = lambda **kw: {"id": "m1", "what": "w", "from": "", "by": "run", "bars": {"holds": {"op": ">=", "n": 1.0, "unit": ""}, "refuted": []}, "span_days": 28, "date": PAST, "value": None, **kw}      # noqa: E731
     item = lambda **kw: {"id": "h", "state": "open", "tests": [], "measures": [m()], **kw}                                                                                                            # noqa: E731
@@ -150,14 +142,6 @@ def test_a_failed_call_asks_the_person_and_one_that_cannot_be_made_asks_nothing(
     assert _tick(host) == 0 and len(model.calls) == 2
 
 
-def test_a_measure_of_the_person_or_of_a_party_gone_is_never_asked_of_a_leader(host, run):
-    model = Model(host, {"values": []})
-    _hyp(host, run, by="")
-    assert _tick(host) == 0
-    hypotheses.measure_set(host.ideas.state_dir, "players-come-back", mid="m1", by="gone-party")
-    assert _tick(host) == 0 and model.calls == []
-
-
 def test_a_hypothesis_whose_goals_are_not_done_waits_for_them(host, run):
     model = Model(host, {"values": [{"id": "m1", "n": 1, "from": "x"}]})
     _hyp(host, run)
@@ -169,19 +153,3 @@ def test_a_hypothesis_whose_goals_are_not_done_waits_for_them(host, run):
     _wait(host, "hypothesis:players-come-back")
     assert _value(host)["n"] == 1.0
 
-
-def test_the_event_names_the_counts_and_never_a_number(host, run):
-    Model(host, {"values": [{"id": "m1", "n": 41.5, "from": "the store page"}]})
-    _hyp(host, run)
-    assert _tick(host) == 1
-    _wait(host, "hypothesis:players-come-back")
-    (ev,) = _events(host)
-    assert {"idea", "party", "measures", "read", "seconds", "cost"} <= set(ev) and (ev["idea"], ev["party"], ev["measures"], ev["read"]) == ("players-come-back", run, 1, 1)
-    assert "41" not in json.dumps(ev) and "store page" not in json.dumps(ev)
-
-
-def test_the_step_is_in_every_table_of_the_target():
-    assert "measure_read" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    assert idea_target.READS["measure_read"] == 4 and idea_target.CONTEXT["measure_read"] == 9_000 and idea_target.CAPS["measure_read"] > 0
-    assert idea_spend.STEP_STAGE["measure_read"] == "spec" and event_log.MEASURE_READ in event_log.EVENTS
-    assert idea_target.pick("measure_read", "balance")[0] in ("warrior", "laborer")

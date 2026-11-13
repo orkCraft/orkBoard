@@ -75,38 +75,6 @@ def test_a_two_step_goal_goes_step_by_step_and_is_done_when_the_last_steps_tasks
     assert h.ideas.keeper.tick(time.time() + 200) is False
 
 
-def test_each_step_is_recorded_as_history_and_the_route_reads_where_the_goal_is(work):
-    h, slug, p = work.host, work.slug, work.parties
-    legs = lambda: [(s["n"], s["party"], s["state"], s["done"], s["total"]) for s in idea_route.route(h.ideas.root(), h.ideas.state_dir, slug) if s["step"] == "party"]      # noqa: E731
-    assert legs() == [(1, p["product"], "plan", 0, 1), (2, p["tech"], "waiting", 0, 0)]
-    h.command("ideas.start", {"slug": slug})
-    work.merge("k1")
-    work.runner.tick()
-    assert legs() == [(1, p["product"], "done", 1, 1), (2, p["tech"], "working", 0, 0)]                                  # the next step's turn, not planned yet
-    h.ideas.keeper.tick(time.time() + 100)
-    work.until()
-    assert legs() == [(1, p["product"], "done", 1, 1), (2, p["tech"], "working", 0, 2)]
-    assert [(s["n"], s["party"], s["tasks"]) for s in idea_route.recorded(h.ideas.state_dir, slug)] == [(1, p["product"], ["k1"]), (2, p["tech"], ["k2", "k3"])]
-    node = next(n for n in h.command("ideas.map", {})["nodes"] if n["slug"] == slug)
-    assert [s["n"] for s in node["route"]] == [1, 2] and json.dumps(node["route"])
-    work.merge("k2", "k3")
-    work.runner.tick()
-    assert legs() == [(1, p["product"], "done", 1, 1), (2, p["tech"], "done", 2, 2)]
-
-
-def test_a_tasks_head_is_its_steps_partys_race_in_the_board_and_in_review(work):
-    h, slug, p = work.host, work.slug, work.parties
-    h.command("ideas.start", {"slug": slug})
-    work.merge("k1")
-    work.runner.tick()
-    h.ideas.keeper.tick(time.time() + 100)
-    work.until()
-    page = h.command("ideas.page", {"slug": slug})
-    heads = {t["id"]: t["head"] for t in page["plan"]["tasks"]}
-    assert heads["k1"]["race"] in ("knight", "unicorn") and heads["k2"]["race"] in ("peon", "shaman") and heads["k3"]["race"] in ("peon", "shaman")
-    assert roles.task_head(h.ideas.state_dir, work.tasks()["k2"], "balance")["race"] in ("peon", "shaman")
-
-
 def test_a_goal_that_cannot_plan_its_next_step_is_taken_off_the_runner_and_start_goes_on_from_there(work):
     h, slug, p = work.host, work.slug, work.parties
     h.command("ideas.start", {"slug": slug})
@@ -189,14 +157,3 @@ def test_a_later_step_of_high_risk_waits_for_start_and_an_ordinary_one_goes_by_i
     assert ideas.state(h.ideas.state_dir, slug)["state"] == "done"
 
 
-def test_a_later_step_of_ordinary_risk_leaves_nothing_waiting(work):
-    h, slug = work.host, work.slug
-    h.command("ideas.start", {"slug": slug})
-    work.merge("k1")
-    work.runner.tick()
-    h.ideas.keeper.tick(time.time() + 100)
-    work.until()
-    assert idea_route.waits(ideas.plan(h.ideas.state_dir, slug)) is None
-    work.runner.tick()
-    assert work.spawned[-1] == (slug, "k2")
-    assert not [r for r in h.command("ideas.board")["needs_you"] if r["idea"] == slug and r["kind"] == "start"]

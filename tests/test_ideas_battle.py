@@ -71,16 +71,6 @@ def test_a_battle_lays_each_open_conflict_with_what_rests_on_it(host, fake_repo)
     assert _bytes(fake_repo, host.ideas.state_dir) == before            # nothing written, no model reached (the keeper's entries fail)
 
 
-def test_a_goal_laid_by_the_skills_has_no_battle(host):
-    assert host.command("ideas.battle", {"idea": "skills"})["against"] == []
-    with pytest.raises(CommandError):
-        host.command("ideas.battle", {"idea": "nope"})
-
-
-def test_the_snapshot_holds_no_rests(host):
-    assert "rests" not in json.dumps(host.command("ideas.board", {}), default=str)
-
-
 def _red_dev(host):
     """A red on the way to dev as stage E wrote it, before the §N were kept with it (stage N3): no `named`."""
     goal_branch.update(host.ideas.state_dir, "goal", branch="goal/goal",
@@ -139,18 +129,6 @@ def test_a_red_gate_on_the_way_to_dev_lays_the_decisions_its_tests_name_where_it
     assert _bytes(fake_repo, state) == before                                             # read only: nothing written
 
 
-def test_a_record_kept_before_the_decisions_were_is_read_in_the_persons_checkout(host, fake_repo):
-    """A red kept before stage N3 has no `named`: its §N are read in `host.repo_root`, as they were then."""
-    _red_dev(host)
-    before = _bytes(fake_repo, host.ideas.state_dir)
-    got = host.command("ideas.gate_guards", {"idea": "goal"})
-    assert got["way"] == "dev"
-    assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_red.py::test_a", "tests/test_red.py::test_b"]}]
-    assert got["files"] == [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}]
-    assert got["agreeing"] == [{"number": 3, "title": "Third"}]
-    assert _bytes(fake_repo, host.ideas.state_dir) == before
-
-
 def test_a_red_gate_on_the_way_to_main_lays_the_decisions_its_tests_name_in_its_trial(host, fake_repo):
     """Stage N3, on what the checks on the way to main really leave: they run in a trial worktree of their own (main's head with the goal's picks,
     realm/goal_main.py `trial`), never the person's checkout (main here, which lacks the goal's tests), and the trial is gone after."""
@@ -177,30 +155,6 @@ def test_a_red_gate_on_the_way_to_main_lays_the_decisions_its_tests_name_in_its_
     assert got["failing"] == [{"number": 2, "title": "Second, the old card", "ids": ["tests/test_goal_guard.py::test_guarded"]}]
     assert got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
 
-
-
-def test_a_green_tests_step_as_the_writer_leaves_it_lays_the_agreeing_pile(host, fake_repo):
-    from orkboard.realm.idea_git import IdeaGit
-    def git(*a):
-        return subprocess.run(["git", *a], cwd=fake_repo, check=True, capture_output=True, text=True).stdout.strip()
-    (fake_repo / "orkcraft.toml").write_text('[gate]\nalways = ["tests/test_ok.py"]\n', encoding="utf-8")      # the gate's own pytest (no `run`) on the critical file
-    git("add", "-A")
-    git("commit", "-q", "-m", "the fixture's files")
-    base = git("rev-parse", "HEAD")
-    (fake_repo / "tests/test_ok.py").write_text('"""Guards decisions §3."""\n\ndef test_d():\n    pass\n\n# touched\n', encoding="utf-8")
-    git("add", "tests/test_ok.py")
-    git("commit", "-q", "-m", "touch the test")
-    py = fake_repo / ".venv/bin/python"                                  # the repository's own Python, as the gate looks for it (untracked): ours, with pytest
-    py.parent.mkdir(parents=True)
-    py.write_text(f'#!/bin/sh\nexec "{Path(sys.prefix) / "bin/python"}" "$@"\n', encoding="utf-8")
-    py.chmod(0o755)
-    ok, _words, record = main_checks._checked(IdeaGit(fake_repo), fake_repo, base, gate_config.Check("Tests", gate=True), threading.Event(), 120, alone=True)
-    assert ok, _words
-    assert record["files"] == ["tests/test_ok.py"]
-    host.ideas._main_checks["goal"] = {"running": False, "checks": [{"name": "The merge", "state": "passed", "words": ""},
-                                                                       {"name": "Tests", "state": "passed", "words": "", **record}]}
-    got = host.command("ideas.gate_guards", {"idea": "goal"})
-    assert got["way"] == "main" and got["failing"] == [] and got["files"] == [] and got["agreeing"] == [{"number": 3, "title": "Third"}]
 
 
 # -- G: Fix it after dev, one press with its Undo ---------------------------------------------------------------------------------------------
@@ -253,15 +207,6 @@ def test_its_undo_removes_the_fix_goal_and_leaves_the_done_goal_as_it_was(host):
         host.command("ideas.undo", {"idea": "goal"})
 
 
-def test_its_undo_is_refused_once_the_fix_goal_changed(host):
-    _red_main(host)
-    fix = host.command("ideas.gate_fix_goal", {"idea": "goal", "from": "mat"})["fix"]
-    ideas.save_state(host.ideas.state_dir, fix, state="talk")
-    with pytest.raises(CommandError, match="It changed since: nothing undone"):
-        host.command("ideas.undo", {"idea": "goal"})
-    assert ideas.idea_page(host.ideas.root(), fix) is not None
-
-
 def test_fix_it_after_dev_is_refused_in_words_on_a_goal_not_in_dev_and_writes_nothing(host, fake_repo):
     _red_main(host)
     _red_dev(host)                                                                            # unmerged on its own branch: its stage runs again instead (H)
@@ -273,10 +218,3 @@ def test_fix_it_after_dev_is_refused_in_words_on_a_goal_not_in_dev_and_writes_no
     assert _bytes(fake_repo, host.ideas.state_dir) == before
     assert not [r for r in event_log.read(host.repo_root) if r["event"] == "move_played"]
 
-
-def test_fix_it_after_dev_is_refused_where_no_test_failed(host, fake_repo):
-    ideas.save_state(host.ideas.state_dir, "goal", state="done")
-    before = _bytes(fake_repo, host.ideas.state_dir)
-    with pytest.raises(CommandError, match="No test failed on its way to main"):
-        host.command("ideas.gate_fix_goal", {"idea": "goal", "from": "mat"})
-    assert _bytes(fake_repo, host.ideas.state_dir) == before

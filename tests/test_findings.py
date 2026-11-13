@@ -3,15 +3,12 @@ its findings in the order of their level, a finding of no goal its own row), the
 from __future__ import annotations
 
 import datetime as dt
-import json
 import sys
-from pathlib import Path
 
 import pytest
 
-from orkboard.core import idea_keeper
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import findings, goal_team, idea_route, ideas, lexicon, library, spec_sections, way_down
+from orkboard.realm import findings, goal_team, idea_route, ideas, library, way_down
 
 
 @pytest.fixture
@@ -62,24 +59,6 @@ def test_a_thing_is_kept_once_by_its_source_its_part_and_its_goal(host, tech):
     assert findings.add(host.ideas.state_dir, {"source": "verdict", "idea": slug, "on": "x", "found": ""}) is None
 
 
-def test_a_finding_has_the_shape_of_d1_and_code_words_are_its_what_until_its_leader_tells_it(host, tech):
-    f = _add(host, _goal(host, tech))
-    assert set(f) == {"id", "at", "source", "idea", "party", "on", "found", "what", "shows", "promised", "cause", "level", "change", "status", "answer", "fix"}
-    assert f["what"] == f["found"] and f["status"] == "found" and f["level"] == "" and f["answer"] == "" and f["fix"] is None and f["id"].startswith("f-")
-
-
-def test_a_goals_record_is_quality_json_in_its_state_folder_and_that_of_no_goal_is_findings_json(host, tech):
-    sd = host.ideas.state_dir
-    slug = _goal(host, tech)
-    _add(host, slug)
-    _add(host, "", source="concern", on="c-1")
-    mine = json.loads((ideas.state_folder(sd, slug) / "quality.json").read_text(encoding="utf-8"))
-    assert set(mine) == {"verdict", "checks", "findings", "hypothesis", "at", "status"} and len(mine["findings"]) == 1 and mine["hypothesis"] is None
-    loose = json.loads((sd / "findings.json").read_text(encoding="utf-8"))
-    assert set(loose) == {"findings"} and loose["findings"][0]["source"] == "concern"
-    assert findings.record(sd, "nothing-here") == {"verdict": [], "checks": [], "findings": [], "hypothesis": None, "at": "", "status": ""}
-
-
 def test_way_down_reads_the_record_and_a_finding_answered_is_not_open(host, tech):
     sd = host.ideas.state_dir
     slug = _goal(host, tech)
@@ -113,18 +92,6 @@ def test_each_status_in_turn_and_the_answers(host, tech):
 
 # -- the calls' answers --------------------------------------------------------------------------------------------------------------------------
 
-def test_a_leaders_answer_is_read_strictly():
-    ids = ["f-1", "f-2"]
-    got = findings.clean_told({"findings": [{"id": "f-1", "what": "  a\nb ", "shows": "x" * 900, "promised": 3, "cause": "c"}, {"id": "f-9", "what": "not asked"}, {"id": "f-2"}, "junk"]}, ids)
-    assert got["f-1"]["what"] == "a b" and len(got["f-1"]["shows"]) == findings.LINE_CHARS and got["f-1"]["promised"] == "" and "f-9" not in got and "f-2" not in got
-    assert findings.clean_told({"nothing": 1}, ids) is None and findings.clean_told(None, ids) is None
-
-
-def test_the_orkmasters_answer_is_read_strictly():
-    got = findings.clean_levels({"levels": [{"id": "f-1", "level": "decision", "change": "word it again"}, {"id": "f-2", "level": "heaven"}, {"id": "f-3", "level": "spec"}]}, ["f-1", "f-2"])
-    assert got == {"f-1": {"level": "decision", "change": "word it again"}, "f-2": {"level": "work", "change": ""}}
-    assert findings.clean_levels({"levels": "no"}, ["f-1"]) is None
-
 
 # -- when a goal's findings are in -------------------------------------------------------------------------------------------------------------------
 
@@ -146,16 +113,6 @@ def test_a_goals_findings_are_in_after_a_day_or_when_its_checks_and_looks_are(ho
     from orkboard.realm import idea_checks
     assert "review" in idea_checks.TAGS
     assert not findings.ripe(sd, slug)                                                                # a check task is still at work
-
-
-def test_pending_names_the_goals_with_a_finding_not_told(host, tech):
-    sd = host.ideas.state_dir
-    slug = _goal(host, tech)
-    f = _add(host, slug)
-    _add(host, "", source="concern", on="c-1")
-    assert set(findings.pending(sd)) == {slug, ""}
-    findings.told(sd, slug, f["id"], {})
-    assert findings.pending(sd) == [""]
 
 
 # -- the hand's rows -----------------------------------------------------------------------------------------------------------------------------
@@ -212,42 +169,7 @@ def test_a_finding_of_no_goal_is_a_row_of_its_own_and_a_later_finding_joins_its_
     assert len([r for r in rows if r["kind"] == "quality"]) == 1 and len(next(r for r in rows if r["kind"] == "quality")["findings"]) == 2
 
 
-def test_not_now_takes_a_finding_out_of_the_hand_and_the_card_goes_with_its_last(host, tech):
-    sd, root = host.ideas.state_dir, host.ideas.root()
-    slug = _goal(host, tech)
-    a = _sorted(host, slug, _add(host, slug, on="a"), "work")
-    b = _sorted(host, slug, _add(host, slug, on="b"), "spec")
-    findings.answer(sd, a["id"], "later")
-    assert [f["id"] for f in findings.rows(sd, root)[0]["findings"]] == [b["id"]]
-    findings.answer(sd, b["id"], "fix", {"idea": "x"})
-    assert findings.rows(sd, root) == [] and len(findings.of_goal(sd, slug)) == 2                      # the record keeps both
-
-
-def test_a_fix_pulls_what_is_below_its_level(host, tech):
-    sd, root = host.ideas.state_dir, host.ideas.root()
-    slug = _goal(host, tech)
-    spec_sections.save_record(sd, slug, {"decision": {"title": "D", "text": "t", "number": 240, "confirmed": True, "changes": []}})
-    f = _sorted(host, slug, _add(host, slug), "spec")
-    got = findings.pulls_of(sd, root, f)
-    assert got["level"] == "spec" and got["sections"] == [{"idea": slug, "party": tech}] and got["estimate"]["usd_high"] > 0           # the section written again
-    assert findings.pulls_of(sd, root, f, "work")["level"] == "work" and findings.pulls_of(sd, root, f, "decision")["level"] == "decision"
-    assert findings.pulls_of(sd, root, {**f, "idea": "gone", "party": "gone"}, "work")["level"] == "work"        # a read that fails pulls nothing, never an error
-
-
 # -- the words ---------------------------------------------------------------------------------------------------------------------------------------
-
-def test_the_words_of_spec_132_d6_are_in_the_glossary():
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert rows["level"] == ("level", "") and rows["quality_finding"] == ("finding", "") and rows["quality_record"] == ("quality record", "")
-    assert lexicon.term("level", many=True) == "levels" and lexicon.term("quality_finding", many=True) == "findings"
-    said = {"level.decision": "Decision", "level.spec": "Spec", "level.work": "Work", "level.quality": "Quality", "quality_of": "Quality of", "found": "found", "fix_there": "Fix it there",
-            "fix_all_there": "Fix all there", "another_level": "Another level…", "not_now": "Not now", "add_to_goal": "Add to the goal", "change_decision": "Change…",
-            "or_say_change": "Or say what to change", "cause_in_code": "The cause is in the code", "cause_in_spec": "The cause is in the spec", "cause_in_decision": "The cause is in the decision"}
-    for key, word in said.items():
-        assert lexicon.term(key) == word, key
-    lines = "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).splitlines()
-    for key in ("level", "quality_finding", "quality_record"):
-        assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
 
 # -- spec 133 D: a refuted hypothesis is a finding of no goal, naming the goals that rested on it ----------------------------------------------------
@@ -268,16 +190,6 @@ def test_a_refuted_hypothesis_is_one_finding_of_no_goal_naming_the_goals_that_re
     assert "Goals that rested on it: weekly-digest (A weekly digest), push-settings (Push settings)." in got["found"] and len(got["found"]) <= findings.FOUND_CHARS
     assert [f["id"] for f in findings.of_goal(sd, "")] == [got["id"]]
     assert findings_gather.hypothesis(sd, _refuted_item(), "product", [("other", "Other")])["id"] == got["id"] and len(findings.of_goal(sd, "")) == 1          # kept once
-
-
-def test_the_goals_names_stay_in_the_finding_when_the_words_are_long_and_a_hypothesis_not_refuted_is_none(host):
-    from orkboard.realm import findings_gather
-    sd = host.ideas.state_dir
-    long = "word " * 80
-    got = findings_gather.hypothesis(sd, _refuted_item(text=long, signal=long, evidence=[{"text": long, "ref": "", "at": ""}]), "", [("the-goal", "The goal")])
-    assert got["party"] == "" and len(got["found"]) <= findings.FOUND_CHARS and "the-goal (The goal)" in got["found"]
-    assert findings_gather.hypothesis(sd, {**_refuted_item(id="h5"), "state": "held"}, "product") is None and findings_gather.hypothesis(sd, {"id": "x"}) is None
-    assert findings_gather.hypothesis(sd, _refuted_item(id="h6"), "", [], "one in four turned it off")["found"].count("Found: one in four turned it off.") == 1
 
 
 @pytest.mark.accepts

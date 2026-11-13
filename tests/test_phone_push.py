@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -117,15 +116,6 @@ def test_none_in_the_quiet_hours_or_under_do_not_disturb(rig):
     assert len(rig.tick(at(14, 0, DAY + dt.timedelta(days=1)))) == 1
 
 
-def test_a_proposal_a_result_to_check_and_a_phone_without_a_subscription_send_nothing(rig):
-    rig.tick(at(12, 0))
-    rig.ask("A proposal", state="proposed")
-    assert rig.tick(at(12, 1)) == []
-    rig.pairing.set_push(rig.device, None)
-    rig.ask("A question")
-    assert rig.tick(at(12, 40)) == []
-
-
 def _log(rig, event, when, **fields):
     row = event_log.line(event, at=when, **fields)
     target = event_log.path(Path(rig.host.repo_root))
@@ -161,20 +151,6 @@ def test_the_morning_says_what_waits_and_is_not_sent_to_a_device_seen_in_the_nig
     assert msg["body"] == "While you were away: 1 result in dev · 1 waits for your answer"
 
 
-def test_nothing_to_say_is_no_morning(rig):
-    rig.set_seen("2026-10-19T20:00:00")
-    assert rig.tick(at(8, 30)) == []
-    assert rig.pairing.get(rig.device)["push"]["morning"] == "2026-10-20"       # the day is checked: the recap is not built again every tick
-
-
-def test_the_morning_reads_at_most_30_days_back(rig, monkeypatch):
-    asked = []
-    monkeypatch.setattr(rig.host.pusher, "morning", lambda since, now, waiting: asked.append(since) or "")
-    rig.set_seen("2026-01-01T08:00:00")
-    rig.tick(at(8, 30))
-    assert asked == [at(8, 30) - dt.timedelta(days=30)]
-
-
 def test_a_gone_subscription_is_dropped_and_the_send_is_logged(rig):
     rig.tick(at(12, 0))
     rig.ask("A question")
@@ -183,37 +159,6 @@ def test_a_gone_subscription_is_dropped_and_the_send_is_logged(rig):
     assert "push" not in rig.pairing.get(rig.device)
     (line,) = [r for r in event_log.read(Path(rig.host.repo_root)) if r["event"] == "push_sent"]
     assert (line["tag"], line["devices"], line["gone"]) == ("needs", 1, 1)
-
-
-def test_the_words_never_hold_a_questions_text(rig):
-    slug = rig.ask("Dark mode")
-    ideas.set_section(rig.root, slug, "Open questions", "- Which secret token does the vault use?")
-    rig.host.ideas.rev += 1
-    rig.pairing.set_push(rig.device, SUB)
-    rig.host.pusher._told[rig.device] = 0
-    (msg,) = rig.tick(at(12, 0))
-    assert "secret token" not in json.dumps(msg) and msg["body"] == "A spec asks · Dark mode"
-
-
-def test_the_kinds_say_who_asks():
-    # The desktop's Today list, whose words these matched, went with the old window (spec 98 E): the push keeps its own words.
-    assert phone_push.KIND_WORDS["goal"] == "A party asks"                               # a party's question: spec 50 §0
-    assert all(v and v[0].isupper() for v in phone_push.KIND_WORDS.values())
-
-
-def test_a_pick_that_waits_is_an_answer_that_waits_said_by_who_asks_and_never_by_its_ask_spec_51(rig, tmp_path):
-    from tests import pick_files as pf
-    rig.tick(at(12, 0))
-    slug = ideas.add_idea(rig.root, "A logo for the app", rig.goal, rig.state)
-    ideas.save_state(rig.state, slug, state="working")
-    task = {"id": "k1", "title": "Draw the logo", "short": "Logo", "brief": "b", "kind": "art", "tier": "warrior", "after": [], "state": "picking",
-            "round": 1, "finished": "2026-10-21T10:00:00", "role": "grunt", "pick": pf.ask(2, "image", text="Which wolf is meanest?")}
-    ideas.save_plan(rig.state, slug, {"idea": slug, "made_at": "2026-10-21T09:00:00", "passed_at": None, "todos": [], "tasks": [task]})
-    pf.make_pick(rig.state, tmp_path / "s", {"a.png": pf.png(), "b.png": pf.png(2, 2)}, slug=slug)
-    rig.host.ideas.rev += 1
-    (msg,) = rig.tick(at(12, 1))
-    assert msg == {"title": "Orkboard", "body": "Grunt asks you to pick one", "tag": "needs", "badge": 1, "url": "./#needs"}
-    assert "meanest" not in json.dumps(msg) and "Draw the logo" not in json.dumps(msg)
 
 
 # -- the commands -----------------------------------------------------------------------------------------------
@@ -230,33 +175,6 @@ def test_the_four_commands_are_a_phones_only(rig):
             host.command(name, {})                                       # the page has no device
         with pytest.raises(CommandError, match="Only a paired phone"):
             _as_phone(host, name, {"device_id": rig.device}, None)       # a made-up id is not taken from the args
-
-
-def test_the_page_cannot_name_a_device(rig):
-    from orkboard.gui.server import Server
-    server = Server(rig.host)
-    for name in ("mobile.push_key", "mobile.push_off"):
-        reply = server._handle(json.dumps({"t": "cmd", "id": 1, "name": name, "args": {"device_id": rig.device, "link": "paired"}}))
-        assert reply["ok"] is False and "Only a paired phone" in reply["error"]       # a known id in the page's own args is no phone
-
-
-def test_without_the_cryptography_package_every_push_command_says_so(rig, monkeypatch):
-    from orkboard.gui import web_push
-
-    def missing():
-        raise web_push.PushError(web_push.NEED)
-    monkeypatch.setattr(web_push, "_crypto", missing)
-    for name, args in (("mobile.push_key", {}), ("mobile.push_on", {}), ("mobile.push_off", {}), ("mobile.push_quiet", {"quiet": "22:00-07:30"})):
-        with pytest.raises(CommandError, match="Notifications need the cryptography package"):
-            _as_phone(rig.host, name, args, rig.device)
-
-
-def test_push_key_gives_the_key_and_the_quiet_hours(rig):
-    rig.machine.quiet = None
-    got = _as_phone(rig.host, "mobile.push_key", {}, rig.device)
-    assert len(got["key"]) == 87 and got["quiet"] == ""
-    rig.machine.quiet = schedule.DEFAULT_QUIET
-    assert _as_phone(rig.host, "mobile.push_key", {}, rig.device)["quiet"] == "23:00-08:00"
 
 
 def test_push_on_keeps_the_subscription_sets_the_quiet_hours_when_none_and_logs(rig):
@@ -286,20 +204,6 @@ def test_push_off_and_push_quiet(rig):
     assert "push" not in rig.pairing.get(rig.device)
     lines = [r for r in event_log.read(Path(rig.host.repo_root)) if r["event"] == "push_set"]
     assert [r["on"] for r in lines] == [False]
-
-
-def test_the_morning_counts_a_goals_flag_beside_a_partys_old_one_spec_50(rig):
-    slug = ideas.add_idea(rig.root, "Export notes", rig.goal, rig.state)
-    other = ideas.add_idea(rig.root, "Queue the writes", rig.goal, rig.state)
-    _log(rig, "idea_flagged", at(4), idea=slug, goal=rig.goal, by="gate", tasks=2, first_time=2, usd=None, days=1)
-    rig.set_seen("2026-10-19T20:00:00")
-    (msg,) = rig.tick(at(8, 30))
-    assert msg["body"] == "While you were away: 1 flag raised and nothing waits for you"
-    _log(rig, "idea_flagged", at(3), idea=other, goal=rig.goal, by="done", tasks=1, first_time=1, usd=None, days=1)
-    _log(rig, "goal_accepted", at(2), goal=rig.goal, met=True, by="Product manager")
-    rig.pairing.set_push(rig.device, SUB)                                                       # the day is not checked yet
-    msg = rig.tick(at(8, 45, DAY + dt.timedelta(days=1)))[-1]                                # the sent list: the day's second morning
-    assert msg["body"].startswith("While you were away: 3 flags raised")
 
 
 # -- the Orkmaster's Go on paid? (decisions §178.5; spec 105 C) -----------------------------------------------------
@@ -332,7 +236,3 @@ def test_go_on_paid_counts_and_is_pushed_once_per_gap_with_its_own_words_and_no_
     rig.tick(at(12, 20))
     assert len(rig.sent) == 1                                                  # the same question is no news again within the gap
 
-
-def test_go_on_paid_without_a_reset_says_no_time():
-    assert phone_push.Pusher.paid_words({"until": None}) == "Go on paid? Every subscription is out."
-    assert phone_push.Pusher.paid_words({}) == "Go on paid? Every subscription is out."

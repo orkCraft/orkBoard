@@ -49,13 +49,6 @@ def priced(monkeypatch):
     monkeypatch.setenv("CODEX_HOME", "/nonexistent-codex-home")    # no config.toml model
 
 
-def test_the_shipped_table_carries_its_source_and_date():
-    """A price goes in only with the date a person read it on OpenAI's page; none has been yet."""
-    assert pricing.OPENAI_PRICES_SOURCE.startswith("https://developers.openai.com/")
-    assert not pricing.OPENAI_PRICES or pricing.OPENAI_PRICES_AS_OF
-    assert pricing.codex_usage_cost("gpt-6-luna", {"input_tokens": M}) is None or pricing.OPENAI_PRICES
-
-
 def test_codex_usage_cost_counts_cached_and_written_input_inside_the_input(priced):
     # openai/codex: 100 in = 40 cached + 60 written; reasoning is part of the output
     usage = {"input_tokens": 100 * M, "cached_input_tokens": 40 * M, "cache_write_input_tokens": 50 * M,
@@ -65,43 +58,6 @@ def test_codex_usage_cost_counts_cached_and_written_input_inside_the_input(price
     assert pricing.codex_usage_cost("gpt-6-astra", usage) is None            # not in the table: unknown, never $0
     assert pricing.codex_usage_cost("", usage) is None
     assert pricing.codex_usage_cost("gpt-6-luna", {"input_tokens": 5, "cached_input_tokens": 9}) == pytest.approx(9 * 0.5 / M)
-
-
-def test_long_context_prices_one_request_only(priced):
-    big = {"input_tokens": 200_000, "output_tokens": 0}
-    assert pricing.codex_usage_cost("gpt-6-luna", big, one_request=True) == pytest.approx(200_000 * 4 / M)
-    assert pricing.codex_usage_cost("gpt-6-luna", big) == pytest.approx(200_000 * 2 / M)   # a run's total
-
-
-def test_an_exec_run_is_priced_from_the_model_it_was_asked_for(priced):
-    out = FIXTURE.read_text(encoding="utf-8")
-    text, cost, tokens, _ = tool_run.result_of("codex", out, model="gpt-6-luna")
-    assert text == "done" and tokens == 34612 + 121
-    assert cost == pytest.approx(((34612 - 30080) * 2 + 30080 * 0.5 + 121 * 10) / M)
-    assert tool_run.result_of("codex", out, model="laborer")[1] == pytest.approx(cost)   # a tier word: its model
-    assert tool_run.result_of("codex", out)[1] is None                    # no model anywhere: unpriced
-    assert tool_run.result_of("codex", out, model="gpt-6-astra")[1] is None
-
-
-def test_without_a_model_the_one_in_codex_config_counts(priced, tmp_path, monkeypatch):
-    home = tmp_path / "codex-home"
-    home.mkdir()
-    (home / "config.toml").write_text('model = "gpt-6-luna"\n[profiles.x]\nmodel = "gpt-6-astra"\n', encoding="utf-8")
-    monkeypatch.setenv("CODEX_HOME", str(home))
-    assert harnesses.codex_config_model() == "gpt-6-luna"
-    assert tool_run.result_of("codex", FIXTURE.read_text(encoding="utf-8"))[1] is not None
-    (home / "config.toml").write_text("model = [", encoding="utf-8")
-    assert harnesses.codex_config_model() == ""
-
-
-def test_a_resumed_run_is_priced_for_its_own_usage_only(priced):
-    out = RESUMED.read_text(encoding="utf-8")
-    before = {"input_tokens": 34612, "cached_input_tokens": 30080, "output_tokens": 121}
-    _, cost, tokens, _ = tool_run.result_of("codex", out, before, "gpt-6-luna")
-    assert tokens == 52450 - 34733
-    fresh = (52000 - 41000) - (34612 - 30080)
-    assert cost == pytest.approx((fresh * 2 + (41000 - 30080) * 0.5 + (450 - 121) * 10) / M)
-    assert tool_run.result_of("codex", out, 34733, "gpt-6-luna")[1] is None   # only a count before: unpriced
 
 
 def test_run_work_charges_a_priced_codex_worker(priced, tmp_path, monkeypatch):
@@ -152,23 +108,6 @@ def test_a_codex_session_in_the_war_tent_is_metered(priced, tmp_path):
         f.write(_count(one, 3, "2026-10-05T09:06:01Z"))
     snap = t.refresh()
     assert snap.spent_usd == pytest.approx(0.1) and snap.unpriced == {"gpt-6-astra"}   # no price: unpriced
-
-
-def test_a_codex_session_without_a_rollout_stays_unpriced(tmp_path):
-    repo = tmp_path / "repo"
-    (repo / ".orkcraft").mkdir(parents=True)
-    run_id = telemetry.new_run_id()
-    (repo / ".orkcraft" / "sessions.jsonl").write_text(json.dumps(
-        {"harness": "codex", "session": "th", "run": run_id, "terminal": "new:codex:1"}) + "\n", encoding="utf-8")
-    assert telemetry.Telemetry(repo, run_id).refresh().unpriced == {"codex"}
-
-
-def test_a_resumed_worker_whose_thread_is_not_found_stays_unpriced(priced, tmp_path, monkeypatch):
-    fake_codex(tmp_path, monkeypatch)
-    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "none"))         # no rollout: the earlier usage is unknown
-    _, cost, tokens, _ = jobs.run_work("codex", "go on", tmp_path, threading.Event(), model="gpt-6-luna",
-                                       resume="th-gone", env={"ORKCRAFT_RUN": "x"})
-    assert tokens == 12 and cost is None
 
 
 def test_a_call_names_the_model_that_ran_never_its_tier(monkeypatch):

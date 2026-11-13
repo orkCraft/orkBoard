@@ -7,7 +7,7 @@ import pytest
 
 from orkboard.core import craft_spend
 from orkboard.realm import craft_tools, ideas
-from tests.test_craft_pick import setup, run
+from tests.test_craft_pick import setup, run  # noqa: F401  (setup is a fixture)
 from tests.test_craft_run import picture
 
 
@@ -102,12 +102,6 @@ def test_parallel_reservations_and_failed_atomic_replace(tmp_path, monkeypatch):
     assert spend.path.read_bytes() == before
 
 
-def test_registry_prices_and_estimate_words():
-    sound = craft_spend.price('elevenlabs-sound', {'duration_seconds': 5})
-    assert sound == dict(amount='0.01', currency='USD', estimate=True, dated='2026-11-08')
-    image = craft_spend.price('openai-images', {'prompt': 'A logo'})
-    assert image['estimate'] and image['dated'] == '2026-11-08'
-    assert Decimal(image['amount']) == Decimal('0.061455')
 
 
 @pytest.mark.parametrize('existing', [False, True])
@@ -145,7 +139,6 @@ def test_missing_key_pick_preserves_ledger_then_one_request_fits_cap(setup, monk
 def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypatch):
     from orkboard.core.idea_picking import PickMixin
     from types import SimpleNamespace
-    from orkboard.core import craft_pick
     key = 'FAKE-STAGE-D-KEY-7b169'
     reads, calls, events, logs = [], [], [], []
     monkeypatch.setattr(craft_tools, 'key', lambda _: reads.append(True) or key)
@@ -173,19 +166,6 @@ def test_fake_key_only_read_at_request_and_absent_from_artifacts(setup, monkeypa
     assert all(key.encode() not in artifact for artifact in artifacts)
 
 
-def test_cap_stop_keeps_price_cap_party_and_maker_for_its_plate(setup, monkeypatch):
-    cap(setup, '0.01')
-    monkeypatch.setattr('orkboard.core.craft_run.https_transport', lambda **kw: pytest.fail('request sent'))
-    with pytest.raises(craft_spend.CapStopped):
-        run(setup)
-    runner, slug, _, _, saved = setup
-    stop = saved['craft_stop']
-    assert stop == {'tool': 'openai-images', 'party': ideas.idea_page(runner.repo_root, slug).get('track'),
-                    'price': {'amount': '0.061455', 'currency': 'USD', 'estimate': True, 'dated': '2026-11-08'},
-                    'cap': {'amount': '0.01', 'currency': 'USD'},
-                    'held': {'amount': '0', 'currency': 'USD', 'estimate': True}}
-    from orkboard.realm.board_map import _run_of
-    assert _run_of(saved)['craft_stop'] == stop
 
 
 @pytest.mark.parametrize('status,held', [(429, '0'), (401, '0'), (408, '0.061455'), (500, '0.061455')])

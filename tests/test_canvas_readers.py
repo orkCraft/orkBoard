@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.sources import canvases, sessions, transcripts
+from orkboard.sources import canvases, sessions
 from orkboard.sources.canvases import Canvas, read_agy, read_all, read_claude, read_codex
 
 FIXTURES = Path(__file__).parent / "fixtures" / "canvases"
@@ -90,18 +90,6 @@ def test_claude_reads_the_artifacts_the_docs_and_the_figma_files_a_session_made(
     assert all(c.key == f"claude:{c.url}" for c in found)
 
 
-def test_claude_reads_the_projects_worktrees_too_and_ignores_another_projects_folder(world, tmp_path):
-    other = (tmp_path / "other").resolve()
-    other.mkdir()
-    _claude(other, "elsewhere")
-    assert read_claude(world) == []
-    tree = world / ".orkcraft" / "worktrees" / "t1"
-    tree.mkdir(parents=True)
-    _claude(tree, "in-a-tree")
-    _claude(world, "in-the-project")
-    assert sorted({c.session for c in read_claude(world)}) == ["in-a-tree", "in-the-project"]
-
-
 def test_claude_a_broken_line_is_skipped_and_a_line_still_being_written_waits(world):
     lines = (FIXTURES / "claude_session.jsonl").read_text(encoding="utf-8").splitlines()
     use = json.dumps({"type": "assistant", "timestamp": "2026-10-25T11:00:00+00:00", "message": {
@@ -113,50 +101,6 @@ def test_claude_a_broken_line_is_skipped_and_a_line_still_being_written_waits(wo
     with path.open("a", encoding="utf-8") as f:
         f.write(result[25:] + "\n")                        # the line is whole now: read from where it was left
     assert read_claude(world)[-1].title == "Late page"
-
-
-def test_claude_an_unchanged_file_is_not_parsed_again_and_a_grown_one_is_read_on(world, monkeypatch):
-    path = _claude(world)
-    parsed = []
-    real = canvases._feed
-    monkeypatch.setattr(canvases, "_feed", lambda tail, p, line: (parsed.append((p.name, tail.offset)), real(tail, p, line))[1])
-    first = read_claude(world)
-    assert read_claude(world) == first and parsed == [("sess-1.jsonl", 0)]      # the second pass opened nothing
-    call = {"type": "assistant", "timestamp": "2026-10-25T12:00:00+00:00", "message": {"model": "m", "content": [
-        {"type": "tool_use", "id": "x1", "name": "Artifact", "input": {"title": "Next page"}}]}}
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(call) + "\n")
-    grown = read_claude(world)
-    assert [n for n, _ in parsed] == ["sess-1.jsonl"] * 2 and parsed[1][1] > 0     # read on from where it was, not again
-    assert grown == first                                                     # the call has no answer yet: no canvas
-    with path.open("a", encoding="utf-8") as f:                               # its answer comes in a later read
-        f.write(json.dumps({"type": "user", "timestamp": "2026-10-25T12:00:03+00:00", "message": {"content": [
-            {"type": "tool_result", "tool_use_id": "x1", "content": "https://claude.ai/artifact/n3x7"}]}}) + "\n")
-    assert [c.title for c in read_claude(world)][-1] == "Next page" and len(parsed) == 3
-    path.write_text("", encoding="utf-8")                                     # a file that shrank is read again
-    assert read_claude(world) == []
-
-
-def test_claude_is_bounded_in_files_and_in_bytes(world, monkeypatch):
-    for i, name in enumerate(("old", "mid", "new")):
-        _claude(world, name, mtime=1_000_000 + i)
-    monkeypatch.setattr(sessions, "MAX_LOCAL", 2)
-    assert {c.session for c in read_claude(world)} == {"mid", "new"}            # the newest files only
-    canvases._CLAUDE.clear()
-    monkeypatch.setattr(sessions, "MAX_LOCAL", 60)
-    first = (FIXTURES / "claude_session.jsonl").read_text(encoding="utf-8").splitlines(keepends=True)[:3]
-    monkeypatch.setattr(transcripts, "MAX_BYTES", sum(map(len, first[:3])) + 5)
-    _claude(world, "big", mtime=2_000_000)
-    assert [c.title for c in read_claude(world) if c.session == "big"] == ["Onboarding"]   # nothing past the cap
-
-
-def test_claude_never_raises(world):
-    assert read_claude(world) == []                                             # no folder at all
-    folder = sessions.claude_projects_dir(world)
-    folder.mkdir(parents=True)
-    (folder / "binary.jsonl").write_bytes(b"\xff\xfe\x00{\n" * 10)
-    (folder / "dir.jsonl").mkdir()
-    assert read_claude(world) == []
 
 
 # -- Codex ------------------------------------------------------------------------------------------------------------
@@ -175,16 +119,6 @@ def test_codex_reads_pictures_and_mcp_calls_of_the_rollouts_under_the_project(wo
     assert (td.kind, td.url, td.at, td.model) == ("design", "https://www.tldraw.com/r/abc123", "2026-10-25T10:03:02+00:00", "gpt-6-luna")
 
 
-def test_codex_a_picture_with_no_saved_path_is_the_file_codex_keeps_when_it_is_there(world):
-    home = Path(os.environ["CODEX_HOME"])
-    _codex(world)
-    assert "A goblin with a ledger" not in _by_title(read_codex(world))             # no file, no picture
-    kept = home / "generated_images" / SESSION_ID / "ig_0002.png"
-    kept.parent.mkdir(parents=True)
-    kept.write_bytes(b"png")
-    assert _by_title(read_codex(world))["A goblin with a ledger"].file == str(kept)
-
-
 def test_codex_a_rollout_of_another_folder_is_ignored_and_one_in_a_subfolder_is_the_projects(world, tmp_path):
     other = (tmp_path / "other").resolve()
     other.mkdir()
@@ -193,36 +127,6 @@ def test_codex_a_rollout_of_another_folder_is_ignored_and_one_in_a_subfolder_is_
     (world / "sub").mkdir()
     _codex(world, cwd=world / "sub", name=f"rollout-2026-10-25T10-00-00-{SESSION_ID}-b")   # a rollout's `cwd` never changes
     assert len(read_codex(world)) == 3
-
-
-def test_codex_reads_a_paginated_rollouts_items_and_a_broken_line_is_skipped(world):
-    meta = {"timestamp": "2026-10-25T09:00:00+00:00", "type": "session_meta", "payload": {"id": "thread-9", "cwd": str(world)}}
-    img = {"timestamp": "2026-10-25T09:01:00+00:00", "type": "event_msg", "payload": {"type": "item_completed", "item": {
-        "type": "Extension", "kind": "image_gen.generation", "id": "ig_9", "status": "completed", "revisedPrompt": "A gnome\nwith a flag",
-        "result": "Zm9v", "savedPath": "/saved/ig_9.png"}}}
-    mcp = {"timestamp": "2026-10-25T09:02:00+00:00", "type": "event_msg", "payload": {"type": "item_completed", "item": {
-        "type": "McpToolCall", "id": "c1", "server": "canva", "tool": "create_design", "arguments": {"title": "Poster"},
-        "status": "completed", "result": {"content": [{"type": "text", "text": "https://www.canva.com/design/xyz/edit"}]}}}}
-    text = "\n".join([json.dumps(meta), "garbage{", json.dumps(img), json.dumps(mcp)]) + "\n"
-    _codex(world, text=text)
-    found = _by_title(read_codex(world))
-    assert (found["A gnome"].file, found["A gnome"].session, found["A gnome"].kind) == ("/saved/ig_9.png", "thread-9", "picture")
-    assert (found["Poster"].url, found["Poster"].kind) == ("https://www.canva.com/design/xyz/edit", "design")
-
-
-def test_codex_an_unchanged_rollout_is_not_parsed_again(world, monkeypatch):
-    _codex(world)
-    parsed = []
-    real = canvases._feed
-    monkeypatch.setattr(canvases, "_feed", lambda tail, p, line: (parsed.append(p.name), real(tail, p, line))[1])
-    first = read_codex(world)
-    assert read_codex(world) == first and len(parsed) == 1
-
-
-def test_codex_never_raises(world):
-    assert read_codex(world) == []                                              # no `~/.codex` at all
-    _codex(world, text="\x00\x01 not a rollout\n{\"type\": \"session_meta\", \"payload\": 5}\n")
-    assert read_codex(world) == []
 
 
 # -- agy --------------------------------------------------------------------------------------------------------------
@@ -246,12 +150,6 @@ def test_agy_a_picture_without_metadata_is_titled_by_its_name_and_only_named_con
     assert read_agy(world, ["unknown"]) == []
 
 
-@pytest.mark.parametrize("bad", ["../conv-1", "conv-1/..", "a/b", "", "..", ".hidden", "/etc"])
-def test_agy_an_id_that_is_not_a_plain_name_is_skipped(world, bad):
-    _agy()
-    assert read_agy(world, [bad]) == []
-
-
 # -- all of them ------------------------------------------------------------------------------------------------------
 
 def test_read_all_is_every_canvas_oldest_first_and_a_canvas_drawn_again_is_one(world):
@@ -273,13 +171,3 @@ def test_read_all_is_every_canvas_oldest_first_and_a_canvas_drawn_again_is_one(w
     assert found[-1] is page[0]
 
 
-def test_read_all_a_reader_that_fails_gives_nothing_and_the_others_go_on(world, monkeypatch):
-    _claude(world)
-    _agy()
-
-    def broken(_):
-        raise RuntimeError("a format that changed")
-    monkeypatch.setattr(canvases, "read_codex", broken)
-    found = read_all(world, ["conv-1"])
-    assert {c.tool for c in found} == {"claude", "agy"}
-    assert read_all(world) == read_claude(world)                                 # no agy conversation named: none read

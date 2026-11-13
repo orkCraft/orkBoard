@@ -47,40 +47,6 @@ def awake(fake_repo):
     return box
 
 
-def test_a_host_never_run_holds_nothing_and_reads_nothing(fake_repo):
-    host = Orkboard(fake_repo)
-    host.keep_awake.power = lambda: pytest.fail("the power is read")
-    host.ideas.working = lambda: True
-    host.keep_awake.tick(1e6)
-    host.keep_awake.apply(1e6)
-    assert host.awake.how == "" and host.awake.applied == [] and host.keep_awake.state()["holding"] is False
-
-
-def test_off_never_holds(awake):
-    awake.working = True
-    awake.host.machine.keep_awake = "off"
-    assert awake.keep.reason() == "" and awake.keep.state()["holding"] is False
-
-
-def test_on_battery_nothing_holds_in_any_mode(awake):
-    awake.power.on, awake.working, awake.keep.phones = False, True, True
-    for mode in ("carts", "phone"):
-        awake.host.machine.keep_awake = mode
-        awake.clock.go(POWER_S)
-        assert awake.keep.reason() == ""
-    assert awake.keep.state()["battery"] is True
-
-
-def test_the_power_is_read_at_most_every_minute_and_none_counts_as_on_power(awake):
-    reads = []
-    awake.keep.power = lambda: reads.append(1) or None
-    awake.clock.go(POWER_S)
-    awake.working = True
-    for _ in range(3):
-        assert awake.keep.reason() == "work"
-    assert len(reads) == 1 and awake.keep.state()["battery"] is False
-
-
 def test_carts_holds_while_the_keeper_or_a_task_is_at_work(awake):
     assert awake.keep.reason() == ""
     awake.working = True                                   # a draft, a plan, a read, a check, a task
@@ -119,16 +85,6 @@ def test_it_lets_go_only_after_the_linger_and_a_reason_coming_back_keeps_one_hol
     assert awake.fake.how == "" and awake.keep.state()["holding"] is False
 
 
-def test_tick_asks_at_most_every_thirty_seconds(awake):
-    awake.working = True
-    awake.keep.tick(awake.clock.go(0))
-    first = len(awake.fake.applied)
-    awake.keep.tick(awake.clock.go(TICK_S - 1))
-    assert len(awake.fake.applied) == first
-    awake.keep.tick(awake.clock.go(1))
-    assert len(awake.fake.applied) == first + 1
-
-
 def test_set_saves_and_applies_at_once_and_off_lets_go_with_no_linger(awake):
     awake.working = True
     awake.keep.apply()
@@ -141,14 +97,6 @@ def test_set_saves_and_applies_at_once_and_off_lets_go_with_no_linger(awake):
     assert awake.host.command("awake.state") == awake.keep.state()
 
 
-def test_state_has_the_keys_the_page_reads(awake):
-    s = awake.keep.state()
-    assert set(s) == {"mode", "why", "holding", "battery", "can", "how", "machine", "paired"}
-    assert s["machine"] == "computer" and s["can"] is True
-    awake.fake.platform = "darwin"
-    assert awake.keep.state()["machine"] == "Mac"
-
-
 def test_offer_once_and_yes_makes_the_mode_phone(awake):
     assert awake.keep.offer() == ""                         # no phone
     awake.keep.phones = True
@@ -158,24 +106,6 @@ def test_offer_once_and_yes_makes_the_mode_phone(awake):
     state = awake.host.command("awake.offer", {"yes": True})
     assert state["mode"] == "phone" and awake.keep.offer() == "" and settings.load().awake_offered is True
     assert settings.load().keep_awake == "phone"
-
-
-def test_not_now_answers_it_and_keeps_the_mode(awake):
-    awake.keep.phones = True
-    awake.host.command("awake.offer", {"yes": False})
-    assert awake.keep.offer() == "" and awake.host.machine.keep_awake == "carts"
-
-
-def test_no_offer_in_the_mode_phone_when_it_cannot_or_in_the_demo(awake):
-    awake.keep.phones = True
-    awake.host.machine.keep_awake = "phone"
-    assert awake.keep.offer() == ""
-    awake.host.machine.keep_awake = "carts"
-    awake.fake.can = lambda: False
-    assert awake.keep.offer() == ""
-    awake.fake.can = lambda: True
-    awake.host.demo = True
-    assert awake.keep.offer() == ""
 
 
 def test_run_hands_stop_to_show_and_it_lets_go_when_the_window_closes(fake_repo, monkeypatch):

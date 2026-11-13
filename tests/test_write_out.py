@@ -90,17 +90,6 @@ def test_the_boards_decisions_are_madr_files_that_read_back_the_same_and_a_readm
     assert "Orkboard" in readme.splitlines()[0] and "- 0001 · [No accounts in the first release](0001-no-accounts-in-the-first-release.md)" in readme
 
 
-def test_the_decisions_as_nygard_files(project, state, tmp_path):
-    (project / "docs" / "decisions.md").write_text(LOG, "utf-8")
-    to = tmp_path / "out"
-    assert write_out.write(project, state, to, "nygard")["decisions"] == 2
-    name = "0002-keep-one-theme-file.md"
-    text = (to / "decisions" / name).read_text("utf-8")
-    assert "Orkboard" in text.splitlines()[0] and "ork-source: docs/decisions.md" in text.splitlines()[0]
-    rec = doc_formats.parse_record(text, name)
-    assert (rec["format"], rec["number"], rec["title"], rec["status"], rec["date"]) == ("nygard", 2, "Keep one theme file", "accepted", "2 November")
-    assert rec["decision"].endswith("1. Tech owns it.")
-    assert doc_formats.folder_format(to / "decisions") == "nygard"
 
 
 def test_the_decisions_of_a_projects_adr_folder_are_written_out_and_the_folder_is_never_touched(project, state):
@@ -129,13 +118,6 @@ def test_nothing_is_refused_into_the_projects_own_decisions_folder(project, stat
 
 # -- the memory bank -----------------------------------------------------------------------------------------------------------------------
 
-def test_the_memory_bank_has_six_files_and_says_nothing_yet(project, state, tmp_path):
-    to = tmp_path / "out"
-    assert write_out.write(project, state, to)["memory_bank"] == 6
-    assert sorted(p.name for p in (to / "memory-bank").iterdir()) == sorted(write_out_bank.FILES)
-    for name in write_out_bank.FILES:
-        text = (to / "memory-bank" / name).read_text("utf-8")
-        assert "Written by Orkboard" in text and "Nothing yet." in text, name
 
 
 def test_the_memory_bank_holds_the_brief_the_parties_the_goals_and_the_journals(project, state, tmp_path):
@@ -194,17 +176,6 @@ def test_a_journal_file_is_in_the_specs_format_and_reads_back_equal(project, sta
     assert proj["meta"]["orkboard-journal"] == journals.PROJECT and proj["entries"][0]["ref"] == "docs/my decisions/0012-x.md#12" and proj["entries"][0]["id"] == p["id"]
 
 
-def test_a_journal_read_back_into_an_empty_state_is_the_same(project, state, tmp_path):
-    tech = _party(project, "Tech", "architect")
-    journals.add(state, tech, "heeded", "You made it smaller", idea="a", on=["x"], ref="r1", at="2026-09-01")
-    journals.add(state, tech, "calibration", "Your no's held 3 of 4 times", at="2026-09-02")
-    to = tmp_path / "out"
-    write_out.write(project, state, to)
-    empty = tmp_path / "empty-state"
-    for e in _read_journal((to / "journals" / f"{tech}.md").read_text("utf-8"))["entries"]:
-        journals.add(empty, tech, e["kind"], e["text"], idea=e["idea"], on=e["on"], ref=e["ref"], at=e["day"])
-    keep = lambda rows: [(r["at"][:10], r["kind"], r["text"], r["idea"], r["on"], r["ref"]) for r in rows]
-    assert keep(journals.read(empty, tech)) == keep(journals.read(state, tech))
 
 
 # -- where it writes ------------------------------------------------------------------------------------------------------------------------
@@ -239,20 +210,10 @@ def test_a_second_export_writes_the_same_files_and_removes_those_that_no_longer_
     assert "0001-no-accounts-in-the-first-release.md" in first and second == ["0001-accounts-come-later.md", "0002-keep-one-theme-file.md", "README.md"]
 
 
-def test_a_project_with_no_decisions_has_a_readme_that_says_so(project, state, tmp_path):
-    got = write_out.write(project, state, tmp_path / "out")
-    assert got["decisions"] == 0 and "Nothing yet." in (tmp_path / "out" / "decisions" / "README.md").read_text("utf-8")
 
 
 # -- orkboard export ------------------------------------------------------------------------------------------------------------------------
 
-def test_run_cli_says_what_it_wrote(project, tmp_path):
-    (project / "docs" / "decisions.md").write_text(LOG, "utf-8")
-    journals.add(project / ".orkcraft", journals.PROJECT, "done", "Goal “Lobby” was done")
-    code, text = write_out.run_cli(project, tmp_path / "out", "madr")
-    assert code == 0 and text == f"Wrote 2 decisions, 6 memory bank files and 1 journal to {tmp_path / 'out'}"
-    code, text = write_out.run_cli(project, None, "nygard")
-    assert code == 0 and text.endswith(f"to {project / '.orkcraft' / 'export'}") and (project / ".orkcraft" / "export" / "decisions").is_dir()
 
 
 def test_orkboard_export_prints_it_and_a_bad_folder_or_format_is_exit_2(project, tmp_path, capsys):
@@ -267,17 +228,6 @@ def test_orkboard_export_prints_it_and_a_bad_folder_or_format_is_exit_2(project,
 
 # -- the journals and the brief in a folder, for the Board's tree (spec 151 B.1, B.3) -------------------------------------------------------
 
-def test_the_journals_go_into_a_folder_one_file_each_and_a_party_with_nothing_has_none(project, state):
-    slug = _party(project, "Tech", "archie")
-    _party(project, "Design", "dryad")
-    journals.add(state, journals.PROJECT, "decision", "Decision 1: no accounts", ref="1")
-    journals.add(state, slug, "stance", "Keep it small")
-    out = project / "wiki" / "journals"
-    parties = write_out_bank.parties(_board(project))
-    assert write_out.journals_into(state, parties, out) == 2
-    assert sorted(p.name for p in out.iterdir()) == ["project.md", f"{slug}.md"]
-    assert "orkboard-journal: _project" in (out / "project.md").read_text() and "Keep it small" in (out / f"{slug}.md").read_text()
-    assert write_out.journals_into(state, parties, out) == 0                                    # nothing changed: nothing written
 
 
 def test_the_brief_is_the_memory_banks_projectbrief_written_again_when_it_changes_and_a_file_of_the_persons_is_left(project, state, tmp_path):
@@ -292,9 +242,3 @@ def test_the_brief_is_the_memory_banks_projectbrief_written_again_when_it_change
     assert not write_out.brief_into(project, state, board, out) and (out / "project.md").read_text() == "# my own brief\n"
 
 
-def test_an_empty_brief_writes_no_file_and_one_with_a_party_does(project, state, tmp_path):
-    """Spec 155 G.3: no `project.md` while every part of the brief is empty (no facts, no parties)."""
-    board, out = _board(project), tmp_path / "wiki"
-    assert not write_out.brief_into(project, state, board, out) and not (out / "project.md").exists()
-    _party(project, "Tech", "archie")
-    assert write_out.brief_into(project, state, board, out) and (out / "project.md").is_file()

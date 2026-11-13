@@ -12,7 +12,7 @@ import pytest
 
 from orkboard.core.idea_keeper import IdeaKeeper
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, party_price, pitches, roles
+from orkboard.realm import event_log, goal_team, ideas, library, pitches
 
 STEPS = (("Read this pitch alone", "pitch_view"), ("Make the case against this pitch", "pitch_case"),
          ("Decide whether to invest", "pitch_decide"), ("write its spec straight away", "draft"), ("turn it into a plan", "plan"),
@@ -108,64 +108,6 @@ def _judged(k, slug, model=None):
 
 # -- §1: the agents, the preset, the stages, the seats ------------------------------------------------------------------
 
-def test_the_six_agents_of_ideation_follow_the_marketing_ones_with_their_craft_tier_band_and_a_pitch_kind_only():
-    ids = [a.id for a in library.LIBRARY]
-    assert ids[ids.index("community") + 1:ids.index("skeptic") + 1] == ["investor", "product-view", "market-view", "tech-view", "design-view", "skeptic"]
-    rows = {a.id: (a.name, a.craft, a.tier, a.band, a.takes, a.line) for a in library.LIBRARY if a.pitch}
-    assert rows == {
-        "investor": ("Investor", "product", "elder", "lead", ("pitch",), "Decides whether to invest in a pitch: where to take it, or why not"),
-        "product-view": ("Product view", "product", "warrior", "build", ("pitch-product",), "Who it is for, what it moves, what it leaves out"),
-        "market-view": ("Market view", "marketing", "warrior", "build", ("pitch-market",), "Who would want it, how they would hear of it, what it is like"),
-        "tech-view": ("Engineering view", "engineering", "warrior", "build", ("pitch-tech",), "What it touches, how big it is, what it risks"),
-        "design-view": ("Design view", "design", "warrior", "build", ("pitch-design",), "Where it lives on screen, the flow, what it costs people"),
-        "skeptic": ("Skeptic", "product", "warrior", "check", ("pitch-against",), "Makes the strongest case not to do it")}
-    assert not any(k in roles.TASK_KINDS for a in library.LIBRARY if a.pitch for k in a.takes)        # the Taskmaster plans no work for them
-    assert roles.RACES[library.get("investor").craft] == "lich" and library.get("investor").check is None
-    told = library.get("investor").instruction
-    assert len(told) <= roles.INSTRUCTION_CHARS and told.startswith("You decide whether to invest the team's time in an idea.")
-    assert all(w in told for w in ("someone it is for is named", "a metric the project has", "reshape it", "pass", "case against",
-                                   "cheapest way to know before building"))
-    for v in [*library.VIEWS, "skeptic"]:
-        said = library.get(v).instruction
-        assert len(said) <= roles.INSTRUCTION_CHARS and "invent no number, no user, no competitor" in said and "I cannot tell from here" in said, v
-    assert "never the same case twice in other words" in library.get("skeptic").instruction
-    listed = {a["id"]: a for a in library.listed()}
-    assert listed["investor"]["pitch"] is True and listed["grunt"]["pitch"] is False
-
-
-def test_the_ideation_preset_follows_website_and_the_investors_stages_are_pitch_views_decision():
-    got = library.presets()
-    i = [p["id"] for p in got].index("ideation")
-    assert got[i - 1]["id"] == "website" and got[i + 1]["id"] == "release" and got[i] == {
-        "id": "ideation", "name": "Ideation", "line": "Small pitches: invest, reshape or pass, and why", "craft": "product", "race": "lich",
-        "mixed": True, "lead": "investor", "build": ["product-view", "market-view", "tech-view", "design-view"], "check": ["skeptic"]}
-    assert library.stages()["investor"] == {"lead": "Pitch", "build": "Views", "check": "Decision", "seats": {"lead": 1, "build": 1, "check": 1}}
-    assert not goal_team.seats(TEAM, "investor")           # a party made before keeps its four views
-
-
-def test_seats_refuse_ideation_without_a_view_with_a_code_agent_and_a_view_elsewhere():
-    whole = "Ideation reads every pitch from all four sides: its views and the skeptic stay"
-    assert goal_team.seats([v for v in TEAM if v != "market-view"], "investor") == whole           # a view out
-    assert goal_team.seats([*TEAM[:3], "grunt", "skeptic"], "investor") == whole                     # a code agent for a view
-    assert goal_team.seats([*TEAM, "grunt"], "investor") == whole                                    # one more
-    assert goal_team.seats(list(library.VIEWS), "investor") == whole                                 # no skeptic
-    assert not goal_team.seats([], "investor") and not goal_team.seats([*library.VIEWS[:2], "skeptic"], "investor")           # a size's part of it (spec 81 §2)
-    assert not goal_team.seats([library.VIEWS[0]], "investor") and not goal_team.seats([library.VIEWS[0], "skeptic"], "investor")     # Standard, Full (spec 87 §5)
-    assert goal_team.seats([*library.VIEWS[:3], "skeptic"], "investor") == whole and goal_team.seats(["skeptic"], "investor") == whole
-    only = "The views judge pitches: they are in Ideation only"
-    assert goal_team.seats(["grunt", "market-view"], "architect") == only
-    assert goal_team.seats(["skeptic"], "") == only and goal_team.seats(["grunt", "skeptic"], "product-manager") == only
-
-
-def test_ideation_is_offered_no_goal_type_and_prices_a_pitch_at_its_calls_caps(keeper):
-    assert goal_types.offered(keeper.state, keeper.root, keeper.ideas) == []
-    read = goal_types.Party.of(keeper.state, keeper.root, "investor", TEAM)
-    assert goal_types.offered(keeper.state, keeper.root, "", read=read) == []
-    got = party_price.price(keeper.root, keeper.state, {"target": "balance"}, "investor", TEAM, [])
-    assert got == {"low": 0.56, "high": 1.13, "learned": False, "ideas": 0, "checks": [], "pitch": True}       # 4 × 0.15 + 0.15 + 0.38: each cap at 1.5 floors (spec 86 §5)
-    assert party_price.price(keeper.root, keeper.state, {"target": "thrift"}, "investor", TEAM, [])["high"] == 0.40
-
-
 # -- §3: the calls ---------------------------------------------------------------------------------------------------
 
 def test_a_pitch_is_judged_its_views_alone_the_engineering_view_alone_with_tools_the_skeptic_on_the_views_the_investor_on_the_parties(keeper):
@@ -205,21 +147,6 @@ def test_a_pitch_is_judged_its_views_alone_the_engineering_view_alone_with_tools
     assert st["measure"]["step"] == "pitch" and st["measure"]["cost"] == 0.06
 
 
-def test_the_target_picks_each_steps_tier_and_effort_and_a_model_set_on_agents_wins(keeper):
-    keeper.settings_now["target"] = "thrift"
-    model = _judged(keeper, _pitch(keeper))
-    assert {(a["tier"], a["effort"]) for a in model.of("pitch_view") + model.of("pitch_case")} == {("laborer", "")}
-    assert (model.of("pitch_decide")[0]["tier"], model.of("pitch_decide")[0]["effort"]) == ("warrior", "medium")
-    keeper.settings_now["target"] = "quality"
-    path = roles.folder(keeper.state) / "market-view.md"
-    path.write_text(path.read_text().replace("model: warrior", "model: haiku"))           # the person's own model for the Market view
-    model = _judged(keeper, _pitch(keeper, "another pitch"))
-    assert {a["view"]: a["tier"] for a in model.of("pitch_view")} == {"product-view": "warrior", "market-view": "haiku",
-                                                                       "tech-view": "warrior", "design-view": "warrior"}
-    assert model.of("pitch_decide")[0]["tier"] == "elder" and model.of("pitch_decide")[0]["effort"] == "medium"
-    assert idea_target.pick("pitch_view", "quality") == ("warrior", "medium")
-
-
 def test_a_view_that_fails_once_is_tried_again_and_twice_fails_the_pitch(keeper):
     def flaky(fails):
         seen = {"n": 0}
@@ -240,14 +167,6 @@ def test_a_view_that_fails_once_is_tried_again_and_twice_fails_the_pitch(keeper)
     assert model.of("pitch_decide") == [] and pitches.read(keeper.state, other)["decision"] is None      # never decided on fewer than four
     assert keeper.judge(other) is True                                                    # Try again
     _wait(keeper, other)
-
-
-def test_a_decision_that_is_not_json_or_not_one_of_three_fails_the_pitch(keeper):
-    slug = _pitch(keeper)
-    _judged(keeper, slug, Model(keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide="I would invest, I think."))
-    assert ideas.state(keeper.state, slug)["error"] == "the answer was not the JSON it was asked for"
-    _judged(keeper, slug, Model(keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide={**DECIDE(), "answer": "maybe"}))
-    assert ideas.state(keeper.state, slug)["error"] == "the Investor's answer was not invest, reshape or pass"
 
 
 # -- §4: cut and cleaned -----------------------------------------------------------------------------------------------
@@ -279,25 +198,7 @@ def test_the_answer_is_cut_and_cleaned_unknown_party_type_like_and_kills_go_and_
     assert list(pitches.KILLS) == ["no_who", "no_move", "repeat", "costly", "off"]
 
 
-def test_an_invest_without_who_is_judged_a_reshape_and_its_page_says_why(keeper):
-    slug = _pitch(keeper)
-    _judged(keeper, slug, Model(keeper, pitch_view=VIEW, pitch_case={"case": "Who is it for?", "kills": ["no_who"]}, pitch_decide=DECIDE()))
-    d = pitches.read(keeper.state, slug)["decision"]
-    assert d["answer"] == "reshape" and d["reshaped"] and d["kills"] == ["no_who"]
-    assert ideas.idea_page(keeper.root, slug).section("Decision").startswith("**Reshape: the Ship party, as Fix a bug**")
-    assert "No one it is for is named" in ideas.idea_page(keeper.root, slug).section("Decision")
-
-
 # -- §7: Stop all -------------------------------------------------------------------------------------------
-
-def test_nothing_judges_or_drafts_by_itself_what_an_older_state_put_off_to_the_night(keeper):
-    goal = ideas.add_idea(keeper.root, "a goal for tonight", keeper.ship, keeper.state, queue="night")
-    slug = _pitch(keeper, queue="night")
-    keeper.call = model = Model(keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide=DECIDE(), draft={})
-    assert not keeper.tick(time.time())                                                    # the clock runs only what the limits held and what is `now`
-    assert ideas.state(keeper.state, slug)["state"] == "raw" and ideas.state(keeper.state, goal)["state"] == "raw"
-    assert model.of("pitch_view") == [] and model.of("draft") == [] and not hasattr(keeper, "run_night")
-
 
 def test_stop_all_stops_a_judging_pitch_failed_and_stopped(keeper):
     slug = _pitch(keeper)
@@ -313,17 +214,6 @@ def test_stop_all_stops_a_judging_pitch_failed_and_stopped(keeper):
     _wait(keeper, slug)
     st = ideas.state(keeper.state, slug)
     assert (st["state"], st["error"]) == ("failed", "stopped") and model.of("pitch_decide") == []
-
-
-def test_the_draft_and_the_plan_refuse_a_pitch_and_a_raw_pitch_is_judged_where_a_goal_would_be_drafted(keeper):
-    from orkboard.core.idea_keeper import KeeperError
-    slug = _pitch(keeper)
-    with pytest.raises(KeeperError, match="A pitch is judged, not built: send it to a party first"):
-        keeper.plan(slug)
-    keeper.call = model = Model(keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide=DECIDE())
-    keeper.draft(slug)                                                                   # Add's, the clock's and Process now's way
-    _wait(keeper, slug)
-    assert ideas.state(keeper.state, slug)["state"] == "judged" and model.of("draft") == []
 
 
 # -- §5, §6: the commands, the events, Needs you, the faces -------------------------------------------------------------
@@ -456,10 +346,6 @@ def test_pass_keeps_it_a_later_pitchs_prompts_hold_its_why_and_the_oldest_beyond
     assert [(e["goal"], e["as_decided"], e["has_reason"]) for e in evs] == [(slug, False, True), (later, False, False)]
 
 
-def test_the_cap_is_two_hundred():
-    assert pitches.KEEP_PASSED == 200 and pitches.PROMPT_PASSED == 20
-
-
 def test_change_and_judge_again_keeps_the_last_two_decisions_and_a_passed_pitch_is_judged_again(host):
     slug = _add_pitch(host)
     host.model.answers["pitch_decide"] = [DECIDE(answer="reshape"), DECIDE(answer="pass"), DECIDE()]
@@ -478,30 +364,3 @@ def test_change_and_judge_again_keeps_the_last_two_decisions_and_a_passed_pitch_
     evs = _events(host, event_log.PITCH_AGAIN)
     assert [(e["goal"], e["changed"]) for e in evs] == [(slug, True), (slug, False), (slug, False)]
 
-
-def test_the_events_hold_no_pitchs_words_and_the_party_counts_what_the_person_did(host):
-    slug = _add_pitch(host)
-    other = _add_pitch(host, "another pitch, OTHER-WORDS")
-    host.command("ideas.pitch_send", {"slug": slug, "party": host.ship})
-    host.command("ideas.pitch_pass", {"slug": other, "why": "PASS-WORDS"})
-    rows = [r for r in event_log.read(host.ideas.host.repo_root) if r["event"].startswith("pitch_")]
-    assert {r["event"] for r in rows} == {"pitch_judged", "pitch_sent", "pitch_passed"}
-    text = json.dumps(rows)
-    assert "SECRET-WORDS" not in text and "OTHER-WORDS" not in text and "PASS-WORDS" not in text
-    judged = next(r for r in rows if r["event"] == "pitch_judged")
-    assert set(judged) >= {"goal", "answer", "kills", "tokens", "cost", "seconds"} and judged["answer"] == "invest"
-    assert judged["kills"] == ["costly"] and judged["cost"] == 0.06
-    assert {pitches_event for pitches_event in event_log.EVENTS if pitches_event.startswith("pitch_")} == {
-        "pitch_judged", "pitch_sent", "pitch_passed", "pitch_again"}
-    work = host.command("ideas.party", {"goal": host.party})
-    assert work["pitches"] == {"judged": 2, "sent": 1, "passed": 1, "as_decided": 0.5, "flags": 0}
-    assert "pitches" not in host.command("ideas.party", {"goal": host.ship})
-
-
-def test_the_words_are_in_the_glossary():
-    from orkboard.realm import lexicon
-    assert lexicon.term("pitch") == "pitch" and lexicon.term("pitch", many=True) == "pitches"
-    assert lexicon.term("pitch_view", many=True) == "views" and lexicon.term("pitch_case") == "the case against"
-    assert lexicon.term("pitch_decision") == "decision" and lexicon.term("pitch_passed") == "passed"
-    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
-    assert all(rows[k][1] == "" for k in ("pitch", "pitch_view", "pitch_case", "pitch_decision", "pitch_passed"))

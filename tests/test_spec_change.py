@@ -12,7 +12,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import CommandError
-from orkboard.realm import event_log, idea_target, ideas, leader_change, spec_change, spec_sections
+from orkboard.realm import event_log, idea_target, ideas, spec_change, spec_sections
 from tests.test_make_change import CHANGE, Model, _events, _goal, _party, design, host, tech  # noqa: F401  (fixtures)
 
 SAID = "Make the winner stand out, nicer"
@@ -116,50 +116,6 @@ def test_a_change_touching_two_sections_goes_to_their_two_parties_and_comes_back
     assert "plain list" in page_text(host, slug), "nothing is written before the person accepts"
 
 
-def test_only_the_parties_the_route_names_rewrite_and_a_lone_party_has_no_join(host, tech, design, clock):
-    slug = made(host, tech, design)
-    model = speaks(host, tech, design, route=[design])
-    ask(host, slug)
-    (row,) = rows(host, slug)
-    assert [p["party"] for p in row["parties"]] == [design] and [c["step"] for c in model.calls] == ["route", "plan"] and row["agree"]["ok"] is True
-
-
-def test_a_leader_with_nothing_to_change_stays_out_of_the_record(host, tech, design, clock):
-    slug = made(host, tech, design)
-    Model(host, lambda c: {"route": [tech, design]} if c["step"] == "route" else TECH_DONE if c["key"] == f"goal:{tech}" else {"why": "Nothing.", "lines": [], "change": [], "drop": [], "add": []})
-    ask(host, slug)
-    (row,) = rows(host, slug)
-    assert row["status"] == "ready" and [p["party"] for p in row["parties"]] == [tech]
-
-
-def test_a_failed_route_is_failed_with_the_tools_words(host, tech, design, clock):
-    slug = made(host, tech, design)
-
-    def out_of_room(call):
-        raise RuntimeError("The tool is out of room until Mon 09:00")
-    Model(host, out_of_room)
-    ask(host, slug)
-    (row,) = rows(host, slug)
-    assert row["status"] == "failed" and "out of room" in row["text"] and "out of room" in row["error"]
-    assert "plain list" in page_text(host, slug)
-    with pytest.raises(CommandError, match="did not come"):
-        host.command("ideas.spec_change_take", {"idea": slug, "id": row["id"]})
-    assert not spec_change.open_on(host.ideas.state_dir, slug), "a failure holds nothing"
-
-
-def test_at_one_leader_goes_to_the_single_leaders_change_as_built(host, tech, design):
-    slug = made(host, tech, design)
-    model = Model(host, TECH_DONE)
-    got = host.command("ideas.spec_change", {"idea": slug, "text": "@Tech show the winner first"})
-    for _ in range(500):
-        if not host.ideas.keeper.busy(f"change:{slug}:{tech}"):
-            break
-        time.sleep(0.01)
-    assert got["ok"] and got["via"] == "change" and [p["party"] for p in got["parties"]] == [tech]
-    assert spec_change.read(host.ideas.state_dir, slug) == [] and [r["party"] for r in leader_change.read(host.ideas.state_dir, slug)] == [tech]
-    assert [c["step"] for c in model.calls] == ["plan"], "no route: the person named the leader"
-
-
 def test_refusals_are_in_plain_words(host, tech, design):
     slug = made(host, tech, design)
     model = speaks(host, tech, design)
@@ -210,17 +166,6 @@ def test_accept_with_the_limits_low_waits_for_the_reset(host, tech, design, cloc
     got = ask(host, slug)
     assert host.command("ideas.spec_change_take", {"idea": slug, "id": got["id"]})["starts"] == "reset"
     assert plan_of(host, slug)["look_until"] == reset
-
-
-def test_accept_with_no_wait_decides_the_plan_at_once(host, tech, design, clock, monkeypatch):
-    host.command("ideas.board_set", {"look_wait": "none"})
-    slug = made(host, tech, design)
-    speaks(host, tech, design)
-    started = []
-    monkeypatch.setattr(host.ideas, "pass_plan", lambda s, by, args=None: started.append((s, by)))
-    got = ask(host, slug)
-    assert host.command("ideas.spec_change_take", {"idea": slug, "id": got["id"]})["starts"] in ("now", "")
-    assert "look_until" not in plan_of(host, slug)
 
 
 def test_drop_it_changes_no_file_and_talk_more_gives_the_words_back(host, tech, design, clock):

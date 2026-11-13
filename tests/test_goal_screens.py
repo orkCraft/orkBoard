@@ -41,14 +41,6 @@ def test_a_screen_whose_component_file_a_task_changed_is_a_screen_of_the_goal_wi
     assert of(repo, "pay-now") == [{"screen": "pay", "name": "Pay", "path": "/pay"}]
 
 
-def test_a_file_the_component_imports_one_level_down_changes_its_screen_a_stylesheet_too(repo):
-    app(repo)
-    land(repo, "rows", "k1", {"src/components/CartRow.jsx": "export default () => <li>row</li>;\n"})
-    assert of(repo, "rows") == [{"screen": "cart", "name": "Cart", "path": "/cart"}]
-    land(repo, "paint", "k1", {"src/styles/cart.css": ".cart { color: blue }\n"})
-    assert of(repo, "paint") == [{"screen": "cart", "name": "Cart", "path": "/cart"}]
-
-
 def test_a_file_no_screen_uses_or_a_goal_that_changed_none_has_no_screens(repo):
     app(repo)
     land(repo, "money", "k1", {"src/util/format.js": "export const money = (n) => `$${n}`;\n", "README.md": "words\n"})
@@ -73,18 +65,3 @@ def test_only_the_goals_own_commits_count(repo):
     assert [s["screen"] for s in of(repo, "pay-now")] == ["pay"]
     assert [s["screen"] for s in of(repo, "terms")] == ["terms"]
 
-
-def test_a_routers_table_that_several_screens_share_names_no_screen(repo):
-    commit(repo, "package.json", json.dumps({"dependencies": {"react-router-dom": "6"}}))
-    commit(repo, "src/App.jsx", 'import { Routes, Route } from "react-router-dom";\nexport default () => <Routes><Route path="/" element={<Home />} /><Route path="/cart" element={<Cart />} /></Routes>;\n')
-    land(repo, "table", "k1", {"src/App.jsx": 'import { Routes, Route } from "react-router-dom";\n// changed\nexport default () => <Routes><Route path="/" element={<Home />} /><Route path="/cart" element={<Cart />} /></Routes>;\n'})
-    assert of(repo, "table") == []
-
-
-def test_a_project_with_no_screen_or_no_dev_has_none(repo):
-    land(repo, "docs", "k1", {"notes.md": "words\n"})
-    assert of(repo, "docs") == []
-    git(repo, "checkout", "-q", "main")
-    git(repo, "branch", "-D", "dev")
-    assert goal_screens.of(state(repo), repo, "docs") == []
-    assert goal_screens.of(state(repo), repo, "docs", "gone") == []

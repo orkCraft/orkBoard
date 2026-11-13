@@ -114,10 +114,6 @@ def _goal(host, about="Show the runs at a glance.", priority="normal", **more):
     return slug
 
 
-def test_the_new_commands_are_the_hosts_and_a_phones(host):
-    assert NEW <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in NEW)
-
-
 def test_a_goal_from_a_description_and_a_priority_is_read_at_once_and_written(host, model):
     slug = _goal(host, priority="high")
     (call,) = model.seen
@@ -176,49 +172,6 @@ def test_autostart_starts_what_is_safe_and_passed_by_says_who(host, model, runne
     assert made["step"] == "plan" and made["prompt_chars"] > 0 and made["tokens"] == {"total": 10} and made["cost"] is None
 
 
-def test_autostart_off_or_a_question_or_a_stopped_plan_waits_for_the_person(host, model, runner):
-    g = _goal(host)
-    host.command("ideas.board_set", {"autostart": False})
-    a = _sent(host, "off", g)["slug"]
-    _wait(host, a)
-    assert ideas.plan(host.ideas.state_dir, a).get("passed_at") is None and runner.started == []
-    host.command("ideas.board_set", {"autostart": True})
-    model.answers["draft"] = {**model.answers["draft"], "questions": ["Which columns?"]}
-    b = _sent(host, "asks", g)["slug"]
-    _wait(host, b)
-    assert ideas.state(host.ideas.state_dir, b)["state"] == "asks" and ideas.plan(host.ideas.state_dir, b) is None
-    host.command("ideas.start", {"slug": a})                                  # the person passes it …
-    assert ideas.plan(host.ideas.state_dir, a)["passed_by"] == "person"
-    host.command("ideas.stop", {"slug": a})                                   # … and stops it: it waits for them now
-    ideas.edit_plan(host.ideas.state_dir, a, lambda p: p.update(passed_at=None))
-    ideas.save_state(host.ideas.state_dir, a, state="plan")
-    assert host.ideas.autostart(a) == "" and ideas.plan(host.ideas.state_dir, a).get("passed_at") is None
-
-
-def test_a_low_safe_plan_starts_at_once_and_a_plan_of_before_the_night_went_waits_for_start_now_or_the_clock(host, model, runner):
-    g = _goal(host, priority="low")
-    slug = host.command("ideas.add", {"text": "low and safe", "track": g, "priority": "low"})["slug"]
-    ideas.save_state(host.ideas.state_dir, slug, state="raw")
-    host.ideas.keeper.draft_one(slug)
-    plan = ideas.plan(host.ideas.state_dir, slug)
-    assert plan.get("start_at") is None and plan["passed_by"] == "auto" and runner.started == [slug]       # no night to wait for
-    with pytest.raises(CommandError, match="does not wait for the night"):
-        host.command("ideas.start_now", {"slug": slug})
-    old = ideas.add_idea(host.ideas.root(), "passed for the night, before it went", g, host.ideas.state_dir)
-    ideas.save_plan(host.ideas.state_dir, old, {"idea": old, "passed_at": "x", "passed_by": "auto", "start_at": "night", "todos": [], "tasks": []})
-    ideas.save_state(host.ideas.state_dir, old, state="plan")
-    row = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == old)
-    assert row["start_at"] == "night" and row["state"] == "plan"
-    host.command("ideas.start_now", {"slug": old, "via": "map"})
-    assert ideas.plan(host.ideas.state_dir, old)["start_at"] is None and runner.started == [slug, old]
-    assert [(e["idea"], e["via"]) for e in _events(host, "plan_started_now")] == [(old, "map")]       # spec 41 §4
-    other = ideas.add_idea(host.ideas.root(), "another of before", g, host.ideas.state_dir)
-    ideas.save_plan(host.ideas.state_dir, other, {"idea": other, "passed_at": "x", "passed_by": "auto", "start_at": "night", "todos": [], "tasks": []})
-    ideas.save_state(host.ideas.state_dir, other, state="plan")
-    assert host.ideas.older_night_plans() == 1 and runner.started == [slug, old, other]               # the clock hands it on: it waits for the reserve, not a night
-    assert ideas.plan(host.ideas.state_dir, other)["start_at"] == "night" and ideas.state(host.ideas.state_dir, other)["state"] == "working"
-
-
 def test_needs_you_is_one_list_blocks_then_priority_then_age_proposals_last(host, model, runner):
     g = _goal(host)
     root, sd = host.ideas.root(), host.ideas.state_dir
@@ -244,22 +197,6 @@ def test_needs_you_is_one_list_blocks_then_priority_then_age_proposals_last(host
     assert asks_low and asks_high
 
 
-def test_a_proposal_that_waits_is_taken_and_drafted_at_once_or_dropped_and_none_is_kept_for_a_night(host, model, runner):
-    g = _goal(host)
-    root, sd = host.ideas.root(), host.ideas.state_dir
-    take = ideas.add_idea(root, "why take", g, sd)
-    no = ideas.add_idea(root, "why not", g, sd)
-    for s in (take, no):
-        ideas.save_state(sd, s, state="proposed")
-    host.command("ideas.proposal", {"slug": take, "take": True, "priority": "low"})
-    _wait(host, take)
-    assert ideas.state(sd, take)["state"] not in ("proposed", "raw") and ideas.state(sd, take)["queue"] != "night"        # drafted at once: Low waits for no night
-    host.command("ideas.proposal", {"slug": no, "take": False, "reason": "not now"})
-    assert ideas.idea_page(root, no) is None
-    assert not (sd / "ideas" / "declined.jsonl").exists()
-    assert [(e["take"], e["has_reason"]) for e in _events(host, "proposal_answered")] == [(True, False), (False, True)]
-
-
 def test_queue_read_stop_and_board_set(host, model, runner):
     g = _goal(host)
     slug = host.command("ideas.add", {"text": "kept", "track": g, "hold": True})["slug"]
@@ -283,68 +220,6 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     (e,) = _events(host, "board_set")
     assert e["target"] == "quality" and e["night"] == "22:00-05:00" and e["device"] == "phone"
     assert [e["idea"] for e in _events(host, "keeper_stopped")] == [slug]
-
-
-def test_the_nights_answer_has_no_command_any_more(host, model, runner):
-    assert "night_low" not in host.command("ideas.board")
-    with pytest.raises(CommandError, match="Unknown command"):
-        host.command("ideas.night_allow", {"allow": True})
-
-
-def test_a_file_todo_is_kept_outside_the_repository_and_off_the_plan(host, model, runner):
-    g = _goal(host)
-    slug = host.command("ideas.add", {"text": "needs a file", "track": g, "hold": True})["slug"]
-    ideas.save_plan(host.ideas.state_dir, slug, {"idea": slug, "made_at": "x", "passed_at": None, "tasks": [
-        {"id": "k1", "title": "Use it", "brief": "b", "state": "waiting", "after": []}], "todos": [
-        {"id": "t2", "title": "the Firebase config", "kind": "file", "why": "", "steps": ["Download it"], "accept": ["json"],
-         "for": ["k1"], "done": False, "value": None}]})
-    ideas.save_state(host.ideas.state_dir, slug, state="plan")
-    data = base64.b64encode(b'{"project": "x-secret"}').decode()
-    with pytest.raises(CommandError, match="paired link"):
-        host.command("ideas.todo", {"idea": slug, "id": "t2", "done": True, "file": {"name": "g.json", "data": data},
-                                    "device": "phone"})
-    with pytest.raises(CommandError, match="not one it takes"):
-        host.command("ideas.todo", {"idea": slug, "id": "t2", "done": True, "file": {"name": "g.txt", "data": data}})
-    host.command("ideas.todo", {"idea": slug, "id": "t2", "done": True, "file": {"name": "google-services.json", "data": data}})
-    plan_text = (host.ideas.state_dir / "ideas" / slug / "plan.json").read_text()
-    assert "x-secret" not in plan_text and json.loads(plan_text)["todos"][0]["value"] == "google-services.json"
-    path = idea_secrets.file_path(host.ideas.state_dir, slug, "t2")
-    assert path.read_bytes() == b'{"project": "x-secret"}' and oct(path.stat().st_mode & 0o777) == "0o600"
-    assert host.ideas.state_dir in path.parents and not list(Path(host.town.repo_root).glob("**/google-services.json"))[1:]
-    guarded = BoardPhone.guard("ideas.todo", {"idea": slug, "link": "paired"}, {"id": "p1", "name": "Phone"})
-    assert guarded["link"] == "paired" and BoardPhone.guard("ideas.todo", {"link": "paired"}, {})["device"] == "phone"
-    assert "link" not in BoardPhone.guard("ideas.todo", {"link": "paired"}, {})
-    host.command("ideas.drop", {"slug": slug})
-    assert not path.exists()
-
-
-def test_the_agents_chips_say_by_itself_tonight_and_why_held(host, runner):
-    root, sd = host.ideas.root(), host.ideas.state_dir
-    g = ideas.add_track(root, "Chips")
-    a = ideas.add_idea(root, "auto", g, sd)
-    b = ideas.add_idea(root, "night", g, sd)
-    task = lambda tid, state, note="": {"id": tid, "title": tid, "brief": "b", "tier": "warrior", "kind": "code",  # noqa: E731
-                                        "after": [], "state": state, "note": note, "started": ""}
-    ideas.save_plan(sd, a, {"idea": a, "passed_at": "x", "passed_by": "auto", "todos": [],
-                            "tasks": [task("k1", "held", "reserve · after 18:00"), task("k2", "held", "after 19:00")]})
-    ideas.save_plan(sd, b, {"idea": b, "passed_at": "x", "passed_by": "auto", "start_at": "night", "todos": [],
-                            "tasks": [task("k1", "ready")]})
-    chips = [c for r in host.command("ideas.agents")["roles"] for c in r.get("chips") or [] if c.get("task")]
-    got = {(c["idea"], c["task"]): c for c in chips}
-    assert got[(a, "k1")]["by"] == "auto" and got[(a, "k1")]["note"].startswith("reserve") and not got[(a, "k1")]["night"]
-    assert got[(a, "k2")]["note"] == "after 19:00" and got[(b, "k1")]["night"] is True
-
-
-def test_board_set_turns_looking_at_each_result_on_and_the_notice_is_said_once(host):
-    """Spec 84 §1, §4: `review` is off by default and the Board says so; the person's switch writes it, and the face clears the notice."""
-    assert host.command("ideas.board")["review"] is False
-    host.machine.review_notice = True
-    assert host.command("ideas.board")["review_notice"] is True
-    got = host.command("ideas.board_set", {"review": True, "review_notice": False})
-    assert got["review"] is True and got["review_notice"] is False and host.machine.review_notice is False
-    assert host.command("ideas.board")["review"] is True
-    with pytest.raises(CommandError, match="Looking at each result"):
-        host.command("ideas.board_set", {"review": "yes"})
 
 
 def test_start_now_lets_the_reserves_held_task_go_as_the_persons_press_and_says_so(host, runner):

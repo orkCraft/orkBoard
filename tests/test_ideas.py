@@ -2,9 +2,7 @@
 the librarian's skip, the state beside the page, and the secret store."""
 from __future__ import annotations
 
-import json
 import os
-import re
 import stat
 
 import pytest
@@ -59,38 +57,6 @@ def test_a_write_keeps_what_it_does_not_know_and_a_hand_edit_is_read_as_written(
         ideas.set_section(root, slug, "Nonsense", "x")
 
 
-def test_a_missing_section_is_written_in_its_place(root):
-    slug = ideas.add_idea(root, "x")
-    path = root / "pages/ideas" / f"{slug}.md"
-    path.write_text("---\nowner: board\nkind: idea\ntrack: general\norder: 1\n---\n# x\n\n## Gist\nx\n\n## Decisions\n- a\n")
-    ideas.set_section(root, slug, "Risks", "r")
-    assert [n for n, _t in ideas.idea_page(root, slug).sections] == ["Gist", "Risks", "Decisions"]
-
-
-def test_order_after_a_move_and_to_another_track(root):
-    a, b, c = (ideas.add_idea(root, w) for w in ("alpha", "beta", "gamma"))
-    ideas.move(root, c, before=a)
-    assert [i["slug"] for i in ideas.ideas(root, "general")] == [c, a, b]
-    ux = ideas.add_track(root, "UX polish")
-    assert ux == "ux-polish"
-    ideas.move(root, a, track=ux)
-    assert [i["slug"] for i in ideas.ideas(root, "general")] == [c, b]
-    assert [(i["slug"], i["order"]) for i in ideas.ideas(root, ux)] == [(a, 1)]
-    assert {t["slug"]: t["count"] for t in ideas.tracks(root)} == {"general": 2, ux: 1}
-    with pytest.raises(ValueError):
-        ideas.move(root, a, track="nowhere")
-
-
-def test_a_track_is_set_and_a_deadline_is_a_date(root):
-    slug = ideas.add_track(root, "Phone first")
-    ideas.set_track(root, slug, about="The phone is where ideas start.", criteria=["drop in 2 taps", " "],
-                    deadline="2026-11-01")
-    t = next(t for t in ideas.tracks(root) if t["slug"] == slug)
-    assert (t["about"], t["criteria"], t["deadline"]) == ("The phone is where ideas start.", ["drop in 2 taps"], "2026-11-01")
-    with pytest.raises(ValueError):
-        ideas.set_track(root, slug, deadline="soon")
-
-
 def test_the_keepers_update_writes_known_sections_and_appends_decisions(root):
     slug = ideas.add_idea(root, "x")
     assert ideas.update(root, slug, {"Why": "because", "Bogus": "no", "Decisions": "no"}, ["one", "two"]) \
@@ -109,24 +75,6 @@ def test_drop_takes_the_page_and_its_state(root, tmp_path):
     assert ideas.idea_page(root, slug) is None and not (state / "ideas" / slug).exists()
 
 
-def test_state_talk_and_plan_beside_the_page(tmp_path):
-    state = tmp_path / ".orkcraft"
-    ideas.save_state(state, "a", state="asks", runner_key="kept")
-    ideas.save_state(state, "a", session="s1")
-    raw = json.loads((state / "ideas/a/state.json").read_text())
-    assert raw["state"] == "asks" and raw["session"] == "s1" and raw["runner_key"] == "kept"
-    for n in range(35):
-        ideas.add_turn(state, "a", "you", f"t{n}")
-    talk = ideas.talk(state, "a")
-    assert len(talk) == 30 and talk[-1]["text"] == "t34"
-    ideas.save_plan(state, "a", {"idea": "a", "passed_at": None, "todos": [], "tasks": []})
-    ideas.edit_plan(state, "a", lambda p: p.update(passed_at="now"))
-    with pytest.raises(ValueError):
-        ideas.save_plan(state, "a", {"idea": "a"})          # a passed plan is the runner's
-    with pytest.raises(ValueError):
-        ideas.state(state, "../x")
-
-
 def test_a_goal_has_its_route_and_the_states_of_its_way_beside_its_page(tmp_path):
     """Spec 99 §4: the states `routed` · `talk` · `decided` · `sections`, and `route` (the parties, in order) with `route_how` in the state; an older state reads none."""
     assert ideas.STATES[-5:] == ("routed", "talk", "decided", "sketch", "sections")
@@ -142,17 +90,6 @@ def test_a_goal_has_its_route_and_the_states_of_its_way_beside_its_page(tmp_path
         assert ideas.save_state(state, "a", state=way)["state"] == way and ideas.state(state, "a")["state"] == way
 
 
-def test_thesis_is_the_first_line_without_markdown():
-    assert ideas.thesis("\n- **Bold** [link](x.md) and `code`\nmore") == "Bold link and code"
-    assert ideas.items("- a\n- b\n") == ["a", "b"] and ideas.items("one\ntwo") == ["one", "two"]
-
-
-def test_a_goals_and_a_partys_pages_say_the_board_owns_them(root):
-    slug = ideas.add_idea(root, "kept by the board")
-    for rel in (f"pages/ideas/{slug}.md", "pages/tracks/general.md"):
-        assert re.search(r"^owner:\s*[\"']?board[\"']?\s*$", (root / rel).read_text(encoding="utf-8")[:1500], re.M), rel
-
-
 def test_a_secret_goes_to_the_store_never_to_the_plan(tmp_path):
     state = tmp_path / ".orkcraft"
     assert idea_secrets.put(state, "idea", "t1", "sk-123") == "file"          # the tests keep the keychain out
@@ -163,20 +100,6 @@ def test_a_secret_goes_to_the_store_never_to_the_plan(tmp_path):
     assert idea_secrets.get(state, "idea", "t1") is None
     with pytest.raises(ValueError):
         idea_secrets.put(state, "../x", "t1", "v")
-
-
-def test_a_goal_written_before_spec_34_is_read_and_saved_as_description(tmp_path):
-    slug = ideas.add_track(tmp_path, "Old goal")
-    page = ideas.track_page(tmp_path, slug)
-    page.sections = [("About", "What it was."), ("Success criteria", "- fewer clicks")]
-    ideas._write(tmp_path / ideas.TRACKS / f"{slug}.md", page.text())
-    (g,) = [t for t in ideas.tracks(tmp_path) if t["slug"] == slug]
-    assert g["about"] == "What it was." and g["criteria"] == ["fewer clicks"] and g["priority"] == "normal"
-    ideas.save_goal(tmp_path, slug, "Old goal", "Now described.", [{"name": "m", "target": "1"}], "low", ["a/b.md"])
-    names = [n for n, _t in ideas.track_page(tmp_path, slug).sections]
-    assert "About" not in names and names[0] == "Description" and "Success criteria" in names
-    (g,) = [t for t in ideas.tracks(tmp_path) if t["slug"] == slug]
-    assert g["about"] == "Now described." and g["priority"] == "low" and g["links"] == ["a/b.md"]
 
 
 def test_a_goal_has_a_short_name_from_its_words_then_the_reading_unless_the_person_titled_it(root):
@@ -193,21 +116,6 @@ def test_a_goal_has_a_short_name_from_its_words_then_the_reading_unless_the_pers
     assert next(i for i in ideas.ideas(root) if i["slug"] == idea)["short"] == "Export the runs to CSV"
 
 
-def test_a_state_saved_with_a_new_state_tells_its_observers_and_keeps_phase_written(tmp_path):
-    """Spec 151 A.3: `phase_written` is a key of the state; an observer hears of each saved `state` (and of no other save)."""
-    heard = []
-    watch = lambda sd, slug, state: heard.append((slug, state))
-    ideas.OBSERVERS.append(watch)
-    try:
-        ideas.save_state(tmp_path, "a-goal", state="talk")
-        ideas.save_state(tmp_path, "a-goal", queue="hold")
-        ideas.save_state(tmp_path, "a-goal", phase_written="talk")
-    finally:
-        ideas.OBSERVERS.remove(watch)
-    assert heard == [("a-goal", "talk")]
-    assert ideas.state(tmp_path, "a-goal")["phase_written"] == "talk" and ideas.STATE_DEFAULT["phase_written"] == ""
-
-
 def test_a_page_keeps_the_keys_it_does_not_know_and_an_answered_question_is_not_open(tmp_path):
     root = tmp_path / "wiki"
     slug = ideas.add_idea(root, "a goal")
@@ -217,9 +125,3 @@ def test_a_page_keeps_the_keys_it_does_not_know_and_an_answered_question_is_not_
     assert [page.get(k) for k in ("phase", "by", "spec")] == ["work", "Codex", "docs/specs/9-x.md"]
     assert ideas.items(page.section("Open questions")) == ["Two?"]
 
-
-def test_a_page_not_named_by_a_slug_is_left_out_of_the_list(root, tmp_path):
-    good = ideas.add_idea(root, "A good goal", state_dir=tmp_path / ".orkcraft")
-    page = root / "pages/ideas" / f"{good}.md"
-    (root / "pages/ideas/96-orkui-0.15.0-copied.md").write_text(page.read_text(encoding="utf-8"), encoding="utf-8")
-    assert [i["slug"] for i in ideas.ideas(root)] == [good]

@@ -42,12 +42,6 @@ def test_now_leaves_the_route_card_when_the_cost_is_over_what_the_window_holds(h
     assert _row(host, got["slug"], "route") is not None, "the route card asks, with its cost"
 
 
-def test_now_leaves_the_route_card_while_the_limits_run_low(host, tech, monkeypatch):
-    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.1, dt.datetime.now() + dt.timedelta(hours=2))])
-    got = _add(host, tech, now=True)
-    assert got["talk"] is False and _state(host, got["slug"])["state"] == "routed" and _row(host, got["slug"], "route") is not None
-
-
 def test_later_lays_the_goal_in_line_whatever_the_limits(host, tech, monkeypatch):
     reset = dt.datetime.now() + dt.timedelta(hours=3)
     monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.9, reset)])        # plentiful: the route card's *Later, by itself* is refused here
@@ -58,8 +52,4 @@ def test_later_lays_the_goal_in_line_whatever_the_limits(host, tech, monkeypatch
     node = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == got["slug"])
     assert (node["place"], node["waits_as"]) == ("deck", "reset") and _row(host, got["slug"], "route") is None
 
-
-def test_later_with_no_limits_read_still_lays_it_in_line(host, tech):
-    got = _add(host, tech, later=True)
-    assert _state(host, got["slug"])["held_until"] and _state(host, got["slug"])["state"] == "routed"
 

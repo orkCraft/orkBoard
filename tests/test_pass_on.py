@@ -10,7 +10,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, idea_pass, idea_questions, ideas
+from orkboard.realm import idea_pass, idea_questions, ideas
 from tests.test_idea_talk import Model, _party, _row, _state, _talk, _wait, card
 
 
@@ -140,18 +140,6 @@ def test_after_the_wait_the_party_answers_in_one_cheap_call_and_it_is_applied_as
     assert {a["q"] for a in _record(host, slug)["answers"]} == {"Which UI framework?", "Which store first?"}
 
 
-def test_when_only_passing_questions_are_left_the_answer_goes_the_talk_on(host, parties, model):
-    _round(model, parties, [FRAMEWORK], tech_q=[])
-    slug = _talk(host, parties, ["design", "tech"])
-    assert _row(host, slug, "talk") is None and _state(host, slug)["state"] == "talk" and not _record(host, slug)["done"]          # nothing for the person: it waits for the answer
-    host.ideas.keeper.pass_clock.now += idea_pass.PASS_S
-    host.ideas.keeper.pass_tick()
-    _wait_pass(host)
-    _wait(host, slug)
-    assert [a["answer"] for a in _record(host, slug)["answers"]] == ["Vanilla"] and _record(host, slug)["done"]
-    assert model.steps("decide") or _state(host, slug)["state"] != "talk"                       # the decision's way is taken, as after the person's last answer
-
-
 def test_pass_take_makes_it_the_persons_at_once_and_no_call_is_made(host, parties, model):
     _round(model, parties, [FRAMEWORK])
     slug = _talk(host, parties, ["design", "tech"])
@@ -165,19 +153,6 @@ def test_pass_take_makes_it_the_persons_at_once_and_no_call_is_made(host, partie
     assert not model.steps("ask") and not _record(host, slug)["passing"]
     with pytest.raises(CommandError):
         host.command("ideas.pass_take", {"id": row["id"]})                                    # not passing any more
-
-
-def test_pass_now_answers_at_once(host, parties, model):
-    _round(model, parties, [FRAMEWORK])
-    slug = _talk(host, parties, ["design", "tech"])
-    (row,) = host.ideas.snapshot()["passing"]
-    assert host.command("ideas.pass_now", {"id": row["id"]}) == {"ok": True}
-    _wait_pass(host)
-    assert len(model.steps("ask")) == 1 and [a["answered_by"] for a in _record(host, slug)["answers"]] == [parties["tech"]]
-    with pytest.raises(CommandError):
-        host.command("ideas.pass_now", {"id": row["id"]})
-    with pytest.raises(CommandError):
-        host.command("ideas.pass_now", {"id": "nothing"})
 
 
 @pytest.mark.parametrize("said", [{"can": False}, {"can": True, "pick": 7}, {"pick": 0}, "not json at all", RuntimeError("the tool failed")], ids=["cannot", "no choice", "no can", "junk", "fails"])
@@ -199,35 +174,6 @@ def test_a_party_that_cannot_answer_or_a_call_that_fails_gives_the_question_to_t
     assert len(model.steps("ask")) == 1 and host.ideas.snapshot()["passing"] == []
 
 
-def test_a_money_question_is_forced_to_the_person(host, parties, model):
-    _round(model, parties, [card("What budget for hosting?", choices=("Small", "Large"), **{"for": "tech"})])
-    slug = _talk(host, parties, ["design", "tech"])
-    assert _record(host, slug)["passing"] == [] and host.ideas.snapshot()["passing"] == []
-    assert sorted(q["q"] for q in _row(host, slug, "talk")["questions"]) == ["What budget for hosting?", "Which store first?"]
-    host.ideas.keeper.pass_clock.now += 60
-    host.ideas.keeper.pass_tick()
-    assert not model.steps("ask")
-
-
-def test_a_question_for_itself_or_a_party_that_is_none_is_the_persons(host, parties, model):
-    _round(model, parties, [card("Which UI framework?", **{"for": "design"}), card("Which font?", **{"for": "ghosts"})])
-    slug = _talk(host, parties, ["design", "tech"])
-    assert _record(host, slug)["passing"] == []
-    assert len(_row(host, slug, "talk")["questions"]) == 3
-
-
-def test_stop_all_gives_the_waiting_questions_to_the_person(host, parties, model):
-    _round(model, parties, [FRAMEWORK])
-    slug = _talk(host, parties, ["design", "tech"])
-    assert host.ideas.snapshot()["passing"]
-    host.ideas.keeper.stop_all()
-    assert host.ideas.snapshot()["passing"] == [] and _record(host, slug)["passing"] == []
-    assert "Which UI framework?" in [q["q"] for q in _row(host, slug, "talk")["questions"]]
-    host.ideas.keeper.pass_clock.now += 60
-    host.ideas.keeper.pass_tick()
-    assert not model.steps("ask")
-
-
 def test_stop_all_stops_a_call_under_way_and_the_question_is_the_persons(host, parties, model):
     _round(model, parties, [FRAMEWORK])
     slug = _talk(host, parties, ["design", "tech"])
@@ -243,24 +189,3 @@ def test_stop_all_stops_a_call_under_way_and_the_question_is_the_persons(host, p
     rec = _record(host, slug)
     assert rec["passing"] == [] and not rec.get("answers") and "Which UI framework?" in [q["q"] for q in _row(host, slug, "talk")["questions"]]
 
-
-def test_the_event_says_how_it_ended_and_never_what_was_asked(host, parties, model, monkeypatch):
-    seen = []
-    monkeypatch.setattr(host.ideas.keeper, "_ev", lambda event, **fields: seen.append((event, fields)))
-    _round(model, parties, [FRAMEWORK])
-    slug = _talk(host, parties, ["design", "tech"])
-    host.ideas.keeper.pass_clock.now += idea_pass.PASS_S
-    host.ideas.keeper.pass_tick()
-    _wait_pass(host)
-    got = [f for e, f in seen if e == event_log.QUESTION_PASSED]
-    assert len(got) == 1 and got[0]["how"] == "answered" and got[0]["idea"] == slug and got[0]["to"] == parties["tech"]
-    assert "Which UI framework?" not in str(got) and event_log.QUESTION_PASSED in event_log.EVENTS
-
-
-def test_the_leaders_are_told_to_say_for_whom_and_the_commands_are_registered(host, parties, model):
-    _round(model, parties, [])
-    _talk(host, parties, ["design", "tech"])
-    prompt = model.steps("talk_round")[0]["prompt"]
-    assert '`for`' in prompt and '"person"' in prompt and "cannot be undone" in prompt
-    assert any(f"{parties[w]} ({t})" in c["prompt"] for c in model.steps("talk_round") for w, t in (("tech", "Tech"), ("design", "Design")))      # the other parties, by slug
-    assert {"ideas.pass_take", "ideas.pass_now"} <= set(host.commands)

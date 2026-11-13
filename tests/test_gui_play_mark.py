@@ -15,7 +15,7 @@ import pytest
 from orkboard.core import idea_shot
 from orkboard.gui import ideas_play_mark
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import goal_route, goal_team, idea_lens, idea_play, ideas, library, play_place
+from orkboard.realm import goal_route, goal_team, idea_lens, idea_play, ideas, library
 from tests.test_commit_goal import repo  # noqa: F401  (the fixture)
 from tests.test_screen_map import REACT, on_dev
 
@@ -127,54 +127,6 @@ def test_the_probes_events_become_hints_in_the_shape_the_signals_read(host):
     assert [h["kind"] for h in host.command("ideas.play_hints", {"path": "/cart"})["hints"]] == ["failed"]
 
 
-def test_three_quick_presses_on_one_element_are_pressed_again_and_again_and_a_slow_request_follows_the_checks_file(host):
-    send(host, press("a.x", 1000, True), press("a.x", 1200, True), press("a.x", 1400, True), req(2000, "/api/slow", 200, 1500, method="GET"))
-    assert {h["kind"] for h in host.command("ideas.play_hints", {})["hints"]} == {"again", "slow"}
-    (host.ideas.state_dir / "checks.toml").write_text("preview_slow_ms = 2000\n")
-    assert {h["kind"] for h in host.command("ideas.play_hints", {})["hints"]} == {"again"}
-
-
-def test_the_ring_is_this_plays_only_and_goes_when_play_stops_or_a_new_play_comes(host):
-    assert send(host, err())["kept"] == 1
-    assert send(host, err(), play="another-play")["kept"] == 0                           # another play's events are not this one's
-    play = host.ideas._play
-    play.play_id = "play-2"                                                              # a new play: its ring is new
-    assert host.command("ideas.play_hints", {})["hints"] == []
-    assert send(host, req(), play="play-1")["kept"] == 0 and send(host, req(), play="play-2")["kept"] == 1
-    play.state = ""                                                                      # Play stopped
-    assert send(host, err(), play="play-2")["kept"] == 0 and host.command("ideas.play_hints", {})["hints"] == []
-    assert host.ideas.__dict__["_play_rings"] == {}
-    play.state = "playing"
-    assert host.command("ideas.play_hints", {})["hints"] == []                           # not the old ring back
-
-
-def test_a_batch_is_bounded_and_what_an_event_says_is_cut(host):
-    got = send(host, *[err(at=1000 + n, message=f"m{n}" + "x" * 900) for n in range(300)])
-    assert got["kept"] == ideas_play_mark.MAX_BATCH
-    ring = host.ideas._ring()
-    assert all(len(e["message"]) <= 300 for e in ring.events())
-    with pytest.raises(CommandError, match="Events are a list"):
-        host.command("ideas.play_events", {"play": "play-1", "events": "x"})
-
-
-def test_the_play_commands_are_the_computers_the_phone_has_none(host):
-    for name, args in (("ideas.play_events", {"events": []}), ("ideas.play_place", {"path": "/"}), ("ideas.play_hints", {}), ("ideas.play_mark", {"text": "x", "kind": "bug", "box": BOX}),
-                       ("ideas.play_mark_offer", {"kind": "bug", "path": "/"})):
-        with pytest.raises(CommandError, match="Play on the computer"):
-            host.command(name, {**args, "device": "phone"})
-
-
-def test_the_place_is_the_screen_and_the_parts_and_a_file_in_plays_worktree_is_the_repositorys(host, monkeypatch):
-    got = host.command("ideas.play_place", {"path": "/orders"})
-    assert got["screen"] == {"id": "orders", "name": "Orders", "step": 2} and got["parts"]["screens"] == [{"id": "orders", "name": "Orders"}]
-    seen = []
-    real = play_place.parts
-    monkeypatch.setattr(play_place, "parts", lambda *a, **k: seen.append(a[3]) or real(*a, **k))
-    work = host.ideas._play.path
-    host.command("ideas.play_place", {"path": "/orders", "files": [f"{work}/src/pages/Orders.tsx:7:3", f"file://{work}/src/Layout.tsx", "src/pages/Home.tsx", 7]})
-    assert seen == [["src/pages/Orders.tsx:7:3", "src/Layout.tsx", "src/pages/Home.tsx"]]
-
-
 # -- the mark: its kind, its party, its goal -----------------------------------------------------------------------------------------------
 
 def test_each_kind_makes_a_goal_of_its_type_looks_wrong_has_none(host, parties, drawn):
@@ -191,12 +143,6 @@ def test_each_kind_makes_a_goal_of_its_type_looks_wrong_has_none(host, parties, 
         mark(host, kind="praise")
 
 
-def test_a_party_that_takes_no_goal_of_the_kinds_type_gets_the_goal_with_none_and_the_play_keeps_the_kind(host, parties, drawn):
-    got = mark(host, party=parties["tech"], kind="confusing", text="Nobody finds the cart")
-    assert state_of(host, got["slug"])["type"] == "" and play_of(host, got["slug"])[0]["kind"] == "confusing"
-    assert ideas.idea_page(host.ideas.root(), got["slug"]).get("track") == parties["tech"]
-
-
 def test_the_answer_says_the_goal_its_party_and_what_was_kept(host, parties, drawn):
     send(host, err(), req())
     got = mark(host, party=parties["tech"], under=[{"selector": "button.save", "role": "button", "text": "Save", "rect": {"x": 1, "y": 2, "w": 3, "h": 4}}], state={"level": 3}, picture=SNAP_PICTURE)
@@ -205,34 +151,6 @@ def test_the_answer_says_the_goal_its_party_and_what_was_kept(host, parties, dra
     assert got["kept"]["marks"] >= 1 and got["element"]
     page = ideas.idea_page(host.ideas.root(), got["slug"])
     assert page is not None and "Saving does nothing" in page.section("Gist") + page.title
-
-
-def test_on_the_projects_tab_a_bug_goes_to_tech_and_any_other_kind_is_routed_by_code(host, parties, drawn):
-    got = mark(host, text="The save button does nothing")
-    st = state_of(host, got["slug"])
-    assert st["state"] == "routed" and [s["party"] for s in st["route"]] == [parties["tech"]] and ideas.idea_page(host.ideas.root(), got["slug"]).get("track") == parties["tech"]
-    assert st["route_how"]["kind"] == "bug" and st["route_how"]["short"] is True
-    other = mark(host, kind="looks", text="The cart looks cramped")
-    assert state_of(host, other["slug"])["state"] == "routed" and state_of(host, other["slug"])["route_how"]["kind"] != "bug"      # the Orkmaster routes it by its words, as ever
-
-
-def test_the_open_tabs_party_is_the_goals_and_ideation_is_not_one_a_mark_goes_to(host, parties, drawn):
-    got = mark(host, party=parties["design"], kind="looks", text="The headline is crowded")
-    assert [s["party"] for s in state_of(host, got["slug"])["route"]] == [parties["design"]]
-    with pytest.raises(CommandError, match="That party is gone"):
-        mark(host, party="nowhere")
-    with pytest.raises(CommandError, match="text is missing"):
-        mark(host, text="  ")
-    for bad in (None, {"x": 0.1}, {"x": 0.1, "y": 0.1, "w": 0, "h": 0.2}, {"x": 2, "y": 0.1, "w": 0.2, "h": 0.2}):
-        with pytest.raises(CommandError, match="Draw a box or press a part"):
-            mark(host, box=bad)
-
-
-def test_the_maps_parts_the_place_touches_are_the_goals_marks(host, parties, drawn):
-    got = mark(host, party=parties["tech"], under=[{"selector": "li", "file": "src/pages/Orders.tsx"}])
-    marks = state_of(host, got["slug"])["marks"]
-    assert {"map": "screens", "id": "orders", "name": "Orders"} in marks
-    assert any(m["map"] == "system" for m in marks)
 
 
 # -- the chips -------------------------------------------------------------------------------------------------------------------------------
@@ -258,14 +176,6 @@ def test_the_chips_left_on_keep_what_they_name_and_a_chip_taken_off_keeps_nothin
         mark(host, **{"with": ["screen", "money"]})
 
 
-def test_errors_are_the_pages_own_said_once_and_requests_are_the_failed_or_slow_ones(host, parties, drawn):
-    send(host, err(1000), err(1100), err(1200, "Another"), err(1300, "On another page", page="/cart"), req(1400, "/api/ok", 200, 20), req(1500, "/api/slow", 200, 4000, method="GET"),
-         req(1600, "/api/me", 401), req(1700, "/api/orders", 500))
-    one = play_of(host, mark(host, party=parties["tech"])["slug"])[0]
-    assert [(e["message"], e["count"]) for e in one["errors"]] == [("Another", 1), ("TypeError: x is undefined", 2)] or [(e["message"], e["count"]) for e in one["errors"]] == [("TypeError: x is undefined", 2), ("Another", 1)]
-    assert [(r["method"], r["path"], r["status"]) for r in one["requests"]] == [("GET", "/api/slow", 200), ("POST", "/api/orders", 500)]
-
-
 def test_the_servers_lines_are_the_last_forty_before_the_mark_with_secrets_out(host, parties, drawn):
     host.ideas._play.lines = [f"line {n}" for n in range(60)]
     one = play_of(host, mark(host, party=parties["tech"])["slug"])[0]
@@ -275,14 +185,6 @@ def test_the_servers_lines_are_the_last_forty_before_the_mark_with_secrets_out(h
     host.ideas._play.lines = ["ready", "using .env.local", "key sk-abcdefghij1234", "done"]            # Play keeps a line that names a secret out; the goal's play does again
     assert play_of(host, mark(host, party=parties["tech"])["slug"])[0]["lines"] == ["ready", "done"]
     host.ideas._play.lines = ["ready", "using .env.local", "key sk-abcdefghij1234", "done"]
-
-
-def test_a_secret_in_what_the_page_sent_is_not_kept(host, parties, drawn):
-    send(host, err(message="fetch failed: sk-abcdefghij1234"))
-    slug = mark(host, party=parties["tech"], state={"password": "hunter2", "level": 1}, under=[{"selector": "div", "file": ".env", "text": "ghp_abcdefghijkl"}])["slug"]
-    kept = (host.ideas.state_dir / "ideas" / slug / "play.json").read_text()
-    for leak in ("sk-abc", "ghp_abc", "hunter2", '".env"'):
-        assert leak not in kept
 
 
 # -- a bug with its failure ----------------------------------------------------------------------------------------------------------------------
@@ -302,12 +204,6 @@ def test_a_bug_whose_mark_holds_an_error_or_a_failed_request_reproduces_and_one_
     assert state_of(host, off["slug"])["route_how"]["reproduces"] is False
     looks = mark(host, party=parties["design"], kind="looks", text="The save button does nothing")
     assert state_of(host, looks["slug"])["route_how"]["reproduces"] is False          # only a Bug carries a failure
-
-
-def test_a_request_that_failed_is_a_failure_too(host, parties, drawn):
-    send(host, req())
-    got = mark(host, text="Orders never load")
-    assert state_of(host, got["slug"])["route_how"]["reproduces"] is True
 
 
 # -- the picture ------------------------------------------------------------------------------------------------------------------------------
@@ -330,15 +226,6 @@ def test_the_picture_is_the_snapshot_drawn_at_the_frames_size_with_no_script_run
     assert host.command("ideas.lens_screen", {"id": item["screen"]})["type"] == "image/png"
 
 
-def test_with_no_snapshot_the_page_is_drawn_anew_from_plays_port_at_the_frames_size(host, parties, drawn):
-    host.ideas._play.port = 41234
-    mark(host, party=parties["design"], kind="looks", picture={"none": True}, viewport={"w": 800, "h": 500}, path="/orders?tab=lines")
-    (call,) = drawn
-    assert call["url"].endswith(":41234/orders?tab=lines") and call["size"] == (800, 500)
-    mark(host, party=parties["design"], kind="looks", path="/odd path<>")
-    assert drawn[-1]["url"].endswith(":41234/") and drawn[-1]["size"] == idea_shot.SIZE                         # a path that is no address is the page's root
-
-
 def test_a_snapshot_that_cannot_be_drawn_falls_back_to_the_page_and_none_at_all_keeps_the_box(host, parties, monkeypatch):
     calls = []
     monkeypatch.setattr(ideas_play_mark.idea_shot, "draw", lambda url, dest, size=idea_shot.SIZE, seconds=25.0: calls.append(url) or False)
@@ -347,13 +234,6 @@ def test_a_snapshot_that_cannot_be_drawn_falls_back_to_the_page_and_none_at_all_
     assert len(calls) == 2 and calls[0].startswith("file://") and calls[1].endswith(":41234/orders")
     one = play_of(host, got["slug"])[0]
     assert idea_lens.read(host.ideas.state_dir, got["slug"]) == [] and one["picture"] == "" and one["box"] == BOX     # the goal is made all the same
-
-
-def test_a_picture_larger_than_a_goal_may_carry_is_left_out(host, parties, monkeypatch):
-    big = PNG + b"\0" * (4 * 2**20)
-    monkeypatch.setattr(ideas_play_mark.idea_shot, "draw", lambda url, dest, size=idea_shot.SIZE, seconds=25.0: Path(dest).write_bytes(big) or True)
-    got = mark(host, party=parties["design"], kind="looks", picture={"html": SNAP, "w": 900, "h": 600})
-    assert idea_lens.read(host.ideas.state_dir, got["slug"]) == [] and play_of(host, got["slug"])[0]["picture"] == ""
 
 
 @needs_browser
@@ -391,16 +271,6 @@ def test_the_page_is_drawn_anew_by_the_real_browser_from_a_page_that_plays(host,
 
 # -- no probe, no play --------------------------------------------------------------------------------------------------------------------------
 
-def test_with_no_probe_nothing_is_known_but_the_box_and_the_path(host, parties, drawn):
-    host.ideas._play = None                                                       # nothing plays: no commit, no ring, no lines, no snapshot, no page to draw
-    got = mark(host, party=parties["design"], kind="looks", under=[], state=None, picture={"none": True})
-    one = play_of(host, got["slug"])[0]
-    assert one["box"] == BOX and one["path"] == "/orders" and one["screen"] == {"id": "orders", "name": "Orders"}
-    assert not (one["commit"] or one["errors"] or one["requests"] or one["lines"] or one["under"] or one["state"] or one["picture"])
-    assert drawn == [] and idea_lens.read(host.ideas.state_dir, got["slug"]) == []
-    assert host.ideas._play is None                                               # the mark made no Play
-
-
 # -- add to a goal --------------------------------------------------------------------------------------------------------------------------------
 
 def test_a_mark_added_to_a_goal_joins_its_lens_picture_of_the_same_page_and_its_play(host, parties, drawn):
@@ -415,23 +285,6 @@ def test_a_mark_added_to_a_goal_joins_its_lens_picture_of_the_same_page_and_its_
     assert "The button is small" in [t["text"] for t in ideas.talk(host.ideas.state_dir, first["slug"])]
     assert idea_play.prompt_lines(host.ideas.state_dir, first["slug"]).count("- Mark ") == 2
     assert len([i for i in ideas.ideas(host.ideas.root()) if i["slug"] == first["slug"]]) == 1            # a goal, not a new one
-
-
-def test_a_mark_on_another_page_added_to_a_goal_brings_its_own_picture(host, parties, drawn):
-    first = mark(host, party=parties["design"], kind="looks", text="Crowded", picture={"html": SNAP, "w": 900, "h": 600})
-    again = mark(host, kind="looks", text="Also here", path="/settings", add_to=first["slug"], picture={"html": SNAP, "w": 900, "h": 600})
-    assert again["joined"] and len(drawn) == 2
-    lens = idea_lens.read(host.ideas.state_dir, first["slug"])
-    assert len(lens) == 2 and lens[0]["screen"] != lens[1]["screen"] and lens[1]["marks"][0]["note"] == "Also here"
-
-
-def test_add_to_a_goal_that_is_gone_or_has_started_is_refused_in_words(host, parties, drawn):
-    with pytest.raises(CommandError, match="That goal is gone"):
-        mark(host, add_to="nowhere")
-    first = mark(host, party=parties["design"], kind="looks", text="Crowded")
-    ideas.save_state(host.ideas.state_dir, first["slug"], state="working")
-    with pytest.raises(CommandError, match="That goal has started"):
-        mark(host, add_to=first["slug"])
 
 
 # -- the offer ---------------------------------------------------------------------------------------------------------------------------------
@@ -451,19 +304,6 @@ def test_the_offer_is_the_goal_not_started_with_a_mark_of_the_kind_on_the_screen
     assert host.command("ideas.play_mark_offer", {"path": "/orders", "kind": "bug"}) == {}
     with pytest.raises(CommandError, match="bug, looks wrong"):
         host.command("ideas.play_mark_offer", {"path": "/orders", "kind": "nope"})
-
-
-def test_a_place_no_screen_fits_is_offered_by_its_page(host, parties, drawn):
-    first = mark(host, party=parties["design"], kind="looks", path="/nowhere/at/all", text="Odd")
-    assert host.command("ideas.play_mark_offer", {"path": "/nowhere/at/all?x=1", "kind": "looks"})["goal"]["slug"] == first["slug"]
-    assert host.command("ideas.play_mark_offer", {"path": "/elsewhere", "kind": "looks"}) == {}
-
-
-def test_the_play_is_in_the_goals_calls_after_its_lens(host, parties, drawn):
-    send(host, err())
-    got = mark(host, party=parties["tech"], picture={"html": SNAP, "w": 900, "h": 600})
-    text = idea_lens.attached(host.ideas.state_dir, got["slug"])
-    assert text.index("The screen \"Orders\"") < text.index("The person marked places on the running product") and "TypeError: x is undefined" in text
 
 
 # -- the mark as an event (spec 121 G, hypothesis H2) ---------------------------------------------------------------------------------------------

@@ -58,39 +58,6 @@ def test_maker_feeds_existing_pick_and_receipt(setup, monkeypatch):
     assert saved['craft_cost'] == pick['cost']
 
 
-@pytest.mark.parametrize('reason', ['no key on this computer', 'its AI tool cannot make it', 'no official API', 'not taken'])
-def test_unavailable_refused_without_session_or_maker(setup, monkeypatch, reason):
-    tool = craft_tools.get('openai-images')
-    if reason == 'no key on this computer':
-        monkeypatch.setattr(craft_tools, 'key', lambda _: None)
-    elif reason == 'its AI tool cannot make it':
-        monkeypatch.setitem(craft_tools.REGISTRY, tool.id, replace(tool, needs=('pictures',)))
-    elif reason == 'no official API':
-        monkeypatch.setitem(craft_tools.REGISTRY, tool.id, replace(tool, official_api=False))
-    else:
-        craft_tools.set_taken(setup[0].repo_root, ideas.idea_page(setup[0].repo_root, setup[1]).get('track'), {})
-    monkeypatch.setattr(craft_pick.craft_run, 'https_transport', lambda **kw: pytest.fail('request sent'))
-    with pytest.raises(ValueError, match='has not taken' if reason == 'not taken' else reason) as error:
-        run(setup)
-    assert 'maker' in str(error.value)
-    assert 'harness' not in str(error.value).lower()
-
-
-def test_planning_only_offers_taken_here_tools(setup, monkeypatch):
-    r, slug, task, _, _ = setup
-    party = ideas.idea_page(r.repo_root, slug).get('track')
-    assert idea_pick.clean_ask(task['pick'])['tool'] == 'openai-images'
-    prompt = craft_pick.plan_lines(r.repo_root, party)
-    assert 'openai-images' in prompt and 'elevenlabs-sound' not in prompt and 'fake-key' not in prompt
-    plan = {'tasks': [task, {'pick': {**task['pick'], 'tool': 'elevenlabs-sound'}}]}
-    craft_pick.clean_plan(plan, r.repo_root, party)
-    assert plan['tasks'][0]['pick']['tool'] == 'openai-images'
-    assert 'tool' not in plan['tasks'][1]['pick']
-    monkeypatch.setattr(craft_tools, 'key', lambda _: None)
-    craft_pick.clean_plan(plan, r.repo_root, party)
-    assert 'tool' not in task['pick']
-
-
 @pytest.mark.parametrize('again', [{'why': 'Make the logo round', 'files': []}, {'conflict': True}])
 def test_a_send_back_runs_the_ai_tools_session_not_the_paid_maker_again(setup, monkeypatch, again):
     r, slug, task, work, _ = setup

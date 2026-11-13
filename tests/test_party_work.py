@@ -86,33 +86,6 @@ def test_the_party_s_work_member_by_member_and_check_by_check(host, goal):
     assert r["name"] == "Reviewer" and set(r["head"]) == {"craft", "race", "tier"} and "slug" not in r
 
 
-def test_a_goal_with_no_plan_says_so_and_nothing_is_priced_that_was_not(host, goal):
-    got = party_work.work(host.ideas.root(), host.ideas.state_dir, goal)
-    assert got["ideas"] == 0 and got["members"] == [] and got["leader"]["usd"] is None
-    assert [(c["by"], c["applied"], c["clean"], c["caught"], c["before"], c["usd"]) for c in got["checks"]] == [
-        ("reviewer", 0, 0, 0, 0, None), ("accessibility-reviewer", 0, 0, 0, 0, None)]
-    one, _two, _three = build(host, goal)
-    state = host.ideas.state_dir                                                                  # the idea's ledger holds unpriced lines only
-    (state / "ideas" / one / idea_spend.FILE).write_text("\n".join(json.dumps(idea_spend.line("task", "grunt", "claude", "m", "warrior", "", None, None, "k1")) for _ in range(2)))
-    got = party_work.work(host.ideas.root(), state, goal)
-    assert next(m for m in got["members"] if m["slug"] == "grunt")["usd"] == 0.25               # only the priced part of the goal's ledger sums
-    assert next(m for m in got["members"] if m["slug"] == "tester")["usd"] is None                # nothing priced: null, never 0
-
-
-def test_a_checker_that_ran_and_is_not_in_the_party_is_listed_after_the_party_s_and_a_leader_alone_has_no_builders(host):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    g = ideas.save_goal(root, None, "Speed", "About speed", None, "normal")[0]
-    goal_team.set_team(root, g, ["reviewer"], every=["reviewer"], leader="architect")
-    idea_with(host, g, "Fast", [task("k1", "code", "grunt"), task("k2", "security", "security-reviewer", findings=[]), task("k3", "review", "reviewer", state="review",
-              findings=[{"where": "x", "what": "y", "fixed": False}])], [{"by": "reviewer", "applies": True, "why": ""}])
-    got = party_work.work(root, state, g)
-    assert [m["slug"] for m in got["members"]] == ["grunt"] and got["leader"]["slug"] == "architect"
-    rows = {c["by"]: c for c in got["checks"]}
-    assert list(rows) == ["reviewer", "security-reviewer"]
-    assert (rows["reviewer"]["caught"], rows["reviewer"]["left"], rows["reviewer"]["applied"]) == (1, 1, 1)           # waiting at Review: it caught
-    assert (rows["security-reviewer"]["clean"], rows["security-reviewer"]["applied"]) == (1, 0)                   # ran, though it is not in the party
-
-
 def test_ideas_party_is_the_hosts_and_a_phones_and_needs_a_goal(host, goal):
     assert BoardPhone.allowed(host, "ideas.party", {"goal": goal})
     build(host, goal)

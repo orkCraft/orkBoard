@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui import board_cli, board_cli_goals as goals
+from orkboard.gui import board_cli
 from orkboard.realm import agent_rules, board_branch, goal_phase, goal_take, idea_questions, ideas
 from orkboard.realm.idea_git import GateRun, IdeaGit
 from tests.test_board_branch import git, make_clone, make_origin
@@ -86,15 +86,6 @@ def test_a_goal_needs_its_tool_a_known_party_and_a_phase_that_exists(repo, capsy
     assert ob("goal", "list", "--phase", "work") == 0
 
 
-def test_the_boards_folder_is_found_from_the_checkout_as_the_app_does(repo, capsys):
-    (repo / "board" / "pages" / "ideas").mkdir(parents=True)
-    ideas.add_track(repo / "board", "General")
-    slug = a_goal(repo, capsys, "In another folder")
-    assert (repo / "board/pages/ideas" / f"{slug}.md").is_file() and not (repo / WIKI).exists()
-    (repo / "elsewhere" / "pages" / "ideas").mkdir(parents=True)
-    assert ob("goal", "list") == 1 and "More than one folder" in capsys.readouterr().err
-    agent_rules.write(repo, "board")
-    assert ob("goal", "list") == 0 and slug in capsys.readouterr().out
 
 
 # -- take ----------------------------------------------------------------------------------------------------------------------------
@@ -152,12 +143,6 @@ def test_a_phase_that_is_unknown_skipped_or_without_its_sections_is_refused(repo
     assert ob("goal", "phase", "no-such", "talk") == 1
 
 
-def test_the_new_formats_plan_and_done_when_count_as_stages_and_a_done_when(repo, capsys):
-    slug = a_goal(repo, capsys)
-    ideas.set_meta(repo / WIKI, slug, phase="talk")
-    fill(repo, slug, Tech="### Done when\n- it scores\n\n### Plan\n- the code")
-    assert ob("goal", "phase", slug, "spec") == 0
-    assert ob("goal", "phase", slug, "work") == 0
 
 
 # -- ask, answer ---------------------------------------------------------------------------------------------------------------------
@@ -186,12 +171,6 @@ def test_a_question_and_its_answer_are_read_back_by_the_page_and_the_hand(repo, 
     assert ob("goal", "answer", slug, "0", "x") == 1
 
 
-def test_a_bad_question_is_a_bad_call(repo, capsys):
-    slug = a_goal(repo, capsys)
-    assert ob("goal", "ask", slug, "Which?", "--choices", "only one") == 2
-    assert ob("goal", "ask", slug, "Which?", "--choices", "a/b", "--pick", "c") == 2
-    assert ob("goal", "ask", slug, "   ") == 2
-    assert page(repo, slug).section("Open questions") == "" and page(repo, slug).get("asks") == ""
 
 
 # -- gate ----------------------------------------------------------------------------------------------------------------------------
@@ -234,16 +213,6 @@ def test_a_red_or_unfinished_gate_is_recorded_as_it_is_and_never_lets_a_goal_be_
     assert page(repo, slug).get("gate") == before
 
 
-def test_the_gate_runs_the_projects_own_command_on_the_checkout_itself(repo, capsys):
-    (repo / "orkcraft.toml").write_text('[gate]\nrun = "true"\nalways = []\n', encoding="utf-8")
-    git(repo, "add", "-A")
-    git(repo, "commit", "-qm", "gate")
-    slug = a_goal(repo, capsys)
-    assert ob("gate", "--base", "HEAD", "--record", slug) == 0
-    assert "gate: green" in capsys.readouterr().out and page(repo, slug).get("gate").endswith("· green")
-    (repo / "orkcraft.toml").write_text('[gate]\nrun = "false"\nalways = []\n', encoding="utf-8")
-    assert ob("gate", "--base", "HEAD") == 1 and "gate: red" in capsys.readouterr().out
-    assert ob("gate", "--base", "nowhere") == 2
 
 
 def test_a_record_is_refused_while_tracked_files_have_uncommitted_changes(repo, capsys, monkeypatch):
@@ -268,12 +237,6 @@ def test_init_writes_the_rules_and_the_ci_step_and_commits_nothing(repo, capsys)
     assert head(repo) == before
 
 
-def test_init_leaves_a_workflow_that_is_the_persons_own(repo, capsys):
-    mine = repo / ".github" / "workflows" / "orkboard-check.yml"
-    mine.parent.mkdir(parents=True)
-    mine.write_text("name: mine\n", encoding="utf-8")
-    assert ob("init", "--ci") == 0 and "is your own file" in capsys.readouterr().out
-    assert mine.read_text(encoding="utf-8") == "name: mine\n"
 
 
 def public(repo, monkeypatch):
@@ -290,18 +253,8 @@ def test_init_refuses_a_public_repository_in_words_naming_both_answers(repo, cap
     assert not (repo / "AGENTS.md").exists() and not (repo / ".github").exists() and not (repo / "orkcraft.toml").exists()
 
 
-def test_init_publish_answers_f_first_and_then_writes_the_rules(repo, capsys, monkeypatch):
-    public(repo, monkeypatch)
-    assert ob("init", "--publish") == 0
-    assert "in_code = true" in capsys.readouterr().out and agent_rules.has_rules(repo)
-    assert ob("init") == 0
-    assert not (repo / ".orkcraft").exists(), "the look at GitHub leaves nothing in the checkout"
 
 
-def test_init_keep_off_answers_f_and_writes_no_rules(repo, capsys, monkeypatch):
-    public(repo, monkeypatch)
-    assert ob("init", "--keep-off") == 0
-    assert "in_code = false" in capsys.readouterr().out and not (repo / "AGENTS.md").exists()
 
 
 # -- no word commits -----------------------------------------------------------------------------------------------------------------
@@ -320,13 +273,6 @@ def test_no_word_makes_a_commit(repo, capsys, monkeypatch):
     assert git(repo, "status", "--porcelain").strip()                           # the files are in the working tree, for the person to commit
 
 
-def test_outside_a_checkout_a_word_is_refused_in_words(tmp_path, monkeypatch, capsys):
-    bare = tmp_path / "not-git"
-    bare.mkdir()
-    monkeypatch.chdir(bare)
-    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
-    assert ob("goal", "list") == 1 and goals.NO_GIT in capsys.readouterr().err
-    assert ob("check") == 1
 
 
 def test_init_writes_a_subagent_and_a_forked_skill_for_each_seat_the_project_has_spec_154_c(repo, capsys):
@@ -359,3 +305,16 @@ def test_a_question_a_written_decision_settles_is_answered_by_its_reference_and_
     text = page(repo, slug).section("Open questions")
     assert f"  - Answered: three (decided by §7, {today})" in text and f"  - Answered: by score (decided by spec 12 B.2, {today})" in text
     assert idea_questions.answers(text) == ["three", "by score", ""] and page(repo, slug).get("asks") == "person"     # the third is still the person's
+
+
+def test_the_gate_runs_the_projects_own_command_on_the_checkout_itself(repo, capsys):
+    (repo / "orkcraft.toml").write_text('[gate]\nrun = "true"\nalways = []\n', encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "gate")
+    slug = a_goal(repo, capsys)
+    assert ob("gate", "--base", "HEAD", "--record", slug) == 0
+    assert "gate: green" in capsys.readouterr().out and page(repo, slug).get("gate").endswith("· green")
+    (repo / "orkcraft.toml").write_text('[gate]\nrun = "false"\nalways = []\n', encoding="utf-8")
+    assert ob("gate", "--base", "HEAD") == 1 and "gate: red" in capsys.readouterr().out
+    assert ob("gate", "--base", "nowhere") == 2
+

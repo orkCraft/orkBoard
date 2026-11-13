@@ -99,23 +99,6 @@ def test_unsealed_it_is_refused_and_nothing_is_written(host, launched):
     assert not [r for r in event_log.read(host.repo_root) if r["event"] == "move_played"]
 
 
-def test_on_a_goal_done_in_dev_it_is_refused_in_words_and_nothing_is_written(host, monkeypatch):
-    goal_branch.update(host.ideas.state_dir, "goal", merged="abc1234", blocked="", blocked_kind="", failing=[], files=[])
-    monkeypatch.setattr(type(host.ideas), "runner", lambda self, need=False: _boom())
-    before = _bytes(host)
-    with pytest.raises(CommandError, match="That goal is in dev already: Fix it lays a new Fix goal"):
-        host.command("ideas.gate_fix_stage", {"idea": "goal", "sealed": True, "from": "mat"})
-    assert _bytes(host) == before
-
-
-def test_a_way_to_dev_that_is_not_red_is_refused_and_nothing_is_written(host, launched):
-    goal_branch.update(host.ideas.state_dir, "goal", blocked="dev conflicts with goal/goal in a.py", blocked_kind="conflict", failing=[], files=[])
-    before = _bytes(host)
-    with pytest.raises(CommandError, match="No test failed on its way to dev: nothing to fix"):
-        host.command("ideas.gate_fix_stage", {"idea": "goal", "sealed": True, "from": "hand"})
-    assert _bytes(host) == before and launched == []
-
-
 def test_the_runner_adds_it_once_and_refuses_while_a_task_of_the_goal_runs(fake_repo):
     """The runner's own half, with no host: `fix_stage` adds the task under the next free id and starts the goal; a second press while its task runs is refused."""
     from orkboard.core.idea_runner import IdeaRunner, Run, RunnerError

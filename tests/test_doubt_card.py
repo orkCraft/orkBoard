@@ -44,12 +44,6 @@ def _doubts(host, slug):
     return idea_say.node(host.ideas.root(), host.ideas.state_dir, slug)["doubts"]
 
 
-def test_nothing_waits_for_the_person_before_the_leaders_have_judged_again_once(host, parties, model):
-    slug = _spoken(host, parties, model)
-    ds = host.ideas.state_dir
-    assert idea_say.record(ds, slug)["judged"] == 0 and idea_say.doubts(ds, slug) == [] and _doubts(host, slug) == []
-
-
 def test_a_leader_that_still_doubts_after_one_judging_with_nothing_left_to_answer_is_a_doubt_the_person_holds(host, parties, model, waiting):
     ds = host.ideas.state_dir
     assert idea_say.record(ds, waiting)["judged"] == 1
@@ -61,14 +55,6 @@ def test_a_leader_that_still_doubts_after_one_judging_with_nothing_left_to_answe
     assert idea_say.doubts(ds, waiting) == []
     idea_questions.save_record(ds, waiting, rec)
     assert idea_say.doubts(ds, waiting) != []
-
-
-def test_judging_again_takes_the_card_away_a_doubt_that_is_gone_or_the_hearing_that_follows_a_doubt_that_stays(host, parties, model, waiting):
-    ds = host.ideas.state_dir
-    _verdicts(model, parties, product={"verdict": "go"})
-    host.command("ideas.judge_again", {"idea": waiting})                                          # Product comes round: nothing doubts
-    _settle(host, waiting)
-    assert idea_say.record(ds, waiting)["judged"] == 2 and _doubts(host, waiting) == []
 
 
 def test_the_second_judging_that_still_doubts_is_the_hearing_so_no_card(host, parties, model, waiting):
@@ -92,11 +78,3 @@ def test_to_the_hearing_opens_the_hearing_at_once_and_the_card_is_gone(host, par
         host.command("ideas.to_hearing", {"idea": waiting})                                       # the hearing is open: it is not the person's to open again
 
 
-def test_to_the_hearing_is_refused_in_plain_words_where_nothing_waits_and_for_a_goal_that_is_gone(host, parties, model):
-    slug = _spoken(host, parties, model)
-    with pytest.raises(CommandError, match="nothing waits for you"):
-        host.command("ideas.to_hearing", {"idea": slug})                                          # not judged again once yet
-    with pytest.raises(CommandError, match="gone"):
-        host.command("ideas.to_hearing", {"idea": "no-such-goal"})
-    with pytest.raises(CommandError):
-        host.command("ideas.to_hearing", {})

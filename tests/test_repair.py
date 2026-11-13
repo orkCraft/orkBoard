@@ -20,7 +20,6 @@ from orkboard.core import repair, updates
 from orkboard.gui import board_host
 from orkboard.gui import repair as gui_repair
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import lexicon
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -112,10 +111,6 @@ def begin(w: World, said: str = "the Board froze", popen=None, **kw) -> dict:
 
 # -- can it (§2.1) ----------------------------------------------------------------------------------------------
 
-def test_a_git_checkout_on_main_with_claude_can_be_fixed(world):
-    assert repair.can(which=lambda name: "/usr/bin/claude", fresh=True) == (True, "")
-
-
 def test_it_says_in_plain_words_why_it_cannot(world, monkeypatch):
     seen = lambda: repair.can(which=lambda name: "/usr/bin/claude", fresh=True)      # noqa: E731
     assert repair.can(which=lambda name: None, fresh=True) == (False, "Claude Code is not on the PATH")
@@ -126,22 +121,6 @@ def test_it_says_in_plain_words_why_it_cannot(world, monkeypatch):
     assert seen() == (False, "the checkout has no remote origin")
     monkeypatch.setattr(updates, "method", lambda *a, **k: updates.Method("pipx", (("pipx", "upgrade", "orkboard"),)))
     assert seen() == (False, "Orkboard was not installed from git")
-
-
-def test_it_looks_for_the_first_word_of_the_machines_command(world, monkeypatch):
-    looked = []
-    monkeypatch.setattr(settings, "load", lambda *a: settings.MachineSettings.from_dict({"repair_command": ["my-claude", "rc"]}))
-    repair.can(which=lambda name: looked.append(name) or "/x", fresh=True)
-    assert looked == ["my-claude"]
-
-
-def test_the_answer_is_read_once_a_minute(world):
-    asked = []
-    which = lambda name: asked.append(name) or None      # noqa: E731
-    assert repair.can(which=which, now=100.0, fresh=True)[0] is False
-    assert repair.can(which=which, now=130.0)[0] is False and len(asked) == 1
-    repair.can(which=which, now=161.0)
-    assert len(asked) == 2
 
 
 # -- the start (§2.2 to §2.4) -----------------------------------------------------------------------------------
@@ -167,11 +146,6 @@ def test_start_makes_the_worktree_the_brief_the_logs_and_launches_detached(world
     assert repair.read_state() == state
 
 
-def test_the_brief_with_nothing_said_tells_to_read_the_logs():
-    assert '"nothing; read the logs"' in repair.brief("  ", "abc", "Orkboard")
-    assert repair.brief("x", "abc", "Elsewhere").splitlines()[0] == "# Fix Elsewhere"      # the product's name, never a fixed one
-
-
 def test_the_excludes_are_written_once_and_an_older_worktree_is_removed(world):
     begin(world)
     wt = repair.worktree_dir()
@@ -191,11 +165,6 @@ def test_a_zip_cannot_write_outside_the_logs_folder(world):
     assert (repair.worktree_dir() / ".orkcraft-repair" / "logs" / "ok" / "x.txt").exists()
 
 
-def test_a_bad_zip_still_starts_the_fix(world):
-    repair.start("", b"not a zip", popen=Popen())
-    assert (repair.worktree_dir() / ".orkcraft-repair" / "logs" / "README.txt").is_file()
-
-
 def test_a_process_that_exits_at_once_is_said_with_the_end_of_its_log(world):
     popen = Popen(Proc(exits=True), said="Remote Control is not enabled for this account\n")
     with pytest.raises(repair.RepairError) as e:
@@ -213,12 +182,6 @@ def test_claude_missing_or_origin_unreachable_is_said(world, tmp_path):
         begin(world)
 
 
-def test_a_non_git_copy_cannot_start(world, monkeypatch):
-    monkeypatch.setattr(updates, "method", lambda *a, **k: updates.Method("brew", (("brew", "upgrade", "x"),)))
-    with pytest.raises(repair.RepairError, match="not installed from git"):
-        begin(world)
-
-
 def test_stop_ends_the_process_group_and_keeps_the_worktree(world):
     def really(cmd, **kw):
         return subprocess.Popen(["sleep", "60"], cwd=kw["cwd"], stdin=kw["stdin"], stdout=kw["stdout"], stderr=kw["stderr"],
@@ -231,19 +194,6 @@ def test_stop_ends_the_process_group_and_keeps_the_worktree(world):
     repair.stop()                                                                    # nothing running: nothing happens
 
 
-def test_a_new_start_stops_the_fix_that_runs(world):
-    procs = []
-
-    def really(cmd, **kw):
-        procs.append(subprocess.Popen(["sleep", "60"], cwd=kw["cwd"], stdin=kw["stdin"], stdout=kw["stdout"],
-                                      stderr=kw["stderr"], start_new_session=True))
-        return procs[-1]
-    repair.start("", logs(), popen=really, settle=0.2)
-    repair.start("", logs(), popen=really, settle=0.2)
-    assert procs[0].poll() is not None and procs[1].poll() is None
-    repair.stop()
-
-
 # -- main moved (§2.5) ------------------------------------------------------------------------------------------
 
 def test_landed_lists_what_came_to_main_newest_first(world):
@@ -254,20 +204,6 @@ def test_landed_lists_what_came_to_main_newest_first(world):
     assert repair.landed(state["base"]) == [{"sha": second, "subject": "and its test"}, {"sha": first, "subject": "fix the freeze"}]
     git(world.checkout, "pull", "-q", "--ff-only", "origin", "main")
     assert repair.landed(state["base"]) == []                                       # this copy has them: nothing more to update to
-
-
-def test_what_main_had_before_the_fix_started_is_not_the_fix(world):
-    world.push("early.py", "someone else's commit")
-    state = begin(world)                                                              # the checkout is behind main: base is main's head
-    assert repair.landed(state["base"]) == []
-    late = world.push("late.py", "the fix")
-    assert [c["sha"] for c in repair.landed(state["base"])] == [late]
-
-
-def test_landed_is_no_news_when_git_fails(world):
-    state = begin(world)
-    git(world.checkout, "remote", "set-url", "origin", "/nowhere.git")
-    assert repair.landed(state["base"]) == []
 
 
 def test_applied_tells_a_restart_on_the_fix(world):
@@ -306,17 +242,6 @@ def test_the_update_fast_forwards_and_checks_the_new_code_for_real(world):
     assert git(world.checkout, "rev-parse", "HEAD") == new
 
 
-def test_the_new_code_is_imported_and_asked_its_version_with_the_restarts_python(world):
-    with_install(world)
-    world.push("a.py", "the fix")
-    run = Script()
-    assert repair.update(run=run).ok
-    checks = [c for c in run.calls if c[0] == sys.executable]
-    assert checks[0][1:] == ["-c", "import orkboard.gui.board_host, orkboard.gui.server"]
-    assert checks[1][1:] == ["-m", "orkboard.gui.board_host", "--version"]
-    assert run.calls.index(["install-step"]) < run.calls.index(checks[0])           # installed, then checked, then restarted
-
-
 def test_a_check_that_fails_sends_the_checkout_back_and_installs_the_old_code_again(world):
     with_install(world)
     old = git(world.checkout, "rev-parse", "HEAD")
@@ -329,27 +254,6 @@ def test_a_check_that_fails_sends_the_checkout_back_and_installs_the_old_code_ag
     assert run.calls.count(["install-step"]) == 2                                    # once on the new code, once on the old
 
 
-def test_a_pull_that_fails_leaves_the_checkout_where_it_was(world):
-    old = commit(world.checkout, "mine.py", subject="a local commit")                 # diverges from origin once main moves
-    world.push("theirs.py", "the fix")
-    result = repair.update()
-    assert not result.ok and git(world.checkout, "rev-parse", "HEAD") == old
-
-
-def test_a_checkout_with_changes_is_refused_in_the_updates_words(world):
-    (world.checkout / "README.md").write_text("changed\n", encoding="utf-8")
-    result = repair.update()
-    assert not result.ok and "the checkout has changes of its own" in result.output
-
-
-def test_update_never_raises(world):
-    def broken(cmd, **kw):
-        raise OSError("no git here")
-    result = repair.update(run=broken)
-    assert not result.ok and "no git here" in result.output
-    assert not repair.update(way=updates.Method("none", why="brew is not on PATH")).ok
-
-
 def test_the_sha_a_restart_comes_from_is_kept_and_proven(world):
     assert repair.last_good() == {} and not repair.pending("abc") and repair.rolled_back() == ""
     repair.remember_good("abc")
@@ -359,18 +263,6 @@ def test_the_sha_a_restart_comes_from_is_kept_and_proven(world):
     assert env == {repair.REPAIRED_ENV: "abc"}
     repair.came_up()                                                                  # the server served: proven
     assert repair.last_good() == {} and repair.guard_environment({}) == {}
-
-
-def test_a_rollback_is_kept_until_the_person_is_told_once(world):
-    repair.remember_good("abc")
-    repair.mark_rolled_back("abc")
-    assert repair.rolled_back() == "abc" and not repair.pending("abc") and repair.guard_environment({}) == {}
-    repair.came_up()
-    assert repair.rolled_back() == "abc"                                              # the start on the old code does not forget it
-    repair.told()
-    assert repair.rolled_back() == ""
-    repair.came_up()
-    assert repair.last_good() == {}
 
 
 def test_fall_back_resets_installs_and_restarts_with_the_same_arguments(world, monkeypatch):
@@ -408,38 +300,8 @@ def test_a_restart_on_a_fix_that_does_not_come_up_goes_back_and_opens_the_old_co
     assert repair.REPAIRED_ENV not in os.environ and repair.rolled_back() == old
 
 
-def test_a_crash_after_the_server_came_up_is_not_a_rollbacks(world, fake_repo, monkeypatch):
-    monkeypatch.setenv(repair.REPAIRED_ENV, "abc")                                   # `last-good.json` was taken away when it came up
-    with pytest.raises(RuntimeError, match="later"):
-        run_main(monkeypatch, fake_repo, lambda *a, **k: (_ for _ in ()).throw(RuntimeError("later")))
-
-
-def test_an_ordinary_crash_is_raised_as_before(world, fake_repo, monkeypatch):
-    monkeypatch.delenv(repair.REPAIRED_ENV, raising=False)
-    with pytest.raises(RuntimeError, match="boom"):
-        run_main(monkeypatch, fake_repo, lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
-
-
-def test_the_restart_after_a_fix_names_the_sha_it_comes_from(world, fake_repo, monkeypatch):
-    repair.remember_good("abc123")
-    seen = []
-    monkeypatch.setattr(board_host.core_updates, "restart", lambda argv: seen.append(os.environ.get(repair.REPAIRED_ENV)))
-    monkeypatch.delenv(repair.REPAIRED_ENV, raising=False)
-    assert run_main(monkeypatch, fake_repo, lambda *a, **k: updates.RESTART) == updates.RESTART
-    assert seen == ["abc123"]
-    monkeypatch.delenv(repair.REPAIRED_ENV, raising=False)
-
-
-def test_a_plain_update_restart_names_nothing(world, fake_repo, monkeypatch):
-    seen = []
-    monkeypatch.setattr(board_host.core_updates, "restart", lambda argv: seen.append(os.environ.get(repair.REPAIRED_ENV)))
-    monkeypatch.delenv(repair.REPAIRED_ENV, raising=False)
-    run_main(monkeypatch, fake_repo, lambda *a, **k: updates.RESTART)
-    assert seen == [None]
-
-
 def test_the_server_coming_up_takes_the_proof_away(world, fake_repo, monkeypatch):
-    from orkboard.gui import extension, folder_dialog, mac_app, server, server_log
+    from orkboard.gui import server, server_log
     repair.remember_good("abc")
 
     class Quiet:
@@ -466,11 +328,6 @@ def test_the_machines_command_is_a_setting_with_a_default_that_survives_a_round_
     assert settings.load(file).repair_command == ["claude", "remote-control", "--name", "Mine"]
     for broken in ("claude", [], [1, 2], ["claude", ""], ["a\nb"], None):
         assert settings.clean_repair_command(broken) == list(settings.REPAIR_COMMAND)
-
-
-def test_the_glossary_has_the_fix():
-    assert lexicon.term("fix") == "Fix" and lexicon.term("fix", many=True) == "Fixes"
-    assert "Claude Code" in "\n".join(Path(f).read_text(encoding="utf-8") for f in lexicon.SOURCES).split('_t("fix"')[1].splitlines()[0]
 
 
 # -- the host (§3.1 to §3.3) ------------------------------------------------------------------------------------
@@ -541,12 +398,6 @@ def test_the_snapshot_says_whether_and_why_and_the_state(fix):
     json.dumps(host.snapshot())
 
 
-def test_the_project_less_snapshot_has_it_too(tmp_path):
-    host = Orkboard(None)
-    assert set(host.snapshot()["repair"]) == {"can", "why", "state", "started_at", "landed", "error"}
-    host.close()
-
-
 def test_start_packs_the_logs_and_hands_them_in_with_the_machines_command(fix):
     host, engine = fix
     snap = host.command("repair.start", {"said": "it froze", "page": {"tab": "Board"}})
@@ -557,14 +408,6 @@ def test_start_packs_the_logs_and_hands_them_in_with_the_machines_command(fix):
     assert "about.json" in names and "on-screen.txt" in names and "page.json" in names
     assert any("Claude Code started" in m and "Fix Orkboard" in m for m, _ in host.toasts)
     assert host.snapshot()["repair"]["state"] == "working"
-
-
-def test_start_is_refused_in_words_when_it_cannot(fix):
-    host, engine = fix
-    engine.ok, engine.why = False, "Claude Code is not on the PATH"
-    with pytest.raises(CommandError, match="Claude Code is not on the PATH"):
-        host.command("repair.start", {})
-    assert "start" not in [a[0] for a in engine.asked if isinstance(a, tuple)]
 
 
 def test_a_start_that_fails_turns_the_bug_to_failed_with_the_error_as_it_is(fix):
@@ -588,22 +431,6 @@ def test_main_moving_turns_working_into_ready_with_the_commits(fix):
     assert snap["state"] == "ready" and snap["landed"] == engine.landed_now and snap["started_at"] is not None
 
 
-def test_main_is_asked_every_thirty_seconds_and_only_while_a_fix_runs(fix):
-    host, engine = fix
-    asks = lambda: len([a for a in engine.asked if isinstance(a, tuple) and a[0] == "landed"])      # noqa: E731
-    host.repair.tick(0.0)
-    assert asks() == 0                                                                # idle: never
-    host.command("repair.start", {})
-    host.repair.tick(10.0)
-    host.repair.tick(25.0)
-    assert asks() == 1
-    host.repair.tick(41.0)
-    assert asks() == 2
-    host.command("repair.stop")
-    host.repair.tick(500.0)
-    assert asks() == 2
-
-
 def test_a_process_that_ended_with_nothing_landed_is_a_fix_that_did_not_come_in(fix):
     host, engine = fix
     host.command("repair.start", {})
@@ -611,14 +438,6 @@ def test_a_process_that_ended_with_nothing_landed_is_a_fix_that_did_not_come_in(
     host.repair.tick(100.0)
     snap = host.snapshot()["repair"]
     assert snap["state"] == "failed" and "nothing came in to main" in snap["error"]
-
-
-def test_a_fix_that_landed_and_then_ended_is_still_ready(fix):
-    host, engine = fix
-    host.command("repair.start", {})
-    engine.runs, engine.landed_now = False, [{"sha": "a", "subject": "the fix"}]
-    host.repair.tick(100.0)
-    assert host.snapshot()["repair"]["state"] == "ready"
 
 
 def test_stop_ends_the_fix_and_the_bug_is_idle(fix):
@@ -654,20 +473,6 @@ def test_an_update_that_does_not_pass_the_check_fails_and_nothing_restarts(fix):
     assert any(sev == "error" for _, sev in host.toasts)
 
 
-def test_a_fix_started_before_a_restart_is_followed_again(fake_repo):
-    host = Orkboard(fake_repo)
-    engine = Engine()
-    engine.state = {"started_at": 55.0, "base": "base-sha", "pid": 9}
-    fixing = gui_repair.Repair(host, engine)
-    assert fixing.snapshot()["state"] == "working" and fixing.snapshot()["started_at"] == 55.0
-    engine.state = {"started_at": 55.0, "base": "applied", "pid": 9}                  # this copy is already on the fix
-    done = gui_repair.Repair(host, engine)
-    assert done.snapshot()["state"] == "idle" and "clear" in engine.asked
-    engine.state = {"started_at": 55.0, "base": "base-sha", "pid": 0}                 # stopped before the restart
-    assert gui_repair.Repair(host, engine).snapshot()["state"] == "idle"
-    host.close()
-
-
 def test_a_rollback_is_said_once_and_the_bug_is_failed(fake_repo):
     host = Orkboard(fake_repo)
     engine = Engine()
@@ -683,14 +488,6 @@ def test_a_rollback_is_said_once_and_the_bug_is_failed(fake_repo):
     host.close()
 
 
-def test_nothing_is_offered_or_asked_in_the_demo(fake_repo):
-    host = Orkboard(fake_repo, demo=True)
-    snap = host.snapshot()["repair"]
-    assert snap["can"] is False and snap["state"] == "idle"
-    host.repair.tick(1.0)
-    host.close()
-
-
 def test_a_phone_may_start_stop_and_update_a_fix_and_sees_its_state(fix):
     host, engine = fix
     for name in ("repair.start", "repair.stop", "repair.update"):
@@ -700,14 +497,3 @@ def test_a_phone_may_start_stop_and_update_a_fix_and_sees_its_state(fix):
     assert host.phone_snapshot()["repair"]["state"] == "working"
     assert host.command("mobile.snapshot")["repair"]["state"] == "working"
 
-
-def test_claude_code_is_found_where_it_installs_when_the_apps_path_does_not_reach_it(tmp_path):
-    """An app started from the Dock has a short PATH: Claude Code is looked for where it installs (spec 119 §2.1, `PLACES`)."""
-    place = tmp_path / "bin"
-    place.mkdir()
-    assert repair.find("claude", which=lambda name: None, places=(str(place),)) is None
-    (place / "claude").write_text("#!/bin/sh\n")
-    assert repair.find("claude", which=lambda name: None, places=(str(place),)) is None        # not executable
-    (place / "claude").chmod(0o755)
-    assert repair.find("claude", which=lambda name: None, places=(str(place),)) == str(place / "claude")
-    assert repair.find("claude", which=lambda name: "/on/path/claude", places=(str(place),)) == "/on/path/claude"

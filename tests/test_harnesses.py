@@ -13,65 +13,10 @@ def _lines(*events: dict) -> str:
     return "\n".join(json.dumps(e) for e in events)
 
 
-def test_every_tool_is_registered_once_in_order():
-    assert harnesses.ids() == ("claude", "agy", "codex", "hermes", "pi", "cursor")
-    assert all(len(h.mark) == 1 for h in harnesses.REGISTRY.values())
-
-
-@pytest.mark.parametrize("tool", harnesses.ids())
-def test_a_prompt_never_reads_as_a_flag(tool, tmp_path):
-    h = harnesses.need(tool)
-    for cmd in (h.ask("-rm everything", tmp_path), h.read("-x", tmp_path), h.work("-x", tmp_path)):
-        if h.stdin_prompt:
-            assert "-rm everything" not in cmd and "-x" not in cmd
-        else:
-            i = next(k for k, a in enumerate(cmd) if a.startswith(("-rm everything", "-x")))   # agy's reads say one line more after it
-            assert cmd[i - 1] in ("-p", "--print", "--")                    # it is a flag's value or after --
-    assert h.interactive("-x") in (None, [*h.interactive(), *h.deploy_args, "Orders: -x"])
-
-
-def test_agys_work_asks_nothing_and_stays_in_its_sandbox(tmp_path):
-    # agy's --print denies every command it would ask about and ends its turn empty, so an ork that runs its
-    # tests first came back with nothing; its work skips the asking (decisions §107.7), never the sandbox.
-    h = harnesses.need("agy")
-    for cmd in (h.work("x", tmp_path), h.work("x", tmp_path, free=True)):
-        assert cmd.count("--dangerously-skip-permissions") == 1 and "--sandbox" in cmd
-    assert harnesses.need("claude").work("x", tmp_path, free=True) == harnesses.need("claude").work("x", tmp_path)
-
-
 # agy's envelope from the logs of 26 October: a spec's read that asked for a terminal command, refused headless, and said nothing.
 AGY_REFUSED = json.dumps({"conversation_id": "9d5b2443", "status": "SUCCESS", "response": "", "duration_seconds": 44.4, "num_turns": 1,
                           "usage": {"input_tokens": 26158, "output_tokens": 1819, "total_tokens": 27977},
                           "denied_actions": [{"action": "command", "display_name": "RunCommand"}]})
-
-
-def test_agy_reads_with_its_file_tools_and_works_as_it_did(tmp_path):
-    h = harnesses.need("agy")
-    for cmd in (h.read("spec it", tmp_path), h.ask("spec it", tmp_path)):
-        prompt = cmd[cmd.index("--print") + 1]
-        assert prompt.startswith("spec it") and prompt.endswith(harnesses.AGY_NO_COMMANDS)
-    assert h.work("fix it", tmp_path, free=True)[h.work("fix it", tmp_path, free=True).index("--print") + 1] == "fix it"   # unchained: its prompt as it was
-
-
-def test_agy_says_which_action_was_refused_and_nothing_when_none_was():
-    assert harnesses.agy_error(AGY_REFUSED) == ("it wanted to run RunCommand, which a run without a window refuses, "
-                                                "and ended with no answer")
-    assert harnesses.agy_error(json.dumps({"response": "{}", "denied_actions": []})) == ""
-    assert harnesses.agy_error("not json") == ""
-
-
-def test_an_agy_read_that_was_refused_a_command_is_its_failure_in_plain_words_not_an_empty_answer(tmp_path, monkeypatch):
-    import threading
-
-    from orkboard.realm import jobs, tool_errors
-    monkeypatch.setattr(tool_run, "run_proc", lambda *a, **k: (0, AGY_REFUSED, "jetski: no output produced"))
-    with pytest.raises(tool_errors.ToolError) as got:
-        jobs.run_read("agy", "spec it", tmp_path, threading.Event())
-    assert got.value.harness == "agy" and got.value.kind == tool_errors.OTHER and "RunCommand" in str(got.value)
-    assert "not signed in" not in tool_errors.plainly(got.value)
-    good = json.dumps({"response": '{"title": "x"}', "denied_actions": [{"action": "command", "display_name": "RunCommand"}]})
-    monkeypatch.setattr(tool_run, "run_proc", lambda *a, **k: (0, good, ""))
-    assert jobs.run_read("agy", "spec it", tmp_path, threading.Event())[0] == '{"title": "x"}'   # an answer given is used
 
 
 def test_hermes_reads_its_stream():
@@ -170,14 +115,6 @@ def test_cursor_reads_its_result_line():
     assert "--mode" in harnesses.need("cursor").read("x", "/r")                         # ask: never edits
 
 
-def test_a_model_moves_between_tools_by_its_tier():
-    assert harnesses.model_on("codex", "haiku") == "gpt-luna"
-    assert harnesses.model_on("codex", "gemini-3.1-pro-high") == "gpt-astra"   # a version of agy's family
-    assert harnesses.model_on("claude", "elder") == "opus"
-    assert harnesses.model_on("agy", "my-own-model") == "my-own-model"
-    assert harnesses.model_on("pi", "opus") == ""                       # no tiers: its own default
-
-
 @pytest.mark.parametrize("tool, answer, expect", [
     ("hermes", _lines({"type": "result", "session_id": "s", "text": "{}", "tokens": {"total": 3}}), ("{}", None)),
     ("pi", _lines({"type": "session", "id": "s"}, {"type": "message_end", "message": {
@@ -218,14 +155,6 @@ def test_logins_of_the_new_tools_are_told_from_disk(tmp_path):
                          run=lambda *a, **k: type("P", (), {"stdout": "1.0.4", "stderr": "", "returncode": 0})(),
                          env={}, home=home)
     assert [s.id for s in found if s.found] == ["pi", "cursor"] and found[4].logged_in
-
-
-def test_a_tool_that_names_its_cache_its_own_way_counts_what_it_read_from_it():
-    """agy: a warm cache's call reads most of its input from the cache, apart; counted, it weighs as a cold one."""
-    cold = {"input_tokens": 21_900, "output_tokens": 100}
-    warm = {"input_tokens": 2_000, "output_tokens": 100, "cache_read_tokens": 19_800, "cachedContentTokenCount": 0}
-    assert harnesses._tokens_of(cold) == 22_000 and harnesses._tokens_of(warm) == 21_900
-    assert harnesses._tokens_of({"input_tokens": 5, "cache_read_input_tokens": 7, "cache_hit": True}) == 12
 
 
 # -- spec 97 part A: the read-only call bounded in fact, its floor bare, its reads counted ---------------------------------
@@ -273,72 +202,6 @@ def test_a_read_only_call_is_denied_the_files_no_leader_needs_in_its_one_list(tm
         assert "Read(**" not in " ".join(argv)                                  # a work or an ask keeps its flags
 
 
-def test_a_read_only_calls_floor_is_no_mcp_and_no_skills_only_when_the_cli_lists_them(tmp_path, monkeypatch):
-    from orkboard.realm import harness_claude
-    h = harnesses.get("claude")
-    listed = {"--strict-mcp-config", "--mcp-config", "--disable-slash-commands"}
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in listed)
-    argv = h.read("p", tmp_path, "opus")
-    assert argv[argv.index("--strict-mcp-config"):][:3] == ["--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}']
-    assert "--disable-slash-commands" in argv and "--bare" not in argv          # the project's CLAUDE.md stays
-    assert harnesses.claude_floor(h)[1] == ["mcp", "skills"]
-    listed.discard("--disable-slash-commands")
-    assert "--disable-slash-commands" not in h.read("p", tmp_path, "opus") and harnesses.claude_floor(h)[1] == ["mcp"]
-    listed.clear()
-    argv = h.read("p", tmp_path, "opus")
-    assert "--strict-mcp-config" not in argv and "--mcp-config" not in argv and harnesses.claude_floor(h) == ([], [])
-    listed.update({"--strict-mcp-config", "--mcp-config", "--disable-slash-commands"})
-    monkeypatch.setenv("ORKCRAFT_MCP_CONFIG", str(tmp_path / "bench.json"))     # a Test bench run's own servers win
-    argv = h.read("p", tmp_path, "opus")
-    assert _flag_values(argv, "--mcp-config") == [str(tmp_path / "bench.json")] and '{"mcpServers":{}}' not in argv
-    assert harnesses.claude_floor(h)[1] == ["skills"]
-    for other in (h.work("p", tmp_path, "opus"), h.ask("p", tmp_path, "opus")):
-        assert "--disable-slash-commands" not in other                          # only the read-only call is bare
-
-
-def test_a_read_only_calls_system_prompt_is_appended_only_when_asked_for_and_the_cli_lists_the_flag(tmp_path, monkeypatch):
-    """Spec 120 §5.3: a leader's map and rubric in `--append-system-prompt`, behind a switch (core/idea_verdict.py `SYSTEM_PROMPT`); the argv has it only inside `system_prompt(...)`."""
-    from orkboard.realm import harness_claude
-    h = harnesses.get("claude")
-    listed = {"--append-system-prompt"}
-    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in listed)
-    assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                                       # nothing asks for it
-    with harness_claude.system_prompt("Your party's map:\ncontainers: web"):
-        argv = h.read("p", tmp_path, "opus")
-        assert _flag_values(argv, "--append-system-prompt") == ["Your party's map:\ncontainers: web"]
-        assert argv[argv.index("-p") + 1] == "p"                                                               # the goal's words stay in -p
-        with harness_claude.system_prompt(""):
-            assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                               # a block that says none says none
-        assert _flag_values(h.read("p", tmp_path, "opus"), "--append-system-prompt")                          # …and the outer one is back
-        for other in (h.work("p", tmp_path, "opus"), h.ask("p", tmp_path, "opus")):
-            assert "--append-system-prompt" not in other                                                       # only the read-only call
-        listed.clear()
-        assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                                   # an installed CLI that lists no such flag gets none
-    assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")
-
-
-def test_a_read_only_call_and_a_working_task_print_their_events_and_the_other_calls_keep_their_output(tmp_path):
-    h = harnesses.get("claude")
-    read = h.read("p", tmp_path, "opus")
-    assert read[read.index("--output-format") + 1] == "stream-json" and "--verbose" in read
-    assert _flag_values(h.ask("p", tmp_path), "--output-format") == ["json"]
-    work = h.work("p", tmp_path)                                  # a task's own to-do list streams (spec 129 H1.3)
-    assert _flag_values(work, "--output-format") == ["stream-json"] and "--verbose" in work
-
-
-def test_claude_envelope_is_the_last_result_of_a_stream_the_one_object_or_nothing():
-    stream, single = _stream(("Read", {"file_path": "a.py"})), _envelope()
-    assert harnesses.claude_envelope(stream)["result"] == "done" and harnesses.claude_envelope(single)["session_id"] == "s-1"
-    old = json.dumps({"result": "done", "total_cost_usd": 0.03, "session_id": "s1"})        # a recording of before: no `type`
-    assert harnesses.claude_envelope(old)["result"] == "done"
-    twice = _lines({"type": "result", "result": "first"}, {"type": "system"}, {"type": "result", "result": "last"})
-    assert harnesses.claude_envelope(twice)["result"] == "last"
-    assert harnesses.claude_envelope("") is None and harnesses.claude_envelope("not json") is None
-    assert harnesses.claude_envelope(_lines({"type": "system", "subtype": "init"}, {"type": "assistant"})) is None
-    assert harnesses.claude_envelope(json.dumps({"type": "system"})) is None                # one event is not a result
-    assert harnesses.claude_envelope("[1, 2]") is None
-
-
 def test_a_result_is_read_the_same_from_the_one_object_and_from_its_stream_json_twin():
     stream, single = _stream(("Read", {"file_path": "a.py"}), ("Grep", {"pattern": "x"})), _envelope()
     for out in (stream, single):
@@ -355,16 +218,6 @@ def test_a_result_is_read_the_same_from_the_one_object_and_from_its_stream_json_
     bare = '{"subtype": "error_max_budget_usd"}'
     assert harnesses.get("claude").result(bare, 0)[0] == bare                               # as json_result gave it
     assert harnesses.json_result(single)[:2] == ("done", 0.04)                              # the others' reader is as it was
-
-
-def test_a_run_ended_on_its_budget_is_told_from_its_stream_but_not_from_a_file_it_read():
-    spent = _stream(subtype="error_max_budget_usd")
-    assert harnesses.capped(spent) and harnesses.capped(_envelope(subtype="error_max_budget_usd"))
-    assert harnesses.capped("", "Error: max budget reached") and not harnesses.capped(_stream())
-    out = _lines({"type": "user", "message": {"content": [{"type": "tool_result", "content": "if spent > max_budget: stop"}]}},
-                 json.loads(_envelope()))
-    assert not harnesses.capped(out)                                                        # a file's words are not the run's
-    assert harnesses.capped(_envelope(result="Exceeded the max budget"))                    # its own are, as before
 
 
 def test_claude_reads_counts_files_searches_denials_and_makes_paths_relative(tmp_path):

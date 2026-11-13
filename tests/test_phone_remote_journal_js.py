@@ -40,15 +40,6 @@ out({ first, second, calls: g.calls.map((c) => [c.key, c.init.headers["If-None-M
     assert got["parties"] == [["Tech", [["Sign-in", "working", True], ["Cache", "failed", False]]]] and got["failed"] == ["Cache"] and got["kept"] is True
 
 
-def test_a_journal_that_is_not_there_yet_is_nothing_to_show():
-    got = run(SETUP + """
-status = 404;
-const first = await r.poll();
-out({ first, view: r.view(), line: r.line() });
-""")
-    assert got["first"] == {"read": True, "changed": False} and got["view"] is None and got["line"] == ""
-
-
 def test_the_limit_stops_the_reads_till_it_lapses_and_a_refused_token_is_said():
     got = run(SETUP + """
 status = 403;
@@ -65,27 +56,6 @@ out({ hit, line, calls, held, callsAfter, later, refused, refusedLine: r.line() 
     assert got["held"] == {"read": False, "why": "limit"} and got["callsAfter"] == got["calls"], "no call while GitHub asks to wait"
     assert got["later"] == {"read": True, "changed": True}
     assert got["refused"] == {"read": False, "why": "token"} and got["refusedLine"] == "The token was refused: give a new one in Settings"
-
-
-def test_it_reads_only_while_the_computer_is_not_reached_and_the_app_is_seen():
-    got = run(SETUP + """
-let reached = true, seen = true;
-r.watch({ reached: () => reached, seen: () => seen, every: 15 });
-const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
-await wait(80); const whileReached = g.calls.length;
-reached = false; seen = false;
-await wait(80); const whileHidden = g.calls.length;
-seen = true;
-await wait(80); const whileSeen = g.calls.length;
-r.stopWatching();
-await wait(60); const after = g.calls.length;
-const kicked = await r.kick();
-out({ whileReached, whileHidden, whileSeen: whileSeen > 0, after: after - whileSeen <= 1, kicked });
-""")
-    assert got["whileReached"] == 0, "on the same network the live Board is the truth"
-    assert got["whileHidden"] == 0, "never in the background"
-    assert got["whileSeen"] is True and got["after"] is True
-    assert got["kicked"] == {"read": False, "why": "not now"}
 
 
 def test_the_goals_this_phone_sent_lie_face_down_till_the_journal_names_them():

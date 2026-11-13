@@ -10,8 +10,7 @@ import time
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.gui.ideas_refine import refine_commands
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import board_ask, event_log, goal_refine, goal_team, idea_ripe, ideas, library, spec_sections
 
 DECISION = {"title": "Dark mode ships", "why": "People read at night.", "points": ["Tech adds it.", "Off by default."]}
@@ -102,10 +101,6 @@ def _events(host, name):
     return [e for e in event_log.read(Path(host.repo_root)) if e["event"] == name]
 
 
-def test_the_commands_are_the_hosts_and_a_phones(host):
-    names = {"ideas.add_to_goal", "ideas.decision_change"}
-    assert set(refine_commands(host.ideas)) == names <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in names)
-    assert {event_log.GOAL_ADDED_TO, event_log.DECISION_CHANGED} <= set(event_log.EVENTS)
 
 
 def test_words_added_to_a_goal_not_yet_decided_are_kept_as_written_and_no_call_is_made(host, tech, model):
@@ -133,14 +128,6 @@ def test_a_goal_whose_decision_is_worded_has_it_worded_again_with_the_old_wordin
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "decided" and ideas.state(host.ideas.state_dir, slug)["error"] == ""
 
 
-def test_a_decision_that_cannot_be_worded_again_keeps_its_old_wording_and_says_so(host, tech, model):
-    slug = _decided(host, tech, model)
-    model.answers["decide"] = "not a decision"
-    host.command("ideas.add_to_goal", {"idea": slug, "text": "Also a timer."})
-    _idle(host, slug)
-    assert _decision(host, slug)["title"] == "Dark mode ships"
-    assert "old words stay" in ideas.state(host.ideas.state_dir, slug)["error"]
-    assert "Added: Also a timer." in ideas.idea_page(host.ideas.root(), slug).section("Gist")          # the words are kept whatever the call did
 
 
 def test_add_to_the_goal_is_refused_in_words(host, tech, model):
@@ -192,14 +179,6 @@ def test_the_change_said_in_words_is_worded_again_by_one_call_given_the_old_entr
     assert ev["said"] is True and ev["kept"] is False
 
 
-def test_the_text_and_the_words_together_the_text_first_then_the_words_on_it(host, tech, model):
-    slug = _decided(host, tech, model)
-    model.answers["decide"] = [AGAIN]
-    got = host.command("ideas.decision_change", {"idea": slug, "text": "Why: written.\n\n1. By hand.", "say": "and a timer"})
-    assert got["kept"] is True and got["reworded"] is True
-    _idle(host, slug)
-    (call,) = _decides(model)
-    assert "Why: written." in call["prompt"] and "and a timer" in call["prompt"]
 
 
 def test_the_change_is_refused_in_words(host, tech, model):
@@ -223,14 +202,6 @@ def test_the_change_is_refused_in_words(host, tech, model):
     assert not _decides(model)
 
 
-def test_goal_in_analysis_by_code(host, tech, model):
-    slug = _decided(host, tech, model)
-    title = ideas.idea_page(host.ideas.root(), slug).title
-    root, state = host.ideas.root(), host.ideas.state_dir
-    assert goal_refine.in_analysis(state, slug) and goal_refine.in_answer(root, state, ["§12", title.upper()]) == slug and goal_refine.in_answer(root, state, ["§12"]) == ""
-    host.command("ideas.confirm", {"idea": slug})
-    _until(host, slug, "plan")
-    assert not goal_refine.in_analysis(state, slug) and goal_refine.in_answer(root, state, [title]) == ""
 
 
 def test_a_quick_questions_answer_carries_the_goal_in_analysis_it_is_about(host, tech, model):

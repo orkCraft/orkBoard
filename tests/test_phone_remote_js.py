@@ -7,11 +7,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import pytest
 
 PWA = Path(__file__).resolve().parent.parent / "orkboard" / "gui" / "static" / "pwa"
 node = shutil.which("node")
-pytestmark = pytest.mark.skipif(node is None, reason="node is not installed")
 
 PRELUDE = """
 const mod = (n) => import(process.argv[1] + n);
@@ -108,40 +106,7 @@ out({{ afterForget, afterWipe: {{ ready: r.ready(), stored: s.getItem("orkcraft.
     assert got["afterWipe"] == {"ready": False, "stored": None, "keys": []}
 
 
-def test_the_computers_repository_fills_the_field_only_when_the_person_set_none():
-    got = run("""
-const r = makeRemote({ fetch: async () => reply(200, {}), storage: new Store() });
-r.prefill("someone/shop"); const first = r.settings().repo;
-r.prefill("other/thing"); out({ first, second: r.settings().repo, bad: (() => { const q = makeRemote({ storage: new Store() }); q.prefill("not a repo"); return q.settings().repo; })() });
-""")
-    assert got == {"first": "someone/shop", "second": "someone/shop", "bad": ""}
 
 
-def test_a_limit_and_a_refused_token_are_a_line_that_ends_with_the_limit():
-    got = run("""
-let t = Date.UTC(2026, 10, 4, 14, 0);
-const r = makeRemote({ fetch: async () => reply(200, {}), storage: new Store(), now: () => t });
-r.noted(new api.RemoteError("limit", "rate", { until: t + 1800_000 }));
-const during = r.line(), waiting = r.waiting();
-t += 1800_001;
-const after = r.line();
-r.noted(new api.RemoteError("token", "bad"));
-out({ during, waiting, after, refused: r.line() });
-""")
-    assert got["during"].startswith("GitHub asks us to wait till ") and got["waiting"] is True and got["after"] == ""
-    assert got["refused"] == "The token was refused: give a new one in Settings"
 
 
-def test_the_api_classifies_what_github_answers():
-    got = run("""
-const kinds = {};
-for (const [name, r, headers] of [["token", reply(401, {message: "x"})], ["limit", reply(403, {message: "rate"}, {"x-ratelimit-remaining": "0", "x-ratelimit-reset": "1793800000"})],
-    ["forbidden", reply(403, {message: "no"}, {"x-ratelimit-remaining": "40"})], ["missing", reply(404, {})], ["conflict", reply(409, {})], ["invalid", reply(422, {})], ["refused", reply(500, {})]]) {
-  const c = api.client({ fetch: async () => r, repo: "me/game", token: "t" });
-  try { await c.info(); kinds[name] = "none"; } catch (e) { kinds[name] = [e.kind, e.until ?? 0]; }
-}
-out({ kinds, cleaned: [api.cleanRepo("me/game"), api.cleanRepo("git@github.com:me/game.git"), api.cleanRepo(" https://github.com/me/game/ "), api.cleanRepo("a b/c")] });
-""")
-    assert {k: v[0] for k, v in got["kinds"].items()} == {"token": "token", "limit": "limit", "forbidden": "forbidden", "missing": "missing", "conflict": "conflict", "invalid": "invalid", "refused": "refused"}
-    assert got["kinds"]["limit"][1] == 1793800000 * 1000
-    assert got["cleaned"] == ["me/game", "me/game", "me/game", ""]

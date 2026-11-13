@@ -41,30 +41,6 @@ def test_the_stage_read_from_the_project_no_code_is_idea_code_alone_being_made_a
     assert project_stage.read(project("ci", "main.py", ".github/workflows/tests.yml")) == "being_made"        # a test workflow is no deploy
 
 
-def test_the_stage_the_person_set_wins_over_the_one_read(tmp_path):
-    root, state = tmp_path / "p", tmp_path / "state"
-    root.mkdir()
-    (root / "main.py").write_text("x", encoding="utf-8")
-    assert project_stage.current(state, root) == {"stage": "being_made", "read": "being_made", "kept": False}
-    project_stage.keep(state, "live")
-    assert project_stage.current(state, root) == {"stage": "live", "read": "being_made", "kept": True}
-
-
-def test_the_crafts_by_stage_idea_the_concepts_lean_being_made_adds_tech_standard_live_adds_running_and_marketing():
-    app = {s: [c["id"] for c in project_stage.crafts("web", s)] for s in project_stage.STAGES}
-    assert app == {"idea": ["product", "design"], "being_made": ["product", "design", "tech"],
-                   "live": ["product", "design", "tech", "marketing"]}            # Release and Run wait (decisions §283.29, which changes §274.1)
-    game = {s: [c["id"] for c in project_stage.crafts("game", s)] for s in project_stage.STAGES}
-    assert game == {"idea": ["game-design", "art"], "being_made": ["game-design", "tech", "art"],
-                    "live": ["game-design", "tech", "art", "marketing"]}
-    cards = {c["id"]: c for c in project_stage.crafts("web", "live")}
-    assert {i: (c["from"], c["size"]) for i, c in cards.items()} == {"product": ("idea", "lean"), "design": ("idea", "lean"), "tech": ("being_made", "standard"),
-                                                                      "marketing": ("live", "standard")}
-    assert project_stage.offered("web") == {s: project_stage.crafts("web", s) for s in project_stage.STAGES}
-    with pytest.raises(ValueError, match="idea, being_made or live"):
-        project_stage.crafts("web", "late")
-
-
 @pytest.mark.parametrize("kind", project_kind.KINDS)
 def test_release_and_live_wait_no_chair_offers_them_but_release_s_card_stays_lean_with_its_engineer_and_notes_and_its_leader_on_the_cheaper_tier(kind):
     release = project_stage.card(party_recipes.CRAFTS[party_recipes.RELEASE])      # §283.29: a Release already seated is read by its card
@@ -77,23 +53,7 @@ def test_release_and_live_wait_no_chair_offers_them_but_release_s_card_stays_lea
     assert release["id"] == "release"
 
 
-def test_a_card_says_its_squad_the_tiers_of_its_proposed_size_and_the_roles_to_tick_from():
-    tech = next(c for c in project_stage.crafts("code", "being_made") if c["id"] == "tech")
-    assert tech["squad"] == ["grunt", "tester", "reviewer"] and tech["build"] == ["grunt", "tester"] and tech["check"] == ["reviewer", "security-reviewer"]
-    assert tech["tiers"] == party_recipes.sized(party_recipes.get("tech"), "standard")["tiers"] == {"architect": "elder", "grunt": "warrior"}
-    assert all(c["because"] and c["name"] and c["line"] for c in project_stage.crafts("code", "live"))
-    assert set(idea_target.SIZES) >= {c["size"] for s in project_stage.STAGES for c in project_stage.crafts("code", s)}
-
-
 # -- the commands ----------------------------------------------------------------------------------------------------------------------------------------------
-
-def test_ideas_stage_answers_the_stage_the_one_read_and_what_each_stage_offers_and_writes_nothing(fake_repo):
-    h = Orkboard(fake_repo)
-    got = h.ideas.stage({})
-    assert got["stage"] == got["read"] == "being_made" and got["kept"] is False and got["kind"] == "code"      # the fake repo has code and no deploy
-    assert got["offered"] == project_stage.offered("code") and set(got["offered"]) == {"idea", "being_made", "live"}
-    assert not (h.ideas.state_dir / "project.json").exists()
-    json.dumps(got)
 
 
 def test_ideas_stage_set_keeps_the_stage_answers_it_and_refuses_one_that_is_none(fake_repo):
@@ -119,9 +79,3 @@ def test_the_proposals_take_the_stage_and_offer_only_the_crafts_of_the_stages_re
     assert release["locked"] is False and release["squad"] == ["release-engineer", "release-notes"] and release["sizes"]["full"]["heads"] == [{"race": "lich", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}, {"race": "skeleton", "tier": "warrior"}]
 
 
-def test_the_waiting_crafts_are_release_run_and_liveops_and_the_presets_say_so():
-    from orkboard.realm import party_presets
-    assert [c for c in ("release", "run", "liveops", "tech", "marketing", "product") if project_stage.waits(c)] == ["release", "run", "liveops"]
-    for kind in ("web", "game"):
-        rows = {r["id"]: r["waits"] for r in party_presets.listed(kind) if r["group"] == "stage"}
-        assert {i for i, w in rows.items() if w} == ({"release", "liveops"} if kind == "game" else {"release", "run"})

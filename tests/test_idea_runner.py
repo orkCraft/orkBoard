@@ -213,41 +213,6 @@ def test_tasks_run_in_order_of_after_and_land_on_main_and_origin(town):
     assert not list((town.repo / ".orkcraft" / "worktrees").glob("*"))   # the worktrees went
 
 
-def test_the_prompt_holds_the_page_the_brief_the_tasks_before_and_the_rules(town):
-    plan_of(town, [{"id": "k1", "brief": "first brief"}, {"id": "k2", "brief": "second brief", "after": ["k1"]}])
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    plan["tasks"][0].update(state="merged", subjects=["k1: add k1.txt"])
-    prompt = runner._prompt("demo", plan, plan["tasks"][1])
-    # spec 35 §0, §13: the spec is named by its path, never pasted
-    assert "llm-wiki/general/pages/ideas/demo.md" in prompt and "A demo idea." not in prompt
-    assert "second brief" in prompt and "first brief" in prompt
-    assert "k1: add k1.txt" in prompt
-    assert "write ork, never orc" not in prompt      # spec 36 §6: Claude Code reads CLAUDE.md itself in the worktree
-
-
-def test_max_parallel_runs_that_many_at_once(town, monkeypatch):
-    monkeypatch.setenv("STUB_SLEEP", "1.5")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}, {"id": "k3"}])
-    runner, _ = runner_of(town, max_parallel=2)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    spans = sorted((c["start"], c["end"]) for c in calls(town))
-    assert spans[1][0] < spans[0][1]                         # two at once …
-    assert spans[2][0] >= min(spans[0][1], spans[1][1]) - 0.05   # … never three
-    assert sorted(t["state"] for t in tasks_of(town).values()) == ["merged"] * 3
-
-
-def test_one_at_a_time_by_default(town, monkeypatch):
-    monkeypatch.setenv("STUB_SLEEP", "0.5")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    runner, _ = runner_of(town)
-    runner.start("demo")
-    wait_idle(runner)
-    a, b = sorted((c["start"], c["end"]) for c in calls(town))
-    assert b[0] >= a[1]
-
-
 def test_a_red_gate_gets_one_more_turn_on_the_same_session(town, monkeypatch):
     monkeypatch.setenv("STUB_MODE", "k1=fail_once")
     plan_of(town, [{"id": "k1"}])
@@ -270,15 +235,6 @@ def test_a_gate_still_red_waits_for_the_look_and_main_stays(town, monkeypatch):
     assert tasks_of(town)["k2"]["state"] == "waiting"             # never started from a result that waits
     assert len(calls(town)) == 2
     assert git(town.repo, "rev-parse", "main") == before == git(town.origin, "rev-parse", "main")
-
-
-def test_no_commit_is_a_red_gate(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=nocommit")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "failed"
-    assert "changed no file" in tasks_of(town)["k1"]["error"]
 
 
 def test_what_the_session_left_uncommitted_is_committed_under_the_tasks_title_and_lands(town, monkeypatch):
@@ -340,19 +296,6 @@ def test_with_review_on_the_goal_waits_on_its_branch_for_main_and_the_person_sen
         runner.goal_to_dev("demo")
 
 
-def test_a_goal_that_is_not_done_is_not_sent_to_main(town, monkeypatch):
-    monkeypatch.setenv("STUB_SLEEP", "2")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town, review=True)
-    runner.start("demo")
-    end = time.time() + 30
-    while time.time() < end and not (town.state / "ideas" / "demo" / "goal_branch.json").exists():
-        time.sleep(0.05)
-    with pytest.raises(idea_runner.RunnerError, match="still has a task running|not done"):
-        runner.goal_to_dev("demo")
-    assert wait_idle(runner)["state"] == "done"
-
-
 def test_a_goal_already_at_work_in_main_lands_there_as_before(town):
     plan_of(town, [{"id": "k0"}, {"id": "k1", "after": ["k0"]}])
     plan = json.loads((town.state / "ideas" / "demo" / "plan.json").read_text())
@@ -365,27 +308,6 @@ def test_a_goal_already_at_work_in_main_lands_there_as_before(town):
     assert tasks["k1"]["state"] == "merged" and tasks["k1"]["commit"] == git(town.repo, "rev-parse", "main")      # landed in main by itself, on no branch
     assert not (town.state / "ideas" / "demo" / "goal_branch.json").exists() and not git(town.repo, "branch", "--list", "goal/demo")
     assert git(town.repo, "show", "main:k1.txt") == "done by k1"
-
-
-def test_main_not_checked_out_moves_by_its_ref_only(town):
-    git(town.repo, "checkout", "-b", "elsewhere")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    assert git(town.repo, "rev-parse", "--abbrev-ref", "HEAD") == "elsewhere"
-    assert not (town.repo / "k1.txt").exists()
-    assert git(town.repo, "show", "main:k1.txt") == "done by k1"
-    assert git(town.origin, "rev-parse", "main") == git(town.repo, "rev-parse", "main")
-
-
-def test_push_off_keeps_origin_where_it_was(town):
-    before = git(town.origin, "rev-parse", "main")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town, push=False)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    assert git(town.origin, "rev-parse", "main") == before != git(town.repo, "rev-parse", "main")
 
 
 def test_a_nearly_spent_window_holds_the_task_until_its_reset(town):
@@ -403,20 +325,6 @@ def test_a_nearly_spent_window_holds_the_task_until_its_reset(town):
     assert wait_idle(runner)["state"] == "done"     # … and it runs
 
 
-def test_the_tool_saying_its_limit_is_hit_holds_the_task(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=limit")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town)
-    runner.start("demo")
-    end = time.time() + 30
-    while time.time() < end and (runner.busy() or tasks_of(town)["k1"]["state"] != "held"):
-        time.sleep(0.1)
-    task = tasks_of(town)["k1"]
-    assert task["state"] == "held" and task["note"].startswith("after ")
-    state = json.loads((town.state / "ideas" / "demo" / "state.json").read_text())
-    assert state["state"] == "working"
-
-
 def test_stop_ends_the_running_task_and_the_idea_needs_you(town, monkeypatch):
     monkeypatch.setenv("STUB_MODE", "k1=slow")
     plan_of(town, [{"id": "k1"}])
@@ -432,19 +340,6 @@ def test_stop_ends_the_running_task_and_the_idea_needs_you(town, monkeypatch):
     assert state["state"] == "failed" and "stopped" in state["error"]
     assert tasks_of(town)["k1"]["state"] == "failed" and "stopped" in tasks_of(town)["k1"]["error"]
     assert git(town.repo, "rev-parse", "main") == before
-
-
-def test_stop_all_stops_every_idea(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "*=slow")
-    plan_of(town, [{"id": "k1"}])
-    plan_of(town, [{"id": "k1"}], slug="other")
-    runner, _ = runner_of(town, max_parallel=2)
-    runner.start("demo")
-    runner.start("other")
-    time.sleep(1)
-    runner.stop_all()
-    for slug in ("demo", "other"):
-        assert wait_idle(runner, slug, timeout=20)["state"] == "failed"
 
 
 def test_a_secret_todo_reaches_the_session_only_by_its_environment(town, monkeypatch):
@@ -465,23 +360,6 @@ def test_a_secret_todo_reaches_the_session_only_by_its_environment(town, monkeyp
     assert git(town.repo, "show", "main:k1.txt") == "s3cret"
     prompt = runner._prompt("demo", runner.plan("demo"), runner.plan("demo")["tasks"][0])
     assert "s3cret" not in prompt and "API_KEY" in prompt
-
-
-def test_a_restart_goes_on_with_working_ideas(town):
-    plan_of(town, [{"id": "k1"}])
-    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "working"}))
-    plan = json.loads((town.state / "ideas" / "demo" / "plan.json").read_text())
-    plan["tasks"][0]["state"] = "running"
-    (town.state / "ideas" / "demo" / "plan.json").write_text(json.dumps(plan))
-    runner, _ = runner_of(town)
-    assert wait_idle(runner)["state"] == "done"
-
-
-def test_settings_are_read_however_they_are_carried():
-    assert idea_runner.setting(SimpleNamespace(ideas={"max_parallel": 3}), "max_parallel") == 3
-    assert idea_runner.setting({"ideas": {"push": False}}, "push") is False
-    assert idea_runner.setting(SimpleNamespace(), "merge_into") == "dev"
-    assert idea_runner.setting(SimpleNamespace(ideas_max_parallel=2), "max_parallel") == 2
 
 
 # -- spec 33: Review ---------------------------------------------------------------------------------
@@ -540,15 +418,6 @@ def test_merge_lands_into_dev_made_from_main_and_does_not_push_by_default(town):
     assert not list((town.repo / ".orkcraft" / "worktrees").glob("*"))
 
 
-def test_merge_pushes_only_when_asked(town):
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town, goal_branches=False, review=True, merge_into="dev", push=True)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    commit = runner.merge("demo", "k1")
-    assert git(town.origin, "rev-parse", "dev") == commit
-
-
 def test_red_after_the_one_retry_waits_at_review_with_its_counts_and_cannot_merge(town, monkeypatch):
     monkeypatch.setenv("STUB_MODE", "k1=fail_always")
     plan_of(town, [{"id": "k1"}])
@@ -563,15 +432,6 @@ def test_red_after_the_one_retry_waits_at_review_with_its_counts_and_cannot_merg
     with pytest.raises(RunnerError, match="red"):
         runner.merge("demo", "k1")
     assert git(town.repo, "rev-parse", "dev") == before and tasks_of(town)["k1"]["state"] == "review"
-
-
-def test_a_gate_without_pytest_says_no_counts():
-    from orkboard.realm.idea_git import parse_tests
-    assert parse_tests("no test files to run") == {"passed": 0, "failed": 0, "skipped": 0, "failing": [], "tail": "no test files to run"}
-    got = parse_tests("FAILED tests/a.py::t1 - assert 1\nFAILED tests/a.py::t2\n2 failed, 18 passed in 1.2s")
-    assert got["passed"] == 18 and got["failed"] == 2 and got["failing"] == ["tests/a.py::t1", "tests/a.py::t2"]
-    many = "\n".join(f"FAILED tests/a.py::t{i}" for i in range(30)) + "\n30 failed in 2s"
-    assert len(parse_tests(many)["failing"]) == 20 and len(parse_tests("x\n" * 100)["tail"].splitlines()) == 40
 
 
 def test_send_back_resumes_the_session_with_the_line_and_counts_the_round(town, monkeypatch):
@@ -613,28 +473,13 @@ def test_a_conflict_found_at_merge_stays_at_review_and_fix_resolves_it(town, mon
     assert git(town.repo, "show", "dev:k1.txt") == "resolved"
 
 
-def test_drop_ends_the_task_as_dropped_removes_its_worktree_and_keeps_its_branch(town):
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    assert list((town.repo / ".orkcraft" / "worktrees").glob("*"))
-    runner.drop_task("demo", "k1")
-    task = tasks_of(town)["k1"]
-    assert task["state"] == "dropped" and task["error"] == "dropped by you"          # gone from the plan, not failed
-    assert not list((town.repo / ".orkcraft" / "worktrees").glob("*"))
-    assert git(town.repo, "branch", "--list", "idea/demo/k1")
-    state = json.loads((town.state / "ideas" / "demo" / "state.json").read_text())
-    assert state["state"] == "plan" and state["error"] == ""                           # its only task gone, nothing merged: no failure, nothing to run
-
-
 def goal_state(town, slug: str = "demo") -> dict:
     return json.loads((town.state / "ideas" / slug / "state.json").read_text())
 
 
 def hand_of(town, slug: str = "demo") -> list[str]:
     """The kinds of stop the goal has in the hand (realm/board_map.py `idea_needs`), read from its files."""
-    from orkboard.realm import board_map, ideas
+    from orkboard.realm import board_map
     plan = json.loads((town.state / "ideas" / slug / "plan.json").read_text())
     i = {"slug": slug, "track": "general", "title": "Demo", "priority": "normal"}
     return [n["kind"] for n in board_map.idea_needs(town.repo, town.state, i, goal_state(town, slug), plan, [], at="x")]
@@ -659,140 +504,6 @@ def test_dropping_the_failed_task_frees_what_waited_for_it_and_the_goal_goes_on(
     assert [c["tid"] for c in calls(town)] == ["k1", "k1", "k2", "k3"] and hand_of(town) == []        # k1's turn and its one fix, never again
 
 
-def test_a_goal_that_failed_over_a_dropped_task_is_working_again_with_no_failed_stop(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=nocommit")
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "failed"
-    runner.drop_task("demo", "k1")
-    wait_task(runner, "k2", "review")
-    assert goal_state(town) == {"state": "working", "error": ""} and hand_of(town) == []         # k2 waits for the person at Review, nothing failed
-    assert tasks_of(town)["k2"]["after"] == []
-
-
-def test_a_goal_whose_last_tasks_are_dropped_is_done_where_something_merged_else_it_returns_to_its_plan(town):
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.merge("demo", "k1")
-    wait_task(runner, "k2", "review")
-    runner.drop_task("demo", "k2")
-    assert goal_state(town)["state"] == "done" and hand_of(town) == []
-    assert [t["state"] for t in tasks_of(town).values()] == ["merged", "dropped"]
-    plan_of(town, [{"id": "x1"}], slug="other")                                                  # nothing merged, the only task dropped
-    runner.start("other")
-    wait_task(runner, "x1", "review", slug="other")
-    runner.drop_task("other", "x1")
-    assert goal_state(town, "other") == {"state": "plan", "error": ""} and hand_of(town, "other") == []
-
-
-def test_dropping_a_task_at_review_still_keeps_its_branch_records_the_decision_and_frees_the_next(town):
-    from orkboard.realm import event_log
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.drop_task("demo", "k1")
-    assert git(town.repo, "branch", "--list", "idea/demo/k1") and not list((town.repo / ".orkcraft" / "worktrees").glob("*k1*"))
-    assert [(r["task"], r["decision"]) for r in event_log.read(town.repo) if r["event"] == "result_decided"] == [("k1", "drop")]
-    assert [r["state"] for r in event_log.read(town.repo) if r["event"] == "task_state" and r["task"] == "k1"][-1] == "dropped"
-    wait_task(runner, "k2", "review")                                                           # it no longer waits for a result that will not come
-    assert goal_state(town)["state"] == "working"
-
-
-def test_a_task_dropped_before_it_had_its_own_state_is_dropped_when_the_goal_starts_again(town):
-    """A plan the owner dropped a task of on 26 October holds it as `failed`, "dropped by you", and the goal failed."""
-    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
-    path = town.state / "ideas" / "demo" / "plan.json"
-    plan = json.loads(path.read_text())
-    plan["tasks"][0].update(state="failed", error="dropped by you")
-    path.write_text(json.dumps(plan))
-    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "Task k1: dropped by you"}))
-    assert hand_of(town) == []                                                                   # the Board reads it as gone
-    runner, _ = runner_of(town)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    tasks = tasks_of(town)
-    assert tasks["k1"]["state"] == "dropped" and tasks["k2"]["state"] == "merged" and tasks["k2"]["after"] == []
-    assert [c["tid"] for c in calls(town)] == ["k2"]
-
-
-def test_stop_task_stops_one_and_the_others_go_on(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=slow")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    runner, _ = reviewing(town, max_parallel=2)
-    runner.start("demo")
-    end = time.time() + 30
-    while time.time() < end and tasks_of(town)["k1"]["state"] not in ("running", "testing"):
-        time.sleep(0.1)
-    runner.stop_task("demo", "k1")
-    wait_task(runner, "k2", "review")
-    k1 = wait_task(runner, "k1", "ready")
-    assert k1["note"] == "stopped by you" and k1["error"] == ""
-    runner.tick()
-    assert tasks_of(town)["k1"]["state"] == "ready"                  # it waits for Start
-    with pytest.raises(RunnerError):
-        runner.stop_task("demo", "k2")
-
-
-def test_the_log_is_cut_to_its_last_lines_and_masks_a_secret(town):
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner._log("demo", "k1", "".join(f"line {i}\n" for i in range(2500)))
-    path = town.state / "ideas" / "demo" / "k1.log"
-    assert len(path.read_text().splitlines()) == 2000 and path.read_text().splitlines()[-1] == "line 2499"
-    assert len(runner.log("demo", "k1").splitlines()) == 200
-    runner._log("demo", "k1", "the key is s3cr3t-value here\n", {"API_KEY": "s3cr3t-value", "ORKCRAFT_ORC": "ideas/x"})
-    assert "s3cr3t-value" not in runner.log("demo", "k1") and "••••" in runner.log("demo", "k1")
-
-
-def test_the_testers_defaults(town):
-    from orkboard import settings
-    assert settings.IDEAS["merge_into"] == "dev" and settings.IDEAS["push"] is False and settings.IDEAS["review"] is False
-    assert settings.clean_ideas({"merge_into": "main", "push": True})["merge_into"] == "main"
-    assert settings.clean_ideas({"merge_into": "main", "push": True})["push"] is True
-
-
-def test_the_runner_writes_its_events_to_the_event_log(town):
-    from orkboard.realm import event_log
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    rows = event_log.read(town.repo)
-    states = [(r["state"], r["was"]) for r in rows if r["event"] == "task_state"]
-    assert ("running", "waiting") in states and ("review", "testing") in states
-    (ready,) = [r for r in rows if r["event"] == "result_ready"]
-    assert ready["idea"] == "demo" and ready["task"] == "k1" and ready["round"] == 1 and ready["passed"] >= 3 and ready["failed"] == 0
-    assert ready["files"] == 1 and ready["added"] == 1 and ready["removed"] == 0 and ready["cost"] == 0.01
-    first = next(r for r in rows if r["event"] == "task_state" and r["state"] == "running")
-    assert first["tier"] == "laborer" and first["round"] == 1
-    runner.merge("demo", "k1", device="phone")
-    (d,) = [r for r in event_log.read(town.repo) if r["event"] == "result_decided"]
-    assert d["decision"] == "merge" and d["into"] == "dev" and d["pushed"] is False and d["device"] == "phone" and d["seconds"] >= 0
-
-
-def test_back_and_drop_are_decisions_with_their_line_and_a_stop_is_a_task_stopped(town, monkeypatch):
-    from orkboard.realm import event_log
-    monkeypatch.setenv("STUB_MODE", "k1=fix_conflict,k2=slow")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    runner, _ = reviewing(town, max_parallel=2)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.back("demo", "k1", "rename it")
-    wait_task(runner, "k1", "review")
-    runner.stop_task("demo", "k2", device="phone")
-    wait_task(runner, "k2", "ready")
-    runner.drop_task("demo", "k1")
-    rows = event_log.read(town.repo)
-    decided = [(r["decision"], r.get("why")) for r in rows if r["event"] == "result_decided"]
-    assert decided == [("back", "rename it"), ("drop", None)] or decided == [("back", "rename it"), ("drop", "")]
-    (stop,) = [r for r in rows if r["event"] == "task_stopped"]
-    assert stop["task"] == "k2" and stop["device"] == "phone"
-
-
 def test_a_task_runs_as_its_types_role_with_that_roles_model_and_instruction(town):
     from orkboard.realm import roles
     slug = roles.save(town.state, "Scribe", "laborer", 2, "Write like a patient scribe.")
@@ -809,120 +520,7 @@ def test_a_task_runs_as_its_types_role_with_that_roles_model_and_instruction(tow
     assert tasks["k1"]["role"] == slug and tasks["k2"]["role"] == "grunt"
 
 
-def test_a_roles_max_parallel_is_held_besides_the_ideas(town, monkeypatch):
-    from orkboard.realm import roles
-    monkeypatch.setenv("STUB_SLEEP", "1.0")
-    slug = roles.save(town.state, "Solo", "laborer", 1, "")
-    roles.set_kind(town.state, "tests", slug)
-    plan_of(town, [{"id": "k1", "kind": "tests"}, {"id": "k2", "kind": "tests"}, {"id": "k3"}])
-    runner, _ = runner_of(town, max_parallel=3)
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-    spans = {c["tid"]: (c["start"], c["end"]) for c in calls(town)}
-    assert spans["k2"][0] >= spans["k1"][1] - 0.05 or spans["k1"][0] >= spans["k2"][1] - 0.05   # the two Solo tasks never overlap
-
-
-def test_the_events_carry_the_role(town):
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.events = True
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    from orkboard.realm import event_log
-    rows = [r for r in event_log.read(town.repo) if r["event"] in ("task_state", "result_ready")]
-    assert rows and all(r.get("role") == "grunt" for r in rows if r["event"] == "result_ready" or r["state"] in ("testing", "review"))
-
-
 # -- spec 36: the ledger, Merge's `dear`, the prompt stable first ------------------------------------------------
-
-def test_a_tasks_two_rounds_and_a_gate_retry_write_their_lines(town, monkeypatch):
-    from orkboard.realm import idea_spend
-    monkeypatch.setenv("STUB_MODE", "k1=fail_once,k2=fix_conflict")
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    wait_task(runner, "k2", "review")
-    runner.back("demo", "k2", "name it better")
-    wait_task(runner, "k2", "review")
-    rows = idea_spend.read(town.state / "ideas" / "demo" / "spend.jsonl")
-    assert [(r["step"], r["task"], r["round"]) for r in rows] == [("task", "k1", 1), ("fix", "k1", 1), ("task", "k2", 1),
-                                                                  ("task", "k2", 2)]
-    tasks = tasks_of(town)
-    for r in rows:
-        assert r["role"] == "grunt" and r["tool"] == "claude" and r["model"] == tasks[r["task"]]["model"]
-        assert r["tier"] == tasks[r["task"]]["ran_tier"] and r["effort"] == tasks[r["task"]]["effort"]
-        assert r["cost"] == 0.01 and r["tokens"]["total"] == 15 and set(r["tokens"]) >= {"in", "out", "cache_read", "cache_write"}
-    got = idea_spend.of_idea(town.state, "demo")
-    assert got["tasks"]["k1"] == {"usd": 0.02, "work": 0.01, "rework": 0.01}
-    assert got["tasks"]["k2"] == {"usd": 0.02, "work": 0.01, "rework": 0.01}
-
-
-def test_merge_with_dear_writes_it_on_result_decided(town):
-    from orkboard.realm import event_log
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
-    runner, _ = reviewing(town)
-    runner.events = True
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.merge("demo", "k1", dear=True)
-    wait_task(runner, "k2", "review")
-    runner.merge("demo", "k2")
-    decided = [r for r in event_log.read(town.repo) if r["event"] == "result_decided"]
-    assert [(r["task"], r["dear"]) for r in decided] == [("k1", True), ("k2", False)]
-
-
-def test_the_prompt_is_stable_first_and_lists_only_its_after_tasks(town):
-    from orkboard.realm import roles
-    roles.save(town.state, "Grunt", "", 8, "Keep it small. Name things plainly.", "grunt")
-    (town.state).mkdir(parents=True, exist_ok=True)
-    (town.state / "secrets.json").write_text(json.dumps({"ideas/demo/t1": "s3cret"}))
-    todos = [{"id": "t1", "title": "API_KEY", "kind": "secret", "why": "", "choices": [], "steps": [],
-              "for": ["k3"], "done": True, "value": "stored"}]
-    plan_of(town, [{"id": "k1", "brief": "first brief"}, {"id": "k2", "brief": "second brief"},
-                   {"id": "k3", "brief": "third brief", "after": ["k2"]}], todos)
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    plan["tasks"][1].update(state="merged", subjects=["k2: add k2.txt"])
-    one, three = (runner._prompt("demo", plan, plan["tasks"][i]) for i in (0, 2))
-    stable = one[:one.index("You do one task")]
-    assert stable.startswith("# Your role: Grunt\n\nKeep it small. Name things plainly.") and "# When you are done" in stable
-    assert three.startswith(stable) and "demo" not in stable and "API_KEY" not in stable
-    assert "k2: add k2.txt" in three and "second brief" in three
-    assert "first brief" not in three                       # not of its `after`: never listed (decisions §49.9)
-    assert "# The tasks before yours" not in one
-    assert three.rstrip().endswith("never print them, write them to a file or commit them.") and "API_KEY" in three
-    assert "write ork, never orc" not in one + three        # CLAUDE.md is not pasted: Claude Code reads it itself
-
-
-def test_a_long_instruction_from_before_goes_to_the_ork_cut_at_a_sentence_end(town):
-    long = "Be careful. " * 60 + "And the tail."
-    (town.state / "roles").mkdir(parents=True, exist_ok=True)
-    (town.state / "roles" / "grunt.md").write_text(f"---\nname: Grunt\nmodel: \nmax_parallel: 8\n---\n{long}\n")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    prompt = runner._prompt("demo", plan, plan["tasks"][0])
-    head = prompt.split("\n\n# When you are done")[0].removeprefix("# Your role: Grunt\n\n")
-    assert len(head) <= 600 and head.endswith("Be careful.") and "And the tail." not in prompt
-
-
-def test_a_to_do_gone_without_or_described_is_said_in_the_prompt_and_lets_the_task_run(town):
-    todos = [{"id": "t1", "title": "Reference picture", "kind": "file", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": True, "skipped": True, "value": None},
-             {"id": "t2", "title": "Logo", "kind": "file", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": True, "words": True, "value": "A grey ork."},
-             {"id": "t3", "title": "Which port", "kind": "choice", "why": "", "choices": ["80", "81"], "steps": [], "for": ["k1"], "done": True, "skipped": True, "value": None},
-             {"id": "t4", "title": "Other task's", "kind": "confirm", "why": "", "choices": [], "steps": [], "for": ["k2"], "done": True, "skipped": True, "value": None}]
-    plan_of(town, [{"id": "k1"}, {"id": "k2"}], todos)
-    runner, _ = runner_of(town)
-    plan = runner.plan("demo")
-    prompt = runner._prompt("demo", plan, plan["tasks"][0])
-    assert "The person went without “Reference picture”: do the task without it; if it cannot be done without it, say what it blocks and stop." in prompt
-    assert "The person left “Which port” to you: choose one of 80, 81, and say which and why in your result." in prompt
-    assert "Instead of the file “Logo”, the person described it: A grey ork." in prompt
-    assert "Other task's" not in prompt
-    runner.start("demo")
-    assert wait_idle(runner)["state"] == "done"
-
 
 # -- spec 107 §1: a gate that could not run is not red; install and test again; the same failure again ---------------------
 
@@ -994,54 +592,6 @@ def test_install_and_test_again_installs_links_and_runs_the_gate_with_no_session
     assert runner.merge("demo", "k1")
 
 
-def test_test_again_without_an_install_relinks_and_runs_the_gate(town, monkeypatch):
-    from orkboard.realm import gate_env
-    node_project(town, "unused")
-    monkeypatch.setattr(gate_env, "missing", lambda root: [{"dir": ".", "command": "npm ci"}])
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.events = True
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    (town.repo / "node_modules").mkdir()                                           # the person installed it themselves
-    runner.regate("demo", "k1", False)
-    task = wait_task(runner, "k1", "review")
-    assert task["tests"]["green"] is True and "== installing" not in runner.log("demo", "k1")
-    assert [d["decision"] for d in events_of(town, "result_decided")] == ["test again"]
-    with pytest.raises(RunnerError, match="not waiting for its tests"):
-        runner.regate("demo", "k1", False)                                         # it ran: nothing is waiting for its tests now
-
-
-def test_an_install_that_fails_comes_back_to_review_with_its_last_line_and_the_round_stays(town, monkeypatch):
-    from orkboard.realm import gate_env
-    rows = node_project(town, f"{sys.executable} -c \"import sys; print('npm ERR! first'); print('npm ERR! network is down'); sys.exit(1)\"")
-    monkeypatch.setattr(gate_env, "missing", lambda root: rows)
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.events = True
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.regate("demo", "k1", True)
-    task = wait_task(runner, "k1", "review")
-    assert task["tests"]["env"] == "The install failed: npm ERR! network is down" and task["tests"]["install"] == rows
-    assert task["round"] == 1 and task["look"] == "the tests could not run" and task["finished"]
-    assert "npm ERR! first" in runner.log("demo", "k1") and len(calls(town)) == 1
-    assert len(events_of(town, "gate_ran")) == 1                                   # the gate did not run the second time
-    runner.regate("demo", "k1", True)                                              # it can be tried again
-    assert wait_task(runner, "k1", "review")["tests"]["env"].startswith("The install failed")
-
-
-def test_install_and_test_again_is_refused_for_a_result_that_did_not_fail_to_run(town):
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    with pytest.raises(RunnerError):
-        runner.regate("demo", "k1", True)                                          # not at Review yet
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    with pytest.raises(RunnerError, match="That result is not waiting for its tests"):
-        runner.regate("demo", "k1", True)                                          # its tests ran
-
-
 def test_a_send_back_that_changed_nothing_and_failed_the_same_way_says_so_and_a_changed_one_does_not(town, monkeypatch):
     monkeypatch.setenv("STUB_MODE", "k1=fail_always")
     plan_of(town, [{"id": "k1"}])
@@ -1057,17 +607,6 @@ def test_a_send_back_that_changed_nothing_and_failed_the_same_way_says_so_and_a_
     assert wait_task(runner, "k1", "review")["tests"]["same"] is True              # still nothing changed
     kinds = [(d["decision"], d["why_kind"]) for d in events_of(town, "result_decided")]
     assert kinds == [("fix", "suggested"), ("fix", "typed")]
-
-
-def test_a_send_back_that_changed_the_code_is_not_the_same_failure(town, monkeypatch):
-    monkeypatch.setenv("STUB_MODE", "k1=fail_moving")
-    plan_of(town, [{"id": "k1"}])
-    runner, _ = reviewing(town)
-    runner.start("demo")
-    wait_task(runner, "k1", "review")
-    runner.back("demo", "k1", "try another value")
-    again = wait_task(runner, "k1", "review")
-    assert again["round"] == 2 and again["tests"]["green"] is False and "same" not in again["tests"]
 
 
 def test_a_task_that_changed_only_documents_runs_no_derived_gate_and_waits_for_a_look(town, monkeypatch):

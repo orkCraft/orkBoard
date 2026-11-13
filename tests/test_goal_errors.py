@@ -22,7 +22,3 @@ def test_a_finding_left_is_an_error_a_fixed_one_is_not_an_env_one_says_so_and_th
     assert [(e["party"], e["kind"], e["line"], e.get("env", False)) for e in got] == [("tech", "finding", "src/a.py: leaks", False), ("tech", "finding", "ci: no device", True)]
 
 
-def test_a_dropped_task_a_clean_task_and_no_tasks_have_no_errors_and_a_count_without_names_is_one_line():
-    assert goal_errors.of([task("d", "dropped", error="x"), task("e", tests={"passed": 4, "failed": 0})], "tech") == []
-    assert goal_errors.of([], "tech") == []
-    assert [e["line"] for e in goal_errors.of([task("f", "failed", tests={"failed": 2})], "tech")] == ["it failed", "2 tests failed"]

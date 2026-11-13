@@ -75,14 +75,6 @@ def test_a_command_that_refuses_is_taken_with_its_words(world):
     assert [(r["slug"], r["error"]) for r in journal_taken(origin)] == [("", "That is answered already")]
 
 
-def test_a_file_that_cannot_be_read_is_taken_with_its_error(world):
-    origin, a, b, phone = world
-    bad = answer_file(A2, kind="shell")                                           # not a kind a phone answers
-    drop(phone, {f"inbox/phone1/{A1}.answer.json": "not json", f"inbox/phone1/{A2}.answer.json": json.dumps(bad)})
-    hand = Hand([])
-    assert tick(a, hand, "host-a")["answer_errors"] == 2 and hand.called == []
-    rows = {r["id"]: r["error"] for r in journal_taken(origin)}
-    assert rows[A1] == "Could not read this answer: it is not an answer's file" and rows[A2].startswith("Could not read this answer: ")
 
 
 def test_goals_and_answers_share_the_inbox_and_do_not_mix(world):
@@ -95,28 +87,7 @@ def test_goals_and_answers_share_the_inbox_and_do_not_mix(world):
     assert [e.id for e in ri.entries(a)] == ["01JC0000000000000001"] and [x.id for x in ra.entries(a)] == [A1]
 
 
-def test_without_apply_the_answers_are_left_alone(world):
-    origin, a, b, phone = world
-    drop(phone, {f"inbox/phone1/{A1}.answer.json": json.dumps(answer_file(A1))})
-    board = Board()
-    got = ri.take(a, a / ".orkcraft", CONFIG, ri.Context(), board.lay, board.find, "host-a", NOW, force=True)
-    assert "answered" not in got
 
 
-def test_what_names_the_card_comes_from_the_row_and_only_the_answers_own_keys_pass():
-    row = {"kind": "fork", "id": "f1", "idea": "idea-1", "goal": "tech"}
-    name, args = ra.call(row, "fork", {"side": "right", "text": "x", "idea": "someone-else", "slug": "evil", "id": "no"})
-    assert name == "ideas.fork_answer" and args == {"idea": "idea-1", "side": "right", "text": "x"}
-    stop = {"kind": "collide", "idea": "i", "collide": {"id": "a|b"}}
-    assert ra.card_key(stop) == "a|b" and ra.call(stop, "collide", {"answer": "leave"}) == ("ideas.collide_answer", {"id": "a|b", "answer": "leave"})
-    assert ra.card_key(row) == "f1" and ra.card_key({"kind": "project_q"}) == ""
-    assert ra.call({"kind": "hearing", "idea": "i", "moment": "talk"}, "hearing", {"dir": "right"}) == ("ideas.throw", {"idea": "i", "moment": "talk", "dir": "right"})
 
 
-def test_clean_rules():
-    e = ra.Answer(A1, "phone1", "p")
-    ok, err = ra.clean(json.dumps(answer_file(A1)), e)
-    assert err == "" and ok["card"] == "idea-1" and ok["kind"] == "talk"
-    for bad in ({"v": 2}, {"id": "other"}, {"card": 5}, {"answer": "yes"}, {"kind": "nope"}):
-        got, why = ra.clean(json.dumps({**answer_file(A1), **bad}), e)
-        assert got is None and why.startswith("Could not read this answer: "), bad

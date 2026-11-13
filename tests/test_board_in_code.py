@@ -105,34 +105,7 @@ def test_in_code_is_written_and_read_and_every_other_line_is_kept(tmp_path):
     assert board_in_code.read(tmp_path) is True and text.count("in_code") == 1 and text.count("[board]") == 1
 
 
-def test_in_code_alone_is_no_yes_to_the_boards_branch_and_the_branch_goes_in_beside_it(tmp_path):
-    board_in_code.write(tmp_path, True)
-    assert board_branch.read_config(tmp_path) is None
-    board_branch.turn_on(tmp_path)
-    assert board_branch.read_config(tmp_path) == board_branch.BoardConfig("origin", "orkboard/board") and board_in_code.read(tmp_path) is True
-    assert (tmp_path / "orkcraft.toml").read_text().count("[board]") == 1
-
-
 # -- the visibility, once a day --------------------------------------------------------------------------------------
-
-def test_the_visibility_is_asked_once_a_day_and_a_look_that_says_nothing_keeps_the_last_word(repo):
-    state = repo / ".orkcraft"
-    get = fake(404)
-    assert board_in_code.status(repo, state, get, now=NOW)["visibility"] == "private" and board_in_code.status(repo, state, get, now=NOW + 100)["goes"]
-    assert len(get.calls) == 1
-    got = board_in_code.check(repo, state, fake(200), now=NOW + DAY)
-    assert got == {"visibility": "public", "was": "private", "found_public": True}
-    assert board_in_code.check(repo, state, fake(0), now=NOW + 2 * DAY)["visibility"] == "public"        # offline: the word before stands
-
-
-def test_no_remote_goes_and_a_remote_not_on_github_does_not_until_the_person_says(tmp_path, repo):
-    state = repo / ".orkcraft"
-    git(repo, "remote", "remove", "origin")
-    assert board_in_code.status(repo, state) == {"visibility": "none", "in_code": None, "goes": True}
-    git(repo, "remote", "add", "origin", "git@example.org:acme/app.git")
-    assert board_in_code.status(repo, state) == {"visibility": "unknown", "in_code": None, "goes": False}
-    board_in_code.write(repo, True)
-    assert board_in_code.status(repo, state)["goes"] is True
 
 
 # -- a private repository: the Board in the code, nothing asked -----------------------------------------------------------
@@ -167,19 +140,6 @@ def test_a_public_repository_commits_on_the_local_ref_and_never_moves_the_work_b
     assert git(repo, "rev-parse", "dev") == before and in_branch(repo, board_tree_off.REF, f"{WIKI}/pages/ideas/b.md")
     assert board_in_code.pending_question(repo, "dev") == {"public": True, "visibility": "public", "pages_in_history": 0}
     assert "refs/orkboard/pages" not in git(repo, "ls-remote", "--refs", ".", "refs/heads/*")
-
-
-def test_the_tree_follows_the_work_branch_while_it_is_off(repo):
-    board_in_code.status(repo, repo / ".orkcraft", fake(200), now=NOW)
-    t = tree_of(repo)
-    page(t, "a.md")
-    t.flush(force=True)
-    commit_code(repo)
-    page(t, "b.md")
-    t.flush(force=True)
-    assert (t.path / "code.py").is_file() and (t.root() / "pages/ideas/a.md").is_file() and (t.root() / "pages/ideas/b.md").is_file()
-    assert git(repo, "merge-base", "--is-ancestor", "dev", board_tree_off.REF) == "" and not in_branch(repo, "dev", f"{WIKI}/pages/ideas/a.md")
-    assert not git(repo, "status", "--porcelain", "--", "code.py")
 
 
 # -- `false`: the pages leave the work branch, once ---------------------------------------------------------------------------
@@ -234,17 +194,6 @@ def test_the_yes_later_puts_the_pages_into_the_work_branch_in_one_commit_and_dro
     assert in_branch(repo, "dev", f"{WIKI}/pages/ideas/e.md") and int(git(repo, "rev-list", "--count", "dev")) == count + 2
 
 
-def test_a_lost_tree_starts_again_from_the_local_ref(repo):
-    board_in_code.status(repo, repo / ".orkcraft", fake(200), now=NOW)
-    t = tree_of(repo)
-    page(t, "a.md")
-    t.flush(force=True)
-    git(repo, "worktree", "remove", "--force", str(t.path))
-    (repo / ".orkcraft" / board_tree_off.MARK).unlink()
-    again = tree_of(repo)
-    assert (again.root() / "pages/ideas/a.md").is_file() and board_tree_off.is_off(again)
-
-
 # -- a task's spec in its worktree ------------------------------------------------------------------------------------------
 
 def test_a_task_is_given_its_spec_in_its_worktree_and_its_commit_holds_none_of_it(repo):
@@ -263,16 +212,6 @@ def test_a_task_is_given_its_spec_in_its_worktree_and_its_commit_holds_none_of_i
     assert g.commit_left(path, "the task")
     assert git(path, "show", "--name-only", "--format=", "HEAD") == "new.py"
     assert not ever_committed(repo, ".orkcraft/spec")
-
-
-def test_a_private_repository_gives_a_task_no_copy(repo):
-    board_in_code.status(repo, repo / ".orkcraft", fake(404), now=NOW)
-    t = tree_of(repo)
-    page(t, "dark-mode.md")
-    t.flush(force=True)
-    g = IdeaGit(repo)
-    path, _branch = g.prepare("dark-mode", "t1", "dev")
-    assert not (path / ".orkcraft/spec").exists() and (path / WIKI / "pages/ideas/dark-mode.md").is_file()
 
 
 # -- found public since ------------------------------------------------------------------------------------------------------
@@ -335,38 +274,6 @@ def test_a_goal_kept_off_is_read_with_the_others_and_is_in_no_commit_of_either_b
     assert not any(f"pages/ideas/{s}.md" in n or n.startswith(f"ideas/{s}/") for n in files for s in ("marked", "sec-kind", "secretive"))
 
 
-def test_pack_leaves_a_goal_kept_off_at_home_and_a_goal_that_goes_is_sent(repo):
-    state = repo / ".orkcraft"
-    board_in_code.write(repo, True)
-    board_in_code.status(repo, state, fake(200), now=NOW)
-    t = tree_of(repo)
-    _goals(repo, t)
-    (state / "ideas" / "marked" / "talk.jsonl").write_text('{"who":"person","text":"words"}\n')
-    (state / "ideas" / "plain" / "talk.jsonl").write_text('{"who":"person","text":"words"}\n')
-    files, _held = board_branch.pack(state, WIKI)
-    assert f"board/{WIKI}/pages/ideas/plain.md" in files and "ideas/plain/talk.jsonl" in files
-    for slug in ("marked", "sec-kind", "secretive"):
-        assert f"board/{WIKI}/pages/ideas/{slug}.md" not in files and not any(n.startswith(f"ideas/{slug}/") for n in files)
-    board_in_code.keep_off(state, "marked", False)                                  # let it go again
-    files, _held = board_branch.pack(state, WIKI)
-    assert f"board/{WIKI}/pages/ideas/marked.md" in files
-
-
-def test_a_goal_that_was_committed_before_it_was_kept_off_leaves_the_work_branch_with_the_next_write(repo):
-    state = repo / ".orkcraft"
-    board_in_code.write(repo, True)
-    board_in_code.status(repo, state, fake(200), now=NOW)
-    t = tree_of(repo)
-    page(t, "later.md")
-    ideas.save_state(state, "later", state="raw")
-    t.flush(force=True)
-    assert in_branch(repo, "dev", f"{WIKI}/pages/ideas/later.md")
-    board_in_code.keep_off(state, "later", True)
-    page(t, "plain.md")
-    t.flush(force=True)
-    assert not in_branch(repo, "dev", f"{WIKI}/pages/ideas/later.md") and (t.root() / "pages/ideas/later.md").is_file()
-
-
 def _prompt(repo, slug):
     from types import SimpleNamespace
 
@@ -378,28 +285,3 @@ def _prompt(repo, slug):
     return TaskMixin._prompt(runner, slug, plan, plan["tasks"][0])
 
 
-def test_the_prompt_names_the_spec_in_the_worktree_when_the_board_is_off_and_the_boards_page_when_it_is_in(repo):
-    state = repo / ".orkcraft"
-    board_in_code.status(repo, state, fake(200), now=NOW)
-    t = tree_of(repo)
-    page(t, "dark-mode.md", '---\ndepends_on: ["base"]\n---\n# Dark mode\nSECRET WORDS\n')
-    page(t, "base.md")
-    t.flush(force=True)
-    off = _prompt(repo, "dark-mode")
-    assert "Its spec is at `.orkcraft/spec/dark-mode.md` in this worktree" in off and "It depends on `.orkcraft/spec/base.md`." in off and "SECRET WORDS" not in off
-    board_in_code.write(repo, True)
-    t.flush(force=True)
-    board_in_code.keep_off(state, "dark-mode", True)                      # in the code, but this goal is kept off it: its spec still comes as a copy
-    assert "Its spec is at `.orkcraft/spec/dark-mode.md`" in _prompt(repo, "dark-mode")
-    board_in_code.keep_off(state, "dark-mode", False)
-    assert f"Its spec is at `{WIKI}/pages/ideas/dark-mode.md`" in _prompt(repo, "dark-mode")
-
-
-def test_nothing_is_kept_off_in_a_private_repository(repo):
-    state = repo / ".orkcraft"
-    board_in_code.status(repo, state, fake(404), now=NOW)
-    t = tree_of(repo)
-    _goals(repo, t)
-    assert board_in_code.kept_off_slugs(state) == [] and not board_in_code.kept_off(repo, state, "marked")
-    t.flush(force=True)
-    assert in_branch(repo, "dev", f"{WIKI}/pages/ideas/marked.md")

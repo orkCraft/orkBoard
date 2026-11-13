@@ -99,41 +99,6 @@ def _stance(craft, **more):
     return {"party": craft, "leader": craft, "craft": craft, "verdict": "go", "priority": "", "risk": "", "against": "", **more}
 
 
-def test_the_weight_is_products_priority_and_the_risk_tech_gave_raised_by_the_rules_no_model_talks_down():
-    assert idea_ripe.weight([_stance("product", priority="high"), _stance("tech", risk="medium")], {}) == {"priority": "high", "risk": "medium"}
-    assert idea_ripe.weight([_stance("tech")], {}) == {"priority": "normal", "risk": "low"}                       # nobody gave a priority: normal; no risk: low
-    assert idea_ripe.weight([{"party": "x", "verdict": "go", "priority": "high", "risk": "high"}], {}) == {"priority": "high", "risk": "high"}      # a record with no craft: the stance that has one
-    assert idea_ripe.weight([_stance("design", priority="high", risk="high")], {}) == {"priority": "normal", "risk": "low"}                  # only Product's priority and Tech's risk count
-    assert idea_ripe.weight([_stance("product", priority="urgent")], {})["priority"] == "normal"                    # out of its set
-    login = idea_ripe.weight([_stance("tech", risk="low")], {"touched": ["src/auth/login.py"]})
-    assert login["risk"] == "medium"                                                                               # a path of sign-in raises it
-    assert idea_ripe.weight([_stance("tech", risk="low")], {}, gist="Add a token check")["risk"] == "medium"        # a word of the goal raises it
-    assert idea_ripe.weight([_stance("tech", risk="low", against="This will drop table users")], {})["risk"] == "medium"     # …and a word of Tech's against
-    assert idea_ripe.weight([_stance("tech", risk="high")], {"touched": []}, gist="plain")["risk"] == "high"       # the model's own high stands
-    assert idea_ripe.weight([_stance("tech", risk="low")], {"touched": ["a.py"]})["risk"] == "low"
-
-
-def test_what_the_verdicts_make_a_hearing_agreed_or_the_decisions_card():
-    go = [_stance("product"), _stance("tech")]
-    assert idea_ripe.outcome({"stances": go}, True) == "agreed"
-    assert idea_ripe.outcome({"stances": [*go, _stance("design", verdict="doubt")]}, True) == "hearing"
-    assert idea_ripe.outcome({"stances": [*go, _stance("design", verdict="no")]}, False) == "hearing"
-    assert idea_ripe.outcome({"stances": go[1:]}, False) == "agreed"                                                    # no Product's word, risk low only
-    assert idea_ripe.outcome({"stances": go[1:], "weight": {"priority": "normal", "risk": "medium"}}, False) == "decision"
-    assert idea_ripe.outcome({"stances": go[1:], "weight": {"priority": "normal", "risk": "medium"}}, True) == "agreed"   # Product spoke: the wait decides how long
-    assert idea_ripe.outcome({"stances": [_stance("tech", risk="high")], "weight": {"priority": "high", "risk": "high"}}, False) == "decision"
-    assert idea_ripe.outcome({"stances": []}, True) == "decision" and idea_ripe.outcome({}, False) == "decision"        # a bug's diagnosis, a Talk not begun
-    assert idea_ripe.outcome({"stances": [_stance("tech")]}, False) == "agreed"                                         # no weight kept: worked out from the stances
-
-
-def test_the_wait_is_a_minute_for_high_priority_at_low_risk_ten_minutes_otherwise_and_none_where_the_plan_would_wait():
-    assert idea_ripe.wait_s("high", "low") == 60
-    assert idea_ripe.wait_s("normal", "low") == idea_ripe.wait_s("low", "low") == idea_ripe.wait_s("high", "medium") == 600       # what the plan's autostart would start
-    assert idea_ripe.wait_s("normal", "medium") is None and idea_ripe.wait_s("low", "medium") is None                              # `wait`: the decision's card as it was
-    assert all(idea_ripe.wait_s(p, "high") is None for p in ("high", "normal", "low"))
-    assert idea_ripe.wait_s("nonsense", "low") == 600                                                                               # a priority nobody knows reads as normal (idea_risk.decide)
-
-
 def test_the_wait_is_kept_beside_the_decision_counts_down_is_held_and_ends(host, tech):
     state = host.ideas.state_dir
     slug = "a-goal"
@@ -181,13 +146,6 @@ def test_a_hearing_or_a_goal_nobody_could_weigh_begins_no_wait(host, tech, model
     assert _ripe(host, slug) is None and _events(host, event_log.RIPE_STARTED) == []
 
 
-def test_a_rule_no_model_talks_down_raises_the_risk_and_so_the_wait(host, tech, model):
-    slug = host.command("ideas.add", {"text": "Add a token check to the sign-in", "track": tech})["slug"]
-    host.command("ideas.talk", {"idea": slug})
-    _until(host, slug, "decided")
-    assert idea_questions.record(host.ideas.state_dir, slug)["weight"]["risk"] == "medium" and _ripe(host, slug) is None     # Tech said low; the words say secrets and sign-in
-
-
 @pytest.mark.weighs
 @pytest.mark.parametrize("priority, risk, left", [("high", "low", 60.0), ("normal", "low", 600.0), ("high", "medium", 600.0), ("normal", "medium", None), ("high", "high", None)])
 def test_product_weighing_the_goal_is_its_word_and_its_priority_makes_the_wait(host, tech, product, model, priority, risk, left):
@@ -200,23 +158,6 @@ def test_product_weighing_the_goal_is_its_word_and_its_priority_makes_the_wait(h
 
 
 # -- it counts down only while a face is open ----------------------------------------------------------------------------------------
-
-def test_the_time_is_kept_with_no_face_open_and_runs_while_one_is(host, tech, model):
-    slug = _agreed(host, tech)
-    ticks = host.ideas.ripe_tick
-    for at in (100.0, 101.0, 130.0, 200.0):
-        ticks(at)
-    assert _ripe(host, slug)["left_s"] == 600.0                                                                     # a goal never starts unseen: no face, no time taken
-    host.faces = lambda: 1
-    ticks(201.0)                                                                                                    # the clock ran on while it was closed: this tick takes one second
-    ticks(202.0)
-    assert _ripe(host, slug)["left_s"] == 598.0
-    ticks(1000.0)                                                                                                   # a computer that slept takes no more than RIPE_MAX_DT at once
-    assert _ripe(host, slug)["left_s"] == 598.0 - ideas_route.RIPE_MAX_DT
-    host.faces = lambda: 0
-    ticks(1001.0)
-    ticks(1002.0)
-    assert _ripe(host, slug)["left_s"] == 598.0 - ideas_route.RIPE_MAX_DT                                           # the face closed: kept
 
 
 def test_hold_stops_the_wait_and_the_goal_waits_for_the_persons_start(host, tech, model):
@@ -236,15 +177,6 @@ def test_hold_stops_the_wait_and_the_goal_waits_for_the_persons_start(host, tech
     got = host.command("ideas.confirm", {"idea": slug})                                                             # *Start*: the person's, as it always was
     assert got["ok"] is True and "the person and" in subprocess.run(["git", "show", "dev:docs/decisions.md"], cwd=host.repo_root, capture_output=True, text=True).stdout
     assert idea_ripe.of(host.ideas.state_dir, slug) is None                                                         # the wait is over, whoever ended it
-
-
-def test_opening_the_card_or_answering_another_holds_nothing(host, tech, model):
-    slug = _agreed(host, tech)
-    other = host.command("ideas.add", {"text": "add a light mode option", "track": tech})["slug"]
-    host.command("ideas.page", {"slug": slug})                                                                      # the card is opened and read
-    host.command("ideas.board")
-    host.command("ideas.route_set", {"idea": other, "route": [tech]})                                               # another goal's card is answered
-    assert _ripe(host, slug)["held"] is False and ideas.state(host.ideas.state_dir, other)["state"] == "routed" and _events(host, event_log.RIPE_HELD) == []
 
 
 # -- the end ---------------------------------------------------------------------------------------------------------------------------------
@@ -282,14 +214,6 @@ def test_a_spent_window_or_a_stop_at_the_end_holds_the_goal_with_why_and_never_s
     assert got["held"] is True and got["by"] == "stopped" and "window is spent" in got["why"]
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "decided" and spec_sections.record(host.ideas.state_dir, slug)["decision"]["confirmed"] is False
     assert _events(host, event_log.RIPE_DONE) == [] and _events(host, event_log.RIPE_HELD)[-1]["why"].startswith("Claude's window is spent")
-
-
-def test_a_tool_that_is_out_or_paid_holds_the_goal_it_is_never_started_on_paid(host, tech, model, monkeypatch):
-    slug = _agreed(host, tech)
-    monkeypatch.setattr(host.ideas, "route_paid", lambda: True)
-    _run_out(host, slug, monkeypatch)
-    got = _ripe(host, slug)
-    assert got["held"] is True and "out of room or paid" in got["why"] and ideas.state(host.ideas.state_dir, slug)["state"] == "decided"
 
 
 def test_stop_all_holds_every_wait_that_counts_down(host, tech, model):

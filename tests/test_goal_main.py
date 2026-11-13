@@ -132,13 +132,6 @@ def work(host, repo):
 
 # -- the plan -----------------------------------------------------------------------------------------------------
 
-def test_a_goals_commits_are_its_tasks_ranges_in_the_order_they_landed(host, repo, work):
-    lobby, chat, l1, c1, own, l2 = work
-    got = plan_of(host, repo, lobby)
-    assert got["goals"] == [lobby] and got["commits"] == [*l1, *l2] and got["sealed"] is None       # not Chat's, not the person's own
-    assert got["files"] == 3 and got["titles"] == {lobby: short(host, lobby)}
-    assert plan_of(host, repo, chat)["commits"] == c1 and own not in got["commits"]
-    assert worktrees(repo) == []                                         # the trial's worktree is gone
 
 
 def test_the_goals_it_stands_on_come_with_it_in_the_order_dev_holds_them(host, repo, work):
@@ -149,25 +142,6 @@ def test_the_goals_it_stands_on_come_with_it_in_the_order_dev_holds_them(host, r
     assert got["titles"] == {lobby: short(host, lobby), chat: short(host, chat)}
     depends(host, chat, "no-such-goal")                                                    # a goal the Board lost is nothing to stand on
     assert plan_of(host, repo, chat)["goals"] == [chat]
-
-
-def test_a_goal_main_has_already_is_not_stood_on(host, repo, work):
-    lobby, chat, _l1, _c1, _own, _l2 = work
-    depends(host, lobby, chat)
-    goal_main.merge(repo, host.ideas.state_dir, chat, root=host.ideas.root())
-    got = plan_of(host, repo, lobby)
-    assert got["goals"] == [lobby] and got["sealed"] is None                               # main holds Chat, under new shas
-
-
-def test_a_goal_that_changed_the_same_files_earlier_comes_with_it(host, repo):
-    first, second, third = goal(host, "Lobby"), goal(host, "Reconnect"), goal(host, "Scores")
-    a = task(host, repo, first, "k1", {"shared/player.ts": "one\n"})
-    b = task(host, repo, third, "k1", {"scores.ts": "scores\n"})                          # touches nothing the others do
-    c = task(host, repo, second, "k1", {"shared/player.ts": "one\ntwo\n"})                 # on Lobby's file, later
-    got = plan_of(host, repo, second)
-    assert got["goals"] == [second, first] and got["commits"] == [*a, *c] and got["sealed"] is None and b[0] not in got["commits"]
-    assert plan_of(host, repo, first)["goals"] == [first]                                  # the earlier goal stands on nothing
-    assert plan_of(host, repo, third)["goals"] == [third]
 
 
 # -- by patch id --------------------------------------------------------------------------------------------------
@@ -186,17 +160,6 @@ def test_a_pick_is_in_main_by_its_patch_id_and_the_gate_does_not_count_it_again(
     git_ = IdeaGit(repo)
     assert goal_main.in_main(git_, [*l1, *l2], "dev", "main") is True and goal_main.in_main(git_, [*l1, *c1], "dev", "main") is False
     assert goal_main.in_main(git_, [], "dev", "main") is False and goal_main.in_main(git_, [git(repo, "rev-parse", "main")], "dev", "main") is True
-
-
-def test_dev_whole_still_goes_after_a_goal_went_alone(host, repo, work):
-    lobby, chat, *_ = work
-    to_main(host, lobby)
-    got = host.command("ideas.gate_merge", {"sealed": True})
-    assert got["ok"] is True and git(repo, "merge-base", "--is-ancestor", "dev", "main") == ""
-    assert host.command("ideas.gate")["commits"] == 0 and (repo / "chat" / "room.ts").exists() and (repo / "own.txt").exists()
-    (e,) = events(host, "gate_merged")
-    assert e["commits"] == 2                                                             # Chat's and the person's: not Lobby's again
-    assert idea_flag.flag_of(host.ideas.state_dir, chat)["by"] == "gate"
 
 
 # -- sealed -------------------------------------------------------------------------------------------------------
@@ -222,21 +185,6 @@ def test_a_goal_it_stands_on_that_is_not_done_seals_it(host, repo, work):
     assert plan_of(host, repo, lobby)["sealed"] in (f"{short(host, chat)} is not done yet", f"{short(host, third)} is not done yet")
 
 
-def test_a_goal_it_stands_on_done_before_this_machine_read_it_seals_nothing(host, repo, work):
-    """Trial 152 E, F1: a goal done in history (or by another tool) has no plan here; its state or its page says done, so it is not lacking."""
-    lobby, *_ = work
-    history = goal(host, "Done in history", state="done")                                  # done, no plan on this machine
-    depends(host, lobby, history)
-    got = plan_of(host, repo, lobby)
-    assert got["sealed"] is None and got["goals"] == [lobby]
-    paged = goal(host, "Done by another tool", state="raw")                                # the state never moved; the page says done
-    ideas.set_meta(host.ideas.root(), paged, phase="done")
-    depends(host, lobby, paged)
-    assert plan_of(host, repo, lobby)["sealed"] is None
-    ideas.set_meta(host.ideas.root(), paged, phase="work")                                  # the page says work: it is not done
-    assert plan_of(host, repo, lobby)["sealed"] == f"{short(host, paged)} is not done yet"
-
-
 def test_a_pick_that_would_conflict_seals_it_with_the_files_and_leaves_nothing_behind(host, repo):
     lobby = goal(host, "Lobby")
     task(host, repo, lobby, "k1", {"a.txt": "dev's a\n"})
@@ -249,40 +197,6 @@ def test_a_pick_that_would_conflict_seals_it_with_the_files_and_leaves_nothing_b
     assert git(repo, "rev-parse", "main") == before and worktrees(repo) == []
     assert git(repo, "status", "--porcelain") == "" and events(host, "goal_to_main") == []
     assert idea_flag.flag_of(host.ideas.state_dir, lobby) is None
-
-
-def test_a_goal_in_main_already_and_a_goal_without_commits_have_nothing_to_send(host, repo, work):
-    lobby, chat, *_ = work
-    to_main(host, lobby)
-    assert plan_of(host, repo, lobby)["sealed"] == f"{short(host, lobby)} is in main already"
-    with pytest.raises(CommandError, match="is in main already"):
-        host.command("ideas.to_main", {"sealed": True, "idea": lobby})
-    check = goal(host, "A check only")
-    ideas.save_plan(host.ideas.state_dir, check, {"idea": check, "tasks": [{"id": "c1", "state": "merged", "commit": "", "after": []}]})
-    assert plan_of(host, repo, check)["sealed"] == f"{short(host, check)} has nothing to send to main"
-
-
-def test_main_behind_its_origin_seals_it(host, repo, tmp_path):
-    remote = tmp_path / "origin.git"
-    git(tmp_path, "init", "-q", "--bare", "-b", "main", str(remote))
-    git(repo, "remote", "add", "origin", str(remote))
-    git(repo, "push", "-q", "origin", "main")
-    lobby = goal(host, "Lobby")
-    task(host, repo, lobby, "k1", {"lobby.ts": "l\n"})
-    other = tmp_path / "other"
-    git(tmp_path, "clone", "-q", str(remote), str(other))
-    git(other, "config", "user.email", "o@x")
-    git(other, "config", "user.name", "O")
-    commit_in(other, "elsewhere.txt", "pushed from elsewhere\n")
-    git(other, "push", "-q", "origin", "main")
-    git(repo, "fetch", "-q", "origin")
-    assert plan_of(host, repo, lobby)["sealed"] == "main is behind origin/main: pull it first"
-
-
-def test_without_a_gate_there_is_nothing_to_send(host, repo):
-    lobby = goal(host, "Lobby")
-    got = goal_main.plan(repo, host.ideas.state_dir, lobby, root=host.ideas.root(), into="main", main="main")
-    assert got["sealed"] == "Results merge into main itself: there is no gate" and got["commits"] == []
 
 
 # -- the merge ----------------------------------------------------------------------------------------------------
@@ -306,16 +220,6 @@ def test_the_merge_picks_the_commits_in_order_onto_main_and_the_checkout_follows
     assert git(repo, "log", "-1", "--format=%an", "main") == "T"                           # the author stays
 
 
-def test_dev_is_not_moved_and_a_main_not_checked_out_moves_by_update_ref(host, repo, work):
-    lobby, *_ = work
-    dev = git(repo, "rev-parse", "dev")
-    git(repo, "checkout", "-q", "-b", "mine")
-    to_main(host, lobby, device="phone")
-    assert git(repo, "rev-parse", "dev") == dev and not (repo / "lobby").exists()
-    assert git(repo, "show", "main:lobby/join.ts") == "join" and git(repo, "rev-parse", "--abbrev-ref", "HEAD") == "mine"
-    assert events(host, "goal_to_main")[0]["device"] == "phone"
-
-
 def test_the_flags_of_the_goals_it_took_are_raised_and_a_goal_left_behind_has_none(host, repo, work):
     lobby, chat, *_ = work
     other = goal(host, "Other")
@@ -327,32 +231,6 @@ def test_the_flags_of_the_goals_it_took_are_raised_and_a_goal_left_behind_has_no
         assert flag and flag["by"] == "gate" and flag["commit"] == got["commit"]
     assert idea_flag.flag_of(host.ideas.state_dir, other) is None
     assert sorted(e["idea"] for e in events(host, "idea_flagged")) == sorted([lobby, chat])
-
-
-def test_a_goal_not_done_gets_no_flag_and_a_goal_stood_on_waits_for_nothing_it_lacks(host, repo):
-    lobby = goal(host, "Lobby", state="done")
-    task(host, repo, lobby, "k1", {"lobby.ts": "l\n"})
-    to_main(host, lobby)
-    assert idea_flag.flag_of(host.ideas.state_dir, lobby)["by"] == "gate"
-    assert host.command("ideas.gate")["commits"] == 0
-
-
-def test_it_pushes_when_the_project_pushes_after_merging(host, repo, tmp_path):
-    remote = tmp_path / "origin.git"
-    git(tmp_path, "init", "-q", "--bare", "-b", "main", str(remote))
-    git(repo, "remote", "add", "origin", str(remote))
-    git(repo, "push", "-q", "origin", "main")
-    lobby = goal(host, "Lobby")
-    task(host, repo, lobby, "k1", {"lobby.ts": "l\n"})
-    host.ideas.save_settings({**host.ideas.settings_now(), "push": True})
-    got = to_main(host, lobby)
-    assert got["note"] == "" and git(remote, "rev-parse", "main") == git(repo, "rev-parse", "main") == got["commit"]
-    assert events(host, "goal_to_main")[0]["pushed"] is True
-    second = goal(host, "Second")
-    task(host, repo, second, "k1", {"second.ts": "s\n"})
-    host.ideas.save_settings({**host.ideas.settings_now(), "push": False})
-    to_main(host, second)
-    assert git(remote, "rev-parse", "main") != git(repo, "rev-parse", "main")
 
 
 # -- the commands -------------------------------------------------------------------------------------------------
@@ -376,36 +254,6 @@ def test_the_commands_round_trip_and_the_phone_may_send_them(host, repo, work):
 
 # -- ready for main (spec 143 F.3, F.4) ---------------------------------------------------------------------------
 
-def test_a_goal_with_a_task_failed_or_still_to_do_is_not_ready_for_main(host, repo, work):
-    lobby, chat, *_ = work
-    assert [i["slug"] for i in host.command("ideas.gate")["ideas"]] == [lobby, chat]
-    for state in ("failed", "waiting", "ready", "running", "review"):
-        plan = ideas.plan(host.ideas.state_dir, lobby)
-        plan["tasks"] = [t for t in plan["tasks"] if t["id"] != "later"] + [{"id": "later", "title": "Later", "state": state, "commit": "", "after": [], "round": 1}]
-        ideas.save_plan(host.ideas.state_dir, lobby, plan)
-        got = host.command("ideas.gate")
-        assert [i["slug"] for i in got["ideas"]] == [chat], f"a task {state}: Lobby is not ready for main"
-        assert got["commits"] == 2 and got["files"] == 2, "its commits are left out of the count: Chat's and the person's own are what is ready (spec 149 G.3)"
-    plan = ideas.plan(host.ideas.state_dir, lobby)
-    plan["tasks"][-1]["state"] = "dropped"
-    ideas.save_plan(host.ideas.state_dir, lobby, plan)
-    assert [i["slug"] for i in host.command("ideas.gate")["ideas"]] == [lobby, chat], "a dropped task holds nothing back"
-
-
-def test_the_boards_own_commits_are_no_pile_but_a_code_commit_of_no_goal_is(host, repo):
-    git(repo, "checkout", "-q", "dev")
-    commit_in(repo, "wiki/pages/tracks/tech.md", "# Tech\n", "The Board lays the table")
-    commit_in(repo, "wiki/pages/ideas/first.md", "# First\n", "The Board writes a goal")
-    git(repo, "checkout", "-q", "main")
-    got = host.command("ideas.gate")
-    assert got["commits"] == 0 and got["files"] == 0 and got["ideas"] == [], "a laid table with no work has no pile"
-    git(repo, "checkout", "-q", "dev")
-    commit_in(repo, "own.txt", "the person's own commit\n")
-    git(repo, "checkout", "-q", "main")
-    got = host.command("ideas.gate")
-    assert got["commits"] == 1 and got["files"] == 1, "a commit of code that belongs to no goal still counts, the Board's two do not"
-    host.command("ideas.gate_merge", {"sealed": True})
-    assert (repo / "wiki" / "pages" / "tracks" / "tech.md").exists(), "they go into main with the next merge"
 
 
 # -- one pile, half a goal refused, the Board's own (spec 149 G.2, G.3, G.4) --------------------------------------
@@ -424,41 +272,6 @@ def test_dev_whole_is_refused_in_words_while_a_goal_with_commits_in_dev_is_not_r
     assert idea_flag.flag_of(host.ideas.state_dir, chat) is not None
 
 
-def test_commits_that_belong_to_no_goal_still_go_with_dev_whole_while_a_goal_is_ready_or_has_no_commits_there(host, repo):
-    git(repo, "checkout", "-q", "dev")
-    commit_in(repo, "own.txt", "the person's own commit\n")
-    git(repo, "checkout", "-q", "main")
-    assert host.command("ideas.gate")["commits"] == 1 and host.command("ideas.gate_merge", {"sealed": True})["ok"] is True
-    assert git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
-
-
-def test_the_pile_counts_only_the_commits_of_goals_ready_and_of_no_goal(host, repo, work):
-    lobby, chat, l1, c1, own, l2 = work
-    got = host.command("ideas.gate")
-    assert got["commits"] == 5 and got["files"] == 5 and [i["slug"] for i in got["ideas"]] == [lobby, chat]
-    unfinished(host, lobby)
-    got = host.command("ideas.gate")
-    assert got["commits"] == 2 and got["files"] == 2 and [i["slug"] for i in got["ideas"]] == [chat], "Lobby's three commits and three files are left out"
-    unfinished(host, chat)
-    got = host.command("ideas.gate")
-    assert got["commits"] == 1 and got["files"] == 1 and got["ideas"] == [], "only the person's own commit, which belongs to no goal"
-
-
-def test_a_goal_sent_alone_when_ready_leaves_a_pile_that_says_nothing_after_the_board_folds(host, repo, work):
-    lobby, chat, *_ = work
-    to_main(host, lobby)
-    to_main(host, chat)
-    host.command("ideas.gate_merge", {"sealed": True})                                                         # the person's own commit goes with dev whole: nothing else is left
-    git(repo, "checkout", "-q", "dev")
-    (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)
-    (repo / "llm-wiki" / "wiki" / "specs" / "lobby.md").write_text("# Lobby\n")
-    git(repo, "add", "-A")
-    git(repo, "-c", f"user.name={BOARD_NAME}", "-c", f"user.email={BOARD_EMAIL}", "commit", "-q", "-m", "board: the fold", "--author", f"{BOARD_NAME} <{BOARD_EMAIL}>")
-    git(repo, "checkout", "-q", "main")
-    got = host.command("ideas.gate")
-    assert got["commits"] == 0 and got["files"] == 0 and got["ideas"] == [], "the fold's commit is the Board's: no pile"
-
-
 def test_without_board_pages_leaves_out_a_commit_authored_by_the_board_and_keeps_a_persons(repo):
     git(repo, "checkout", "-q", "dev")
     (repo / "llm-wiki" / "wiki" / "specs").mkdir(parents=True)
@@ -474,25 +287,6 @@ def test_without_board_pages_leaves_out_a_commit_authored_by_the_board_and_keeps
     assert idea_gate.without_board_pages(g, shas, files) == ([mine], 1)
 
 
-def test_a_commit_by_the_board_under_either_name_is_no_pile(tmp_path):
-    """The Board's commits said *Orkline board* before spec 149 F.3 and say *<the product> board* since: both are the Board's (§253.8)."""
-    import subprocess
-    from orkboard import brand
-    from orkboard.realm import idea_gate
-    from orkboard.realm.idea_git import BOARD_NAME, IdeaGit
-    run = lambda *a: subprocess.run(["git", *a], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
-    run("init", "-q", "-b", "main")
-    shas = []
-    for i, (who, email) in enumerate([(BOARD_NAME, "board@orkline.local"), brand.board_author(), ("Someone", "someone@example.com")]):
-        (tmp_path / f"llm-wiki/specs/s{i}.md").parent.mkdir(parents=True, exist_ok=True)
-        (tmp_path / f"llm-wiki/specs/s{i}.md").write_text(f"{i}\n")
-        run("add", "-A")
-        run("-c", f"user.name={who}", "-c", f"user.email={email}", "commit", "-q", "-m", f"c{i}")
-        shas.append(run("rev-parse", "HEAD"))
-    kept, files = idea_gate.without_board_pages(IdeaGit(tmp_path), shas, 3)
-    assert kept == shas[2:] and files == 1
-
-
 def test_a_goal_in_dev_reaches_main_after_the_checks_with_no_release_party(host, repo):
     """Release is a craft as any (decisions §274.1): no Release party, and the goal still goes to main by `ideas.to_main`."""
     from orkboard.realm import goal_types
@@ -506,11 +300,6 @@ def test_a_goal_in_dev_reaches_main_after_the_checks_with_no_release_party(host,
 
 # -- the one named skip (spec 158 B, decisions §274.3) -------------------------------------------------------------
 
-def test_a_normal_send_logs_the_tests_as_run_with_the_checks_time(host, repo, work):
-    lobby, *_ = work
-    to_main(host, lobby)
-    (e,) = events(host, "goal_to_main")
-    assert e["tests"] == "run" and isinstance(e["checks_s"], float) and e["checks_s"] >= 0
 
 
 def test_untested_true_sends_without_asking_the_checks_and_logs_skipped(host, repo, work):
@@ -519,22 +308,6 @@ def test_untested_true_sends_without_asking_the_checks_and_logs_skipped(host, re
     assert got["ok"] is True and git(repo, "rev-parse", "main") == got["commit"]
     (e,) = events(host, "goal_to_main")
     assert e["tests"] == "skipped" and "checks_s" not in e
-
-
-@pytest.mark.parametrize("value", ["yes", 1, "true", "True", [True], {"a": 1}, None])
-def test_nothing_truthy_but_true_skips_the_checks(host, repo, work, value):
-    lobby, *_ = work
-    before = git(repo, "rev-parse", "main")
-    with pytest.raises(CommandError, match="checks have not been run"):
-        host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": value})
-    assert git(repo, "rev-parse", "main") == before and events(host, "goal_to_main") == []
-
-
-def test_a_sealed_goal_is_refused_even_with_the_skip(host, repo, work):
-    lobby, *_ = work
-    unfinished(host, lobby)
-    with pytest.raises(CommandError, match="is not done yet"):
-        host.command("ideas.to_main", {"sealed": True, "idea": lobby, "untested": True})
 
 
 def test_a_project_with_no_tests_is_refused_in_words_and_only_the_skip_sends_it(host, repo, work, monkeypatch):

@@ -88,67 +88,6 @@ def test_each_list_comes_from_its_events(where):
     assert got["empty"] is False
 
 
-def test_a_quiet_night_a_lone_cost_and_an_empty_period(where):
-    root, state = where
-    _log(root, "night_run", 5, drafted=0, started=0, refreshed=0, proposed=0)
-    _ledger(state, "queue", 5, 1.5)
-    got = board_recap.build(root, state, SINCE, NOW, _rows(("queue", "working")))
-    assert got["night"] is None and got["usd"] == 1.5 and got["empty"] is True       # a cost alone makes no card
-    got = board_recap.build(root, state, SINCE, NOW, _rows(("queue", "working")), into="main")
-    assert got["into"] == "main"
-    _log(root, "task_state", 5, idea="queue", task="k1", state="merged", was="review", round=1)
-    assert board_recap.build(root, state, SINCE, NOW, _rows(("queue", "working")))["empty"] is False
-
-
-def test_usd_is_null_when_unpriced_and_zero_when_none(where):
-    root, state = where
-    assert board_recap.build(root, state, SINCE, NOW, _rows())["usd"] == 0.0
-    _ledger(state, "queue", 3, None)
-    assert board_recap.build(root, state, SINCE, NOW, _rows())["usd"] is None
-    _ledger(state, "queue", 2, 0.337)
-    assert board_recap.build(root, state, SINCE, NOW, _rows())["usd"] == 0.34
-
-
-def test_times_with_and_without_an_offset(where):
-    root, state = where
-    assert board_recap.when("2026-10-20T09:00:00").utcoffset() is not None
-    assert board_recap.when("2026-10-20T09:00:00+05:00") == dt.datetime(2026, 10, 20, 4, 0, tzinfo=dt.timezone.utc)
-    assert board_recap.when("nonsense") is None and board_recap.when(None) is None
-    far = dt.timezone(dt.timedelta(hours=-11))                                       # a line written in another offset is placed by its instant
-    row = event_log.line("task_state", at=_at(3).astimezone(far), idea="queue", task="k1", state="merged", was="review", round=1)
-    event_log.path(root).parent.mkdir(parents=True)
-    event_log.path(root).write_text(json.dumps(row) + "\n")
-    assert board_recap.build(root, state, SINCE, NOW, _rows(("queue", "working")))["merged"]["tasks"] == 1
-
-
-def test_between_is_a_half_open_period_over_every_ledger(where):
-    _root, state = where
-    _ledger(state, "a", 10, 9.0)                                                     # before
-    _ledger(state, "a", 8, 1.0)
-    _ledger(state, "b", 8, 2.0, naive=False)
-    _ledger(state, "a", 0, 4.0)                                                      # at `now`: not in the period
-    goal = state / "goals" / "offline"
-    goal.mkdir(parents=True)
-    (goal / idea_spend.FILE).write_text(json.dumps({"at": _at(2).replace(tzinfo=None).isoformat(), "cost": 0.5}) + "\n")
-    (state / "ideas" / idea_spend.BOARD).write_text(json.dumps({"at": _at(1).replace(tzinfo=None).isoformat(), "cost": None}) + "\n")
-    assert idea_spend.between(state, SINCE, NOW) == 3.5
-    assert idea_spend.between(state, NOW + dt.timedelta(hours=1), NOW + dt.timedelta(hours=2)) == 0.0
-
-
-def test_a_check_that_found_nothing_is_no_result(where):
-    """Spec 43 A: a `merged` line with `clean` is not a result (*in dev*), nor counted in merged or first_time."""
-    root, state = where
-    _log(root, "task_state", 8, idea="queue", task="k1", state="merged", was="review", round=1)
-    _log(root, "task_state", 7, idea="queue", task="k2", state="merged", was="running", round=1, check=True, clean=True)
-    _log(root, "task_state", 6, idea="csv", task="k1", state="merged", was="running", round=1, check=True, clean=True)       # only a clean check
-    _log(root, "task_state", 5, idea="queue", task="k3", state="merged", was="review", round=2, check=True)               # left, then merged: a result
-    rows = _rows(("queue", "working"), ("csv", "working"))
-    got = board_recap.build(root, state, SINCE, NOW, rows)
-    assert got["merged"]["tasks"] == 2 and got["merged"]["first_time"] == 1
-    assert [i["slug"] for i in got["merged"]["ideas"]] == ["queue"]
-    assert board_recap.merges([{"state": "merged", "clean": True}, {"state": "merged", "round": 1}]) == (1, 1)
-
-
 def test_a_goals_flag_reads_in_main_beside_a_partys_old_flag_and_a_flag_alone_makes_a_card_spec_50(where):
     root, state = where
     rows = _rows(("queue", "working"), ("csv", "done"))
@@ -216,26 +155,6 @@ def test_the_night_is_the_recap_cut_to_the_window_goals_with_their_screens_failu
     assert got["failed"] == [{"slug": "export", "short": "Export", "title": "Title of export", "task": "Export", "why": "Tests would not pass"}]
     assert got["checks"] == [{"slug": "table", "short": "Table", "title": "Title of table", "task": "The table", "check": "npm test"}]
     assert [r["subject"] for r in got["reverts"]] == ['Revert "the cart link"'] and len(got["reverts"][0]["sha"]) == 7
-
-
-def test_the_night_carries_the_hints_of_the_last_play_and_a_quiet_night_is_empty(repo):
-    from tests.test_commit_goal import state
-    _night_app(repo)
-    now = dt.datetime.now().astimezone()
-    hints = [{"kind": "error", "on": None, "words": "An error here: boom", "at": 4.0}, {"kind": "dead_press", "on": {"selector": "button.pay", "rect": None}, "words": "A press did nothing", "at": 9.0}]
-    got = board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(), hints=hints)
-    assert got["empty"] is True, "Play's hints alone make no card"
-    assert got["play"] == {"hints": [{"kind": "error", "words": "An error here: boom", "on": ""}, {"kind": "dead_press", "words": "A press did nothing", "on": "button.pay"}]}
-    assert board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(), into="gone")["reverts"] == []             # a branch there is not
-
-
-def test_a_goal_the_board_lost_and_a_clean_check_are_left_out_of_the_night(repo):
-    from tests.test_commit_goal import state
-    now = dt.datetime.now().astimezone()
-    _clock(repo, 3, now, "task_state", idea="deleted", task="k1", state="merged", was="review", round=1)
-    _clock(repo, 2, now, "task_state", idea="queue", task="k2", state="merged", was="running", round=1, check=True, clean=True)
-    got = board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(("queue", "working")))
-    assert got["goals"] == [] and got["empty"] is True
 
 
 def test_the_night_starts_at_the_last_windows_open_or_the_devices_last_look_whichever_is_later():

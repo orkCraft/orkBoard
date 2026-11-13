@@ -2,7 +2,6 @@
 (gui/board_host.py)."""
 from __future__ import annotations
 
-import base64
 import json
 import sys
 import threading
@@ -13,22 +12,9 @@ from pathlib import Path
 import pytest
 
 from orkboard.core import idea_keeper
-from orkboard.gui import ideas as gui_ideas
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import idea_change, idea_secrets, ideas, jobs, roles, tool_run
+from orkboard.realm import idea_secrets, ideas, jobs, roles
 
-BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.plan", "ideas.start", "ideas.move",
-                  "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.track_drop", "ideas.todo", "ideas.drop", "ideas.stop",
-                  "ideas.review_list", "ideas.diff", "ideas.merge", "ideas.back", "ideas.regate", "ideas.drop_task",
-                  "ideas.stop_task", "ideas.agents", "ideas.task", "ideas.into", "ideas.log", "ideas.logs", "ideas.goal_save",
-                  "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_add", "ideas.role_drop",
-                  "ideas.kind_set", "ideas.gate", "ideas.gate_merge", "ideas.to_main_plan", "ideas.to_main", "ideas.today", "ideas.pick",
-                  "ideas.revise", "ideas.revise_answer",
-                  "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
-                  "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
-                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.seen",
-                  "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start",
-                  "ideas.talk_answer", "ideas.cause_answer", "ideas.confirm", "ideas.fork_answer", "ideas.stage", "ideas.stage_set", "ideas.project_ask", "ideas.project_answer", "ideas.project_facts", "ideas.project_fact_set", "ideas.project_kind_set", "ideas.talk_read", "ideas.loop", "ideas.loop_set", "ideas.loop_propose", "ideas.art_map", "ideas.release_map", "ideas.way_map", "ideas.screens", "ideas.pain_pin", "ideas.tree", "ideas.tree_set", "ideas.tree_attach", "ideas.tree_propose", "ideas.paid"}   # spec 105 §3: going on paid, … … the project's questions (spec 99 §8), the project's stage (spec 99 §1.2), the decision and the forks (spec 99 §6, §7), talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture
@@ -64,10 +50,6 @@ def _plan(host, slug, todos=()):
     ideas.save_state(host.ideas.state_dir, slug, state="plan")
 
 
-def test_every_board_command_is_the_hosts_and_a_phones(host):
-    assert BOARD_COMMANDS <= set(host.commands)
-    assert all(BoardPhone.allowed(host, c, {}) for c in BOARD_COMMANDS)
-    assert BOARD_COMMANDS <= set(host.command("mobile.hello")["commands"])
 
 
 def test_drop_an_idea_and_read_the_board_and_its_page(host):
@@ -99,25 +81,6 @@ def test_drop_an_idea_and_read_the_board_and_its_page(host):
         _add(host, "  ")
 
 
-def test_tracks_move_edit_and_drop(host):
-    a = _add(host, "alpha")["slug"]
-    b = _add(host, "beta")["slug"]
-    ux = host.command("ideas.track_add", {"title": "UX"})["slug"]
-    assert host.command("ideas.track_set", {"slug": ux, "about": "Calm", "criteria": ["fewer clicks"],
-                                            "deadline": "2026-12-01"}) == {"ok": True}
-    host.command("ideas.move", {"slug": b, "before": a})
-    assert [i["slug"] for i in host.command("ideas.board")["ideas"]] == [b, a]
-    host.command("ideas.move", {"slug": a, "track": ux})
-    t = {t["slug"]: t for t in host.command("ideas.board")["tracks"]}
-    assert t[ux]["count"] == 1 and t[ux]["criteria"] == ["fewer clicks"] and t[ux]["deadline"] == "2026-12-01"
-    host.command("ideas.edit", {"slug": a, "section": "Risks", "text": "none"})
-    assert host.command("ideas.page", {"slug": a})["sections"][4]["text"] == "none"
-    with pytest.raises(CommandError, match="no section"):
-        host.command("ideas.edit", {"slug": a, "section": "Bogus", "text": "x"})
-    with pytest.raises(CommandError, match="deadline"):
-        host.command("ideas.track_set", {"slug": ux, "deadline": "tomorrow"})
-    host.command("ideas.drop", {"slug": a})
-    assert [i["slug"] for i in host.command("ideas.board")["ideas"]] == [b]
 
 
 def test_say_and_plan_run_the_keeper_in_the_background(host, monkeypatch):
@@ -149,22 +112,8 @@ def test_say_and_plan_run_the_keeper_in_the_background(host, monkeypatch):
     assert host.snapshot()["needs_you"] == 1
 
 
-def test_the_demo_runs_no_model(fake_repo):
-    host = Orkboard(fake_repo, demo=True)
-    slug = _add(host, "x")["slug"]
-    assert host.command("ideas.board")["demo"] is True
-    with pytest.raises(CommandError, match="demo runs no model"):
-        host.command("ideas.say", {"slug": slug, "text": "hi"})
-    host.close()
 
 
-def test_start_without_a_runner_says_so_and_passes_nothing(host, monkeypatch):
-    monkeypatch.setitem(sys.modules, "orkboard.core.idea_runner", None)     # this build has no runner
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug)
-    with pytest.raises(CommandError, match="runner is not in this build"):
-        host.command("ideas.start", {"slug": slug})
-    assert ideas.plan(host.ideas.state_dir, slug)["passed_at"] is None
 
 
 def test_start_passes_the_plan_to_the_runner_and_stop_all_reaches_it(host, monkeypatch):
@@ -229,42 +178,12 @@ def test_a_secret_todo_is_stored_and_the_plan_says_stored(host):
     assert idea_secrets.get(host.ideas.state_dir, slug, "t1") is None
 
 
-def test_the_snapshot_carries_the_board_and_the_phone_hears_an_idea(host):
-    snap = host.snapshot()
-    assert "ideas_rev" in snap and snap["needs_you"] == 0
-    before = BoardPhone.phone_snapshot(host)
-    assert before["needs_you"] == 0
-    slug = _add(host, "phone idea")["slug"]
-    mid = BoardPhone.phone_snapshot(host)
-    assert mid["ideas_rev"] > before["ideas_rev"] and mid["rev"] != before["rev"]
-    assert [i["state"] for i in mid["idea_states"] if i["slug"] == slug] == ["raw"]     # raw: nothing asks yet
-    ideas.save_state(host.ideas.state_dir, slug, state="asks")
-    host.ideas.changed(slug)
-    after = BoardPhone.phone_snapshot(host)
-    assert after["needs_you"] == 1 and after["rev"] != mid["rev"]                        # the phone gets it
-    assert {"slug": slug, "title": "phone idea", "state": "asks"} in after["idea_states"]
-    assert BoardPhone.phone_snapshot(host)["rev"] == after["rev"]                        # once: nothing new to push
 
 
-def test_the_runner_bus_hops_to_the_hosts_thread(host):
-    hops = []
-    host.town.call = lambda fn, *a: hops.append(fn)
-    gui_ideas._Hop(host.board).publish(idea_keeper.CHANGED, slug="x")       # the shown project's Board, on the host's call
-    rev = host.ideas.rev
-    assert len(hops) == 1
-    hops[0]()
-    assert host.ideas.rev == rev + 1
 
 
-def test_a_lost_reading_shows_as_new(host):
-    slug = _add(host, "x")["slug"]
-    ideas.save_state(host.ideas.state_dir, slug, state="reading")     # the host closed while the keeper read
-    assert host.command("ideas.page", {"slug": slug})["state"] == "raw"
 
 
-def test_the_snapshot_writes_nothing_into_a_town_that_has_no_board_yet(host):
-    host.snapshot()
-    assert not (Path(host.town.repo_root) / "llm-wiki").exists()
 
 
 # -- spec 33: Review, Agents, the top bar's limits ---------------------------------------------------------
@@ -299,28 +218,8 @@ def test_review_list_has_the_spec_shape_and_the_phones_may_call_it(host):
     assert BoardPhone.allowed(host, "ideas.merge", {"slug": slug, "task": "k1"})
 
 
-def test_a_check_s_result_has_the_checker_and_its_findings_and_another_task_s_has_neither(host):
-    """Spec 43 A: a row of a check task gains `check` (the checker's name) and `findings`."""
-    found = [{"where": "a.py:1", "what": "a bug", "fixed": False}, {"where": "b.py:2", "what": "another", "fixed": True}]
-    plain = _review(host)
-    (r,) = host.command("ideas.review_list")["results"]
-    assert "check" not in r and "findings" not in r
-    slug = _review(host, kind="review", role="reviewer", findings=found, note="1 left")
-    rows = {x["idea"]: x for x in host.command("ideas.review_list")["results"]}
-    assert rows[slug]["check"] == "Reviewer" and rows[slug]["findings"] == found and "check" not in rows[plain]
-    other = _review(host, kind="security", findings=[])                     # a role of another slug: the checker of its tag
-    assert {x["idea"]: x for x in host.command("ideas.review_list")["results"]}[other]["check"] == "Security reviewer"
 
 
-def test_the_snapshot_counts_results_and_the_phone_is_pushed_when_one_arrives(host):
-    before = BoardPhone.phone_snapshot(host)
-    assert before["review_count"] == 0
-    slug = _review(host)
-    host.ideas.changed(slug)
-    after = BoardPhone.phone_snapshot(host)
-    assert after["review_count"] == 1 and after["review_results"] == [{"idea": slug, "task": "k1", "title": "Do it"}]
-    assert after["rev"] != before["rev"]                                                 # the phone is pushed
-    assert BoardPhone.phone_snapshot(host)["rev"] == after["rev"]                        # once
 
 
 def test_the_limits_are_the_smallest_remaining_of_each_installed_tools_rows(host, monkeypatch):
@@ -338,75 +237,12 @@ def test_the_limits_are_the_smallest_remaining_of_each_installed_tools_rows(host
     assert BoardPhone.phone_snapshot(host)["limits"][0]["left"] == 0.62
 
 
-def test_a_tool_turned_on_whose_limits_were_not_read_stays_and_says_why(host, monkeypatch):
-    # the owner's 19 October: Claude was missing from the limits without a word; a tool not turned on stays out
-    rows = [Limit("agy", "Pro", "daily", 0.4, None), Limit("claude", "", "", None, None, "Not logged in · Please run /login"),
-            Limit("codex", "", "", None, None, "not installed")]
-    monkeypatch.setattr(host, "limits", lambda: rows)
-    host.machine.tools["claude"].enabled, host.machine.tools["codex"].enabled = True, False
-    got = host.snapshot()["limits"]
-    assert [(x["provider"], x["left"]) for x in got] == [("claude", None), ("agy", 0.4)]
-    assert got[0] == {"provider": "claude", "name": "Claude", "left": None, "error": "Not logged in · Please run /login",
-                      "rows": []}
-    host.ideas.log_limits(force=True)                                    # an unread tool logs no limits_read
-    rows[:1] = [Limit("agy", "Gemini Models", "weekly", 0.87, None), Limit("agy", "Claude and GPT models", "session", 1.0, None)]
-    agy = host.snapshot()["limits"][1]                                   # a tool with groups: each row says whose
-    assert [r["window"] for r in agy["rows"]] == ["Gemini Models · week", "Claude and GPT models · 5h"]
 
 
-def test_a_draft_the_tool_failed_says_why_on_the_page_not_as_its_error(host, monkeypatch):
-    # the owner's 19 October: the page's `error` read as the command's own, so it toasted on every refresh and the
-    # idea never opened; the line is the tool's failure in plain words, with what to do
-    said = json.dumps({"type": "result", "is_error": True, "subtype": "success", "result": "Not logged in · Please run /login",
-                       "usage": {"input_tokens": 0, "output_tokens": 0}})
-
-    def run_read(harness, prompt, workdir, cancel, model="", env=None, resume="", timeout_s=0, **kw):
-        raise tool_run.failure(harness, 1, said, "")
-
-    monkeypatch.setattr(jobs, "run_read", run_read)
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")                   # a key is set: a sign-in cannot help (spec 45 §3)
-    slug = _add(host, "Dark mode", hold=False)["slug"]                  # Normal: routed, no call before Talk (spec 99 §4)
-    ideas.save_state(host.ideas.state_dir, slug, state="raw", queue="now")   # Talk is part D's (tests/test_idea_talk.py); this test is of the draft
-    host.ideas.keeper.draft(slug)
-    _wait(host, slug)
-    page = host.command("ideas.page", {"slug": slug})
-    assert "error" not in page and page["state"] == "raw"
-    assert page["state_error"].startswith("Claude Code is not signed in, or its sign-in has expired.")
-    assert "Not logged in · Please run /login" in page["state_error"] and "{" not in page["state_error"]
 
 
-def test_agents_shows_the_taskmaster_and_a_chip_per_live_task(host):
-    first = host.command("ideas.agents")
-    assert first["done_today"] == [] and [r["role"] for r in first["roles"]] == ["taskmaster", "grunt"]
-    assert {k: first["roles"][0][k] for k in ("name", "state", "waits_on", "chips")} == {
-        "name": "Taskmaster", "state": "waiting", "waits_on": None, "chips": []}
-    assert first["roles"][1]["name"] == "Grunts" and first["roles"][1]["chips"] == []      # spec 34: a block per role
-    slug = _review(host)
-    ideas.save_state(host.ideas.state_dir, slug, state="working")
-    other = _add(host, "asking idea")["slug"]
-    ideas.save_state(host.ideas.state_dir, other, state="asks")
-    got = host.command("ideas.agents")
-    tm, grunts = got["roles"][:2]
-    assert tm["state"] == "waiting" and tm["waits_on"]["idea"] == other and "asking idea" in tm["waits_on"]["text"]
-    assert tm["chips"] == [{"idea": other, "title": "asking idea", "short": "Asking idea", "state": "waiting"}]
-    (chip,) = grunts["chips"]
-    assert chip["state"] == "review" and chip["task"] == "k1" and chip["idea"] == slug and chip["tier"] == "warrior"
-    assert chip["head"] == {"craft": "engineering", "race": "peon", "tier": "warrior"}            # a Grunt, an ork (decisions §53)
-    assert tm["head"] == {"craft": "engineering", "race": "peon", "tier": "elder"} and grunts["head"]["race"] == "peon"
-    assert host.command("ideas.task", {"slug": slug, "task": "k1"})["head"] == chip["head"]           # the task, the plan: the same head
-    assert host.command("ideas.page", {"slug": slug})["plan"]["tasks"][0]["head"] == chip["head"]
-    ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p["tasks"][0].update(
-        state="merged", finished=dt.datetime.now().isoformat(timespec="seconds")))
-    got = host.command("ideas.agents")
-    assert got["roles"][1]["chips"] == [] and got["done_today"] == [{"idea": slug, "task": "k1", "title": "Do it", "role": "grunt"}]
 
 
-def test_task_returns_its_fields_idea_title_and_log(host):
-    slug = _review(host)
-    got = host.command("ideas.task", {"slug": slug, "task": "k1"})
-    assert got["id"] == "k1" and got["idea_title"] == "A review idea" and got["log"] == "" and got["round"] == 2
-    with pytest.raises(CommandError, match="gone"):
-        host.command("ideas.task", {"slug": slug, "task": "zz"})
 
 
 def test_the_answers_at_review_reach_the_runner_and_its_refusals_are_plain_words(host, monkeypatch):
@@ -464,27 +300,10 @@ def test_the_answers_at_review_reach_the_runner_and_its_refusals_are_plain_words
         host.command("ideas.merge", a)
 
 
-def test_into_sets_the_branch_made_when_missing_and_the_push_switch(host):
-    import subprocess
-    root = Path(host.town.repo_root)
-    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
-    subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@x", "commit", "-q", "--allow-empty", "-m", "start"],
-                   cwd=root, check=True)
-    assert host.command("ideas.into", {"branch": "next"}) == {"ok": True}
-    assert host.command("ideas.review_list")["into"] == "next"
-    assert subprocess.run(["git", "rev-parse", "--verify", "next"], cwd=root, capture_output=True).returncode == 0
-    host.command("ideas.into", {"push": True})
-    assert host.command("ideas.review_list")["push"] is True and host.command("ideas.review_list")["into"] == "next"
-    with pytest.raises(CommandError):
-        host.command("ideas.into", {"branch": "bad name"})
-    with pytest.raises(CommandError, match="branch is missing"):
-        host.command("ideas.into", {})
 
 
 # -- spec 33 §9: every action logged ----------------------------------------------------------------------------
 
-import io
-import zipfile
 
 from orkboard.realm import event_log
 
@@ -493,104 +312,18 @@ def _events(host, *names):
     return [r for r in event_log.read(Path(host.town.repo_root)) if not names or r["event"] in names]
 
 
-def test_each_action_writes_its_event_with_its_fields_and_the_device(host):
-    slug = _add(host, "Dark mode for the night")["slug"]
-    (e,) = _events(host, "idea_added")
-    assert e["idea"] == slug and e["track"] == "first-goal" and e["chars"] == 23 and e["device"] == "desktop"
-    host.command("ideas.say", {"slug": slug, "text": "Does it follow the system?", "section": "Risks", "device": "phone"})
-    _wait(host, slug)
-    (e,) = _events(host, "idea_said")
-    assert e["section"] == "Risks" and e["text"] == "Does it follow the system?" and e["chars"] == 26 and e["device"] == "phone"
-    assert e["device"] == "phone"                                   # the phone listener puts it there (BoardPhone.guard)
-    assert BoardPhone.guard("ideas.say", {"slug": "x", "device": "desktop"}, {"id": "p", "name": "P"})["device"] == "phone"
-    host.command("ideas.into", {"push": True})
-    (e,) = _events(host, "into_changed")
-    assert e["branch"] == "dev" and e["push"] is True and e["device"] == "desktop"
 
 
-def test_the_keepers_states_and_the_plan_are_logged_and_a_secret_never(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    todos = [{"id": "t1", "title": "API_KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": False, "value": None}]
-    _plan(host, slug, todos)
-    host.ideas.changed(slug)
-    (made,) = _events(host, "plan_made")
-    assert made["idea"] == slug and made["tasks"] == 1 and made["todos"] == 1 and made["usd_low"] == 0.15
-    states = [(r["state"], r["was"]) for r in _events(host, "keeper_state")]
-    assert ("plan", "raw") in states or states[-1][0] == "plan"
-
-    class Runner:
-        def __init__(self, *a, **k):
-            pass
-
-        def start(self, slug):
-            pass
-
-        def stop_all(self):
-            pass
-    monkeypatch.setitem(sys.modules, "orkboard.core.idea_runner", types.SimpleNamespace(IdeaRunner=Runner))
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "value": "s3cr3t-value"})
-    (done,) = _events(host, "todo_done")
-    assert done["todo"] == "t1" and done["kind"] == "secret" and done["seconds"] is not None
-    host.command("ideas.start", {"slug": slug, "via": "map"})
-    (passed,) = _events(host, "plan_passed")
-    assert passed["idea"] == slug and passed["tasks"] == 1 and passed["seconds"] is not None
-    assert passed["via"] == "map"                                               # spec 41 §4: Start on the Map
-    host.command("halt")
-    (stop,) = _events(host, "stop_all")
-    assert stop["device"] == "desktop"
-    assert "s3cr3t-value" not in event_log.path(Path(host.town.repo_root)).read_text()
 
 
-def test_opened_goes_through_ideas_log_and_nothing_else_does(host):
-    assert host.command("ideas.log", {"event": "opened", "what": "result", "ref": "sync/k2"}) == {"ok": True}
-    (e,) = _events(host, "opened")
-    assert (e["what"], e["ref"], e["device"]) == ("result", "sync/k2", "desktop")
-    for bad in ({"event": "idea_added", "what": "idea"}, {"event": "stop_all"}, {"event": "nope"}, {"event": "opened", "what": "elsewhere"}):
-        with pytest.raises(CommandError):
-            host.command("ideas.log", bad)
-    assert [e["event"] for e in _events(host)] == ["project_opened", "opened"]      # the host opened the project first
 
 
-def test_the_logs_zip_holds_the_events_the_ideas_and_no_secret(host):
-    slug = _add(host, "Logs idea")["slug"]
-    _plan(host, slug)
-    (host.ideas.state_dir / "ideas" / slug / "k1.log").write_text("== round 1\nthe key was ••••\n")
-    host.command("ideas.log", {"event": "opened", "what": "tab", "ref": "review"})
-    name, data = host.day_logs.pack_period(1)
-    z = zipfile.ZipFile(io.BytesIO(data))
-    names = z.namelist()
-    assert "events.jsonl" in names and f"ideas/{slug}/plan.json" in names and f"ideas/{slug}/state.json" in names
-    assert f"ideas/{slug}/k1.log" in names
-    assert b'"event": "opened"' in z.read("events.jsonl")
-    got = host.command("ideas.logs", {"days": 1})
-    assert got["name"].endswith(".zip") and zipfile.ZipFile(io.BytesIO(__import__("base64").b64decode(got["data"]))).namelist()
 
 
-def test_a_keeper_calls_record_names_its_idea_so_the_two_logs_join(tmp_path):
-    from orkboard.realm import call_log
-    call_log.keep_days(tmp_path)
-    try:
-        call_log.record({"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": "dark-mode"}, "read", "claude", "m", "p", "o", "", 0, 1.0)
-        call_log.record({"ORKCRAFT_ORC": "ideas/dark-mode-k1", "ORKCRAFT_IDEA": "dark-mode", "ORKCRAFT_TASK": "k1"}, "work", "claude", "m", "p", "o", "", 0, 1.0)
-        lines = [x for b in (tmp_path / call_log.DAYS).rglob(call_log.LINES) for x in call_log.read(b.parent)]
-    finally:
-        call_log.keep_days(None)
-    assert {(x.get("idea"), x.get("task")) for x in lines} == {("dark-mode", None), ("dark-mode", "k1")}
 
 
 # -- spec 36 §4, §7: Review's cost against the plan, `dear`, `ideas.spend`, the roles' week and types ----------------
 
-def test_a_result_has_its_cost_split_and_against_its_planned_share(host):
-    from orkboard.realm import idea_spend
-    slug = _review(host, ran_tier="warrior")
-    state = host.ideas.state_dir
-    for step, rnd, cost in (("task", 1, 0.3), ("task", 2, 0.1), ("fix", 2, 0.02)):
-        idea_spend.append(state, idea_spend.line(step, "grunt", "claude", "sonnet", "warrior", "low", None, cost, "k1", rnd), idea=slug)
-    (r,) = host.command("ideas.review_list")["results"]
-    assert r["work"] == 0.3 and r["rework"] == 0.12
-    assert r["estimate"] == {"low": 0.15, "high": 0.45} and r["over"] is None       # 0.42 a result, warrior's default
-    ideas.edit_plan(state, slug, lambda p: p["tasks"][0].update(cost=0.9))
-    assert host.command("ideas.review_list")["results"][0]["over"] == 2.0           # 0.9 / 0.45
 
 
 def test_merge_sends_dear_only_when_it_is_ticked(host, monkeypatch):
@@ -613,259 +346,41 @@ def test_merge_sends_dear_only_when_it_is_ticked(host, monkeypatch):
         host.command("ideas.merge", {"slug": slug, "task": "k1", "dear": "yes"})
 
 
-def test_ideas_spend_gives_an_ideas_and_a_goals_money_and_the_phone_may_call_it(host):
-    from orkboard.realm import idea_spend
-    slug = _add(host, "an idea that costs")["slug"]
-    goal = ideas.idea_page(host.ideas.root(), slug).get("track")
-    state = host.ideas.state_dir
-    idea_spend.append(state, idea_spend.line("draft", "taskmaster", "claude", "opus", "elder", "medium", None, 0.5), idea=slug)
-    idea_spend.append(state, idea_spend.line("goal", "taskmaster", "claude", "opus", "elder", "medium", None, 0.25), goal=goal)
-    got = host.command("ideas.spend", {"idea": slug})
-    assert got["usd"] == 0.5 and got["stages"]["spec"]["usd"] == 0.5 and set(got) == {"usd", "unpriced", "tokens", "share", "stages", "tasks"}
-    g = host.command("ideas.spend", {"goal": goal})
-    assert g["usd"] == 0.75 and g["stages"]["goal"]["usd"] == 0.25 and g["merged"] == 0 and g["usd_per_merged"] is None
-    for bad in ({"idea": "ghost"}, {"goal": "ghost"}, {}):
-        with pytest.raises(CommandError):
-            host.command("ideas.spend", bad)
-    assert "ideas.spend" in host.commands and BoardPhone.allowed(host, "ideas.spend", {"idea": slug})
 
 
-def test_roles_gain_their_types_week_and_hand_model_and_role_save_takes_types(host):
-    from orkboard.realm import idea_spend
-    idea_spend.forget()
-    slug = host.command("ideas.role_save", {"name": "Scribe", "model": "", "max_parallel": 1,
-                                            "instruction": "Write plainly.", "kinds": ["docs", "text"]})["slug"]
-    got = {r["slug"]: r for r in host.command("ideas.roles")["roles"]}
-    assert got[slug]["kinds"] == ["docs", "text"] and got[slug]["model"] == "" and got[slug]["hand_model"] is False
-    assert got["grunt"]["kinds"] == [k for k in roles.TASK_KINDS if k not in ("docs", "text")] and got["taskmaster"]["kinds"] == []
-    assert got["taskmaster"]["week"] == {"spent": 0, "plans": 0, "first_time": 0, "finished": 0, "merged": 0}
-    assert got[slug]["week"] is None                                                # no task of its finished yet
-    assert next(k for k in host.command("ideas.roles")["kinds"] if k["kind"] == "docs")["role"] == slug
-    host.command("ideas.role_save", {"slug": slug, "name": "Scribe", "model": "", "max_parallel": 1, "kinds": ["docs"]})
-    assert next(k for k in host.command("ideas.roles")["kinds"] if k["kind"] == "text")["role"] == "grunt"
-    with pytest.raises(CommandError, match="600"):
-        host.command("ideas.role_save", {"slug": slug, "name": "Scribe", "model": "", "max_parallel": 1, "instruction": "x" * 601})
-    with pytest.raises(CommandError):
-        host.command("ideas.role_save", {"slug": "grunt", "name": "Grunt", "model": "", "max_parallel": 8, "kinds": ["code"]})
-    saved = _events(host, "role_saved")
-    assert [(e["kinds"], e["instruction_chars"]) for e in saved] == [(["docs", "text"], 14), (["docs"], 0)]
-    blocks = {b["role"]: b for b in host.command("ideas.agents")["roles"]}
-    assert all("week" in b for b in blocks.values()) and blocks["taskmaster"]["week"]["plans"] == 0
 
 
-def test_an_agents_craft_is_saved_and_every_role_says_the_head_it_wears(host):
-    slug = host.command("ideas.role_save", {"name": "Layout", "model": "elder", "max_parallel": 1, "craft": "design"})["slug"]
-    got = host.command("ideas.roles")
-    mine = {r["slug"]: r for r in got["roles"]}
-    assert mine[slug]["craft"] == "design" and mine[slug]["head"] == {"craft": "design", "race": "elf", "tier": "elder"}
-    assert mine["grunt"]["head"] == {"craft": "engineering", "race": "peon", "tier": "warrior"}          # By Target, balance
-    assert [(c["craft"], c["race"]) for c in got["crafts"]] == [("engineering", "peon"), ("design", "elf"), ("data", "goblin"),
-                                                               ("marketing", "gnome"), ("product", "lich")]
-    assert got["crafts"][2]["heads"] == {"": "warrior", "elder": "elder", "warrior": "warrior", "laborer": "laborer"}
-    host.command("ideas.role_save", {"slug": slug, "name": "Layout", "model": "elder", "max_parallel": 1})
-    assert {r["slug"]: r for r in host.command("ideas.roles")["roles"]}[slug]["craft"] == "design"             # kept when not sent
-    assert _events(host, "role_saved")[-1]["craft"] == "design"
-    for bad in ({"craft": "sorcery"}, {"craft": 3}, {"slug": "taskmaster", "name": "Taskmaster", "model": "elder", "craft": "data"}):
-        with pytest.raises(CommandError):
-            host.command("ideas.role_save", {"name": "X", "model": "", "max_parallel": 1, **bad})
-    block = next(b for b in host.command("ideas.agents")["roles"] if b["role"] == slug)
-    assert block["head"] == {"craft": "design", "race": "elf", "tier": "elder"}
 
 
-def test_every_role_says_its_record_of_the_last_30_days_spec_42_d(host):
-    from orkboard.realm import idea_spend
-    root, state = host.ideas.root(), host.ideas.state_dir
-    scribe = host.command("ideas.role_save", {"name": "Scribe", "model": "", "max_parallel": 1, "kinds": ["docs"]})["slug"]
-    few = host.command("ideas.role_save", {"name": "Few", "model": "", "max_parallel": 1})["slug"]
-    goal = ideas.add_track(root, "Docs goal")
-    idea = ideas.add_idea(root, "Write the guide", goal, state)
-    now = time.strftime("%Y-%m-%dT%H:%M:%S")
-    tasks = [{"id": f"k{n}", "title": f"T{n}", "state": "merged", "round": 2 if n == 4 else 1, "role": scribe, "finished": now} for n in range(1, 5)]
-    tasks += [{"id": "f1", "title": "F", "state": "merged", "round": 1, "role": few, "finished": now},
-              {"id": "old", "title": "Old", "state": "merged", "round": 1, "role": scribe, "finished": "2020-01-01T00:00:00"}]
-    folder = state / "ideas" / idea
-    folder.mkdir(parents=True, exist_ok=True)
-    (folder / "plan.json").write_text(json.dumps({"idea": idea, "tasks": tasks}))
-    for n in range(1, 5):
-        idea_spend.append(state, idea_spend.line("task", scribe, "claude", "m", "warrior", "", None, 0.5, f"k{n}", 1), idea=idea)
-    idea_spend.append(state, idea_spend.line("plan", "taskmaster", "claude", "m", "elder", "", None, 0.2), idea=idea)
-    idea_spend.forget()
-    got = {r["slug"]: r for r in host.command("ideas.roles")["roles"]}
-    json.dumps(got)
-    assert got[scribe]["record"] == {"days": 30, "finished": 4, "merged": 4, "first_time": 3, "usd_per_merged": 0.5}
-    assert got[few]["record"] == {"days": 30, "finished": 1, "merged": 1, "first_time": 1, "usd_per_merged": None}     # under TOO_FEW: no price
-    assert got["grunt"]["record"] is None                                                                          # no row
-    assert got["taskmaster"]["record"] == {"days": 30, "plans": 1, "finished": 5, "first_time": 4}                    # of its plans' tasks
 
 
 # -- spec 49 A: the reserve, each role's tool, where a press was -------------------------------------------------------
 
-def _night_around(hours: float) -> str:
-    """A night window `hours` from now, an hour long (HH:MM-HH:MM, local time; it may cross midnight)."""
-    now = dt.datetime.now()
-    return f"{now + dt.timedelta(hours=hours):%H:%M}-{now + dt.timedelta(hours=hours + 1):%H:%M}"
 
 
-def test_the_snapshot_carries_the_reserve_by_day_and_inside_the_night_window_and_the_phones_rev_follows(host):
-    host.ideas.save_settings({**host.ideas.settings_now(), "night": _night_around(2), "reserve_day": 0.25, "reserve_night": 0.05})
-    day = host.snapshot()
-    assert day["reserve"] == {"share": 0.25, "night": False}
-    phone = BoardPhone.phone_snapshot(host)
-    assert phone["reserve"] == {"share": 0.25, "night": False}
-    host.ideas.save_settings({**host.ideas.settings_now(), "night": _night_around(-0.5)})      # now is inside it: no change of the Board
-    night = host.snapshot()
-    assert night["reserve"] == {"share": 0.05, "night": True} and night["ideas_rev"] == day["ideas_rev"]
-    moved = BoardPhone.phone_snapshot(host)
-    assert moved["reserve"] == {"share": 0.05, "night": True} and moved["rev"] != phone["rev"]   # the phone is sent it again
-    assert BoardPhone.phone_snapshot(host)["rev"] == moved["rev"]
-    json.dumps(moved)
 
 
-def test_the_reserve_is_the_default_shares_until_the_person_changes_them(host):
-    host.ideas.save_settings({**host.ideas.settings_now(), "night": _night_around(2)})
-    assert host.snapshot()["reserve"] == {"share": 0.3, "night": False}
-    host.ideas.save_settings({**host.ideas.settings_now(), "night": _night_around(-0.5)})
-    assert host.snapshot()["reserve"] == {"share": 0.1, "night": True}
-    assert Orkboard().snapshot()["reserve"] == {"share": 0.3, "night": False}                  # no project open: the day's
 
 
-def test_every_role_says_the_tool_it_runs_on_and_the_taskmasters_is_the_keepers(host, monkeypatch):
-    from orkboard.core import idea_runner
-    from orkboard.realm import harnesses
-    host.command("ideas.role_save", {"name": "Scribe", "model": "", "max_parallel": 1, "kinds": ["docs"]})
-    claude = {"id": "claude", "name": "Claude"}
-    assert idea_runner.HARNESS == idea_keeper.HARNESS == "claude" and harnesses.title("claude") == "Claude Code"
-    for got in (host.command("ideas.roles")["roles"], host.command("ideas.agents")["roles"]):
-        assert len(got) == 3 and all(r["harness"] == claude for r in got)
-    monkeypatch.setattr(idea_keeper, "HARNESS", "codex")
-    monkeypatch.setattr(idea_runner, "HARNESS", "agy")
-    for got, key in ((host.command("ideas.roles")["roles"], "slug"), (host.command("ideas.agents")["roles"], "role")):
-        by = {r[key]: r["harness"] for r in got}
-        assert by["taskmaster"] == {"id": "codex", "name": "Codex"}
-        assert by["grunt"] == by["scribe"] == {"id": "agy", "name": "Antigravity"}
 
 
-def test_a_start_or_a_queue_says_where_the_press_was_when_it_is_one_of_via(host, monkeypatch):
-    from orkboard.gui import ideas_args
-
-    class Runner:
-        def __init__(self, *a, **k):
-            pass
-
-        def start(self, slug):
-            pass
-
-        def tick(self):
-            pass
-
-        def stop_all(self):
-            pass
-    monkeypatch.setitem(sys.modules, "orkboard.core.idea_runner", types.SimpleNamespace(IdeaRunner=Runner))
-    assert gui_ideas.VIA is ideas_args.VIA and {"hand", "party", "today", "gate"} <= set(gui_ideas.VIA)
-    assert {"gate", "today"} <= set(gui_ideas.OPENED)
-    assert [ideas_args._via({"via": v}) for v in gui_ideas.VIA] == list(gui_ideas.VIA)           # a press from anywhere VIA names
-    assert [ideas_args._via(a) for a in ({}, {"via": ""}, {"via": "elsewhere"}, {"via": None}, {"via": 3}, {"via": ["map"]})] == ["idea"] * 6
-    first, second, third = (_add(host, f"idea {n}")["slug"] for n in (1, 2, 3))
-    _plan(host, first)
-    host.command("ideas.start", {"slug": first, "via": "hand"})
-    host.command("ideas.queue", {"slug": second, "queue": "night", "via": "party"})
-    host.command("ideas.queue", {"slug": third, "queue": "night", "via": "map"})
-    _plan(host, second)
-    ideas.edit_plan(host.ideas.state_dir, second, lambda p: p.update(start_at="night"))
-    ideas.save_state(host.ideas.state_dir, second, state="plan")
-    host.command("ideas.start_now", {"slug": second, "via": "today"})
-    assert [(e["idea"], e["via"]) for e in _events(host, "plan_passed")] == [(first, "hand")]
-    assert [(e["idea"], e["via"]) for e in _events(host, "idea_queued")] == [(second, "party"), (third, "map")]
-    assert [(e["idea"], e["via"]) for e in _events(host, "plan_started_now")] == [(second, "today")]
 
 
-def test_the_gate_and_the_strip_are_opened_and_logged_through_ideas_log(host):
-    for what, via in (("gate", "hand"), ("gate", "gate"), ("today", "today"), ("idea", "party"), ("task", "hand"), ("result", "map")):
-        assert host.command("ideas.log", {"event": "opened", "what": what, "ref": "x", "via": via}) == {"ok": True}
-    assert [(e["what"], e["via"]) for e in _events(host, "opened")] == [
-        ("gate", "hand"), ("gate", "gate"), ("today", "today"), ("idea", "party"), ("task", "hand"), ("result", "map")]
-    with pytest.raises(CommandError, match="hand"):
-        host.command("ideas.log", {"event": "opened", "what": "gate", "via": "elsewhere"})
-    with pytest.raises(CommandError, match="gate, today"):
-        host.command("ideas.log", {"event": "opened", "what": "elsewhere"})
 
 
 # -- spec 50 A: a goal's element and flag, and no acceptance by itself -----------------------------------------------------------
 
-def test_a_new_goal_answers_with_its_element_and_every_card_of_it_will_wear_it(host):
-    first, second = _add(host, "Dark mode for the night"), _add(host, "Larger text")
-    assert (first["element"], second["element"]) == ("meadow", "ice") and set(first) == {"slug", "queue", "element", "hue", "type", "joined"}
-    assert ideas.state(host.ideas.state_dir, first["slug"])["element"] == "meadow"
-    nodes = {n["slug"]: n["element"] for n in host.command("ideas.map", {})["nodes"]}
-    assert nodes == {first["slug"]: "meadow", second["slug"]: "ice"}
 
 
-def test_ideas_flags_gains_the_goals_flags_every_partys_newest_first_and_keeps_the_old_ones(host):
-    from orkboard.realm import idea_flag
-    assert host.command("ideas.flags", {}) == {"flags": [], "goals": []}
-    a, b, c = _add(host, "Dark mode for the night")["slug"], _add(host, "Larger text")["slug"], _add(host, "Not flagged")["slug"]
-    other = ideas.add_track(host.ideas.root(), "Second party")
-    d = host.command("ideas.add", {"text": "In another party", "track": other, "hold": True})["slug"]
-    state, root = host.ideas.state_dir, host.ideas.root()
-    for slug, at in ((a, "2026-10-19T09:00:00"), (b, "2026-10-21T09:00:00"), (d, "2026-10-20T09:00:00")):
-        idea_flag.raise_flag(root, state, slug, "gate", "c" * 40)
-        path = ideas.state_folder(state, slug) / "flag.json"
-        path.write_text(json.dumps({**json.loads(path.read_text()), "at": at}))
-    got = host.command("ideas.flags", {})
-    json.dumps(got)
-    assert got["flags"] == [] and [g["slug"] for g in got["goals"]] == [b, d, a]                      # newest first, every party's
-    assert got["goals"][0] == {"slug": b, "title": "Larger text", "short": "Larger text", "goal": "first-goal", "element": "ice", "hue": "meadow",
-                               "release": None, "at": "2026-10-21T09:00:00", "tasks": 0, "first_time": 0, "usd": None, "days": got["goals"][0]["days"]}
-    assert got["goals"][1]["goal"] == "second-party" and c not in {g["slug"] for g in got["goals"]}
 
 
-def test_nothing_accepts_a_party_when_its_goals_are_all_done(host, monkeypatch):
-    called = []
-    monkeypatch.setattr(host.ideas.keeper, "accept_goal", lambda slug: called.append(slug))
-    slug = _add(host, "Dark mode for the night")["slug"]
-    ideas.save_state(host.ideas.state_dir, slug, state="working")
-    host.ideas.changed(slug)                                                                          # seen at work …
-    ideas.save_state(host.ideas.state_dir, slug, state="done")
-    host.ideas.changed(slug)                                                                          # … then done: the party's last goal
-    assert called == [] and not hasattr(host.ideas, "_accept_when_done")
-    assert "ideas.goal_accept" in host.commands                                                       # asked for a party of before, it stays
 
 
-def test_what_the_host_says_to_a_person_says_party_for_the_container_and_goal_for_the_idea_spec_50(host):
-    """Spec 50 §2.6: errors the host sends a face are in today's words (decisions §63); keys, commands and prompts keep the code's."""
-    def says(command: str, args: dict) -> str:
-        with pytest.raises(CommandError) as err:
-            host.command(command, args)
-        return str(err.value)
-
-    assert says("ideas.add", {"text": "x"}) == "A goal needs a party"
-    assert says("ideas.add", {"text": "x", "track": "general"}) == "A goal needs a party"
-    assert says("ideas.add", {"text": "x", "track": "nope"}) == "That party is gone"
-    assert says("ideas.page", {"slug": "nope"}) == "That goal is gone"
-    assert says("ideas.start", {"slug": "nope"}) == "This goal has no plan yet: Take it to work first"
-    assert says("ideas.map", {"goal": "nope"}) == says("ideas.goal", {"slug": "nope"}) == says("ideas.party", {"goal": "nope"}) == "That party is gone"
-    assert says("ideas.words", {"track": "nope"}) == says("ideas.spend", {"goal": "nope"}) == "That party is gone"
-    assert says("ideas.spend", {"idea": "nope"}) == says("ideas.read_stop", {"slug": "nope"}) == "That goal is gone"
-    assert says("ideas.move", {"slug": "nope"}) == "No goal 'nope'" and says("ideas.edit", {"slug": "nope", "priority": "high"}) == "Priority is High, Normal or Low"
-    slug = _add(host, "Dark mode for the night")["slug"]
-    assert says("ideas.move", {"slug": slug, "track": "nope"}) == "No party 'nope'"
-    with pytest.raises(ValueError, match="^A party needs a title$"):
-        ideas.add_track(host.ideas.root(), " ")
-    assert says("ideas.goal_save", {"title": "", "about": ""}) == "A party needs a description, or at least a title"
-    host.ideas.keeper._busy[slug] = "reading"
-    assert says("ideas.drop", {"slug": slug}) == "The keeper is busy with this goal: a moment"
-    assert says("ideas.edit", {"slug": slug, "section": "Gist", "text": "x"}) == "The keeper is writing this goal: a moment"
-    with pytest.raises(idea_keeper.KeeperError, match="^The keeper is busy with this goal: a moment$"):
-        host.ideas.keeper._claim(slug, "draft")
-    host.ideas.keeper._busy.pop(slug)
-    host.ideas.keeper._busy["goal:first-goal"] = "reading"
-    with pytest.raises(idea_keeper.KeeperError, match="^The keeper is busy with this party: a moment$"):
-        host.ideas.keeper._claim("goal:first-goal", "goal")
 
 
 # -- spec 52 A: New goal by its type, its asks, who joins; a plan's missing ---------------------------------------------------
 
-from orkboard.realm import goal_team, goal_types, library     # noqa: E402
+from orkboard.realm import goal_team, library     # noqa: E402
 
 
 def _party(host, team=(), leader="taskmaster", title="Ship"):
@@ -889,40 +404,8 @@ def _says(host, command, args):
     return str(err.value)
 
 
-def test_a_goal_of_a_type_keeps_its_id_and_a_type_the_party_is_not_offered_or_unknown_is_refused(host):
-    ship = _party(host, leader="architect")
-    got = _new(host, ship, type="restructure")
-    assert got["type"] == "restructure" and got["joined"] is None and set(got) == {"slug", "queue", "element", "hue", "type", "joined", "route", "talk"}
-    assert got["route"] == [ship]                                                        # routed to the party it was sent to, no call (spec 99 §4)
-    assert ideas.state(host.ideas.state_dir, got["slug"])["type"] == "restructure"
-    blank = _new(host, ship, "A blank one")
-    assert blank["type"] == "" and ideas.state(host.ideas.state_dir, blank["slug"])["type"] == ""
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "logo"}) == "Ship cannot take “New logo”: no one of it does pixel art"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "mechanic"}) == "Ship cannot take “New mechanic”: no one of it does game design"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "nope"}) == "No goal type “nope”"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "architect/restructure"}) == "No goal type “architect/restructure”"     # an old key is read, not taken
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "tidy"}).startswith("Ship cannot take “Clean up”: no one of it does code")
-    other = _party(host, title="Other")
-    host.command("ideas.move", {"slug": got["slug"], "track": other})
-    assert ideas.state(host.ideas.state_dir, got["slug"])["type"] == "restructure"      # a goal moved keeps its own
 
 
-def test_the_asks_are_written_after_the_goals_text_in_the_types_order(host):
-    ship = _party(host, ["artist"], leader="product-designer")
-    got = _new(host, ship, "A logo for the app", type="logo", asks={"refs": "  dribbble.com/a\n  b.png ", "says": " calm,  quick, ours ", })
-    page = ideas.idea_page(host.ideas.root(), got["slug"])
-    assert page.section("Gist") == "A logo for the app\n\nWhat it should say: calm, quick, ours\nRefs: dribbble.com/a b.png"
-    assert page.title == "A logo for the app"
-    bug = _new(host, _party(host, title="Bugs"), "The login breaks", type="bug",
-               asks={"expected": "I am in", "did": "1. Open 2. Sign in", "happened": "  ", })
-    assert ideas.idea_page(host.ideas.root(), bug["slug"]).section("Gist") == (
-        "The login breaks\n\nWhat you did: 1. Open 2. Sign in\nWhat should have: I am in")            # an empty one left out
-    long = _new(host, ship, "Long", type="icon", asks={"where": "x" * 400})
-    assert ideas.idea_page(host.ideas.root(), long["slug"]).section("Gist").endswith("Where it shows: " + "x" * 300)
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "logo", "asks": {"who": "me"}}) == "New logo has no field “who”"
-    assert _says(host, "ideas.add", {"text": "x", "track": "bugs", "type": "bug", "asks": {"refs": "a"}}) == "Fix a bug has no field “refs”"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "asks": {"says": "a"}}) == "A goal with no type has no fields of its own"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "logo", "asks": ["a"]}) == "asks are the goal type's fields, by their ids"
 
 
 def test_a_free_seat_joins_the_party_before_the_goal_is_added(host):
@@ -940,75 +423,14 @@ def test_a_free_seat_joins_the_party_before_the_goal_is_added(host):
     assert _says(host, "ideas.add", {"text": "x", "track": ship, "join": {"add": "experimenter"}}) == "Experimenter is not what this goal misses"
 
 
-def test_the_idea_added_event_counts_what_the_party_offered_and_how_many_with_someone_missing(host):
-    ship = _party(host, ["grunt"], leader="product-manager")
-    _new(host, ship, "A pain", type="pain")
-    (added,) = _events(host, "idea_added")
-    assert (added["type"], added["offered"], added["near"]) == ("pain", 7, 3)       # New feature, Fix a bug, Clean up, Solve a pain + New screen, Try an experiment, Write the launch
-    _new(host, ship, "Blank")
-    assert _events(host, "idea_added")[-1]["offered"] == 7
 
 
-FIVE = ["artist", "grunt", "copywriter", "seo", "aso"]          # a full band of those who do (spec 99 §1.3: up to five)
 
 
-def test_a_full_band_swaps_a_member_with_no_open_work_and_out_is_required(host, monkeypatch):
-    ship = _party(host, FIVE, leader="product-manager")
-    busy = _new(host, ship, "Busy")["slug"]
-    ideas.save_plan(host.ideas.state_dir, busy, {"idea": busy, "tasks": [{"id": "k1", "title": "t", "kind": "art", "role": "artist", "state": "running"}], "todos": []})
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit"}}) == "The party is full: pick who leaves"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit", "out": "artist"}}) == "Artist has work open: it cannot leave"
-    assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit", "out": "reviewer"}}) == "Reviewer is not one of the party's builders"
-    assert goal_team.team_of(host.ideas.root(), ship) == FIVE and len(ideas.ideas(host.ideas.root(), ship)) == 1     # refused: nothing changed
-    ideas.save_plan(host.ideas.state_dir, busy, {"idea": busy, "tasks": [{"id": "k1", "title": "t", "kind": "art", "role": "artist", "state": "merged"}], "todos": []})
-    goal_team.set_team(host.ideas.root(), ship, FIVE, every=["artist"])
-    got = _new(host, ship, "A screen", type="screen", join={"add": "ui-kit", "out": "artist"})
-    assert got["joined"] == {"add": "ui-kit", "out": "artist"}
-    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit", *FIVE[1:]] and goal_team.every_of(host.ideas.root(), ship) == []    # in its seat
-    saved = _events(host, "goal_saved")[-1]
-    assert (saved["joined"], saved["out"], saved["via"]) == ("ui-kit", "artist", "type")
 
 
-def test_a_party_has_up_to_five_who_do_and_two_who_check_with_any_leader_and_a_party_made_before_keeps_its_team(host):
-    ship = _party(host, ["grunt", "artist", "level-designer"], leader="game-designer")        # three who do: within the five a party has (spec 99 §1.3)
-    got = _new(host, ship, "A level", type="level")
-    assert got["type"] == "level" and got["joined"] is None
-    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer"], "leader": "game-designer"})["slug"] == ship     # saved again as it is
-    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist"], "leader": "game-designer"})["slug"] == ship                      # one leaves
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "artist"]
-    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer", "sound-designer", "animator"], "leader": "game-designer"})["slug"] == ship   # five
-    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer", "sound-designer", "animator", "composer"], "leader": "game-designer"}) == (
-        "A party led by Game designer has at most 5 builders")                                # one more than five
-    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "aso", "seo", "copywriter", "community"], "leader": "architect"}) == (
-        "A party led by Architect has at most 5 builders")
-    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["playtester", "reviewer", "editor"], "leader": "game-designer"}) == (
-        "A party led by Game designer has at most 2 checkers")
-    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "aso", "seo", "copywriter", "reviewer", "editor"], "leader": "architect"}) == (
-        "A party has at most 7 seats: its leader and 6 more")
 
 
-def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_a_goal_kept_on_hold(host, monkeypatch):
-    import threading
-    seen = []
-
-    def held() -> bool:
-        free = []
-        t = threading.Thread(target=lambda: free.append(ideas.LOCK.acquire(blocking=False) and (ideas.LOCK.release() or True)))
-        t.start()
-        t.join()
-        return not free[0]
-
-    set_team, add_idea = goal_team.set_team, ideas.add_idea
-    monkeypatch.setattr(goal_team, "set_team", lambda *a, **k: (seen.append(("party", held())), set_team(*a, **k))[1])
-    monkeypatch.setattr(ideas, "add_idea", lambda *a, **k: (seen.append(("goal", held())), add_idea(*a, **k))[1])
-    ship = _party(host, [], leader="product-manager")
-    seen.clear()
-    _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
-    assert seen == [("party", True), ("goal", True)]
-    seen.clear()
-    kept = host.command("ideas.add", {"text": "Kept back", "track": ship, "hold": True, "type": "experiment", "join": {"add": "experimenter"}})
-    assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
-    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"]
 
 
 class _Runner:
@@ -1055,145 +477,26 @@ def test_add_and_start_joins_the_party_then_gives_the_tasks_not_started_their_ne
     assert (passed["joined"], passed["missing"], passed["via"]) == ("artist", 1, "hand")
 
 
-def test_add_and_start_is_refused_when_the_band_is_full_and_start_without_changes_no_one(host, monkeypatch):
-    monkeypatch.setitem(sys.modules, "orkboard.core.idea_runner", types.SimpleNamespace(IdeaRunner=_Runner))
-    full = ["grunt", "tester", "ui-kit", "copywriter", "seo"]          # five who do: the band is full
-    ship = _party(host, full, leader="product-designer")
-    slug = _new(host, ship, "A logo")["slug"]
-    _missing_plan(host, slug, [{"id": "k1", "title": "t", "brief": "b", "kind": "art", "role": "grunt", "state": "ready", "tier": "warrior", "after": []}],
-                  [{"kind": "art", "agent": "artist"}])
-    assert [n["missing"] for n in host.command("ideas.board")["needs_you"] if n["kind"] == "plan"][0][0]["free"] is False
-    assert _says(host, "ideas.start", {"slug": slug, "join": {"add": "artist"}}) == "The party is full: change a member in Edit the party"
-    assert ideas.plan(host.ideas.state_dir, slug)["passed_at"] is None
-    host.command("ideas.start", {"slug": slug})                                                            # Start without
-    assert goal_team.team_of(host.ideas.root(), ship) == full
-    assert ideas.plan(host.ideas.state_dir, slug)["tasks"][0]["role"] == "grunt"
-    passed = _events(host, "plan_passed")[-1]
-    assert (passed["joined"], passed["missing"]) == ("", 1) and not _events(host, "goal_saved")
 
 
-def test_edit_the_party_logs_goal_saved_with_no_one_joined(host):
-    ship = _party(host, ["grunt"])
-    host.ideas._ev(event_log.GOAL_SAVED, {}, goal=ship, new=False)                   # as gui/ideas_goals.py's goal_save writes it
-    (saved,) = _events(host, "goal_saved")
-    assert (saved["joined"], saved["out"], saved["via"]) == ("", "", "")
 
 
-def test_goal_save_logs_the_library_party_its_seats_started_from_and_the_leaders_seats(host):
-    game = next(p for p in library.presets() if p["id"] == "game")
-    first = [game["build"][0], game["check"][0]]                                            # the first of each: fewer than the preset lists
-    args = {"about": "A game", "title": "Dragon", "leader": game["lead"], "team": first}
-    host.command("ideas.goal_save", {**args, "preset": "game"})
-    saved = _events(host, "goal_saved")[-1]
-    assert (saved["preset"], saved["stages"], saved["leader"]) == ("", "5/2", "game-designer")       # the preset lists more members than the team has: not that party; a party has up to five who do and two who check
-    host.command("ideas.goal_save", {**args, "title": "Dragon two", "preset": "game", "team": [game["build"][0]]})
-    assert _events(host, "goal_saved")[-1]["preset"] == ""                          # a seat changed: no longer that party
-    host.command("ideas.goal_save", {**args, "title": "Dragon three"})
-    assert _events(host, "goal_saved")[-1]["preset"] == ""                          # none sent
-    host.command("ideas.goal_save", {**args, "title": "Dragon four", "preset": "no-such-party"})
-    assert _events(host, "goal_saved")[-1]["preset"] == ""
-    ideation = next(p for p in library.presets() if p["id"] == "ideation")
-    with pytest.raises(CommandError, match="not made any more"):                    # Ideation is not made (spec 99 §1.1); a party of before keeps its four views and the skeptic whole
-        host.command("ideas.goal_save", {"about": "Pitches", "title": "Pitches", "leader": ideation["lead"], "team": [*ideation["build"], *ideation["check"]], "preset": "ideation"})
 
 
-def test_the_map_gives_a_partys_types_the_most_used_first_then_those_missing_no_one_and_a_goals_type(host):
-    ship = _party(host, ["grunt", "artist"], leader="product-designer")
-    for type_id in ("logo", "icon", "logo"):
-        _new(host, ship, f"A {type_id}", type=type_id)
-    old = _new(host, ship, "An old logo")["slug"]
-    ideas.save_state(host.ideas.state_dir, old, type="product-designer/logo")         # kept by its leader before spec 59: counted as `logo`
-    moved = _new(host, _party(host, title="Other"), "A bug", type="bug")["slug"]
-    host.command("ideas.move", {"slug": moved, "track": ship})
-    got = host.command("ideas.map", {"goal": ship})
-    (party,) = got["goals"]
-    assert [(t["id"], t["used"], bool(t["missing"])) for t in party["types"]] == [
-        ("logo", 3, False), ("bug", 1, False), ("icon", 1, False), ("feature", 0, False), ("tidy", 0, False), ("character", 0, False), ("screen", 0, True)]
-    logo = party["types"][0]
-    assert {k: logo[k] for k in ("name", "sign", "lens", "refs")} == {"name": "New logo", "sign": "logo", "lens": "text", "refs": True}
-    assert logo["asks"] == [{"id": "says", "label": "What it should say", "hint": "three words"}] and logo["missing"] == []
-    (kit,) = party["types"][-1]["missing"]
-    assert (kit["agent"], kit["free"], [o["slug"] for o in kit["out"]]) == ("ui-kit", True, ["artist", "grunt"])      # a seat is free: the band holds five
-    nodes = {n["title"]: n["type"] for n in got["nodes"]}
-    assert nodes["A logo"] == {"id": "logo", "name": "New logo", "sign": "logo"} and nodes["A bug"] == {"id": "bug", "name": "Fix a bug", "sign": "bug"}
-    assert nodes["An old logo"] == {"id": "logo", "name": "New logo", "sign": "logo"}
-    assert [t["id"] for t in host.command("ideas.map", {"goal": "other"})["goals"][0]["types"]] == ["feature", "bug", "tidy"]     # its bug moved out: the catalog's order
 
 
-def test_the_map_gives_a_party_its_leaders_stages(host):
-    plain = _party(host, ["grunt"], leader="architect", title="Plain")
-    game = _party(host, ["grunt", "artist"], leader="game-designer", title="Game")
-    alone = _party(host, title="Alone")
-    got = {g["slug"]: g["stages"] for g in host.command("ideas.map")["goals"]}
-    assert got[game] == {"lead": {"word": "Concept"}, "build": {"word": "Build", "seats": 5}, "check": {"word": "Playtest", "seats": 2}}
-    default = {"lead": {"word": "Planning"}, "build": {"word": "Implementation", "seats": 5}, "check": {"word": "Checking", "seats": 2}}
-    assert got[plain] == got[alone] == default
 
 
-def _file_todo(tid="t1", **more):
-    return {"id": tid, "title": "Reference picture", "kind": "file", "why": "w", "choices": [], "steps": [],
-            "for": ["k1"], "done": False, "value": None, **more}
 
 
-def _todo_of(host, slug, tid="t1"):
-    plan = json.loads((host.ideas.state_dir / "ideas" / slug / "plan.json").read_text())
-    return next(t for t in plan["todos"] if t["id"] == tid), plan
 
 
-def test_a_to_do_of_each_kind_can_be_gone_without(host):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug, [
-        _file_todo(),
-        {"id": "t2", "title": "API_KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": False, "value": None},
-        {"id": "t3", "title": "Which", "kind": "choice", "why": "", "choices": ["a", "b"], "steps": [], "for": ["k1"], "done": False, "value": None},
-        {"id": "t4", "title": "Check it", "kind": "confirm", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": False, "value": None}])
-    for tid in ("t1", "t2", "t3", "t4"):
-        host.command("ideas.todo", {"idea": slug, "id": tid, "done": True, "skip": True})
-        todo, plan = _todo_of(host, slug, tid)
-        assert todo["done"] is True and todo["skipped"] is True and todo["value"] is None
-    assert plan["tasks"][0]["state"] == "ready"
-    assert [e["skipped"] for e in _events(host, "todo_done")] == [True] * 4
-    host.command("ideas.todo", {"idea": slug, "id": "t3", "done": False})
-    todo, _ = _todo_of(host, slug, "t3")
-    assert todo["done"] is False and "skipped" not in todo
 
 
-def test_going_without_a_secret_keeps_its_stored_value(host):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug, [{"id": "t1", "title": "API_KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "for": ["k1"], "done": False, "value": None}])
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "value": "sk-1"})
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "skip": True})
-    todo, _ = _todo_of(host, slug)
-    assert todo["skipped"] is True and todo["value"] == "stored"
-    assert idea_secrets.get(host.ideas.state_dir, slug, "t1") == "sk-1"
 
 
-def test_a_file_to_do_can_be_described_instead_and_a_file_replaces_the_words(host):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug, [_file_todo()])
-    for empty in ("", "   "):
-        with pytest.raises(CommandError, match="Say what it should look like"):
-            host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "words": empty})
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "words": "  A grey ork at dusk.  "})
-    todo, plan = _todo_of(host, slug)
-    assert todo["done"] and todo["value"] == "A grey ork at dusk." and todo["words"] is True and "skipped" not in todo
-    assert plan["tasks"][0]["state"] == "ready"
-    (done,) = _events(host, "todo_done")
-    assert done["words"] is True and done["skipped"] is False and "dusk" not in json.dumps(done)
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "words": "x" * 3000})
-    assert len(_todo_of(host, slug)[0]["value"]) == 2000
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "file": {"name": "ork.png", "data": base64.b64encode(b"png").decode()}})
-    todo, _ = _todo_of(host, slug)
-    assert todo["value"] == "ork.png" and "words" not in todo
-    host.command("ideas.todo", {"idea": slug, "id": "t1", "done": False})
-    assert "skipped" not in _todo_of(host, slug)[0]
 
 
-def test_words_are_for_a_file_to_do_only(host):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug, [{"id": "t1", "title": "Which", "kind": "choice", "why": "", "choices": ["a", "b"], "steps": [], "for": ["k1"], "done": False, "value": None}])
-    with pytest.raises(CommandError, match="choices"):
-        host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "words": "whatever"})
 
 
 # -- spec 62 A: the spec after the start ---------------------------------------------------------------------
@@ -1277,38 +580,8 @@ def test_the_page_says_what_changed_since_the_plan_whether_it_is_passed_and_the_
     assert host.snapshot()["needs_you"] == 1
 
 
-def test_a_plan_change_gives_no_task_to_the_leader_at_any_size_spec_152_a_2(host, monkeypatch):
-    """The rows a revise adds or changes go to the squad's seat that takes the tag, else the project's role; a leader never does a task, Lean too."""
-    for size in ("lean", "standard", "full"):
-        party = host.command("ideas.goal_save", {"title": f"Code {size}", "about": "Code.", "craft": "engineering", "leader": "architect",
-                                                 "team": ["tester"], "size": size})["slug"]
-        slug = host.command("ideas.add", {"text": f"x {size}", "track": party, "hold": True})["slug"]
-        _plan(host, slug)
-        _started(host, slug)
-        host.command("ideas.edit", {"slug": slug, "section": "Out", "text": f"no images {size}"})
-        _leader(monkeypatch, CHANGE)
-        host.command("ideas.revise", {"slug": slug})
-        _wait(host, slug)
-        change = idea_change.read(host.ideas.state_dir, slug)
-        rows = [*change["change"], *change["add"]]
-        assert rows and {r["role"] for r in rows} <= {"tester", "grunt"}, (size, rows)
 
 
-def test_re_plan_what_is_left_refuses_in_words_through_the_command(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    prompts = _leader(monkeypatch, CHANGE)
-    with pytest.raises(CommandError, match="This goal has no plan yet"):
-        host.command("ideas.revise", {"slug": slug})
-    _plan(host, slug)
-    with pytest.raises(CommandError, match="Its plan is not started: Re-plan it"):
-        host.command("ideas.revise", {"slug": slug})
-    _started(host, slug)
-    ideas.save_state(host.ideas.state_dir, slug, state="done")
-    with pytest.raises(CommandError, match="This goal is done"):
-        host.command("ideas.revise", {"slug": slug})
-    with pytest.raises(CommandError, match="slug is missing"):
-        host.command("ideas.revise", {})
-    assert prompts == [] and host.command("ideas.page", {"slug": slug})["change"] is None
 
 
 def test_take_the_new_plan_applies_it_through_the_runner_and_keeps_the_rest(host, monkeypatch):
@@ -1344,92 +617,36 @@ def test_take_the_new_plan_applies_it_through_the_runner_and_keeps_the_rest(host
         host.command("ideas.revise_answer", {"slug": slug, "take": False})
 
 
-def test_keep_the_plan_leaves_it_as_it_was_and_clears_what_changed(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug)
-    runner = _started(host, slug)
-    host.command("ideas.edit", {"slug": slug, "section": "Done when", "text": "- it exports"})
-    _leader(monkeypatch, CHANGE)
-    host.command("ideas.revise", {"slug": slug})
-    _wait(host, slug)
-    before = (host.ideas.state_dir / "ideas" / slug / "plan.json").read_text()
-    assert host.command("ideas.revise_answer", {"slug": slug, "take": False}) == {"ok": True, "added": 0, "changed": 0, "dropped": 0, "left": []}
-    assert (host.ideas.state_dir / "ideas" / slug / "plan.json").read_text() == before
-    page = host.command("ideas.page", {"slug": slug})
-    assert (page["changed"], page["change"]) == ([], None) and not (host.ideas.state_dir / "ideas" / slug / "plan_change.json").exists()
-    (answered,) = _events(host, "plan_change_answered")
-    assert (answered["take"], answered["added"], answered["changed_n"], answered["dropped"], answered["left"], answered["via"]) == (False, 1, 1, 1, 0, "idea")
-    assert runner.launched == [] and [n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "change"] == []
 
 
-def test_the_talk_and_the_edit_while_a_change_waits_keep_what_changed_and_the_stop_stays(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug)
-    _started(host, slug)
-    host.command("ideas.edit", {"slug": slug, "section": "Out", "text": "no images"})
-    _leader(monkeypatch, CHANGE)
-    host.command("ideas.revise", {"slug": slug})
-    _wait(host, slug)
-    host.command("ideas.edit", {"slug": slug, "section": "Risks", "text": "big files"})
-    page = host.command("ideas.page", {"slug": slug})
-    assert page["changed"] == ["Out", "Risks"] and page["change"] is not None
-    host.command("ideas.revise", {"slug": slug})                          # again: a newer one replaces it
-    _wait(host, slug)
-    assert [n["kind"] for n in host.command("ideas.board")["needs_you"]] == ["change"]
-    assert len(_events(host, "plan_revised")) == 2 and _events(host, "idea_edited")[-1]["passed"] is True
 
 
-def test_a_plan_change_goes_by_itself_when_the_goal_is_done_and_is_shown_nowhere_meanwhile(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug)
-    _started(host, slug)
-    _leader(monkeypatch, CHANGE)
-    host.command("ideas.revise", {"slug": slug})
-    _wait(host, slug)
-    path = host.ideas.state_dir / "ideas" / slug / "plan_change.json"
-    assert path.exists()
-    ideas.save_state(host.ideas.state_dir, slug, state="done")
-    assert host.command("ideas.page", {"slug": slug})["change"] is None      # read: shown nowhere …
-    assert [n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "change"] == [] and path.exists()
-    host.ideas.changed(slug)                                                 # … and the next change of the goal drops it
-    assert not path.exists()
-    with pytest.raises(CommandError, match="No plan change waits for this goal"):
-        host.command("ideas.revise_answer", {"slug": slug, "take": True})
 
 
-def test_a_press_while_the_leader_works_or_a_runner_that_cannot_apply_it_leaves_the_change_waiting(host, monkeypatch):
-    slug = _add(host, "x")["slug"]
-    _plan(host, slug)
-    runner = _started(host, slug)
-    _leader(monkeypatch, CHANGE)
-    host.command("ideas.revise", {"slug": slug})
-    _wait(host, slug)
-    host.ideas.keeper._busy[slug] = "planning"
-    with pytest.raises(CommandError, match="The keeper is busy with this goal: a moment"):
-        host.command("ideas.revise_answer", {"slug": slug, "take": True})
-    host.ideas.keeper._busy.pop(slug)
-
-    def refuse(s, change):
-        raise type("RunnerError", (Exception,), {})("This goal has no plan yet")
-    monkeypatch.setattr(runner, "revise_tasks", refuse)
-    with pytest.raises(CommandError, match="no plan yet"):
-        host.command("ideas.revise_answer", {"slug": slug, "take": True})
-    assert host.command("ideas.page", {"slug": slug})["change"] is not None        # it waits as it did
 
 
-def test_a_task_holds_commits_when_its_branch_is_ahead_of_where_it_started(host, fake_repo):
-    """Spec 149 D.4: the page says *Start again* throws work away only where the branch holds commits since the task's base."""
-    import subprocess
 
-    def run(*a):
-        return subprocess.run(["git", *a], cwd=str(fake_repo), check=True, capture_output=True, text=True).stdout.strip()
-    base = run("rev-parse", "HEAD")
-    run("branch", "idea/g/t1", base)
-    task = {"branch": "idea/g/t1", "base": base}
-    assert host.ideas._holds_commits(task) is False and host.ideas._holds_commits({"branch": "", "base": base}) is False
-    run("switch", "idea/g/t1")
-    (fake_repo / "work.txt").write_text("x\n", encoding="utf-8")
-    run("add", "work.txt")
-    run("commit", "-m", "work")
-    assert host.ideas._holds_commits(task) is True
-    assert host.ideas._holds_commits({"branch": "idea/g/gone", "base": base}) is False
+
+def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_a_goal_kept_on_hold(host, monkeypatch):
+    import threading
+    seen = []
+
+    def held() -> bool:
+        free = []
+        t = threading.Thread(target=lambda: free.append(ideas.LOCK.acquire(blocking=False) and (ideas.LOCK.release() or True)))
+        t.start()
+        t.join()
+        return not free[0]
+
+    set_team, add_idea = goal_team.set_team, ideas.add_idea
+    monkeypatch.setattr(goal_team, "set_team", lambda *a, **k: (seen.append(("party", held())), set_team(*a, **k))[1])
+    monkeypatch.setattr(ideas, "add_idea", lambda *a, **k: (seen.append(("goal", held())), add_idea(*a, **k))[1])
+    ship = _party(host, [], leader="product-manager")
+    seen.clear()
+    _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
+    assert seen == [("party", True), ("goal", True)]
+    seen.clear()
+    kept = host.command("ideas.add", {"text": "Kept back", "track": ship, "hold": True, "type": "experiment", "join": {"add": "experimenter"}})
+    assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
+    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"]
+

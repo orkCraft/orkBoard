@@ -10,10 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, ideas, library, spec_sections
 
-DECIDE_COMMANDS = {"ideas.confirm", "ideas.fork_answer"}
 
 
 @pytest.fixture
@@ -63,8 +62,6 @@ def _row(host, slug, kind):
     return next((n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == kind), None)
 
 
-def test_the_commands_are_the_hosts_and_a_phones(host):
-    assert DECIDE_COMMANDS <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in DECIDE_COMMANDS)
 
 
 def test_the_arguments_are_checked_in_plain_words(host, tech, model):

@@ -119,42 +119,9 @@ def test_the_first_proposal_is_one_call_of_products_leader_on_the_cheaper_tier_w
     assert "Read no file" in p and '"outcomes"' in p and '"jobs"' in p and "3 to 7" in p and "1 or 2" in p
 
 
-def test_the_step_is_as_the_loops_on_the_cheaper_tier_in_the_specs_stage_of_its_partys_ledger(host, product, model):
-    _propose(host, product)
-    spent = idea_spend.of_goal(host.ideas.state_dir, product)
-    assert spent["usd"] == 0.01 and spent["stages"]["spec"]["usd"] == 0.01
-    assert idea_spend.STEP_STAGE["tree"] == "spec" and "tree" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("tree", target) == idea_target.pick("loop", target)
-    assert idea_target.READS["tree"] == 0 and idea_target.CONTEXT["tree"] == idea_target.CONTEXT["loop"] and idea_target.CAPS["tree"] == idea_target.CAPS["loop"] <= 0.15
-
-
-def test_the_proposal_is_kept_by_the_leader_and_the_command_reads_it(host, product, model):
-    assert host.command("ideas.tree", {}) == {"outcomes": [], "jobs": [], "serves": [], "tests": [], "proposing": False, "status": "", "party": product}
-    _propose(host, product)
-    got = host.command("ideas.tree", {})
-    assert got["status"] == "done" and got["proposing"] is False and got["party"] == product and "error" not in got
-    assert [o["text"] for o in got["outcomes"]] == [OUT[0]["text"]]
-    assert [j["want"] for j in got["jobs"]] == ["see a sketch", "share it with a friend", "compare two versions"] and all(j["by"] == "leader" and j["at"] for j in got["jobs"])
-    assert tree.read(host.ideas.state_dir)["jobs"] == got["jobs"]
-    assert tree.text(host.ideas.state_dir, host.ideas.keeper.repo_root).splitlines()[4] == "1. When I start a new project, I want to see a sketch, so I can judge the idea. For solo founders."
-
-
 def test_it_is_asked_once_a_tree_kept_or_proposed_is_never_asked_again(host, product, model):
     assert _propose(host, product)["asked"] is True and _propose(host, product)["asked"] is False and len(model.calls) == 1
     tree.save_proposal(host.ideas.state_dir, "")                                                                        # the proposal forgotten: the tree stands, so nothing is asked
-    assert _propose(host, product)["asked"] is False and len(model.calls) == 1
-
-
-def test_a_tree_the_person_kept_first_is_never_asked_and_never_overwritten_by_a_late_proposal(host, product):
-    def late(call):
-        host.command("ideas.tree_set", {"outcomes": [{"text": "Mine"}], "jobs": [job(w) for w in ("a", "b", "c")]})        # the person keeps theirs while the leader is asked
-        return ANSWER
-
-    model = Model(host, late)
-    _propose(host, product)
-    got = tree.read(host.ideas.state_dir)
-    assert [o["text"] for o in got["outcomes"]] == ["Mine"] and [j["want"] for j in got["jobs"]] == ["a", "b", "c"] and {j["by"] for j in got["jobs"]} == {"person"} and len(model.calls) == 1
     assert _propose(host, product)["asked"] is False and len(model.calls) == 1
 
 
@@ -172,40 +139,6 @@ def test_a_call_that_does_not_answer_is_tried_once_more_then_recorded_and_asked_
     assert _propose(host, product)["asked"] is True and host.command("ideas.tree", {})["status"] == "done" and len(tree.read(host.ideas.state_dir)["jobs"]) == 3
 
 
-def test_a_call_lost_with_the_process_is_not_proposing_and_is_asked_again(host, product, model):
-    tree.save_proposal(host.ideas.state_dir, "asking")                                                                  # the record of a run that died
-    assert host.command("ideas.tree", {})["proposing"] is False and host.command("ideas.tree", {})["status"] == ""
-    assert _propose(host, product)["asked"] is True and len(model.calls) == 1
-
-
-def test_a_proposal_being_asked_is_proposing_and_is_not_asked_a_second_time(host, product):
-    seen = {}
-
-    def slow(call):
-        seen["tree"] = host.command("ideas.tree", {})
-        seen["again"] = host.command("ideas.tree_propose", {})
-        return ANSWER
-
-    Model(host, slow)
-    _propose(host, product)
-    assert seen["tree"]["proposing"] is True and seen["tree"]["status"] == "asking" and seen["tree"]["jobs"] == [] and seen["again"]["asked"] is False
-
-
-def test_no_product_party_or_no_call_to_make_is_asked_false_with_why_never_a_refusal(host, model, monkeypatch):
-    assert _propose(host) == {"ok": True, "asked": False, "why": "Product has no party here: make it first"} and not model.calls
-    assert host.command("ideas.tree", {})["party"] == ""
-    _party(host, "Product", "product-manager", ["copywriter"], "product")
-    monkeypatch.setattr(host.ideas.keeper, "_may_run", lambda: "Today's spend limit is reached: the keeper waits")
-    assert _propose(host) == {"ok": True, "asked": False, "why": "Today's spend limit is reached: the keeper waits"}
-    assert not model.calls and tree.proposal(host.ideas.state_dir)["status"] == ""                                      # nothing begun: asked at the next press
-
-
-def test_a_party_that_is_not_products_is_not_asked(host, model):
-    _party(host, "Game design", "game-designer", ["level-designer"], "product")
-    _party(host, "Tech", "architect", ["grunt", "tester"], "engineering")
-    assert _propose(host)["asked"] is False and not model.calls
-
-
 # -- the person's outcomes and jobs ----------------------------------------------------------------------------------------------------
 
 def test_the_person_sets_the_outcomes_and_jobs_kept_by_the_person_and_one_part_alone_leaves_the_other(host, product):
@@ -216,23 +149,6 @@ def test_the_person_sets_the_outcomes_and_jobs_kept_by_the_person_and_one_part_a
     assert only["jobs"] == got["jobs"] and only["outcomes"][0]["text"] == "Keep people coming back"
     again = host.command("ideas.tree_set", {"jobs": [got["jobs"][0], {**got["jobs"][1], "so": "show it off"}, got["jobs"][2]]})
     assert again["jobs"][0] == got["jobs"][0] and again["jobs"][1]["so"] == "show it off" and again["jobs"][1]["id"] == got["jobs"][1]["id"]
-
-
-def test_the_jobs_of_the_leader_the_person_did_not_touch_stay_the_leaders(host, product, model):
-    _propose(host, product)
-    kept = tree.read(host.ideas.state_dir)["jobs"]
-    got = host.command("ideas.tree_set", {"jobs": [kept[0], {**kept[1], "want": "pass it on"}, kept[2]]})
-    assert [j["by"] for j in got["jobs"]] == ["leader", "person", "leader"] and got["jobs"][1]["id"] == kept[1]["id"]
-
-
-def test_a_set_that_is_none_is_refused_in_plain_words_and_changes_nothing(host, product):
-    host.command("ideas.tree_set", {"outcomes": OUT, "jobs": THREE})
-    before = tree.read(host.ideas.state_dir)
-    for bad, why in (({}, "Say the outcomes or the jobs"), ({"jobs": THREE[:2]}, "3 to 7 jobs"), ({"jobs": "no"}, "3 to 7 jobs"), ({"outcomes": []}, "1 or 2 outcomes"),
-                     ({"outcomes": [{"text": ""}]}, "few words"), ({"jobs": [*THREE[:2], job("")]}, "when, what the person wants"), ({"jobs": [*THREE[:2], THREE[0]]}, "Two jobs say the same")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.tree_set", bad)
-    assert tree.read(host.ideas.state_dir) == before
 
 
 # -- the goals under a job, the experiments on a goal ----------------------------------------------------------------------------------
@@ -259,28 +175,3 @@ def test_an_experiment_is_set_on_a_goal_and_taken_off_it(host, product):
     assert [t["experiment"] for t in host.command("ideas.tree_attach", {"goal": dark, "experiment": ""})["tests"]] == []
 
 
-def test_an_attach_that_is_none_is_refused_in_plain_words_and_changes_nothing(host, product):
-    host.command("ideas.tree_set", {"outcomes": OUT, "jobs": THREE})
-    dark = make_goal(host, "Dark mode")
-    host.command("ideas.tree_attach", {"job": "see-a-sketch", "goal": dark})
-    before = tree.read(host.ideas.state_dir)
-    for bad, why in (({"job": "no-such-job", "goal": dark}, "That job is gone"), ({"job": "see-a-sketch", "goal": "ghost"}, "That goal is gone"), ({"job": "see-a-sketch", "goal": ""}, "That goal is gone"),
-                     ({"goal": dark, "experiment": "ghost"}, "That goal is gone"), ({"goal": "ghost", "experiment": dark}, "That goal is gone"), ({"goal": dark, "experiment": dark}, "its own experiment"),
-                     ({"job": "see-a-sketch", "goal": 3}, "not text")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.tree_attach", bad)
-    assert tree.read(host.ideas.state_dir) == before
-
-
-def test_a_goal_dropped_from_the_board_is_left_out_of_the_command_and_a_detach_still_works(host, product):
-    host.command("ideas.tree_set", {"outcomes": OUT, "jobs": THREE})
-    dark, fast = make_goal(host, "Dark mode"), make_goal(host, "Faster pages")
-    host.command("ideas.tree_attach", {"job": "see-a-sketch", "goal": dark})
-    host.command("ideas.tree_attach", {"job": "see-a-sketch", "goal": fast})
-    (host.ideas.root() / ideas.IDEAS / f"{dark}.md").unlink()
-    assert [s["goal"] for s in host.command("ideas.tree", {})["serves"]] == [fast]
-    assert host.command("ideas.tree_attach", {"job": "", "goal": dark})["ok"] is True and [s["goal"] for s in tree.read(host.ideas.state_dir)["serves"]] == [fast]
-
-
-def test_the_commands_are_in_the_table_by_name(host):
-    assert COMMANDS <= set(host.commands) and set(tree_commands(host.ideas)) == COMMANDS

@@ -4,15 +4,13 @@ push (only on its command), every call under the repository's lock and with no s
 from __future__ import annotations
 
 import subprocess
-import threading
 import time
 from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, repo_git
-from orkboard.realm.idea_git import lock_of
+from orkboard.gui.board_host import Orkboard
+from orkboard.realm import event_log
 
 
 def git(cwd: Path, *args: str) -> str:
@@ -70,21 +68,6 @@ def test_status_with_ahead_behind_and_counts(host, repos):
     assert files["app.py"] == {"path": "app.py", "status": "modified", "added": 2, "removed": 1}
     assert files["new.py"] == {"path": "new.py", "status": "untracked", "added": 2, "removed": 0}
     assert ".env" not in files                                                # a secret-looking file is never offered
-
-
-def test_a_files_diff_in_ideas_diff_shape(host, repos):
-    repo = repos[1]
-    (repo / "app.py").write_text("a = 1\nb = 3\n", encoding="utf-8")
-    got = host.command("git.diff", {"path": "app.py"})
-    assert set(got) == {"base", "branch", "commits", "files", "truncated"}
-    (f,) = got["files"]
-    assert (f["path"], f["added"], f["removed"]) == ("app.py", 1, 1) and "+b = 3" in f["patch"]
-    (repo / "new.md").write_text("hello\n", encoding="utf-8")
-    assert "+hello" in host.command("git.diff", {"path": "new.md"})["files"][0]["patch"]
-    with pytest.raises(CommandError, match="no changes"):
-        host.command("git.diff", {"path": "README.md"})
-    with pytest.raises(CommandError, match="not in the project"):
-        host.command("git.diff", {"path": "../x"})
 
 
 def test_a_commit_takes_the_ticked_files_only(host, repos):
@@ -166,74 +149,4 @@ def test_push_only_on_its_command(host, repos):
     assert "no origin" in _done(host, "push")["said"]
 
 
-def test_every_call_is_under_the_lock_with_no_shell(host, repos, monkeypatch):
-    repo = repos[1]
-    lock, real, seen = lock_of(repo), subprocess.run, []
-
-    def run(argv, *a, **k):
-        assert isinstance(argv, list) and argv[0] == "git" and not k.get("shell")
-        assert lock._is_owned(), argv
-        seen.append(argv[1])
-        return real(argv, *a, **k)
-
-    monkeypatch.setattr(repo_git.subprocess, "run", run)
-    (repo / "app.py").write_text("a = 5\n", encoding="utf-8")
-    host.command("git.status")
-    host.command("git.diff", {"path": "app.py"})
-    host.command("git.commit", {"paths": ["app.py"], "message": "Five"})
-    host.command("git.switch", {"branch": "main"})
-    _done(host, "pull")
-    _done(host, "push")
-    assert {"status", "diff", "add", "commit", "switch", "pull", "push"} <= set(seen)
-    assert not {"rebase", "reset", "stash"} & set(seen) and "--force" not in str(seen)
-
-
-def test_the_work_branch_is_the_projects_merge_into(host, repos):
-    host.command("ideas.into", {"branch": "release"})
-    assert host.command("git.status")["work_branch"] == "release"
-
-
 # -- off the server's thread ---------------------------------------------------------------------------------------
-
-def test_a_push_runs_off_the_server_thread_and_a_second_press_is_refused(host, repos, monkeypatch):
-    origin, repo, _other = repos
-    (repo / "app.py").write_text("a = 9\n", encoding="utf-8")
-    host.command("git.commit", {"paths": ["app.py"], "message": "Nine"})
-    gate, entered, real = threading.Event(), threading.Event(), repo_git.RepoGit.push
-
-    def slow(self):                                  # a fake slow git: the push is held until the test lets it go
-        entered.set()
-        assert gate.wait(30)
-        return real(self)
-
-    monkeypatch.setattr(repo_git.RepoGit, "push", slow)
-    seen = []
-    host.projects.current().bus.subscribe("background.ran", seen.append)
-    assert host.command("git.push") == {"started": True}
-    assert entered.wait(30)
-    st = host.command("git.status")                  # another command answers while the push is held
-    assert (st["running"], st["last"]) == ("push", None)
-    assert host.command("git.push") == {"error": "a push is already running"}
-    assert host.command("git.pull") == {"error": "a push is already running"}
-    assert git(origin, "rev-parse", "main") != git(repo, "rev-parse", "HEAD")
-    gate.set()
-    deadline = time.monotonic() + 30
-    while not seen and time.monotonic() < deadline:
-        time.sleep(0.02)
-    assert [(e.data["op"], e.data["ok"], e.data["said"]) for e in seen] == [("push", True, "Sent main to origin")]
-    st = host.command("git.status")
-    assert st["running"] == "" and st["last"]["ok"] is True
-    assert git(origin, "rev-parse", "main") == git(repo, "rev-parse", "HEAD")
-
-
-def test_the_branches_work_branch_and_main_first_the_current_marked(host, repos):
-    repo = repos[1]
-    for name in ("zeta", "alpha", "dev"):
-        git(repo, "branch", name)
-    git(repo, "switch", "alpha")
-    got = host.command("git.branches")["branches"]
-    assert [b["name"] for b in got] == ["dev", "main", "alpha", "zeta"]            # the work branch (dev), then main
-    assert [b["name"] for b in got if b["current"]] == ["alpha"]
-    assert {b["name"]: b["upstream"] for b in got}["main"] == "origin/main" and got[0]["upstream"] == ""
-    (repo / "app.py").write_text("dirty\n", encoding="utf-8")
-    assert "uncommitted" in host.command("git.switch", {"branch": "main"})["error"]

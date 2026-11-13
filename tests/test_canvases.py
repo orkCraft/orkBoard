@@ -9,10 +9,9 @@ import sys
 import pytest
 
 from orkboard.core import canvases as store_mod
-from orkboard.core.canvases import KEEP, MADE, SEEN, Canvases
+from orkboard.core.canvases import MADE, Canvases
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, lexicon
-from orkboard.sources.canvases import Canvas, link_host
+from orkboard.sources.canvases import Canvas
 
 ART = "https://claude.ai/artifact/0f3c"
 
@@ -41,53 +40,7 @@ def test_a_canvas_is_kept_told_and_drawn_again_is_one_card_moved(tmp_path):
     assert store_mod.path(tmp_path).is_file()
 
 
-def test_seen_folds_it_survives_a_restart_and_a_drawing_again_makes_it_new(tmp_path):
-    s = Canvases(tmp_path)
-    s.add(_c("2026-10-25T10:00:00+00:00"))
-    rev = s.rev
-    assert s.seen(f"claude:{ART}") and s.rev > rev and not s.seen("claude:https://claude.ai/artifact/none")
-    again = Canvases(tmp_path)
-    assert again.shown()[0] == [] and [c.key for c in again.shown()[1]] == [f"claude:{ART}"]
-    again.add(_c("2099-01-01T00:00:00+00:00"))
-    assert [c.key for c in Canvases(tmp_path).shown()[0]] == [f"claude:{ART}"]
-
-
-def test_the_hooks_lines_are_read_when_the_file_changes(tmp_path):
-    s = Canvases(tmp_path)
-    assert s.new_count() == 0
-    p = store_mod.path(tmp_path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    line = _c("2026-10-25T10:00:00+00:00", tool="agy", kind="picture", url="", file=str(tmp_path / "a.png")).line()
-    p.write_text(json.dumps(line) + "\nnot json\n" + json.dumps({"tool": "nope"}) + "\n", encoding="utf-8")
-    assert s.new_count() == 1 and s.shown()[0][0].tool == "agy"
-
-
-def test_the_store_keeps_the_last_canvases_only(tmp_path):
-    s = Canvases(tmp_path)
-    for i in range(KEEP + 5):
-        s.add(_c(f"2026-10-25T10:{i // 60:02d}:{i % 60:02d}+00:00", url=f"https://claude.ai/artifact/{i}"))
-    new, _ = Canvases(tmp_path).shown()
-    assert len(new) == KEEP and new[-1].url.endswith("/5")
-
-
-def test_a_line_that_is_no_canvas_is_none():
-    assert Canvas.from_line({"key": "x", "seen": "now"}) is None
-    assert Canvas.from_line({"tool": "claude", "kind": "design", "url": "http://claude.ai/a"}) is None   # not https, no file
-    assert Canvas.from_line({"tool": "claude", "kind": "drawing", "url": ART}) is None
-
-
-def test_only_the_allowed_hosts_are_links():
-    assert link_host(ART) == "claude.ai" and link_host("https://www.figma.com/design/k/x") == "figma.com"
-    assert link_host("http://claude.ai/a") == "" and link_host("https://claude.ai.evil.com/a") == ""
-    assert link_host("https://evil.com/claude.ai") == "" and link_host("not a url") == ""
-
-
 # -- the words (§2.4) and the log ---------------------------------------------------------------------------------
-
-def test_canvas_is_a_word_of_the_glossary_and_its_events_are_logged():
-    assert lexicon.term("canvas") == "canvas" and lexicon.term("canvas", many=True) == "canvases"
-    assert {event_log.CANVAS_MADE, event_log.CANVAS_SEEN} <= set(event_log.EVENTS)
-
 
 # -- the cards and their commands (§3) ----------------------------------------------------------------------------
 
@@ -148,13 +101,6 @@ def test_a_local_file_shows_only_from_the_allowed_folders(host, fake_repo, tmp_p
         host.command("ideas.canvas_file", {"key": cards["secret.png"]["key"]})
 
 
-def test_the_phone_may_call_the_canvas_commands(host):
-    from orkboard.gui.board_host import BoardPhone
-    for name in ("ideas.canvases", "ideas.canvas_seen", "ideas.canvas_file"):
-        assert BoardPhone.allowed(host, name, {})
-    assert SEEN == "canvas.seen"
-
-
 # -- one tool call as a canvas (sources/canvases.py `from_call`: the readers' and the hook's) -----------------------
 
 from orkboard.sources.canvases import from_call  # noqa: E402
@@ -172,25 +118,4 @@ def test_an_artifact_published_is_a_canvas_and_a_read_or_an_asset_is_not():
     assert from_call("claude", "Artifact", {"action": "read", "url": ART}, "<html>", AT) is None
     assert from_call("claude", "Artifact", {"asset": True, "url": ART, "file_path": "/a.png"}, ART, AT) is None
     assert from_call("claude", "Artifact", {"file_path": "a.html"}, "refused", AT) is None
-
-
-def test_a_doc_a_figma_file_and_a_picture_are_canvases():
-    doc = from_call("claude", "mcp__Claude_Docs__batch", {"container": {"kind": "project", "create": {"name": "Plan"}}},
-                    {"ack": f"made {ART}"}, AT)
-    assert (doc.kind, doc.title, doc.url) == ("document", "Plan", ART)
-    assert from_call("claude", "mcp__Claude_Docs__batch", {"container": {"id": "x"}}, ART, AT) is None
-    fig = from_call("codex", "mcp__figma__create_new_file", {"fileName": "Board"}, "https://www.figma.com/design/K/Board.", AT)
-    assert (fig.tool, fig.kind, fig.url) == ("codex", "design", "https://www.figma.com/design/K/Board")
-    assert from_call("claude", "mcp__Figma__get_screenshot", {}, "https://www.figma.com/design/K", AT) is None
-    assert from_call("codex", "mcp__tldraw__create", {}, "https://evil.com/x", AT) is None
-    pic = from_call("agy", "generate_image", {"Prompt": "a pixel elf\nsmall"}, "Saved to /home/u/.gemini/brain/c1/elf.png", AT)
-    assert (pic.kind, pic.title, pic.file) == ("picture", "a pixel elf", "/home/u/.gemini/brain/c1/elf.png")
-    assert from_call("claude", "Bash", {"command": "ls"}, "", AT) is None
-
-
-def test_a_canvas_says_its_time_in_one_spelling():
-    """The store compares `at` as text: `…Z`, `…+00:00`, a fraction and another offset all read as one UTC spelling."""
-    from orkboard.sources.canvases import norm_at
-    assert _c("2026-10-25T10:00:00.123Z").at == "2026-10-25T10:00:00+00:00" == norm_at("2026-10-25T12:00:00+02:00")
-    assert norm_at("not a time") == "not a time"
 

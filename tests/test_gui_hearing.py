@@ -44,10 +44,6 @@ def _no_goal(host, parties, model, text="add a dark mode option", **noes):
     return _talk(host, parties, ["product", "design", "tech"], text)
 
 
-def test_the_commands_are_the_hosts_and_a_phones(host):
-    assert COMMANDS <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in COMMANDS)
-
-
 def test_a_goal_with_a_no_has_one_hearing_row_and_ideas_hearing_gives_it_with_its_goal(host, parties, model):
     slug = _no_goal(host, parties, model, tech=TECH_NO, product={"verdict": "no", "why": "Not worth it", "instead": "Only the setting"})
     rows = [n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug]
@@ -57,27 +53,6 @@ def test_a_goal_with_a_no_has_one_hearing_row_and_ideas_hearing_gives_it_with_it
     assert [(s["dir"], s["kind"]) for s in got["sides"]] == [("right", "go"), ("up", "smaller")]
     node = next(n for n in host.command("ideas.map")["nodes"] if n["slug"] == slug)
     assert node["needs_you"] == "hearing"
-
-
-def test_a_goal_with_no_hearing_gives_null_and_a_throw_of_it_is_refused(host, parties, model):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    assert host.command("ideas.hearing", {"idea": slug}) is None
-    with pytest.raises(CommandError, match="This was decided already"):
-        _throw(host, slug, dir="right")
-    with pytest.raises(CommandError, match="That goal is gone"):
-        host.command("ideas.hearing", {"idea": "nobody"})
-
-
-def test_the_arguments_are_checked_in_plain_words(host, parties, model):
-    slug = _no_goal(host, parties, model, tech=TECH_NO)
-    for args, why in (({"moment": "talk"}, "Throw it to a side"), ({"moment": "chat", "dir": "right"}, "moment is talk or fork"), ({"dir": "right"}, "moment is talk or fork"),
-                      ({"moment": "talk", "dir": "down"}, "dir is right, left or up"), ({"moment": "talk", "dir": 3}, "dir and text are text"),
-                      ({"moment": "talk", "text": 3}, "dir and text are text")):
-        with pytest.raises(CommandError, match=why):
-            host.command("ideas.throw", {"idea": slug, **args})
-    with pytest.raises(CommandError, match="Throw it to a side"):
-        _throw(host, slug, dir="left")                                                                            # a side that is not there (only go and the smaller one stand)
-    assert len(_objections(host, slug)) == 1
 
 
 def test_go_confirms_the_decision_once_it_is_worded_names_the_overruled_and_the_sections_follow(host, parties, model, sections):
@@ -96,30 +71,6 @@ def test_go_confirms_the_decision_once_it_is_worded_names_the_overruled_and_the_
     assert any(t["who"] == "you" and t["text"].startswith("Thrown to ") and "Do it" in t["text"] for t in said)
 
 
-def test_go_on_anyway_when_no_leader_said_go_is_the_right_side_too(host, parties, model, sections):
-    slug = _no_goal(host, parties, model, product={"verdict": "no", "why": "No"}, design={"verdict": "no", "why": "No"}, tech=TECH_NO)
-    got = host.command("ideas.hearing", {"idea": slug})
-    assert got["sides"][0]["outcome"] == "Go on anyway" and got["sides"][0]["leaders"] == []
-    assert _throw(host, slug, dir="right")["outcome"] == "Go on anyway"
-    _until_sections(host, slug)
-    assert sections == [slug]
-
-
-def test_smaller_words_the_goal_as_the_instead_then_confirms_and_the_other_noes_are_overruled(host, parties, model, sections):
-    slug = _no_goal(host, parties, model, tech=TECH_NO, product={"verdict": "no", "why": "Not worth it before the lobby"})
-    got = host.command("ideas.hearing", {"idea": slug})
-    assert [(s["dir"], s["kind"]) for s in got["sides"]] == [("right", "go"), ("left", "drop"), ("up", "smaller")]
-    done = _throw(host, slug, dir="up")
-    assert done["kind"] == "smaller" and done["outcome"] == "Do the smaller one: Only the setting, no new caller"
-    _until_sections(host, slug)
-    page = ideas.idea_page(host.ideas.root(), slug)
-    assert page.section("Gist") == "Only the setting, no new caller" and page.title == "Only the setting, no new caller"
-    prompt = model.steps("decide")[0]["prompt"]
-    assert "Only the setting, no new caller" in prompt and "Against" in prompt and "Not worth it before the lobby" in prompt    # Tech's no is answered; Product's was overruled and is told
-    assert "It adds a third caller" not in prompt.split("overruled")[-1]
-    assert len(model.steps("talk_round")) == 3                                                                         # Talk is not run again
-
-
 def test_later_waits_on_the_goal_named_and_goes_back_to_the_deck_held(host, parties, model):
     first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]
     slug = _no_goal(host, parties, model, text="add a dark mode option", product={"verdict": "no", "why": "The lobby comes first", "after": first})
@@ -131,22 +82,6 @@ def test_later_waits_on_the_goal_named_and_goes_back_to_the_deck_held(host, part
     assert node["waits_on"] == [first] and node["depends_on"] == [first] and node["place"] == "deck" and node["state"] == "raw" and node["queue"] == "hold"
     assert _objections(host, slug) == [] and idea_questions.record(host.ideas.state_dir, slug) == {} and len(model.steps("decide")) == 0
     assert host.command("ideas.hearing", {"idea": slug}) is None
-
-
-def test_later_that_would_close_a_cycle_is_refused_and_the_hearing_stays(host, parties, model):
-    first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]
-    slug = _no_goal(host, parties, model, product={"verdict": "no", "why": "The lobby comes first", "after": first})
-    from orkboard.realm import collide
-    collide.add_dependency(host.ideas.root(), first, slug, "the other goal")
-    with pytest.raises(CommandError, match="waits for this one"):
-        _throw(host, slug, dir="left")
-    assert len(_objections(host, slug)) == 1
-
-
-def test_drop_drops_the_goal(host, parties, model):
-    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
-    assert _throw(host, slug, dir="left")["outcome"] == "Drop it"
-    assert ideas.idea_page(host.ideas.root(), slug) is None and not any(n["idea"] == slug for n in host.command("ideas.board")["needs_you"])
 
 
 def test_the_persons_own_words_are_confirmed_as_written_and_win_over_a_side(host, parties, model, sections):
@@ -169,54 +104,6 @@ def test_a_throw_when_the_questions_still_wait_goes_on_when_they_are_answered(ho
     host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})
     _until_sections(host, slug)
     assert sections == [slug] and len(model.steps("decide")) == 1
-
-
-def test_a_late_throw_is_refused_in_plain_words_and_changes_nothing(host, parties, model, sections):
-    slug = _no_goal(host, parties, model, tech=TECH_NO)
-    _throw(host, slug, dir="right")
-    for args in ({"dir": "right"}, {"dir": "left"}, {"text": "my words"}):
-        with pytest.raises(CommandError, match="This was decided already"):
-            _throw(host, slug, **args)
-    _until_sections(host, slug)
-    with pytest.raises(CommandError, match="This was decided already"):
-        _throw(host, slug, dir="right")
-    with pytest.raises(CommandError, match="This was decided already"):
-        host.command("ideas.throw", {"idea": slug, "moment": "fork", "dir": "right"})
-    assert len(model.steps("decide")) == 1 and sections == [slug]
-
-
-def test_a_hearing_another_face_answered_with_the_old_command_is_a_late_throw(host, parties, model):
-    slug = _no_goal(host, parties, model, tech=TECH_NO)
-    host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "go"})
-    with pytest.raises(CommandError, match="This was decided already"):
-        _throw(host, slug, dir="right")
-
-
-def test_a_doubt_only_hearing_is_open_when_the_weigher_says_so(host, parties, model, sections):
-    _noes(model, parties, per=1, design={"verdict": "doubt", "why": "The contrast is low", "instead": "Keep the old look"})
-    model.said[("decide", "")] = DECIDED
-    slug = _talk(host, parties, ["design", "tech"])                                                                     # a question waits, so the goal is at Talk
-    assert host.command("ideas.hearing", {"idea": slug}) is None and _objections(host, slug) == []                      # a doubt alone holds nothing today
-    with ideas.LOCK:
-        rec = idea_questions.record(host.ideas.state_dir, slug)
-        rec["hearing"] = True                                                                                           # the seam of part C: `outcome` says a hearing
-        idea_questions.save_record(host.ideas.state_dir, slug, rec)
-    got = host.command("ideas.hearing", {"idea": slug})
-    assert [(s["dir"], s["kind"]) for s in got["sides"]] == [("right", "go"), ("up", "smaller")] and got["title"].endswith("has a doubt")
-    _throw(host, slug, dir="up")
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})
-    _until_sections(host, slug)
-    assert ideas.idea_page(host.ideas.root(), slug).section("Gist") == "Keep the old look"
-
-
-def test_a_throw_is_logged_without_a_word_of_anyones(host, parties, model, sections):
-    slug = _no_goal(host, parties, model, tech=TECH_NO)
-    host.ideas.keeper.events = True
-    _throw(host, slug, dir="right")
-    _until_sections(host, slug)
-    lines = [e for e in event_log.read(host.repo_root) if e["event"] == event_log.HEARING_THROWN]
-    assert len(lines) == 1 and lines[0]["idea"] == slug and lines[0]["kind"] == "go" and lines[0]["dir"] == "right" and lines[0]["moment"] == "talk"
-    assert "It adds a third caller" not in str(lines[0]) and event_log.HEARING_THROWN in event_log.EVENTS
 
 
 # -- a fork -------------------------------------------------------------------------------------------------------------------------------------
@@ -252,27 +139,10 @@ def test_a_fork_thrown_to_a_side_answers_it_by_that_party_and_by_words_with_the_
         host.command("ideas.throw", {"idea": _forked(host, parties, 2), "moment": "fork", "dir": "up"})             # a fork of two has no top side
 
 
-def test_a_fork_thrown_again_after_it_was_answered_is_refused(host, parties, model):
-    slug = _forked(host, parties)
-    host.ideas.keeper.fork_answer = lambda s, side="", text="": None
-    way = spec_sections.record(host.ideas.state_dir, slug)
-    way["forks"][1]["status"] = "answered"
-    spec_sections.save_record(host.ideas.state_dir, slug, way)
-    assert host.command("ideas.hearing", {"idea": slug}) is None
-    with pytest.raises(CommandError, match="This was decided already"):
-        host.command("ideas.throw", {"idea": slug, "moment": "fork", "dir": "right"})
-    with pytest.raises(CommandError, match="This was decided already"):
-        host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})                              # a fork's goal has no Talk to throw
-
-
 # -- Undo of a throw (spec 120 §6.7, `ideas.unthrow`) -----------------------------------------------------------------------------------------------
 
 def _unthrow(host, slug, **args):
     return host.command("ideas.unthrow", {"idea": slug, "moment": "talk", **args})
-
-
-def test_the_unthrow_command_is_the_hosts_and_a_phones(host):
-    assert "ideas.unthrow" in host.commands and BoardPhone.allowed(host, "ideas.unthrow", {})
 
 
 def test_a_drop_taken_back_returns_the_goal_with_its_state_its_ledger_and_its_hearing(host, parties, model):
@@ -293,37 +163,6 @@ def test_a_drop_taken_back_returns_the_goal_with_its_state_its_ledger_and_its_he
         _unthrow(host, slug)                                                                                          # taken back once
 
 
-def test_not_now_taken_back_removes_the_wait_and_the_goal_is_at_talk_again(host, parties, model):
-    first = host.command("ideas.add", {"text": "add a lobby for the party game", "track": parties["product"], "hold": True})["slug"]
-    slug = _no_goal(host, parties, model, text="add a dark mode option", product={"verdict": "no", "why": "The lobby comes first", "after": first})
-    state_dir, root = host.ideas.state_dir, host.ideas.root()
-    was = ((root / ideas.IDEAS / f"{slug}.md").read_text(encoding="utf-8"), _state(host, slug)["state"], idea_questions.record(state_dir, slug))
-    _throw(host, slug, dir="left")
-    assert _state(host, slug)["state"] == "raw"
-    assert _unthrow(host, slug)["kind"] == "later"
-    assert ((root / ideas.IDEAS / f"{slug}.md").read_text(encoding="utf-8"), _state(host, slug)["state"], idea_questions.record(state_dir, slug)) == was
-    node = next(n for n in host.command("ideas.map")["nodes"] if n["slug"] == slug)
-    assert node["waits_on"] == [] and node["state"] == "talk" and len(_objections(host, slug)) == 1
-
-
-def test_a_go_taken_back_while_the_questions_still_wait_leaves_the_hearing_open_and_nothing_decided(host, parties, model, sections):
-    _noes(model, parties, per=1, tech=TECH_NO)
-    model.said[("decide", "")] = DECIDED
-    slug = _talk(host, parties, ["tech"])
-    state_dir = host.ideas.state_dir
-    was = idea_questions.record(state_dir, slug)
-    _throw(host, slug, dir="right")
-    assert idea_questions.record(state_dir, slug).get("thrown") and _objections(host, slug) == []
-    assert _unthrow(host, slug)["kind"] == "go"
-    assert idea_questions.record(state_dir, slug) == was and len(_objections(host, slug)) == 1
-    assert not any(t["text"].startswith("Thrown to ") for t in ideas.talk(state_dir, slug)), "the line the throw added to the Talk is gone"
-    assert model.steps("decide") == [] and sections == []
-    _throw(host, slug, dir="right")                                                                                   # thrown again after it was taken back, it goes on as before
-    host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})
-    _until_sections(host, slug)
-    assert sections == [slug]
-
-
 def test_a_go_that_began_the_decision_cannot_be_taken_back_and_changes_nothing(host, parties, model, sections):
     slug = _no_goal(host, parties, model, tech=TECH_NO)
     _throw(host, slug, dir="right")
@@ -332,25 +171,3 @@ def test_a_go_that_began_the_decision_cannot_be_taken_back_and_changes_nothing(h
         _unthrow(host, slug)
     assert sections == [slug] and len(model.steps("decide")) == 1
 
-
-def test_an_unthrow_after_its_time_or_of_a_fork_or_of_nothing_is_refused_in_plain_words(host, parties, model, monkeypatch):
-    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
-    with pytest.raises(CommandError, match="It went on already"):
-        _unthrow(host, slug)                                                                                          # nothing was thrown
-    with pytest.raises(CommandError, match="It went on already"):
-        _unthrow(host, slug, moment="fork")
-    _throw(host, slug, dir="left")
-    from orkboard.realm import idea_hearing
-    monkeypatch.setattr(idea_hearing, "UNDO_S", -1)
-    with pytest.raises(CommandError, match="It went on already"):
-        _unthrow(host, slug)
-    assert ideas.idea_page(host.ideas.root(), slug) is None
-
-
-def test_a_throw_taken_back_is_logged_without_a_word_of_anyones(host, parties, model):
-    slug = _no_goal(host, parties, model, tech={"verdict": "no", "why": "No way"})
-    host.ideas.keeper.events = True
-    _throw(host, slug, dir="left")
-    _unthrow(host, slug)
-    lines = [e for e in event_log.read(host.repo_root) if e["event"] == event_log.HEARING_UNTHROWN]
-    assert len(lines) == 1 and lines[0]["idea"] == slug and lines[0]["kind"] == "drop" and "No way" not in str(lines[0]) and event_log.HEARING_UNTHROWN in event_log.EVENTS

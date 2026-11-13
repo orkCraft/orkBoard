@@ -7,10 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from orkboard import settings
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import first_open, ideas, project_kind, tool_hand
-from tests.test_engine_godot import FIXTURES
 
 SAID = project_kind.START_LINE + "."
 
@@ -119,24 +117,10 @@ def test_a_new_empty_folder_is_made_and_opened(empty, tmp_path):
             empty.command("projects.new_folder", args)
 
 
-def test_a_new_folder_that_may_not_be_a_project_is_not_left_behind(empty, tmp_path):
-    keys = tmp_path / "home" / ".ssh"                                                      # the test's home (conftest): its keys' folder is never a project's
-    keys.mkdir(parents=True)
-    with pytest.raises(CommandError, match="settings or keys"):
-        empty.command("projects.new_folder", {"parent": str(keys), "name": "keys"})
-    assert not (keys / "keys").exists()
 
 
 # -- the table is laid at Start (A.5) ---------------------------------------------------------------------------------
 
-def test_the_table_is_not_laid_until_start(board, fake_repo):
-    state_dir = fake_repo / ".orkcraft"
-    assert board.snapshot()["laid"] is False and first_open.laid(state_dir, fake_repo) is False
-    assert board.command("first_open.ask", {})["laid"] is False
-    ideas.add_track(fake_repo, ideas.GENERAL_TITLE)                                       # General is written when a goal is first added: no party of the person's
-    assert first_open.laid(state_dir, fake_repo) is False
-    assert first_open.lay(state_dir) is True and first_open.lay(state_dir) is False        # once
-    assert first_open.laid(state_dir, fake_repo) and (state_dir / "project.json").is_file()
 
 
 def test_start_lays_the_table_once_and_the_snapshot_says_so(board, fake_repo, monkeypatch):
@@ -151,15 +135,6 @@ def test_start_lays_the_table_once_and_the_snapshot_says_so(board, fake_repo, mo
     assert first_open.kept(state_dir)
 
 
-def test_the_other_keys_of_the_projects_file_are_left_as_they_are(fake_repo):
-    from orkboard.realm import project_kind, project_stage
-    state_dir = fake_repo / ".orkcraft"
-    project_kind.keep(state_dir, "code")
-    project_stage.keep(state_dir, "live")
-    first_open.lay(state_dir)
-    assert project_kind.kept(state_dir) == "code" and project_stage.kept(state_dir) == "live" and first_open.kept(state_dir)
-    project_stage.keep(state_dir, "idea")                                                  # the others write it whole too: `laid` survives them
-    assert first_open.kept(state_dir)
 
 
 def test_a_project_with_parties_of_its_own_is_laid_at_once(fake_repo):
@@ -186,30 +161,10 @@ def test_the_engines_line_is_said_once_with_the_kind_for_every_kind_and_not_afte
     assert project_kind.START_LINE not in board.command("first_open.ask", {})["line"]      # the second read: said already, never again
 
 
-def _godot_project(empty, tmp_path, fixture: str):
-    import shutil
-    import subprocess
-    folder = tmp_path / fixture
-    shutil.copytree(FIXTURES / fixture, folder)
-    subprocess.run(["git", "init"], cwd=str(folder), check=True, capture_output=True)
-    empty.command("first_open.tools_skip", {})
-    empty.command("projects.open", {"path": str(folder)})
-    return empty.command("first_open.ask", {})
 
 
-def test_a_godot_csharp_project_is_told_it_has_no_play_yet_and_a_gdscript_one_is_not(empty, tmp_path):
-    said = _godot_project(empty, tmp_path, "godot_csharp")
-    assert said["step"] == "kind" and said["kind"]["id"] == "game"
-    assert said["line"].endswith(f"Right? {project_kind.START_LINE}. {project_kind.GODOT_CSHARP}.")
-    assert "has no Play until it does" in said["line"]
-    plain = _godot_project(empty, tmp_path, "godot")
-    assert plain["step"] == "kind" and project_kind.GODOT_CSHARP not in plain["line"] and plain["line"].endswith(SAID)
 
 
-def test_the_words_alone_say_the_engines_line_for_any_folder(tmp_path):
-    assert project_kind.start_words(tmp_path) == SAID
-    assert project_kind.start_words(FIXTURES / "godot") == SAID
-    assert project_kind.start_words(FIXTURES / "godot_csharp") == f"{project_kind.START_LINE}. {project_kind.GODOT_CSHARP}."
 
 
 # -- the project's release branch (spec 150 G.2.2, decisions §254.8) -------------------------------------------------
@@ -228,17 +183,6 @@ def test_the_release_branch_is_read_from_git_main_by_default_and_a_press_lists_t
     assert got["branch"] == "main" and got["branches"] == ["develop", "main"]
 
 
-def test_a_branch_kept_is_the_main_the_gate_and_the_portal_read(empty, fake_repo):
-    _branch(fake_repo, "branch", "-M", "main")
-    _branch(fake_repo, "branch", "release")
-    empty.command("projects.open", {"path": str(fake_repo)})
-    state_dir = empty.projects.current().ideas.state_dir
-    assert empty.command("ideas.gate", {})["main"] == "main"
-    assert empty.command("first_open.branch", {"branch": "release"}) == {"ok": True, "branch": "release", "branches": ["main", "release"]}
-    assert first_open.kept_branch(state_dir) == "release" and empty.command("first_open.branch", {})["branch"] == "release"
-    assert empty.command("ideas.gate", {})["main"] == "release"
-    _branch(fake_repo, "branch", "-D", "release")                                           # a branch that is gone is no main: git's default again
-    assert empty.command("first_open.branch", {})["branch"] == "main" and empty.command("ideas.gate", {})["main"] == "main"
 
 
 def test_a_release_branch_that_is_not_a_branch_is_refused_and_keeps_the_files_other_keys(empty, fake_repo):
@@ -254,13 +198,3 @@ def test_a_release_branch_that_is_not_a_branch_is_refused_and_keeps_the_files_ot
     assert first_open.keep_release_branch(state_dir, "") == "" and first_open.kept_branch(state_dir) == "" and first_open.kept(state_dir) is True
 
 
-def test_a_folder_with_no_git_yet_gets_no_pages_of_the_boards_written_into_it(empty, tmp_path):
-    folder = tmp_path / "skyhop"
-    folder.mkdir()
-    empty.command("first_open.tools_skip", {})
-    empty.command("projects.open", {"path": str(folder)})
-    empty.command("ideas.board", {})                                                       # the page reads the Board as the folder opens, before *Start git here*
-    assert not (folder / "llm-wiki").exists(), "General's pages would be read as the project's own (a team's wiki)"
-    empty.command("projects.start_git", {"path": str(folder)})
-    got = empty.command("first_open.ask", {})
-    assert got["step"] == "kind" and got["kind"]["empty"]

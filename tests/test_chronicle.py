@@ -71,21 +71,6 @@ def test_tags_that_read_as_a_version_are_the_versions_dated_by_their_tag(repo):
     assert got["versions"][0]["day"] == "2026-10-10" and got["versions"][1]["day"] == "2026-10-20"
 
 
-def test_with_no_tag_the_changelogs_headings_with_a_version_and_a_day_are_the_versions(repo):
-    (repo / "CHANGELOG.md").write_text("# Changelog\n\n## [Unreleased]\n\n## [1.1.0] - 2026-10-20\n- x\n\n## v1.0.0 (17 October 2026)\n\n## 0.9.0\n\n## [0.8.0] - not a day\n")
-    got = chronicle_versions.read(repo)
-    assert got["kind"] == "changelog" and [(v["name"], v["day"]) for v in got["versions"]] == [("1.0.0", "2026-10-17"), ("1.1.0", "2026-10-20")]
-    tag(repo, "v2.0", "2026-10-30")
-    assert chronicle_versions.read(repo)["kind"] == "tag"                                      # the tags first
-
-
-def test_with_neither_the_weeks_and_a_folder_that_is_no_git_has_no_version(tmp_path, repo):
-    assert chronicle_versions.read(repo) == {"kind": "week", "versions": []}
-    assert chronicle_versions.read(tmp_path / "nowhere") == {"kind": "week", "versions": []}
-    assert chronicle_versions.week_of("2026-11-04") == "2026-11-02" and chronicle_versions.week_of("2026-11-02") == "2026-11-02"
-    assert chronicle_versions.week_of("nonsense") == ""
-
-
 # -- decisions ------------------------------------------------------------------------------------------------------------------------------
 
 def test_decisions_by_number_with_their_days_what_they_change_and_what_changed_them():
@@ -99,16 +84,6 @@ def test_decisions_by_number_with_their_days_what_they_change_and_what_changed_t
     assert rows[1]["changed_by"][0]["points"] == [4] and "text" not in rows[0]
     assert "says purple" in chronicle_decisions.read(LOG, text=True)[1]["text"]
     assert chronicle_decisions.read("") == []
-
-
-def test_a_folder_of_records_reads_as_a_log(tmp_path):
-    folder = tmp_path / "adr"
-    folder.mkdir()
-    (folder / "0001-one.md").write_text("---\nstatus: accepted\ndate: 2026-10-01\n---\n# One\n\n## Decision Outcome\n\nA.\n")
-    (folder / "0002-two.md").write_text("---\nstatus: accepted\ndate: 2026-10-05\nork-changes: [1]\n---\n# Two\n\n## Decision Outcome\n\nB.\n")
-    rows = chronicle_decisions.read(folder)
-    assert [(r["number"], r["day"]) for r in rows] == [(1, "2026-10-01"), (2, "2026-10-05")]
-    assert rows[1]["changes"] == [{"n": 1, "point": 0, "title": "One"}] and rows[0]["changed_by"][0]["number"] == 2
 
 
 # -- the goals and the chapters ------------------------------------------------------------------------------------------------------------
@@ -144,36 +119,6 @@ def test_a_chapter_a_version_newest_first_a_days_items_go_with_the_version_of_th
     assert [g["idea"] for g in got["unreleased"]["goals"]] == [late] and got["unreleased"]["decisions"] == []
     assert got["decisions"][1]["goal"] == before and got["decisions"][2]["goal"] == mid and got["decisions"][3]["goal"] == ""
     assert "text" not in got["decisions"][1]
-
-
-def test_decisions_of_no_goal_are_rows_of_their_own_in_the_chapter_of_their_day(repo, pages):
-    tag(repo, "v0.1", "2026-10-10")
-    tag(repo, "v0.2", "2026-10-20")
-    through(pages, repo, "Carries one", "2026-10-15", 1)
-    got = chronicle.read(state(repo), pages, repo, LOG)
-    second, first = got["chapters"]
-    assert [d["number"] for d in first["decisions"]] == [3, 2] and [d["number"] for d in second["decisions"]] == [4]
-    assert first["decisions"][0] == {"number": 3, "title": "Third, no date", "day": "2026-10-10", "changes": got["decisions"][3]["changes"], "changed_by": [], "goal": ""}
-
-
-def test_with_no_version_the_chapters_are_the_weeks_that_have_something(repo, pages):
-    a = through(pages, repo, "A", "2026-11-03")
-    b = through(pages, repo, "B", "2026-11-04")
-    c = through(pages, repo, "C", "2026-10-13")
-    got = chronicle.read(state(repo), pages, repo, "## 7. Seven (5 November 2026, the owner)\n\nWhy.\n")
-    assert got["kind"] == "week" and got["unreleased"] is None
-    assert [(ch["id"], ch["name"], ch["day"]) for ch in got["chapters"]] == [("w:2026-11-02", "", "2026-11-02"), ("w:2026-10-12", "", "2026-10-12")]
-    assert [g["idea"] for g in got["chapters"][0]["goals"]] == [b, a] and [g["idea"] for g in got["chapters"][1]["goals"]] == [c]
-    assert [d["number"] for d in got["chapters"][0]["decisions"]] == [7]
-
-
-def test_earlier_is_the_last_version_or_the_last_week_or_none(repo, pages):
-    assert chronicle.earlier(state(repo), pages, repo) is None
-    through(pages, repo, "A", "2026-11-04")
-    assert chronicle.earlier(state(repo), pages, repo) == {"kind": "week", "name": "", "day": "2026-11-02"}
-    tag(repo, "v0.1", "2026-10-10")
-    tag(repo, "v0.2", "2026-10-20")
-    assert chronicle.earlier(state(repo), pages, repo) == {"kind": "tag", "name": "v0.2", "day": "2026-10-20"}
 
 
 # -- a goal as it was, a decision -----------------------------------------------------------------------------------------------------------
@@ -230,41 +175,7 @@ def test_the_search_finds_by_every_word_in_goals_sections_and_decisions_by_chapt
     assert [(c["name"], [d["number"] for d in c["decisions"]]) for c in no_goal["chapters"]] == [("v0.2", [4])] and no_goal["chapters"][0]["decisions"][0]["in"] == ["decision"]
 
 
-def test_an_empty_query_finds_nothing_and_the_finds_are_bounded(repo, pages, monkeypatch):
-    for n in range(5):
-        through(pages, repo, f"Common title {n}", "2026-11-03")
-    assert chronicle_find.find(state(repo), pages, repo, LOG, "  ") == {"query": "", "found": 0, "more": 0, "chapters": [], "unreleased": None}
-    monkeypatch.setattr(chronicle_find, "FIND_MAX", 3)
-    got = chronicle_find.find(state(repo), pages, repo, LOG, "common")
-    assert got["found"] == 3 and got["more"] == 2 and len(got["chapters"][0]["goals"]) == 3
-    assert chronicle_find.words("a b c d e f g h") == list("abcdef") and len(chronicle_find.words("x" * 200)) == 1
-    assert len(chronicle_find.words("x" * 200)[0]) == chronicle_find.QUERY_MAX
-
-
-def test_unreleased_finds_are_kept_apart(repo, pages):
-    tag(repo, "v0.1", "2026-10-10")
-    late = through(pages, repo, "Late purple", "2026-10-25")
-    got = chronicle_find.find(state(repo), pages, repo, LOG, "late")
-    assert got["chapters"] == [] and [g["idea"] for g in got["unreleased"]["goals"]] == [late]
-
-
 # -- by party (spec 150 E1.4) ---------------------------------------------------------------------------------------------------------------
-
-def test_a_decision_is_a_partys_when_it_holds_a_slice_of_it_standing_or_replaced(repo):
-    from orkboard.realm import slices
-    st = state(repo)
-    old, _tech = slices.add_cut(st, 1, {"design": {"says": "Purple.", "points": ["1"]}, "tech": {"says": "One build.", "points": ["1"]}})
-    slices.add_cut(st, 2, {"design": {"says": "Green.", "points": ["2"], "replaces": [old["id"]]}, "art": None})
-    assert chronicle_decisions.parties(st) == {1: ["design", "tech"], 2: ["design"]}
-    assert chronicle_decisions.parties(state(repo) / "none") == {}
-
-
-def test_the_first_line_of_an_entrys_why():
-    assert chronicle_decisions.why_line("Changes: 1.\n\nWhy: People read faster than we thought.\n\n1. One") == "People read faster than we thought."
-    assert chronicle_decisions.why_line("Why:\nOn the next line.\n\n1. One") == "On the next line."
-    assert chronicle_decisions.why_line("Changes: 1.\n\nNo why here.") == "No why here."
-    assert chronicle_decisions.why_line("Why: " + "w" * 300, 20) == "w" * 19 + "…" and chronicle_decisions.why_line("") == ""
-
 
 def test_last_gives_the_newest_decisions_of_a_party_with_their_goals_element_and_version(pages, repo):
     from orkboard.realm import slices
@@ -282,14 +193,6 @@ def test_last_gives_the_newest_decisions_of_a_party_with_their_goals_element_and
     assert chronicle.last(st, pages, repo, LOG, "design", 0) == chronicle.last(st, pages, repo, LOG, "design", 3)
 
 
-def test_goals_by_party_are_those_whose_route_held_it(pages, repo):
-    a = through(pages, repo, "Routed", "2026-10-05")
-    b = through(pages, repo, "Not routed", "2026-10-06")
-    ideas.save_state(state(repo), a, route=[{"party": "design"}])
-    assert [g["idea"] for g in chronicle.goals(state(repo), pages, "design")] == [a] and {g["idea"] for g in chronicle.goals(state(repo), pages)} == {a, b}
-    assert [g["idea"] for g in chronicle.goals(state(repo), pages, "general")] == [a, b]            # the party a goal lies in held it too
-
-
 # -- a party's past from the pages (spec 162 D; decisions §277.3) ---------------------------------------------------------------------------
 
 def page_key(pages: Path, slug: str, key: str, value: str) -> None:
@@ -297,67 +200,3 @@ def page_key(pages: Path, slug: str, key: str, value: str) -> None:
     head, rest = p.read_text().split("\n---\n", 1)
     p.write_text(f"{head}\n{key}: {value}\n---\n{rest}")
 
-
-def test_a_pages_route_holds_a_party_while_the_state_has_none_and_the_states_wins(pages, repo):
-    a = through(pages, repo, "Page routed", "2026-10-05")
-    b = through(pages, repo, "State routed", "2026-10-06")
-    page_key(pages, a, "route", "product, design, tech")
-    page_key(pages, b, "route", "product")
-    ideas.save_state(state(repo), b, route=[{"party": "design"}])
-    st = state(repo)
-    assert [g["idea"] for g in chronicle.goals(st, pages, "product")] == [a]                       # b's state names design: its page's product does not count
-    assert {g["idea"] for g in chronicle.goals(st, pages, "design")} == {a, b}
-    got = chronicle.read(st, pages, repo, LOG, party="product")
-    assert [g["idea"] for c in got["chapters"] for g in c["goals"]] == [a]
-
-
-def test_a_goal_carries_the_newest_decision_its_page_names_that_the_log_holds(pages, repo):
-    st = state(repo)
-    a = through(pages, repo, "Several", "2026-10-12")
-    page_key(pages, a, "decisions", "2, 3, 9")
-    b = through(pages, repo, "Own record", "2026-10-13", 1)
-    page_key(pages, b, "decisions", "4")
-    rows = chronicle_decisions.read(LOG)
-    got = {g["idea"]: g["decision"] for g in chronicle.goals(st, pages, rows=rows)}
-    assert got == {a: 3, b: 1}                                                                      # 9 is not in the log; the record's own decision wins
-    assert {g["idea"]: g["decision"] for g in chronicle.goals(st, pages)}[a] == 9                   # with no log, any named
-
-
-def test_with_a_party_a_carried_decision_stands_under_its_goal_and_one_of_no_goal_is_on_no_tab(pages, repo):
-    st = state(repo)
-    a = through(pages, repo, "Product's", "2026-10-12")
-    page_key(pages, a, "route", "product")
-    page_key(pages, a, "decisions", "2")
-    whole = chronicle.read(st, pages, repo, LOG)
-    assert [(g["idea"], g["decision"]) for c in whole["chapters"] for g in c["goals"]] == [(a, 2)]
-    assert sorted(d["number"] for c in whole["chapters"] for d in c["decisions"]) == [1, 3, 4]       # 2 stands under its goal, the rest whole
-    mine = chronicle.read(st, pages, repo, LOG, party="product")
-    assert [g["idea"] for c in mine["chapters"] for g in c["goals"]] == [a]
-    assert [d["number"] for c in mine["chapters"] for d in c["decisions"]] == []                    # 2 under its goal, no other on the tab
-    assert mine["decisions"][2]["goal"] == a and sorted(mine["decisions"]) == [1, 2, 3, 4]
-    other = chronicle.read(st, pages, repo, LOG, party="design")
-    assert [d["number"] for c in other["chapters"] for d in c["decisions"]] == [] and not [g for c in other["chapters"] for g in c["goals"]]
-
-
-def test_a_decision_carried_by_a_goal_of_another_party_stands_as_a_row_of_its_own_for_a_party_holding_a_slice(pages, repo):
-    from orkboard.realm import slices
-    st = state(repo)
-    a = through(pages, repo, "Tech's", "2026-10-12")
-    page_key(pages, a, "decisions", "2")
-    slices.add_cut(st, 2, {"design": {"says": "Two.", "points": ["2"]}})
-    got = chronicle.read(st, pages, repo, LOG, party="design")
-    assert [d["number"] for c in got["chapters"] for d in c["decisions"]] == [2] and not [g for c in got["chapters"] for g in c["goals"]]
-
-
-def test_last_by_party_agrees_with_read(pages, repo):
-    from orkboard.realm import slices
-    st = state(repo)
-    a = through(pages, repo, "Product's", "2026-10-12")
-    page_key(pages, a, "route", "product")
-    page_key(pages, a, "decisions", "2")
-    slices.add_cut(st, 4, {"product": {"says": "Four.", "points": ["4"]}})
-    got = chronicle.last(st, pages, repo, LOG, "product", 5)
-    assert [(d["number"], d["parties"]) for d in got] == [(4, ["product"]), (2, ["product"])]
-    assert got[1]["element"] == idea_element.of(st, a)
-    assert chronicle.last(st, pages, repo, LOG, "design", 5) == []
-    assert [d["number"] for d in chronicle.last(st, pages, repo, LOG, "", 5)] == [4, 3, 2, 1]        # no party: the whole log

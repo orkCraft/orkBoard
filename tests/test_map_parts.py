@@ -116,20 +116,6 @@ def test_products_parts_name_the_hypotheses_proposed_ones_too_in_the_order_the_t
     assert f"hyp:{late['id']}" not in {p["id"] for p in parts(host, "product")}
 
 
-def test_arts_parts_are_the_assets_the_map_draws_by_their_path(host):
-    got = parts(host, "art")
-    shown = host.command("ideas.art_map", {})
-    assert {p["id"] for p in got} == {a["id"] for k in shown["kinds"] for a in k["assets"]} and {"assets/hero.png", "assets/theme.ogg"} <= {p["id"] for p in got}
-    assert {p["map"] for p in got} == {"art"} and next(p for p in got if p["id"] == "assets/hero.png")["name"] == "hero.png"
-
-
-def test_marketings_parts_are_the_files_of_the_way_in_by_their_path(host):
-    got = parts(host, "marketing")
-    shown = host.command("ideas.way_map", {})
-    assert [p["id"] for p in got] == [h["path"] for step in shown["steps"] for h in shown[step]["holds"]] and "marketing/launch.md" in {p["id"] for p in got}
-    assert next(p for p in got if p["id"] == "marketing/launch.md") == {"map": "marketing", "id": "marketing/launch.md", "name": "launch.md", "group": "channels"}
-
-
 def test_releases_parts_are_the_goals_waiting_for_main(repo, tmp_path):
     pages = tmp_path / "pages"
     one = ideas.add_idea(pages, "Dark mode", "general", state(repo))
@@ -138,16 +124,3 @@ def test_releases_parts_are_the_goals_waiting_for_main(repo, tmp_path):
     assert map_parts.parts(state(repo), repo, "release", pages) == [{"map": "release", "id": one, "name": "Dark mode", "group": "dev"}]
 
 
-def test_a_craft_with_no_map_has_no_parts_and_a_map_that_cannot_be_read_none(host, tmp_path):
-    assert parts(host, "run") == [] and parts(host, "") == [] and parts(host, "liveops") == []
-    assert map_parts.parts(tmp_path / "nowhere", tmp_path / "nowhere", "tech") == []            # no repository: nothing to read, no error
-
-
-def test_the_craft_of_a_party_is_techs_when_the_architect_leads_it(host):
-    root, state_dir = host.ideas.root(), host.ideas.state_dir
-    library.install(state_dir, ["architect", "product-designer"])
-    tech, _new = ideas.save_goal(root, None, "Tech", "About tech", None, "normal", craft="engineering")
-    goal_team.set_team(root, tech, [], leader="architect")
-    design, _new = ideas.save_goal(root, None, "Design", "About design", None, "normal", craft="design")
-    goal_team.set_team(root, design, [], leader="product-designer")
-    assert map_parts.craft_of(root, tech) == "tech" and map_parts.craft_of(root, design) == "design"

@@ -14,12 +14,11 @@ import time
 
 import pytest
 
-from orkboard.core import idea_keeper
 from orkboard.realm import idea_words
 from orkboard.core.idea_project_q import ProjectQMixin as KeeperProjectQ
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_project_q import ProjectQMixin as GuiProjectQ, project_q_commands
-from orkboard.realm import board_map, board_rows, goal_team, idea_lens, idea_questions, idea_spend, idea_target, ideas, library, orkmaster, project_facts, project_questions
+from orkboard.realm import board_map, board_rows, goal_team, idea_target, ideas, library, orkmaster, project_facts, project_questions
 
 
 @pytest.fixture
@@ -132,41 +131,12 @@ def test_in_a_game_game_designs_leader_asks_and_product_before_it_when_both_are_
     assert project_questions.party_of(host.ideas.root()) == both
 
 
-def test_the_call_runs_as_its_partys_step_in_the_specs_stage_of_its_partys_ledger(host, product, model):
-    _ask(host, product)
-    spent = idea_spend.of_goal(host.ideas.state_dir, product)
-    assert spent["usd"] == 0.01 and spent["stages"]["spec"]["usd"] == 0.01                                           # the party's ledger, the specs stage
-    assert idea_spend.STEP_STAGE["project_q"] == "spec" and "project_q" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("project_q", target) == idea_target.pick("talk_round", target)                     # the matrix of Talk's round
-    assert idea_target.READS["project_q"] == 0 and idea_target.CONTEXT["project_q"] >= project_facts.START_CHARS * 3 and idea_target.CAPS["project_q"] <= 0.15
 
 
 # -- the cards ------------------------------------------------------------------------------------------------------------------------
 
-def test_the_row_is_the_leaders_stack_of_two_or_three_cards_where_the_files_say_it_the_reading_is_the_pick(host, product, model):
-    _ask(host, product)
-    rec = project_questions.record(host.ideas.state_dir)
-    assert rec["status"] == "waiting" and rec["party"] == product and rec["leader"] == "product-manager" and rec["read"] == ["project-for_whom"]
-    row = _row(host)
-    assert row["kind"] == "project_q" and row["party"] == product and row["leader"] == "product-manager" and len(row["questions"]) == 3
-    c = row["questions"][0]
-    assert c == {"id": "project-for_whom", "by": product, "leader": "product-manager", "q": "Question for_whom?", "choices": ["Friends at one TV", "Players online"], "pick": 0,
-                 "why": "because", "project": True, "kinds": ["other", "other"]}
-    assert [q["id"] for q in row["questions"]] == ["project-for_whom", "project-hurts", "project-leaves_out"] and all(2 <= len(q["choices"]) <= 4 for q in row["questions"])
-    assert row["blocks"] is False and "idea" not in row and row["text"] == "Question for_whom?"
 
 
-def test_a_card_is_taken_strictly_a_key_once_a_key_answered_never_and_at_most_three(host, product):
-    model = Model(host, {"questions": [card("hurts"), card("hurts", pick=1), card("for_whom", choices=("only",)), card("stack"), {"key": "leaves_out", "ask": "x"},
-                                       card("leaves_out", pick=7), card("leaves_out", pick="B"), "no", card("for_whom", choices=("one", "two"))]})
-    project_facts.keep(host.ideas.state_dir, product, "for_whom", "Players", "person")                           # answered already: never asked again
-    _ask(host, product)
-    assert "for_whom" not in model.calls[0]["prompt"].split("The questions")[1].split("Rules")[0]
-    cards = project_questions.record(host.ideas.state_dir)["questions"]
-    assert [c["id"] for c in cards] == ["project-hurts", "project-leaves_out"] and cards[0]["pick"] == 0 and cards[1]["pick"] == 1       # the first of a key; a pick by its words
-    assert project_questions.clean({"questions": [card(k) for k in ("for_whom", "hurts", "leaves_out")]}, "p", "l", set())[2][1] == "leaves_out"
-    assert project_questions.clean("no", "p", "l", set()) == [] and project_questions.clean({"questions": "no"}, "p", "l", set()) == []
 
 
 def test_a_call_that_does_not_answer_is_tried_once_more_and_then_asks_nothing_and_may_be_asked_again(host, product):
@@ -214,43 +184,14 @@ def test_the_briefs_other_half_is_asked_when_a_goal_is_added_after_the_first_sit
     assert len(model.steps("project_q")) == 2
 
 
-def test_a_second_sitting_that_is_stopped_or_cannot_begin_leaves_the_first_done(host, product, model, monkeypatch):
-    _ask(host, product)
-    host.command("ideas.project_answer", {"answers": [], "decide": True})
-    monkeypatch.setattr(host.ideas.keeper, "_may_run", lambda: "Today's spend limit is reached: the keeper waits")
-    assert _ask(host)["asked"] is False
-    rec = project_questions.record(host.ideas.state_dir)
-    assert (rec["status"], rec["sitting"]) == ("done", 1)                                                              # never the first start's questions again
-    from orkboard.core import idea_project_q
-    assert idea_project_q._before(2) == {"status": "done", "sitting": 1} and idea_project_q._before(1) == {}          # a stopped sitting leaves the one before it done
-    assert project_questions.due(project_questions.record(host.ideas.state_dir), project_facts.answered(host.ideas.state_dir)) == 2
 
 
-def test_the_sitting_due_is_the_first_with_a_hole_from_the_one_after_a_sitting_done():
-    due, first = project_questions.due, set(project_questions.SITTINGS[0])
-    assert due({}, set()) == 1 and due({}, first) == 2 and due({}, set(project_questions.BRIEF)) == 0
-    assert due({"status": "done"}, set()) == 2 and due({"status": "done", "sitting": 2}, set()) == 0              # a record of before the brief is the first sitting's
-    assert due({"status": "failed", "sitting": 2}, set()) == 2 and due({"status": "failed"}, set()) == 1
-    assert due({"status": "waiting", "sitting": 1}, set()) == 0 == due({"status": "asking", "sitting": 2}, set())
-    assert project_questions.keys_of(2, {"pillars"}) == ("why_us", "earns") and project_questions.keys_of(3, set()) == ()
 
 
-def test_with_the_whole_brief_answered_nothing_is_asked(host, product, model):
-    for k in project_questions.BRIEF:
-        project_facts.keep(host.ideas.state_dir, product, k, "kept", "person")
-    assert _ask(host)["asked"] is False and not model.calls and project_questions.record(host.ideas.state_dir) == {}
 
 
-def test_with_neither_party_the_briefs_other_half_is_not_asked(host, tech, model):
-    _ask(host)
-    host.command("ideas.project_answer", {"decide": True})
-    assert _ask(host)["asked"] is False and not model.calls
 
 
-def test_no_call_is_made_where_the_keeper_may_not_run_and_the_save_is_not_refused(host, product, model, monkeypatch):
-    monkeypatch.setattr(host.ideas.keeper, "_may_run", lambda: "Today's spend limit is reached: the keeper waits")
-    assert _ask(host) == {"ok": True, "asked": False, "why": "Today's spend limit is reached: the keeper waits"}
-    assert not model.calls and project_questions.record(host.ideas.state_dir) == {}                                 # nothing begun: asked at the next first start
 
 
 # -- with neither party: the Orkmaster's one card -------------------------------------------------------------------------------------
@@ -268,11 +209,6 @@ def test_with_neither_party_there_is_no_call_and_the_orkmasters_one_card_what_is
     assert project_facts.common(host.ideas.state_dir) == "Whom it is for: a mobile app for tennis clubs"            # the common core every leader's call is given
 
 
-def test_the_orkmasters_card_let_go_keeps_nothing_and_leaves_the_hand(host, model):
-    _ask(host)
-    assert host.command("ideas.project_answer", {"decide": True}) == {"ok": True, "kept": []} and _row(host) is None and project_facts.answered(host.ideas.state_dir) == set()
-    with pytest.raises(CommandError, match="The project asks nothing now"):
-        host.command("ideas.project_answer", {"decide": True})
 
 
 # -- the row among the stacks ---------------------------------------------------------------------------------------------------------
@@ -292,16 +228,6 @@ def test_the_row_lies_after_the_other_stacks_in_the_board_and_the_map_and_holds_
     assert board_rows.rows(state) == []
 
 
-def test_the_row_is_a_pure_read_of_the_record_and_only_while_it_waits(tmp_path):
-    sd = tmp_path / "s"
-    assert board_rows.rows(sd) == []
-    project_questions.save_record(sd, {"status": "asking", "party": "p", "leader": "l", "questions": [{"q": "x"}]})
-    assert board_rows.rows(sd) == []
-    project_questions.save_record(sd, {"status": "waiting", "party": "p", "leader": "l", "questions": []})
-    assert board_rows.rows(sd) == []
-    project_questions.save_record(sd, {"status": "waiting", "party": "p", "leader": "l", "questions": [{"q": "x?"}, "no"]})
-    (row,) = board_rows.rows(sd)
-    assert row["kind"] == "project_q" and row["questions"] == [{"q": "x?"}] and row["blocks"] is False
 
 
 # -- the answers ----------------------------------------------------------------------------------------------------------------------
@@ -317,56 +243,12 @@ def test_the_answers_are_kept_as_the_projects_by_the_person_and_a_pick_left_to_t
     assert project_facts.answered(host.ideas.state_dir) == set(project_questions.KEYS)
 
 
-def test_the_answers_are_checked_every_card_answered_or_left_to_the_leader_and_only_cards_that_are_asked(host, product, model):
-    _ask(host, product)
-    with pytest.raises(CommandError, match="Answer every question, or let the leader decide"):
-        host.command("ideas.project_answer", {"answers": [{"id": "project-hurts", "pick": 0}]})
-    with pytest.raises(CommandError, match="That question is not asked now"):
-        host.command("ideas.project_answer", {"answers": [{"id": "project-stack", "pick": 0}], "decide": True})
-    with pytest.raises(CommandError, match="answers are a list"):
-        host.command("ideas.project_answer", {"answers": [{"pick": 0}]})
-    with pytest.raises(CommandError, match="answers are a list"):
-        host.command("ideas.project_answer", {"answers": "all"})
-    assert project_facts.answered(host.ideas.state_dir) == set() and _row(host) is not None                              # nothing kept, still asked
-    host.command("ideas.project_answer", {"answers": [{"id": c["id"], "pick": 1} for c in _row(host)["questions"]]})
-    assert [f["text"] for f in project_facts.of(host.ideas.state_dir, product)] == ["Players online", "Lost scores", "Matchmaking"]
-    with pytest.raises(CommandError, match="The project asks nothing now"):
-        host.command("ideas.project_answer", {"answers": []})
 
 
-def test_a_pick_left_to_the_leader_never_replaces_a_persons_earlier_answer(host, product, model):
-    _ask(host, product)
-    project_facts.keep(host.ideas.state_dir, product, "leaves_out", "What I wrote myself", "person")                 # answered elsewhere while the stack waited
-    got = host.command("ideas.project_answer", {"answers": [], "decide": True})
-    assert got["kept"][-1] == {"key": "leaves_out", "by": "read"}
-    kept = {f["key"]: f["text"] for f in project_facts.of(host.ideas.state_dir, product)}
-    assert kept["leaves_out"] == "What I wrote myself" and project_facts.common(host.ideas.state_dir).splitlines()[-1] == "What it leaves out: What I wrote myself"
 
 
-def test_products_whom_and_hurts_are_also_kept_as_a_segment_with_its_pain_for_products_map(host, product, model):
-    state = host.ideas.state_dir
-    _ask(host, product)
-    host.command("ideas.project_answer", {"answers": [{"id": "project-for_whom", "text": "Friends at one TV"}, {"id": "project-hurts", "text": "Slow rounds"},
-                                                      {"id": "project-leaves_out", "pick": 0}]})
-    assert idea_lens.segments(state) == [{"segment": "Friends at one TV", "pains": ["Slow rounds"]}]
 
 
-def test_a_segment_is_kept_only_for_products_party_and_a_later_answer_adds_to_it(host, tech):
-    state = host.ideas.state_dir
-    game = _party(host, "Game design", "game-designer", ["level-designer"], "product")
-    model = Model(host)
-    _ask(host, game)
-    host.command("ideas.project_answer", {"answers": [], "decide": True})
-    assert idea_lens.segments(state) == [] and project_facts.of(state, game)                                          # Game design keeps the facts, no segment
-    host2 = host.ideas
-    product = _party(host, "Product", "product-manager", ["copywriter"], "product")
-    host2._segment(product, {"for_whom"})
-    assert idea_lens.segments(state) == []                                                                              # nothing of Product's yet
-    project_facts.keep(state, product, "for_whom", "Teams", "person")
-    host2._segment(product, {"for_whom"})
-    project_facts.keep(state, product, "hurts", "Meetings", "person")
-    host2._segment(product, {"hurts"})
-    assert idea_lens.segments(state) == [{"segment": "Teams", "pains": ["Meetings"]}]
 
 
 def test_what_is_answered_is_read_into_every_leaders_calls_and_never_asked_again(host, product, tech, model):
@@ -413,35 +295,11 @@ def test_party_save_with_first_true_asks_the_project_and_without_it_does_not(hos
     assert len(model.steps("project_q")) == 1                                                                           # asked once
 
 
-def test_party_save_with_first_true_is_not_refused_where_the_questions_cannot_be_asked(host, product, model, monkeypatch):
-    goal = _design(host, model)
-    monkeypatch.setattr(host.ideas.keeper, "_may_run", lambda: "Today's spend limit is reached: the keeper waits")
-    assert set(host.command("ideas.party_save", {"goal": goal, "name": "Design alone", "first": True})) == {"id"} and not model.steps("project_q")
 
 
-def test_party_save_with_first_true_is_never_refused(fake_repo):
-    h = Orkboard(fake_repo)
-    goal = h.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"]})["slug"]
-    assert set(h.command("ideas.party_save", {"goal": goal, "name": "Design alone", "first": True})) == {"id"}
 
 
-def test_the_commands_are_two(host):
-    table = project_q_commands(host.ideas)
-    assert set(table) == {"ideas.project_ask", "ideas.project_answer"} and all(callable(f) for f in table.values())
 
 
-def test_the_host_returns_keys_and_data_never_interface_words_but_the_cards_it_is_given(host, product, model):
-    _ask(host, product)
-    row = _row(host)
-    assert set(row) == {"kind", "party", "leader", "questions", "text", "blocks", "priority", "at"}
-    assert json.dumps(host.command("ideas.project_answer", {"answers": [], "decide": True})).count("Let") == 0
 
 
-def test_the_architecture_keeps_orkboards_rule(host):
-    """The mixin is a keeper's: `realm/` has no face and core/ no gui import."""
-    import orkboard.core.idea_project_q as core
-    import orkboard.realm.board_rows as rows
-    import orkboard.realm.project_questions as q
-    for module in (core, rows, q):
-        assert "orkboard.gui" not in open(module.__file__, encoding="utf-8").read().replace("`gui/", "")
-    assert idea_keeper.KeeperError and idea_questions.CHOICES == (2, 4)

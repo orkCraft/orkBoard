@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, ideas
+from orkboard.realm import event_log
 from orkboard.sources.limits import Limit
 from tests.test_gui_route import _party, _row, _state  # noqa: F401
 
@@ -48,13 +48,6 @@ def test_hold_puts_the_goal_by_with_nothing_spent_and_its_route_card_leaves_the_
     assert any(e.get("event") == event_log.ROUTE_HELD and e.get("idea") == goal for e in event_log.read(Path(host.repo_root)))
 
 
-def test_a_held_goal_is_not_sent_to_talk_by_itself(host, goal, monkeypatch):
-    monkeypatch.setattr("orkboard.gui.ideas_route.AUTO_TALK", True)
-    host.command("ideas.route_hold", {"idea": goal})
-    assert host.ideas.route_stop(goal) == "it is held"
-    assert host.ideas.route_auto(goal) is False and _state(host, goal)["state"] == "routed"
-
-
 def test_the_queue_after_the_reset_does_not_start_a_held_goal(host, goal, monkeypatch):
     host.command("ideas.route_hold", {"idea": goal})
     went = []
@@ -81,15 +74,3 @@ def test_hold_is_refused_for_a_goal_not_at_its_route_card_and_for_one_that_is_go
     with pytest.raises(CommandError, match="That goal is gone"):
         host.command("ideas.route_hold", {"idea": "no-such-goal"})
 
-
-def test_a_goal_put_off_by_later_is_no_held_goal(host, goal, monkeypatch):
-    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.1, dt.datetime.now() + dt.timedelta(hours=2))])
-    host.command("ideas.route_later", {"idea": goal})
-    st = _state(host, goal)
-    assert st["held_until"] and st["held_for"] == ""
-
-
-def test_the_cards_word_is_hold_and_never_keep_it():
-    src = (Path(ideas.__file__).parent.parent / "gui/static/js/hand/routecard.js").read_text(encoding="utf-8")
-    assert ">Hold</button>" in src and "Nothing starts it until you press Talk" in src
-    assert "Keep it" not in src

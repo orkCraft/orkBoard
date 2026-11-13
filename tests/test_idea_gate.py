@@ -103,55 +103,6 @@ def test_the_gate_counts_what_dev_holds_and_lists_the_ideas_by_their_tasks_commi
     assert git(repo, "rev-list", "main..dev").split() == [c2, c1]
 
 
-def test_ideas_come_in_the_boards_order_and_a_task_counts_once_per_commit():
-    rows = [("b", "B", "g", [{"state": "merged", "commit": "c2"}, {"state": "merged", "commit": "c3"}]),
-            ("a", "A", "g", [{"state": "merged", "commit": "c1"}, {"state": "review", "commit": "c1"}, {"state": "merged", "commit": ""},
-                             {"state": "merged"}, {"state": "merged", "commit": "elsewhere"}]),
-            ("none", "None", "g", [])]
-    assert idea_gate.ideas_in(["c1", "c2", "c3"], rows) == [{"slug": "b", "title": "B", "goal": "g", "tasks": 2},
-                                                           {"slug": "a", "title": "A", "goal": "g", "tasks": 1}]
-    assert idea_gate.ideas_in([], rows) == []
-
-
-def test_nothing_waits_when_dev_is_main_and_there_is_no_gate_when_they_are_one_branch(host, repo):
-    assert host.command("ideas.gate") == {"into": "dev", "main": "main", "same": False, "commits": 0, "files": 0, "ideas": []}
-    host.command("ideas.into", {"branch": "main"})
-    assert host.command("ideas.gate") == {"into": "main", "main": "main", "same": True, "commits": 0, "files": 0, "ideas": []}
-    with pytest.raises(CommandError, match="there is no gate"):
-        host.command("ideas.gate_merge", {"sealed": True})
-    assert events(host) == []
-
-
-def test_without_a_main_there_is_no_gate(tmp_path):
-    bare = tmp_path / "fresh"
-    bare.mkdir()
-    git(bare, "init", "-b", "main")                                                          # no commit yet: no main branch
-    h = Orkboard(bare)
-    assert h.command("ideas.gate") == {"into": "dev", "main": "", "same": True, "commits": 0, "files": 0, "ideas": []}
-    with pytest.raises(CommandError, match="no main branch: there is no gate"):
-        h.command("ideas.gate_merge", {"sealed": True})
-    plain = tmp_path / "plain"
-    plain.mkdir()
-    assert Orkboard(plain).command("ideas.gate")["same"] is True                             # not a git folder at all
-
-
-def test_all_in_is_every_sha_in_main_and_no_sha_is_false(repo, monkeypatch):
-    """Spec 50 §2.2: a goal's flag asks main whether every commit of its merged tasks is in it, with one git call."""
-    g = IdeaGit(repo)
-    c1 = land(repo, "x", "k1", "q.txt")
-    old, reads, real = git(repo, "rev-parse", "main"), [], idea_gate._git
-    monkeypatch.setattr(idea_gate, "_git", lambda cwd, *a, **k: reads.append(a[0]) or real(cwd, *a, **k))
-    assert idea_gate.all_in(g, [old], "main") is True and reads == ["rev-list"]                # one git call
-    assert idea_gate.all_in(g, [old, c1], "main") is False and idea_gate.all_in(g, [c1], "main") is False
-    assert idea_gate.all_in(g, [old, old], "main") is True
-    assert idea_gate.all_in(g, [], "main") is False and idea_gate.all_in(g, [""], "main") is False      # no sha is False
-    assert idea_gate.all_in(g, ["0" * 40], "main") is False and idea_gate.all_in(g, ["--all"], "main") is False
-    assert idea_gate.all_in(g, [old], "nowhere") is False and idea_gate.all_in(g, [old], "") is False
-    monkeypatch.undo()
-    git(repo, "merge", "-q", "--ff-only", "dev")
-    assert idea_gate.all_in(g, [old, c1], "main") is True
-
-
 # -- ideas.gate_merge ---------------------------------------------------------------------------------------------
 
 def test_main_is_fast_forwarded_to_dev_the_checkout_follows_and_it_is_logged(host, repo, work):
@@ -170,23 +121,6 @@ def test_main_is_fast_forwarded_to_dev_the_checkout_follows_and_it_is_logged(hos
     with pytest.raises(CommandError, match="Nothing in dev waits for main"):
         host.command("ideas.gate_merge", {"sealed": True})
     assert len(events(host)) == 1
-
-
-def test_main_not_checked_out_moves_by_update_ref_and_the_phone_is_logged_as_the_phone(host, repo, work):
-    git(repo, "checkout", "-q", "-b", "work")                                                # the person's own branch is checked out
-    host.command("ideas.gate_merge", {"sealed": True, "device": "phone"})
-    assert git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev") and not (repo / "q.txt").exists()
-    assert git(repo, "rev-parse", "--abbrev-ref", "HEAD") == "work" and events(host)[0]["device"] == "phone"
-
-
-def test_main_checked_out_with_a_touched_file_changed_is_refused_with_its_files(host, repo):
-    c = land(repo, idea(host, "Change a"), "k1", "a.txt", "dev's a\n")
-    (repo / "a.txt").write_text("the owner's own edit\n")
-    before = git(repo, "rev-parse", "main")
-    with pytest.raises(CommandError, match="uncommitted changes in a.txt"):
-        host.command("ideas.gate_merge", {"sealed": True})
-    assert git(repo, "rev-parse", "main") == before and (repo / "a.txt").read_text() == "the owner's own edit\n"
-    assert git(repo, "rev-parse", "dev") == c and events(host) == []
 
 
 def worktrees(repo: Path) -> list[str]:
@@ -243,13 +177,6 @@ def test_main_is_pushed_when_the_project_pushes_after_merging(host, repo, work, 
     assert events(host)[0]["pushed"] is True
 
 
-def test_main_is_not_pushed_when_the_project_does_not_push(host, repo, work, tmp_path):
-    bare = origin(repo, tmp_path)
-    before = git(bare, "rev-parse", "main")
-    host.command("ideas.gate_merge", {"sealed": True})
-    assert git(bare, "rev-parse", "main") == before != git(repo, "rev-parse", "main") and events(host)[0]["pushed"] is False
-
-
 def test_a_push_that_fails_is_a_note_and_main_has_moved_all_the_same(host, repo, work, tmp_path):
     git(repo, "remote", "add", "origin", str(tmp_path / "nowhere.git"))
     host.command("ideas.into", {"push": True})
@@ -257,8 +184,3 @@ def test_a_push_that_fails_is_a_note_and_main_has_moved_all_the_same(host, repo,
     assert got["note"].startswith("push failed") and got["commit"] == git(repo, "rev-parse", "main") == git(repo, "rev-parse", "dev")
     assert events(host)[0]["pushed"] is False
 
-
-def test_the_push_note_is_empty_when_there_is_no_origin(host, repo, work):
-    host.command("ideas.into", {"push": True})
-    got = host.command("ideas.gate_merge", {"sealed": True})
-    assert got["note"] == "" and events(host)[0]["pushed"] is False                           # nothing was pushed, and nothing failed

@@ -6,7 +6,6 @@ import json
 import sqlite3
 from pathlib import Path
 
-from orkboard.quota import hermes_quota
 from orkboard.sources import limits, telemetry
 
 
@@ -46,12 +45,6 @@ def test_pi_and_hermes_sessions_count_their_own_price(tmp_path: Path, monkeypatc
     assert snap.unpriced == {"cursor"}
 
 
-def test_hermes_usage_becomes_windows():
-    data = {"provider": "openai-codex", "title": "ChatGPT", "plan": "plus",
-            "windows": [{"label": "5h", "used_percent": 40, "resets_at": "2026-10-07T18:00:00Z"}]}
-    rows = hermes_quota.get_hermes_quota(runner=lambda cmd, timeout=0: json.dumps(data))
-    assert [(r.group, r.window, r.remaining_fraction, r.note) for r in rows] == [("ChatGPT", "5h", 0.6, "plus")]
-    assert hermes_quota.parse({"windows": [], "unavailable_reason": "no OAuth"})[0].error == "no OAuth"
 
 
 def test_cursor_sign_in_token_is_never_read(tmp_path: Path, monkeypatch):

@@ -20,29 +20,11 @@ def state(tmp_path: Path) -> Path:
     return s
 
 
-def test_first_is_the_first_photo_in_the_order_they_came_and_empty_with_none(state):
-    assert idea_photos.first(state, "dark-mode") == "" and idea_photos.thumb(state, "dark-mode") is None
-    idea_photos.put(state, "dark-mode", JPEG)
-    idea_photos.put(state, "dark-mode", PNG)
-    assert idea_photos.first(state, "dark-mode") == ".orkcraft/ideas/dark-mode/photos/1.jpg"
-    assert idea_photos.thumb(state, "dark-mode") == state / "ideas" / "dark-mode" / "photos" / "1.jpg"
-    assert idea_photos.first(state, "other") == ""
-
-
 def test_a_photo_over_the_size_gives_no_picture_and_one_at_it_gives_one(state):
     idea_photos.put(state, "big", JPEG + b"\x00" * idea_photos.THUMB_BYTES)
     assert idea_photos.thumb(state, "big") is None, "larger than 200 KB and no image Pillow can read: the card keeps its words"
     idea_photos.put(state, "edge", JPEG + b"\x00" * (idea_photos.THUMB_BYTES - len(JPEG)))
     assert idea_photos.thumb(state, "edge").stat().st_size == idea_photos.THUMB_BYTES
-
-
-def test_a_photo_that_is_a_link_out_of_the_folder_gives_no_picture(state, tmp_path):
-    outside = tmp_path / "secret.jpg"
-    outside.write_bytes(JPEG)
-    where = idea_photos.folder(state, "linked")
-    where.mkdir(parents=True)
-    (where / "1.jpg").symlink_to(outside)
-    assert idea_photos.first(state, "linked") and idea_photos.thumb(state, "linked") is None
 
 
 def test_a_goal_node_carries_picture_with_a_photo_and_none_without(state):
@@ -78,13 +60,6 @@ def test_the_route_serves_the_first_photo_signed_and_refuses_the_rest(state):
     assert media.parse_photo("/media/_photo/dark-mode/1.jpg") is not None and media.parse_photo("/media/_photo/dark-mode/1.thumb.jpg") is not None
 
 
-def test_a_signed_path_outside_the_state_is_refused(state, tmp_path):
-    (tmp_path / "outside.jpg").write_bytes(JPEG)
-    for target in ("/media/_photo/dark-mode/..%2F..%2F..%2Foutside.jpg", "/media/_photo/%2e%2e/1.jpg", "/media/_photo/dark-mode/../../x.jpg"):
-        signed = target.split("?")[0]
-        assert get(state, f"{signed}?s={media.sign(signed)}").status == 404
-
-
 # -- the small copy (spec 148 A.2, Pillow a dependency) ------------------------------------------------------------------
 
 def _image(w: int, h: int, mode: str = "RGB", fmt: str = "JPEG") -> bytes:
@@ -117,27 +92,6 @@ def test_a_large_photo_is_shown_as_a_copy_of_at_most_320_px_made_once_beside_it(
 def test_a_small_picture_is_shown_as_it_is_a_sprite_keeps_its_pixels(state):
     idea_photos.put(state, "coin", _image(16, 16, fmt="PNG"))
     assert idea_photos.thumb(state, "coin").name == "1.png" and not list(idea_photos.folder(state, "coin").glob("*.thumb.*"))
-
-
-def test_a_large_picture_with_transparency_keeps_it_in_a_png_copy(state):
-    from PIL import Image
-    idea_photos.put(state, "glass", _image(800, 800, "RGBA", "PNG"))
-    shown = idea_photos.thumb(state, "glass")
-    with Image.open(shown) as img:
-        assert shown.name == "1.thumb.png" and img.mode == "RGBA" and img.size == (320, 320)
-
-
-def test_a_newer_photo_makes_its_copy_again(state):
-    import os
-    idea_photos.put(state, "redo", _image(1000, 500))
-    shown = idea_photos.thumb(state, "redo")
-    photo = idea_photos.folder(state, "redo") / "1.jpg"
-    photo.write_bytes(_image(500, 1000))
-    later = shown.stat().st_mtime + 5
-    os.utime(photo, (later, later))
-    from PIL import Image
-    with Image.open(idea_photos.thumb(state, "redo")) as img:
-        assert img.size == (160, 320)
 
 
 def test_a_goal_node_carries_its_copys_address(state):

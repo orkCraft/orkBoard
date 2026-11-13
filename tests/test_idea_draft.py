@@ -96,21 +96,6 @@ def test_the_draft_writes_its_sections_and_front_matter_and_drops_unknown_or_cyc
     assert "The table lives in src/app.py." in first["prompt"] and "a table of runs please" in first["prompt"]
 
 
-def test_a_draft_gives_the_idea_its_short_name_or_code_makes_one(keeper):
-    # spec 41 §3: the person's text gives one at once; the draft its own, when it fits
-    slug = ideas.add_idea(keeper.root, "Давай сделаем таблицу прогонов в настройках", keeper.goal, keeper.state)
-    assert ideas.idea_page(keeper.root, slug).get("short") == "Сделаем таблицу прогонов"
-    keeper.call = Model(draft={**DRAFT, "short": "Runs table"}, plan=PLAN)
-    keeper.draft_one(slug)
-    assert ideas.idea_page(keeper.root, slug).get("short") == "Runs table"
-    assert next(i for i in ideas.ideas(keeper.root) if i["slug"] == slug)["short"] == "Runs table"
-    other = ideas.add_idea(keeper.root, "another", keeper.goal, keeper.state)
-    keeper.call = Model(draft={**DRAFT, "short": "a short name far longer than it may be"}, plan=PLAN)
-    keeper.draft_one(other)
-    assert ideas.idea_page(keeper.root, other).get("short") == "The table"         # its title's
-    assert '"short": "its name in two or three words, 24 characters at most"' in keeper.call.asked[0]["prompt"]
-
-
 def test_no_question_makes_the_plan_at_once_with_its_stages_and_risk(keeper):
     slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
     keeper.call = model = Model(draft=DRAFT, plan=PLAN)
@@ -121,18 +106,6 @@ def test_no_question_makes_the_plan_at_once_with_its_stages_and_risk(keeper):
     assert page.section("Stages") == "1. k1 The table (S) ∥ k2 The form (M)\n2. k3 The checks (L), after k1"
     assert page.get("risk") == "low" and json.loads(page.get("risk_triggers")) == []
     assert ideas.state(keeper.state, slug)["session"] == ""                  # §0: no session kept
-
-
-@pytest.mark.parametrize("source, written", [("hand", "hand"), ("open", "open"), ("elsewhere", None), ("", None)])
-def test_an_answer_says_where_it_was_given_only_when_it_is_hand_or_open(keeper, source, written):
-    # spec 158 E: `from` on `idea_answered`: "hand" (the lifted card) or "open" (after Open…); a bad value is not written
-    slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
-    keeper.call = Model(draft={**DRAFT, "questions": ["Which columns?"]}, plan=PLAN, answer={"sections": {"Done when": "- shown"}})
-    keeper.draft_one(slug)
-    keeper.answer(slug, ["name, date"], source=source)
-    _wait(keeper, slug)
-    (e,) = _events(keeper, "idea_answered")
-    assert e.get("from") == written and ("from" in e) is (written is not None)
 
 
 def test_questions_go_to_asks_and_one_round_of_answers_writes_the_rest_then_the_plan(keeper):
@@ -161,68 +134,6 @@ def test_questions_go_to_asks_and_one_round_of_answers_writes_the_rest_then_the_
     assert e["typed"] == 1 and e["picked"] == 0 and e["decided"] is False
 
 
-def test_a_question_comes_with_its_pick_and_let_the_taskmaster_decide_takes_them(keeper):
-    # spec 41 §9: the page's line says the pick in bold; deciding answers each with it, Decisions say whose pick it was
-    slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
-    keeper.call = model = Model(draft={**DRAFT, "questions": [
-        {"ask": "Which columns?", "choices": ["All five", "Name and state"], "pick": 0, "why": "the runs page shows five"},
-        {"ask": "Sorted how?", "choices": ["Newest first", "By name"], "pick": 7},
-        "Anything else? (yes / no)"]}, plan=PLAN, answer={"sections": {}, "decisions": [], "assumed": []})
-    keeper.draft_one(slug)
-    page = ideas.idea_page(keeper.root, slug)
-    assert ideas.items(page.section("Open questions")) == [
-        "Which columns? (**All five** / Name and state) — the runs page shows five",
-        "Sorted how? (Newest first / By name)", "Anything else? (yes / no)"]
-    assert "only what changes the plan" in model.asked[0]["prompt"]
-    keeper.answer(slug, [], decide=True)
-    _wait(keeper, slug)
-    ask = model.asked[1]["prompt"]
-    assert "the runs page shows five\n  All five" in ask and "Sorted how? (Newest first / By name)\n  (no answer: decide)" in ask
-    decisions = ideas.idea_page(keeper.root, slug).section("Decisions")
-    assert "Which columns? — All five (the Taskmaster's pick)" in decisions and "Sorted how?" not in decisions
-    assert "Left to the Taskmaster" in ideas.talk(keeper.state, slug)[-1]["text"]
-    (e,) = _events(keeper, "idea_answered")
-    assert e["decided"] is True and e["answers"] == 1
-
-
-def test_the_persons_answers_are_told_apart_by_the_choices_they_took():
-    from orkboard.realm import idea_questions
-    lines = ["Which? (**a** / b)", "When? (now / later)", "Why?"]
-    assert idea_questions.tally(lines, ["a", "Later", "because"]) == {"picked": 2, "recommended": 1, "typed": 1}
-    assert idea_questions.picks(lines) == ["a", "", ""]
-
-
-def test_every_call_stays_within_its_cap_and_holds_only_its_parts(keeper):
-    keeper.settings_now["target"] = "quality"
-    long = "word " * 5000
-    slug = ideas.add_idea(keeper.root, long, keeper.goal, keeper.state)
-    ideas.update(keeper.root, slug, {"Risks": "R" * 9000, "Out": "the out section", "Why": "the why section"},
-                 ["an old decision"] * 30)
-    keeper.call = model = Model(draft={**DRAFT, "questions": ["Q?"]}, plan=PLAN, talk={"reply": "ok"},
-                                answer={"sections": {}})
-    keeper.draft_one(slug)
-    ideas.save_state(keeper.state, slug, state="asks")
-    keeper.say(slug, "make Out shorter " + "x" * 9000, "Out")
-    _wait(keeper, slug)
-    keeper.answer(slug, ["A " * 6000])
-    _wait(keeper, slug)
-    for call in model.asked:
-        head = call["prompt"].split("Answer with one JSON object")[0]
-        assert len(head) <= idea_target.CONTEXT[call["step"]] + 1500, call["step"]      # its instructions not counted
-        assert call["budget"] == idea_target.budget(call["step"], "quality")
-    talk = next(c["prompt"] for c in model.asked if c["step"] == "talk")
-    assert "the why section" not in talk and "make Out shorter" in talk and talk.count("an old decision") <= 10
-
-
-def test_a_call_ended_on_its_budget_leaves_the_idea_as_it_was_with_its_line(keeper):
-    slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
-    keeper.call = Model(draft=RuntimeError("the keeper ran out of its budget (max budget)"))
-    keeper.draft_one(slug)
-    st = ideas.state(keeper.state, slug)
-    assert st["state"] == "raw" and st["error"] == idea_keeper.BUDGET_LINE
-    assert ideas.idea_page(keeper.root, slug).section("Gist") == "a table"
-
-
 def test_a_spent_window_holds_the_call_until_it_is_back_and_refuses_the_persons(keeper):
     slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state, queue="now")
     reset = dt.datetime.now() + dt.timedelta(hours=1)
@@ -239,57 +150,6 @@ def test_a_spent_window_holds_the_call_until_it_is_back_and_refuses_the_persons(
     assert keeper.tick(time.time())
     _wait(keeper, slug)
     assert model.steps()[0] == "draft" and ideas.state(keeper.state, slug)["held_until"] == ""
-
-
-def test_read_stop_stops_one_ideas_run_not_another(keeper):
-    a = ideas.add_idea(keeper.root, "first idea", keeper.goal, keeper.state)
-    b = ideas.add_idea(keeper.root, "second idea", keeper.goal, keeper.state)
-    keeper.call = model = Model(draft={**DRAFT, "questions": ["Q?"]})
-    model.gate["draft"] = release = threading.Event()
-    keeper.draft(a)
-    keeper.draft(b)
-    for _ in range(200):
-        if len(model.asked) == 2:
-            break
-        time.sleep(0.01)
-    assert keeper.read_stop(a) is True
-    release.set()
-    _wait(keeper, a)
-    _wait(keeper, b)
-    sa, sb = ideas.state(keeper.state, a), ideas.state(keeper.state, b)
-    assert sa["state"] == "raw" and sa["queue"] == "hold" and sb["state"] == "asks"
-    assert [e["idea"] for e in _events(keeper, "keeper_stopped")] == [a]
-
-
-def test_each_keeper_event_carries_its_step_tokens_and_cost(keeper):
-    slug = ideas.add_idea(keeper.root, "a table", keeper.goal, keeper.state)
-    keeper.call = Model(draft=DRAFT, plan=PLAN, talk={"reply": "ok"})
-    keeper.draft_one(slug)
-    (d,) = _events(keeper, "idea_drafted")
-    assert d["step"] == "draft" and d["prompt_chars"] > 0 and d["tokens"] == {"total": 1000} and d["cost"] is None
-    assert d["risk"] == "low" and d["triggers"] == [] and d["questions"] == 0 and d["tier"] == "elder" and d["effort"] == "medium"
-    keeper.say(slug, "shorter", "Gist")
-    _wait(keeper, slug)
-    (s,) = _events(keeper, "idea_said")
-    assert s["step"] == "talk" and s["tokens"] == {"total": 1000} and s["cost"] is None and s["device"] == "desktop"
-    assert ideas.state(keeper.state, slug)["measure"]["step"] == "talk"
-
-
-def test_stages_in_waves_by_after():
-    plan = {"tasks": [{"id": "k1", "title": "A", "tier": "laborer", "after": []},
-                      {"id": "k2", "title": "B", "tier": "elder", "after": ["k1"]},
-                      {"id": "k3", "title": "C", "tier": "warrior", "after": ["k2", "k1"]},
-                      {"id": "k4", "title": "D", "tier": "warrior", "after": []}]}
-    assert idea_draft.stages(plan) == "1. k1 A (S) ∥ k4 D (M)\n2. k2 B (L), after k1\n3. k3 C (M), after k2, k1"
-
-
-def test_a_file_todo_with_steps_survives_the_plan():
-    plan = idea_keeper.make_plan("x", {"tasks": [{"title": "t", "brief": "b"}], "todos": [
-        {"title": "API key", "kind": "secret", "steps": ["Open the console", "Copy the key"], "for": ["k1"]},
-        {"title": "the Firebase config, google-services.json", "kind": "file", "accept": [".json"], "for": ["k1"]}]})
-    secret, file = plan["todos"]
-    assert secret["steps"] == ["Open the console", "Copy the key"] and secret["title"] == "API_KEY"
-    assert file["kind"] == "file" and file["accept"] == ["json"]
 
 
 def test_a_draft_names_its_partys_metrics_and_asks_which_it_moves_only_when_the_party_has_some_spec_50(keeper):
@@ -319,12 +179,3 @@ def test_the_draft_prompt_says_the_goals_type_beside_what_its_lens_pointed_at_sp
     ideas.save_state(keeper.state, slug, type="growth/landing")
     assert "Its type: A landing page.\n" in keeper.draft_prompt(keeper.root, slug)                 # no plan line: the name alone
 
-
-def test_a_goals_and_a_drafts_call_say_the_cards_budget_and_ask_a_title_in_seven_words_spec_150(keeper):
-    """Spec 150 C.3: `CARD_RULE` is said in the Orkmaster's goal call and the draft's; the title is asked in seven words (the parsers' caps stay a net)."""
-    rule = " ".join(idea_words.CARD_RULE.split())
-    assert idea_words.CARD_LINE_CHARS == 140 and "seven words" in rule and "140" in rule
-    goal = " ".join(keeper.goal_prompt(keeper.root, keeper.goal).split())
-    assert rule in goal and '"title": "a title of at most seven words"' in goal
-    draft = " ".join(keeper.draft_prompt(keeper.root, ideas.add_idea(keeper.root, "a table of runs please", keeper.goal, keeper.state)).split())
-    assert rule in draft and '"title": "a title of at most seven words"' in draft

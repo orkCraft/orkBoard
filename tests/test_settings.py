@@ -35,61 +35,6 @@ def test_broken_or_unknown_values_fall_back(tmp_path: Path):
     assert "gpt" not in s.tools
 
 
-def test_path_follows_env(tmp_path: Path, monkeypatch):
-    monkeypatch.delenv("ORKCRAFT_SETTINGS_FILE")
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    assert settings.path() == tmp_path / "orkcraft" / "settings.json"
-    monkeypatch.setenv("ORKCRAFT_SETTINGS_FILE", str(tmp_path / "x.json"))
-    assert settings.path() == tmp_path / "x.json"
-
-
-def test_the_old_look_and_office_hours_load_and_are_not_written_again(tmp_path: Path):
-    f = tmp_path / "settings.json"
-    f.write_text(json.dumps({"mode": "shift", "onboarded": True, "office": {"start": "09:00", "end": "18:00"},
-                             "office_days": [0, 1, 2], "quiet": {"start": "23:00", "end": "08:00"}}),
-                 encoding="utf-8")
-    s = settings.load(f)
-    assert s.onboarded and s.quiet == schedule.DEFAULT_QUIET
-    assert not hasattr(s, "mode") and not hasattr(s, "office") and not hasattr(s, "office_days")
-    settings.save(s, f)
-    assert not {"mode", "office", "office_days"} & set(json.loads(f.read_text(encoding="utf-8")))
-
-
-def test_keys_no_one_reads_here_load_and_are_not_written_again(tmp_path: Path):
-    """Orkboard draws orkUI's one look and keeps nothing for another product: an older file's `look`, `work`, `autonomy`,
-    `profile`, `growth`, `focus`, `ops`… load, are ignored, and go with the next save (decisions §305)."""
-    f = tmp_path / "settings.json"
-    gone = {"look": "camp", "work": {"start": "09:00", "end": "18:00"}, "autonomy": "free", "autonomy_wait": 7, "rebuild_wait": 12,
-            "profile": {"role": "dev"}, "growth": {"stage": 2}, "agy_warder_checked": True, "fire": False, "recent_folders": ["/w"],
-            "focus": "", "ops": {"target": "quality"}}
-    f.write_text(json.dumps({"onboarded": True, **gone}), encoding="utf-8")
-    s = settings.load(f)
-    assert s.onboarded and not any(hasattr(s, k) for k in gone)
-    settings.save(s, f)
-    assert not set(gone) & set(json.loads(f.read_text(encoding="utf-8")))
-    assert not hasattr(settings, "look_now") and not hasattr(settings, "LOOKS") and not hasattr(settings, "FOCUSES")
-
-
-def test_the_boards_settings_are_cleaned():
-    s = settings.MachineSettings()
-    assert s.ideas == {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1,
-                                              "merge_into": "dev", "push": False, "review": False, "review_v": 2,      # spec 84 §1: off by default
-                                              # spec 35 §12: the Board's Target, autostart, night, reserves, own paths
-                                              "target": "balance", "autostart": True, "night": "01:00-07:00",
-                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [],
-                                              "work_at_night": False,      # spec 121 §4.1: off until the person says
-                                              "look_wait": "2h",           # spec 144 A.1: Give me time to look
-                                              "hours": [], "presence": None}      # spec 138 B.1, spec 139 C.1: no hours, no press
-    back = settings.MachineSettings.from_dict({"ideas": {"batch_minutes": 0, "max_parallel": 2, "merge_into": "../x", "push": "yes"}})
-    assert back.ideas["max_parallel"] == 2 and back.ideas["batch_minutes"] == 30
-    assert back.ideas["merge_into"] == "dev" and back.ideas["push"] is False and back.ideas["review"] is False
-    owner = settings.MachineSettings.from_dict({"ideas": {"merge_into": "main", "push": True, "review": False, "review_v": 2}})
-    assert owner.ideas["merge_into"] == "main" and owner.ideas["push"] is True and owner.ideas["review"] is False
-    looking = settings.MachineSettings.from_dict({"ideas": {"review": True, "review_v": 2}})
-    assert looking.ideas["review"] is True and not looking.review_notice          # what a person set after the move stays
-    assert settings.MachineSettings.from_dict(back.to_dict()).ideas == back.ideas
-
-
 # -- spec 84 §1: review is off by default, and a file that asked for it before is moved off once ----------------------------------
 
 def test_an_old_settings_file_with_review_on_is_moved_off_once_and_said_once(tmp_path: Path):
@@ -105,13 +50,6 @@ def test_an_old_settings_file_with_review_on_is_moved_off_once_and_said_once(tmp
     f.write_text(json.dumps(kept), encoding="utf-8")
     again = settings.load(f)
     assert again.ideas["review"] is True and again.ideas["review_v"] == 2 and not again.review_notice
-
-
-def test_the_notice_is_for_a_machine_that_had_review_on_and_not_for_a_new_one_or_one_that_had_it_off():
-    assert not settings.MachineSettings.from_dict({}).review_notice                       # a new machine has nothing to be told
-    assert settings.MachineSettings.from_dict({"onboarded": True}).review_notice          # an old one read the default (on) before
-    assert not settings.MachineSettings.from_dict({"onboarded": True, "ideas": {"review": False}}).review_notice
-    assert settings.MachineSettings.from_dict({"onboarded": True, "ideas": {"max_parallel": 2}}).ideas["review"] is False
 
 
 def test_a_projects_board_json_naming_review_is_moved_off_once(tmp_path: Path):

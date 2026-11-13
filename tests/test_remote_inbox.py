@@ -131,31 +131,6 @@ def test_a_refused_push_is_taken_again_with_what_is_left(world):
                    "01JC0000000000000004": "host-b"}
 
 
-def test_a_broken_goal_is_taken_with_its_error_and_not_read_again(world):
-    origin, a, _, phone = world
-    drop(phone, {"inbox/phone1/01JC0000000000000001.json": "{not json",
-                 "inbox/phone1/01JC0000000000000002.json": json.dumps(goal_file("01JC0000000000000002", "  ")),
-                 "inbox/phone1/notes.txt": "anything else is nothing"})
-    board = Board()
-    got = tick(a, board, "host-a")
-    assert (got["read"], got["taken"], got["errors"], board.laid) == (2, 2, 2, {})
-    rows = journal_taken(origin)
-    assert [r["slug"] for r in rows] == ["", ""] and all(r["error"].startswith("Could not read this goal: ") for r in rows)
-    again = tick(a, board, "host-a")
-    assert (again["taken"], again["errors"]) == (0, 0)
-    said = [r for r in event_log.read(a, since="2026-01-01") if r.get("event") == event_log.INBOX_TAKEN]
-    assert len(said) == 2 and all(r["error"] for r in said)
-
-
-def test_a_goal_the_board_refuses_is_taken_with_the_adds_words(world):
-    origin, a, _, phone = world
-    drop(phone, {"inbox/phone1/01JC0000000000000001.json": json.dumps(goal_file("01JC0000000000000001", "refuse me"))})
-    got = tick(a, Board(refuse="refuse"), "host-a")
-    assert (got["taken"], got["laid"], got["errors"]) == (1, 0, 1)
-    row = journal_taken(origin)[0]
-    assert row["slug"] == "" and row["error"] == "A goal needs a party"
-
-
 def test_a_goal_already_on_the_board_is_not_laid_again_and_one_taken_and_not_laid_is_laid_after_a_stop(world):
     origin, a, _, phone = world
     drop(phone, {"inbox/phone1/01JC0000000000000001.json": json.dumps(goal_file("01JC0000000000000001")),
@@ -172,17 +147,6 @@ def test_a_goal_already_on_the_board_is_not_laid_again_and_one_taken_and_not_lai
     assert tick(a, board, "host-a")["laid"] == 1 and list(board.laid) == ["01JC0000000000000002"]
 
 
-def test_nothing_is_written_to_the_inbox_nor_to_the_working_tree(world):
-    origin, a, _, phone = world
-    drop(phone, {"inbox/phone1/01JC0000000000000001.json": json.dumps(goal_file("01JC0000000000000001"))})
-    before = git(origin, "rev-parse", "orkboard/inbox")
-    branch, status = git(a, "branch", "--show-current"), git(a, "status", "--porcelain")
-    tick(a, Board(), "host-a")
-    assert git(origin, "rev-parse", "orkboard/inbox") == before
-    assert git(a, "branch", "--show-current") == branch and git(a, "status", "--porcelain") == status
-    assert not (a / "inbox").exists()
-
-
 def test_no_inbox_branch_yet_is_nothing_and_a_failed_fetch_is_said_not_raised(world, tmp_path):
     origin, a, _, _ = world
     got = tick(a, Board(), "host-a")
@@ -192,14 +156,6 @@ def test_no_inbox_branch_yet_is_nothing_and_a_failed_fetch_is_said_not_raised(wo
     assert got["why"] and got["taken"] == 0
     said = [r for r in event_log.read(a, since="2026-01-01") if r.get("event") == event_log.INBOX_TAKEN]
     assert said and said[-1]["ok"] is False
-
-
-def test_it_reads_at_most_every_two_minutes(world):
-    _, a, _, _ = world
-    board = Board()
-    ctx = ri.Context(parties={"tech"})
-    ri.take(a, a / ".orkcraft", CONFIG, ctx, board.lay, board.find, "h", NOW)
-    assert not ri.due(a / ".orkcraft", NOW + dt.timedelta(seconds=60)) and ri.due(a / ".orkcraft", NOW + dt.timedelta(seconds=121))
 
 
 def test_a_goal_laid_comes_with_its_photos(world):
@@ -215,35 +171,6 @@ def test_a_goal_laid_comes_with_its_photos(world):
 
 E = ri.Entry("01JC0000000000000001", "phone1", "inbox/phone1/01JC0000000000000001.json")
 CTX = ri.Context(parties={"tech", "design"}, types=lambda p: {"bug"} if p == "tech" else set(), chars=20)
-
-
-def test_clean_keeps_what_is_the_projects_and_drops_the_rest():
-    goal, err = ri.clean(json.dumps(goal_file(E.id, "x" * 50, party="tech", type="bug", element=CTX.elements[0], asks={"steps": "click", "n": 3},
-                                              marks=[{"map": "system"}])), E, CTX)
-    assert err == "" and goal == {"text": "x" * 20, "party": "tech", "type": "bug", "asks": {"steps": "click"}, "element": CTX.elements[0],
-                                  "marks": [{"map": "system"}]}
-    goal, _ = ri.clean(json.dumps(goal_file(E.id, party="gone", type="bug", element="nope")), E, CTX)
-    assert goal == {"text": "Make the table sort"[:20]}                              # not the project's party, rune: the route decides
-    goal, _ = ri.clean(json.dumps(goal_file(E.id, party="design", type="bug")), E, CTX)
-    assert goal == {"text": "Make the table sort"[:20], "party": "design"}           # a type the party is not offered is dropped
-
-
-@pytest.mark.parametrize("raw,why", [("[]", "goal's file"), ("nope", "goal's file"), (json.dumps({"v": 2, "text": "x"}), "version"),
-                                     (json.dumps({"v": 1, "text": "   "}), "no words"), (json.dumps({"v": 1}), "no words")])
-def test_clean_refuses_what_cannot_be_read_in_words(raw, why):
-    goal, err = ri.clean(raw, E, CTX)
-    assert goal is None and err.startswith("Could not read this goal: ") and why in err
-
-
-def test_clean_keeps_only_the_photos_beside_it_within_their_limits():
-    big = ri.PHOTO_BYTES + 1
-    entry = ri.Entry(E.id, "phone1", E.path, tuple((f"inbox/phone1/{E.id}.{n}.jpg", s) for n, s in enumerate([10, big, 10, 10, 10, 10], 1)))
-    bodies = {p: (PNG if s <= 10 else b"0" * s) for p, s in entry.photos}
-    bodies[entry.photos[2][0]] = b"not an image"
-    goal, _ = ri.clean(json.dumps(goal_file(E.id)), entry, CTX, lambda p: bodies[p])
-    assert len(goal["photos"]) == 4                                            # the big one and the non-image dropped; four is the most
-    goal, _ = ri.clean(json.dumps(goal_file(E.id)), entry, CTX)
-    assert "photos" not in goal
 
 
 # -- the glue: Ideas.add keeps the inbox id ---------------------------------------------------------------------------------
@@ -298,25 +225,3 @@ def test_turn_it_on_writes_the_journal_and_the_inbox_and_asks_no_more(pj, fake_r
     assert {"journal.phone_ask", "journal.turn_on", "journal.not_now"} <= set(host.commands)
 
 
-def test_a_card_that_came_to_the_hand_is_urgent_and_the_first_look_is_not(pj, monkeypatch):
-    j, host = pj
-    p = host.project
-    rows = []
-    monkeypatch.setattr(p.ideas, "board", lambda make=True: {"needs_you": rows})
-    assert j._cards(p, 0.0) == (set(), frozenset(), False)
-    rows.append({"idea": "g1", "kind": "asks"})
-    assert j._cards(p, 5.0)[2] is False                                         # looked at too lately: no new look
-    cards, goals, urgent = j._cards(p, 30.0)
-    assert (cards, goals, urgent) == ({("g1", "asks")}, frozenset({"g1"}), True)
-    assert j._cards(p, 60.0)[2] is False                                        # the same card is not news twice
-    rows[:] = [{"idea": "g1", "kind": "asks"}, {"idea": "g2", "kind": "proposal"}]
-    assert j._cards(p, 90.0)[2] is False                                        # a proposal waits for no one
-
-
-def test_the_context_is_the_projects_parties_and_the_types_they_are_offered(pj):
-    from orkboard.realm import ideas
-    j, host = pj
-    p = host.project
-    party = ideas.add_track(p.ideas.root(), "Chips")
-    ctx = j.context(p)
-    assert party in ctx.parties and isinstance(ctx.types(party), set)

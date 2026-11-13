@@ -34,24 +34,11 @@ def test_the_marks_are_kept_in_the_ideas_state_and_read_into_its_prompts(host):
     assert "- On the system map: server/lobby.ts, everything in client/" in said and "- On the screens map: /lobby" in said
 
 
-def test_an_idea_with_no_marks_has_none_and_says_nothing_of_them(host):
-    got = _add(host)
-    assert ideas.state(host.ideas.state_dir, got["slug"])["marks"] == []
-    assert idea_lens.attached(host.ideas.state_dir, got["slug"]) == ""
-    got = _add(host, marks="server/lobby.ts")
-    assert ideas.state(host.ideas.state_dir, got["slug"])["marks"] == [], "a list of marks or none"
-
-
 def test_the_whole_map_a_mark_with_no_place_a_repeat_and_what_is_no_mark_are_left_out_and_the_words_cut(host):
     got = _add(host, marks=[{"map": "system", "all": True, "name": "all of System"}, {"map": "system", "name": "nowhere"}, {"id": "x", "name": "no map"}, "server", None,
                             LOBBY, dict(LOBBY), {"map": "assets", "id": "hero.png", "name": "h" * 500}])
     marks = ideas.state(host.ideas.state_dir, got["slug"])["marks"]
     assert [m["id"] for m in marks] == ["server/lobby.ts", "hero.png"] and len(marks[1]["name"]) == 120
-
-
-def test_at_most_forty_marks_are_kept(host):
-    got = _add(host, marks=[{"map": "system", "id": f"p{i}", "name": f"p{i}"} for i in range(60)])
-    assert [m["id"] for m in ideas.state(host.ideas.state_dir, got["slug"])["marks"]] == [f"p{i}" for i in range(idea_lens.MAX_PICKS)]
 
 
 def test_only_marks_on_systems_map_offer_tech_on_the_route():

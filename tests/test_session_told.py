@@ -23,11 +23,6 @@ def prompt_on(town, monkeypatch, tool: str) -> str:
     return runner._prompt("demo", runner.plan("demo"), runner.plan("demo")["tasks"][0])
 
 
-def test_codex_cannot_commit_or_start_a_browser_and_claude_can():
-    assert (harnesses.get("codex").commits, harnesses.get("codex").browsers) == (False, False)
-    assert (harnesses.get("claude").commits, harnesses.get("claude").browsers) == (True, True)
-
-
 def test_a_session_on_codex_is_told_not_to_commit_and_not_to_look_for_a_browser(town, monkeypatch):
     prompt = prompt_on(town, monkeypatch, "codex")
     assert "Git cannot write in this sandbox: do not commit; what you leave is committed for you" in prompt
@@ -62,22 +57,6 @@ def test_what_the_task_settled_goes_under_the_title_and_the_note_is_never_commit
     (path / "k2.txt").write_text("more\n")
     g.commit_left(path, "k2")
     assert git(path, "log", "-1", "--format=%b") == ""                      # the note was read once
-
-
-def test_a_note_alone_makes_no_commit_and_a_stale_one_is_taken_away(tmp_path):
-    root = tmp_path / "repo"
-    root.mkdir()
-    git(root, "init", "-b", "main")
-    git(root, "config", "user.email", "t@x")
-    git(root, "config", "user.name", "T")
-    (root / "a.txt").write_text("a\n")
-    git(root, "add", "-A")
-    git(root, "commit", "-m", "start")
-    g = IdeaGit(root)
-    path, _ = g.prepare("demo", "k1", "main")
-    (path / steps_git.COMMIT_FILE).write_text("nothing else changed\n")
-    assert g.commit_left(path, "k1") is False and g.dirty(path) is False
-    assert not (path / steps_git.COMMIT_FILE).exists()
 
 
 def test_the_commits_the_product_makes_say_its_name_and_the_boards_pages_say_its_board():

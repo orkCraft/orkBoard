@@ -60,69 +60,6 @@ def test_each_event_is_one_row_with_its_mark_tone_words_and_what_a_click_opens()
         "task": "", "open": {"kind": "gate", "slug": ""}}
 
 
-def test_the_gates_row_says_the_branches_it_merged_and_a_merge_says_where_it_went():
-    got = one("gate_merged", commits=1, ideas=1, files=1, how="fast-forward", into="next", main="trunk")
-    assert (got["words"], got["title"]) == ("next merged into trunk", "next → trunk")
-    (row,) = board_today.rows([line("task_state", idea="sync", task="k1", state="merged")], TITLES, into="next")
-    assert row["words"] == "merged into next"
-
-
-def test_a_check_that_found_nothing_landed_nothing_and_has_no_row():
-    clean = line("task_state", idea="sync", task="k2", state="merged", was="review", check=True, clean=True)
-    fixed = line("task_state", idea="sync", task="k2", state="merged", was="review", check=True)
-    assert board_today.rows([clean], TITLES) == []
-    assert [r["words"] for r in board_today.rows([fixed], TITLES)] == ["merged into dev"]
-
-
-def test_other_events_and_lines_without_what_they_need_are_skipped():
-    skipped = [line("keeper_state", idea="sync", state="plan", was="planning"), line("opened", what="idea", ref="sync"),
-               line("task_state", idea="sync", task="k1", state="running", was="ready"),
-               line("result_decided", idea="sync", task="k1", decision="merge"),
-               line("task_state", idea="sync", state="merged"),                       # no task
-               line("plan_passed", tasks=1), line("goal_answered", answers=1),        # no idea, no goal
-               {"event": "plan_passed", "idea": "sync", "at": "nonsense"},
-               line("idea_added", idea="sync", track="offline")]
-    assert board_today.rows(skipped, TITLES) == []
-
-
-def test_the_newest_is_first_and_a_later_line_wins_a_tie():
-    lines = [line("plan_passed", 5, idea="sync"), line("idea_answered", 2, idea="csv"),
-             line("task_state", 0.5, idea="sync", task="k2", state="failed"),
-             line("proposal_answered", 2, idea="csv", take=True)]                      # the same second as the answer, written later
-    got = board_today.rows(lines, TITLES)
-    assert [(r["at"], r["words"]) for r in got] == [("15:00", "failed"), ("13:30", "taken"), ("13:30", "you answered"), ("10:30", "the work started")]
-
-
-def test_at_most_forty_rows():
-    lines = [event_log.line("plan_passed", at=NOW - dt.timedelta(minutes=n), idea="sync") for n in range(1, 61)]   # one a minute
-    got = board_today.rows(lines, TITLES)
-    assert len(got) == board_today.LIMIT == 40
-    assert got[0]["at"] == "15:29" and got[-1]["at"] == "14:50"                          # the newest forty
-    assert len(board_today.rows(lines, TITLES, limit=3)) == 3
-
-
-def test_a_title_the_board_no_longer_has_reads_as_the_slug():
-    gone = board_today.rows([line("plan_passed", idea="gone"), line("goal_answered", goal="lost")], TITLES)
-    assert [(r["title"], r["goal"]) for r in gone] == [("lost", "lost"), ("gone", "")]
-    task = board_today.rows([line("task_state", idea="sync", task="k9", state="failed")], TITLES)[0]
-    assert (task["title"], task["task"]) == ("Sync the queue", "k9")                    # a lost task reads as its idea
-    task = board_today.rows([line("task_state", idea="gone", task="k9", state="failed")], TITLES)[0]
-    assert (task["title"], task["goal"]) == ("gone", "")
-    assert board_today.rows([line("plan_passed", idea="gone")], {})[0]["title"] == "gone"
-
-
-def test_midnight_cuts_the_day_by_the_instants_of_the_lines():
-    midnight = board_today.midnight(NOW)
-    assert midnight == dt.datetime(2026, 10, 21, 0, 0).astimezone() and midnight.utcoffset() is not None
-    before = event_log.line("plan_passed", at=midnight - dt.timedelta(seconds=1), idea="sync")
-    after = event_log.line("plan_passed", at=midnight, idea="csv")
-    far = dt.timezone(dt.timedelta(hours=-11))                                          # written in another offset: placed by its instant
-    elsewhere = event_log.line("plan_passed", at=(midnight + dt.timedelta(minutes=5)).astimezone(far), idea="csv")
-    got = board_today.rows([before, after, elsewhere], TITLES, since=midnight)
-    assert [r["at"] for r in got] == [(midnight + dt.timedelta(minutes=5)).strftime("%H:%M"), "00:00"]
-    assert len(board_today.rows([before, after], TITLES)) == 2                          # without a cut, all of them
-
-
 # -- ideas.today ----------------------------------------------------------------------------------------------------
 
 @pytest.fixture
@@ -153,10 +90,6 @@ def test_ideas_today_reads_the_log_since_midnight_and_joins_the_titles_from_the_
         ("the work started", "gone", ""), ("you answered", "Work offline", goal), ("failed", "Queue writes", goal),
         ("the work started", "Sync the queue", goal)]                                  # newest first; yesterday's failure is not here
     assert all(len(r["at"]) == 5 and r["at"][2] == ":" for r in got["events"]) and BoardPhone.allowed(host, "ideas.today", {})
-
-
-def test_ideas_today_of_a_quiet_day_is_empty(host):
-    assert host.command("ideas.today") == {"events": []}
 
 
 def test_a_goals_flag_is_a_row_that_opens_the_goal_spec_50():

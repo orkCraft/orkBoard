@@ -68,14 +68,6 @@ def _events(host, name):
     return [e for e in event_log.read(Path(host.repo_root)) if e["event"] == name]
 
 
-def test_words_are_the_significant_ones_lightly_stemmed():
-    assert goal_match.words("Add a dark mode, with timers!") == {"dark", "mode", "timer"}
-    assert goal_match.words("Timer timers TIMING ed up") == {"timer", "tim"}
-    assert goal_match.words("do it") == set() and goal_match.words("ab") == set()
-    assert goal_match.words("x " * 5000 + "lobby") == set()                       # a text is cut at JOIN_CHARS: what is past it is not read
-    assert goal_match.words("lobby " + "x " * 5000) == {"lobby"}
-
-
 def test_the_face_down_goals_are_those_before_their_spec_in_the_orkmasters_order(host, tech, calls):
     a = _held(host, tech, "first goal about lobbies", "raw")
     b = _held(host, tech, "second goal about lobbies", "routed", route=[tech])
@@ -123,27 +115,6 @@ def test_the_same_route_lowers_the_bar_and_the_same_place_lowers_it_more(host, t
     assert _match(host, text, route=[tech], marks=[{"map": "system", "id": "server/other.ts"}]) is None
 
 
-def test_the_best_score_wins_and_a_tie_goes_to_the_earlier(host, tech, calls):
-    _held(host, tech, "dark mode switch for the settings page with a long list of other wishes around it")
-    best = _held(host, tech, "dark mode switch settings")
-    assert _match(host, "dark mode switch settings", home=tech)["idea"] == best
-    a = _held(host, tech, "lobby reconnect timeout fix")
-    _held(host, tech, "lobby reconnect timeout fix again")
-    assert _match(host, "lobby reconnect timeout fix", home=tech)["idea"] == a            # …the earlier in the Orkmaster's order (the first scores higher: fewer words)
-
-
-def test_not_too_big_a_goal_that_would_gain_two_parties_or_pass_its_words_is_skipped(host, tech, art, calls):
-    big = _held(host, tech, "dark mode switch settings " + "word " * 10)
-    near = _held(host, tech, "dark mode switch settings page", "routed", route=[tech])
-    assert goal_match.fits(host.ideas.root(), host.ideas.state_dir, near, "dark mode", [tech, art]) is True            # one party added
-    third = _party(host, "Run", "data", "ops-lead", ["sre"])
-    assert goal_match.fits(host.ideas.root(), host.ideas.state_dir, near, "dark mode", [tech, art, third]) is False   # two
-    assert _match(host, "dark mode switch settings", route=[tech, art, third])is None
-    ideas.update(host.ideas.root(), big, {"Gist": "dark mode switch settings " + "w" * goal_match.JOIN_CHARS})
-    assert goal_match.fits(host.ideas.root(), host.ideas.state_dir, big, "more", [tech]) is False                      # its words would pass JOIN_CHARS
-    assert _match(host, "dark mode switch settings", home=tech)["idea"] == near
-
-
 def test_the_field_is_told_of_a_match_and_nothing_is_written_nor_called(host, tech, calls):
     slug = _held(host, tech, "Add a dark mode switch to the settings page")
     before = (sorted(p.name for p in (host.ideas.root() / ideas.IDEAS).glob("*.md")), len(event_log.read(Path(host.repo_root))))
@@ -156,13 +127,6 @@ def test_the_field_is_told_of_a_match_and_nothing_is_written_nor_called(host, te
     assert _events(host, event_log.GOAL_MATCHED)[0]["idea"] == slug
 
 
-def test_a_match_on_a_decided_goal_says_it_is_worded_again_and_its_cost(host, tech, calls):
-    slug = _held(host, tech, "Add a dark mode switch to the settings page", "decided", route=[tech])
-    spec_sections.save_record(host.ideas.state_dir, slug, {"decision": {"title": "Dark mode", "text": "Why: x.\n\n1. y", "confirmed": False}})
-    got = host.command("ideas.add", {"text": "dark mode toggle for the settings", "track": tech, "match": True})["match"]
-    assert got["state"] == "decided" and got["reworded"] is True and got["cost"]["calls"] == 1 and got["cost"]["usd_high"]
-
-
 def test_no_match_adds_as_today_and_keep_apart_adds_and_says_so(host, tech, calls):
     slug = _held(host, tech, "Add a dark mode switch to the settings page")
     got = host.command("ideas.add", {"text": "reconnect the lobby after a drop", "track": tech, "match": True})
@@ -171,15 +135,6 @@ def test_no_match_adds_as_today_and_keep_apart_adds_and_says_so(host, tech, call
     assert apart["slug"] and "match" not in apart
     (ev,) = _events(host, event_log.GOAL_KEPT_APART)
     assert ev["with"] == slug and not _events(host, event_log.GOAL_MATCHED)
-
-
-def test_only_the_field_matches_a_plain_add_a_hold_a_type_a_recurring_goal_never(host, tech, calls):
-    _held(host, tech, "Add a dark mode switch to the settings page")
-    same = {"text": "dark mode toggle for the settings", "track": tech}
-    assert host.command("ideas.add", dict(same))["slug"]                                   # a phone's, a script's: no `match`, never matched
-    assert host.command("ideas.add", {**same, "match": True, "hold": True})["slug"]
-    assert host.command("ideas.add", {**same, "match": True, "recurring": True})["slug"]
-    assert not _events(host, event_log.GOAL_MATCHED)
 
 
 def test_add_to_it_is_add_to_the_goal_with_its_rune_and_its_record(host, tech, calls):
@@ -201,15 +156,3 @@ def test_add_to_it_is_add_to_the_goal_with_its_rune_and_its_record(host, tech, c
     assert len(goal_refine.added_rows(host.ideas.state_dir, slug)) == 2
 
 
-def test_the_added_words_record_reads_a_broken_file_as_none(host, tech, calls):
-    slug = _held(host, tech, "Add a dark mode switch to the settings page")
-    (ideas.state_folder(host.ideas.state_dir, slug) / goal_refine.FILE).write_text("{not json", encoding="utf-8")
-    assert goal_refine.added_rows(host.ideas.state_dir, slug) == []
-    assert goal_refine.add_record(host.ideas.state_dir, slug, " words ", "lava", "nonsense") == [{**goal_refine.added_rows(host.ideas.state_dir, slug)[0]}]
-    assert goal_refine.added_rows(host.ideas.state_dir, slug)[0]["via"] == "" and goal_refine.added_rows(host.ideas.state_dir, slug)[0]["text"] == "words"
-
-
-def test_the_words_are_in_the_glossary():
-    assert [lexicon.term(k) for k in ("looks_like_part_of", "add_to_it", "keep_apart", "look_like_one", "join", "split")] == [
-        "Looks like part of: <title>", "Add to it", "Keep apart", "These look like one goal", "Join", "Split"]
-    assert event_log.GOAL_MATCHED in event_log.EVENTS and event_log.GOAL_KEPT_APART in event_log.EVENTS

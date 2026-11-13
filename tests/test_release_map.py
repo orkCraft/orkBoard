@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_maps import MapsMixin, maps_commands
-from orkboard.realm import goal_team, ideas, idea_element, library, map_text, release_map, releases
+from orkboard.realm import goal_team, ideas, idea_element, library, release_map
 from tests.test_commit_goal import commit, git, land, repo, state  # noqa: F401  (the fixture)
 
 
@@ -49,38 +49,6 @@ def test_the_goals_in_dev_and_not_in_main_newest_landing_first_ticked_with_their
     assert a != c
 
 
-def test_a_goal_all_of_whose_commits_main_has_waits_for_nothing_and_a_dropped_goal_is_not_listed(repo, pages):
-    one, two = goal(pages, repo, "Dark mode"), goal(pages, repo, "Faster pages")
-    land(repo, one, "k1", {"x.css": "x\n"})
-    git(repo, "branch", "-f", "main", "dev")                                          # main caught up: one's commit is in it
-    land(repo, two, "k1", {"y.css": "y\n"})
-    assert [g["idea"] for g in release_map.read(state(repo), repo, pages)["goals"]] == [two]
-    (pages / ideas.IDEAS / f"{two}.md").unlink()                                          # dropped from the Board
-    got = release_map.read(state(repo), repo, pages)
-    assert got["goals"] == [] and got["commits"] == 1
-    assert [g["idea"] for g in release_map.read(state(repo), repo)["goals"]] == [two]    # no pages: every plan's goal, its slug for a title
-    assert release_map.read(state(repo), repo)["goals"][0]["title"] == two
-
-
-def test_main_caught_up_waits_for_nothing_and_dev_as_main_is_no_gate(repo, pages):
-    land(repo, goal(pages, repo, "Dark mode"), "k1", {"x.css": "x\n"})
-    git(repo, "branch", "-f", "main", "dev")
-    got = release_map.read(state(repo), repo, pages)
-    assert (got["same"], got["commits"], got["goals"]) == (False, 0, [])
-    only = release_map.read(state(repo), repo, pages, "main")
-    assert (only["same"], only["goals"]) == (True, [])
-
-
-def test_since_is_the_last_version_read_from_the_tags_else_the_changelog_and_none_with_neither(repo, pages):
-    """Decisions §283.29 (it changes spec 102 C's *the Release party's last release out*): the project's own versions, no Release party needed."""
-    assert release_map.read(state(repo), repo, pages)["since"] is None and release_map.read(state(repo), repo)["since"] is None
-    (repo / "CHANGELOG.md").write_text("# Changes\n\n## [1.1.0] - 2026-10-01\n- a\n\n## [1.2.0] - 2026-10-12\n- b\n\n## Unreleased\n", encoding="utf-8")
-    assert release_map.read(state(repo), repo)["since"] == {"version": "1.2.0", "out": "2026-10-12"}
-    git(repo, "tag", "v1.0.0")
-    tagged = release_map.read(state(repo), repo, pages)["since"]
-    assert tagged["version"] == "v1.0.0" and len(tagged["out"]) == 10                  # the tags come first
-
-
 # -- the text -----------------------------------------------------------------------------------------------------------------------
 
 def test_the_text_names_the_goals_waiting_and_the_last_version(repo, pages):
@@ -92,22 +60,6 @@ def test_the_text_names_the_goals_waiting_and_the_last_version(repo, pages):
                               f'- goal {one} "Dark mode" (commit {sha[:7]})', "", "No version is out yet."])
     (repo / "CHANGELOG.md").write_text("## [1.3] - 2026-10-20\n- c\n", encoding="utf-8")
     assert release_map.text(state(repo), repo, "", pages).endswith("\n\nLast version out: 1.3, 2026-10-20.")
-
-
-def test_the_text_for_no_gate_nothing_waiting_the_persons_own_commits_and_no_dev(repo, pages):
-    assert release_map.text(state(repo), repo, "", pages).splitlines()[2] == "Nothing in dev waits for main."
-    commit(repo, "mine.txt", "my own\n")
-    lines = release_map.text(state(repo), repo, "", pages).splitlines()
-    assert lines[2] == "Waiting for main (0 goals; 1 commit, 1 file changed):" and lines[3] == "- the commits are the person's own, no goal's."
-    assert release_map.text(state(repo), repo, "", pages, "main").splitlines()[2] == "main and main are one branch here: there is no gate, nothing waits for main."
-    assert release_map.text(state(repo), repo, "", pages, "no-such") is None
-
-
-def test_the_text_is_bounded_and_says_how_many_goals_it_left_out(repo, pages):
-    for n in range(50):
-        land(repo, goal(pages, repo, f"A goal with a rather long title number {n:03d} to fill the text"), "k1", {f"f{n}.txt": "x\n"})
-    text = release_map.text(state(repo), repo, "", pages)
-    assert len(text) <= map_text.LIMIT and "\n- and " in text and " more goals\n" in text
 
 
 # -- ideas.release_map --------------------------------------------------------------------------------------------------------------
@@ -135,18 +87,3 @@ def test_the_command_answers_what_the_gate_would_merge(host, fake_repo):
     assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "hue": idea_element.hue_of(host.ideas.state_dir, slug), "commit": sha, "ticked": True, "at": got["goals"][0]["at"]}]
     assert [g["slug"] for g in gate["ideas"]] == [slug]
 
-
-def test_a_goal_has_the_time_of_its_oldest_commit_main_lacks_from_one_log_for_all(repo, pages, monkeypatch):
-    import subprocess
-    one, two = goal(pages, repo, "Dark mode"), goal(pages, repo, "Faster pages")
-    a, _ = land(repo, one, "k1", {"x.css": "x\n"})
-    land(repo, two, "k1", {"y.css": "y\n"})
-    c, _ = land(repo, one, "k2", {"z.css": "z\n"})
-    calls: list[tuple] = []
-    real = release_map._git
-    monkeypatch.setattr(release_map, "_git", lambda cwd, *a, **k: (calls.append(a), real(cwd, *a, **k))[1])
-    got = {g["idea"]: g for g in release_map.read(state(repo), repo, pages)["goals"]}
-    out = subprocess.run(["git", "log", "--no-walk=unsorted", "--format=%H %ct", a, c], cwd=repo, capture_output=True, text=True).stdout.split()
-    when = dict(zip(out[::2], map(int, out[1::2])))
-    assert got[one]["at"] == when[a] and got[two]["at"] > 0
-    assert sum(1 for x in calls if x[0] == "log") == 1

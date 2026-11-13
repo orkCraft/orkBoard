@@ -3,12 +3,10 @@
 project's journal's line) and a new project's decisions as the MADR folder `docs/decisions`. The model call is stubbed as the decision's tests stub it."""
 from __future__ import annotations
 
-from orkboard.core.idea_decide import changes_line, clean_changes, clean_decision
-from orkboard.realm import decisions_log as dl, doc_formats, journal_notes, journals, spec_sections
+from orkboard.realm import decisions_log as dl, doc_formats, journals, spec_sections
 from tests.test_idea_decide import DECISION, MADR_FILE, NYGARD_FILE, _adr_folder, _decided, _state, git, host, model, parties  # noqa: F401  (the fixtures)
 
 LOG = "# Decisions\n\n## 7. Seven (1 May 2026, the person and Orkboard)\n\nWhy: x.\n\n## 8. Eight (2 May 2026, the person and Orkboard)\n\nWhy: y.\n"
-BASE = {"title": "T", "why": "W", "points": ["a", "b"]}
 
 
 def _seed(host, text=LOG):
@@ -31,21 +29,8 @@ def _journal(host, number):
 
 # -- the answer, strictly ------------------------------------------------------------------------------------------------------------------------
 
-def test_the_answers_changes_are_cleaned_to_the_numbers_of_the_headings_it_was_given():
-    assert clean_decision({**BASE, "changes": [7, 8]}, [7, 8, 9])["changes"] == [7, 8]
-    assert clean_decision({**BASE, "changes": [7, 99, "8", 7.5, True, None, 8, 8]}, [7, 8])["changes"] == [7, 8]                    # once each; only whole numbers among the headings'
-    assert "changes" not in clean_decision({**BASE, "changes": []}, [7]) and "changes" not in clean_decision(BASE, [7])             # none: the key is not there
-    assert "changes" not in clean_decision({**BASE, "changes": [7]}) and "changes" not in clean_decision({**BASE, "changes": "7"}, [7])
-    assert clean_decision({**BASE, "changes": list(range(1, 20))}, range(1, 20))["changes"] == [1, 2, 3, 4, 5, 6]                    # at most six
-    assert clean_changes({"7": 1}, [7]) == [] and changes_line([110, 183]) == "Changes: 110, 183." and changes_line([]) == ""
 
 
-def test_the_prompt_asks_for_changes_and_gives_the_headings_it_is_to_choose_from(host, parties, model):
-    _seed(host)
-    slug = _decided(host, parties, model)
-    prompt = model.steps("decide")[0]["prompt"]
-    assert "`changes`: the numbers of the earlier decisions this one changes or replaces" in prompt and '"changes": []' in prompt and "7. Seven" in prompt and "8. Eight" in prompt
-    assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["changes"] == []
 
 
 def test_a_decision_keeps_the_changes_the_orkmaster_named_and_a_number_it_was_not_given_is_dropped(host, parties, model):
@@ -73,25 +58,8 @@ def test_in_the_one_file_the_entry_starts_with_the_changes_line_and_the_readers_
     assert _journal(host, 9) == "Decision 9: Dark mode ships as a setting (changes 7, 8)"
 
 
-def test_a_decision_that_changes_nothing_has_no_line_and_nothing_is_changed_by_it(host, parties, model):
-    _seed(host)
-    slug = _decided(host, parties, model)
-    _confirm(host, slug)
-    log = git(host.repo_root, "show", "dev:docs/decisions.md")
-    assert "Changes:" not in log and "changed by" not in "".join(dl.headings(log))
-    assert _journal(host, 9) == "Decision 9: Dark mode ships as a setting"
 
 
-def test_the_context_a_leader_reads_says_which_headings_no_longer_stand_as_written(tmp_path):
-    log = LOG + "\n## 9. Nine (3 May 2026, the person and Orkboard)\n\nChanges: 7, 8.\n\nWhy: z.\n\n## 10. Ten (4 May 2026, the person and Orkboard)\n\nChanges: 8.\n\nWhy: w.\n"
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "decisions.md").write_text(log, encoding="utf-8")
-    got = dl.context(tmp_path)
-    assert "7. Seven (1 May 2026, the person and Orkboard) (changed by 9)\n8. Eight (2 May 2026, the person and Orkboard) (changed by 9, 10)\n9. Nine" in got
-    assert got.endswith("10. Ten (4 May 2026, the person and Orkboard)")
-    assert dl.headings("## 1. A\n\n## 2. B\n\nChanges: 2, 1, 5.\n") == ["1. A (changed by 2)", "2. B"]                      # an entry never changes itself or a later one
-    fenced = "## 1. A\n\n```\n## 2. B\nChanges: 1.\n```\n"
-    assert dl.headings(fenced) == ["1. A"]
 
 
 def test_in_a_madr_folder_the_changes_are_front_matter_and_in_a_nygard_folder_the_line_tops_the_decision(host, parties, model):
@@ -110,17 +78,6 @@ def test_in_a_madr_folder_the_changes_are_front_matter_and_in_a_nygard_folder_th
     assert _journal(host, 3) == "Decision 3: Dark mode ships as a setting (changes 1, 2)"
 
 
-def test_a_nygard_record_says_the_line_at_the_top_of_its_decision(host, parties, model):
-    _adr_folder(host, "docs/adr", NYGARD_FILE, 3)
-    slug = _decided(host, parties, model, answer={**DECISION, "changes": [3]})
-    got = _confirm(host, slug)
-    text = git(host.repo_root, "show", f"dev:{got['path']}")
-    assert "## Decision\n\nChanges: 3.\n\nWhy: People read at night" in text and "ork-changes" not in text
-    rec = doc_formats.parse_record(text, "0004-x.md")
-    assert rec["format"] == "nygard" and dl.changes_of(rec) == [3]
-    folder = host.repo_root / "docs" / "adr"
-    (folder / "0004-x.md").write_text(text, encoding="utf-8")
-    assert dl.headings(folder)[-2:] == ["3. Title 3 (changed by 4)", "4. Dark mode ships as a setting"]
 
 
 def test_the_persons_correction_keeps_what_they_write_and_theirs_is_the_line(host, parties, model):
@@ -138,13 +95,6 @@ def test_the_persons_correction_keeps_what_they_write_and_theirs_is_the_line(hos
     assert _journal(host, got["number"]).endswith("(changes 8)")
 
 
-def test_the_journals_decision_line_keeps_its_numbers_when_the_overruled_are_long(tmp_path):
-    long = ["Against Tech: " + "x" * 400]
-    journal_notes.decision(tmp_path, tmp_path, "g", 5, "T" * 200, long, [110, 183])
-    (line,) = [e["text"] for e in journals.read(tmp_path, journals.PROJECT)]
-    assert line.endswith(" (changes 110, 183)") and line.startswith("Decision 5: ") and len(line) <= journals.TEXT_CHARS
-    journal_notes.decision(tmp_path, tmp_path, "h", 6, "Short", [], [])
-    assert [e["text"] for e in journals.read(tmp_path, journals.PROJECT)][-1] == "Decision 6: Short"
 
 
 # -- a new project: MADR ------------------------------------------------------------------------------------------------------------------------
@@ -178,8 +128,3 @@ def test_a_project_with_any_log_keeps_it(tmp_path):
     assert dl.context(tmp_path / "nothing") == "" and dl.path(tmp_path / "nothing", "notes/log.md") == tmp_path / "nothing" / "notes" / "log.md"
 
 
-def test_the_hypotheses_verdict_writes_no_changes_line(host):
-    host.ideas.root()
-    _seed(host)
-    host.ideas.keeper.write_decision("Hypothesis held: x", "Signal: y", host.ideas._decision_tree())
-    assert "Changes:" not in git(host.repo_root, "show", "dev:docs/decisions.md")

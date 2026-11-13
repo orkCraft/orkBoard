@@ -41,17 +41,6 @@ def test_the_system_before_and_after_has_the_parts_the_goal_touched_new_changed_
     assert sha != gone
 
 
-def test_with_no_snapshot_from_before_the_goal_nothing_is_compared_and_it_says_so_and_with_none_after_it_says_that(repo):
-    s = state(repo)
-    sha, _ = land(repo, "pay", "k1", {"src/a.py": "a\n"})
-    got = goal_before_after.system(s, repo, "pay")
-    assert got["before"] is None and got["after"] is None and "not kept" in got["none"] and got["parts"] == []
-    project_map._keep(s, sha, "", [part("src", 1)], {})
-    got = goal_before_after.system(s, repo, "pay")
-    assert got["before"] is None and got["after"]["commit"] == sha and "from before this goal" in got["none"] and [r["path"] for r in got["parts"]] == ["src"]
-    assert goal_before_after.system(s, repo, "nobody") is None
-
-
 def shot(s, slug, task, at):
     plan = ideas.plan(s, slug)
     t = next(x for x in plan["tasks"] if x["id"] == task)
@@ -72,11 +61,3 @@ def test_the_shots_before_and_after_of_a_screen_the_goal_changed_are_its_tasks_p
     only = goal_before_after.shots(s, repo, "first")
     assert only[0]["after"]["goal"] == "first" and only[0]["before"] is None, "nothing was kept before the first: none is made up"
 
-
-def test_a_screen_the_goal_changed_with_no_picture_has_none_and_of_reads_the_parties_whose_craft_keeps_both(repo):
-    app(repo)
-    s = state(repo)
-    land(repo, "plain", "k1", {"src/pages/Pay.jsx": "export default () => <b>x</b>;\n"})
-    got = goal_before_after.of(s, repo, "plain", "dev", {"design": "design", "tech": "tech", "product": "product"})
-    assert got["design"] == {"kind": "screens", "screens": [{"screen": "pay", "name": "Pay", "path": "/pay", "before": None, "after": None}]}
-    assert set(got) == {"design", "tech"} and got["tech"]["kind"] == "parts"

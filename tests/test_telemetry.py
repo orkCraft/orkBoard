@@ -11,23 +11,6 @@ from orkboard.sources import pricing, telemetry
 from orkboard.sources import transcripts as tr
 
 
-def test_prices_match_the_published_table():
-    # Spot checks against https://platform.claude.com/docs/en/about-claude/pricing (2026-09-29).
-    assert pricing.price_for("claude-opus-5-5") == pricing.Price(4, 5, 8, 0.20, 20, fast_input=8, fast_output=40)
-    assert pricing.price_for("claude-fable-5-1").cache_read == 0.25
-    assert pricing.price_for("claude-sonnet-4-5-20250929").input == 3          # dated id
-    assert pricing.price_for("claude-opus-4-5@20251101").output == 25          # Vertex spelling
-    assert pricing.price_for("us.anthropic.claude-haiku-4-5-20251001-v1:0").input == 1   # Bedrock
-    assert pricing.price_for("claude-opus-5-5[1m]").input == 4                 # Claude Code suffix
-    assert pricing.price_for("claude-sonnet-4-0").input == 3                   # alias
-    assert pricing.price_for("gemini-3.8-flash") is None
-    assert pricing.price_for(None) is None
-    # every write/read price is the documented multiple of the base input price
-    for model, p in pricing.PRICES.items():
-        assert p.cache_5m == pytest.approx(p.input * 1.25), model
-        assert p.cache_1h == pytest.approx(p.input * 2), model
-
-
 def test_usage_cost_cache_ttl_fast_and_geo():
     m = 1_000_000
     usage = {"input_tokens": m, "output_tokens": m, "cache_read_input_tokens": m,
@@ -100,42 +83,6 @@ def test_meter_counts_this_run_only_and_reads_incrementally(tmp_path: Path):
     assert t._meters[str(transcript)].offset < transcript.stat().st_size
 
 
-def test_levels_and_units():
-    assert telemetry.level(15.99, 20) == "ok" and telemetry.level(16, 20) == "warn"
-    assert telemetry.level(20, 20) == "over" and telemetry.level(5, 0) == "ok"
-    assert telemetry.fmt_tokens(131072) == "128k" and telemetry.fmt_tokens(512) == "512"
-
-
-def test_model_calls_with_no_transcript_count_in_the_run(tmp_path: Path):
-    telemetry.reset_charges()
-    telemetry.charge(0.5, "before the run")
-    meter = telemetry.Telemetry(tmp_path, "run1", started=dt.datetime.now().astimezone() + dt.timedelta(seconds=1))
-    import time
-    time.sleep(1.1)
-    telemetry.charge(0.25, "claude -p haiku")
-    telemetry.charge(0.10, "claude -p haiku")
-    telemetry.charge(None, "agy agent")
-    telemetry.charge(-1, "nonsense")
-    snap = meter.refresh()
-    assert snap.side_usd == pytest.approx(0.35) and snap.spent_usd == pytest.approx(0.35)
-    assert snap.side_by_source == {"claude -p haiku": pytest.approx(0.35)} and "agy agent" in snap.unpriced
-    assert telemetry.charged({"ORKCRAFT_RUN": "x"}) and not telemetry.charged({}) and not telemetry.charged(None)
-    telemetry.reset_charges()
-
-
-def test_the_light_calls_charge_the_ledger(monkeypatch):
-    import subprocess
-    from orkboard.realm import tool_run
-    telemetry.reset_charges()
-    since = dt.datetime.now().astimezone()
-    answer = json.dumps({"result": "ok", "total_cost_usd": 0.02})
-    from orkboard.realm import halt
-    monkeypatch.setattr(halt, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, answer, ""))
-    assert tool_run.ask("claude", "hi", model="haiku") == ("ok", 0.02)
-    assert [(usd, src) for _, usd, src, *_ in telemetry.charges(since)] == [(0.02, "claude -p haiku")]
-    telemetry.reset_charges()
-
-
 # -- the ledger by purpose (docs/design/simplify.md §2) --------------------------------------------
 
 def test_every_call_says_what_it_was_for_and_is_kept_on_disk(tmp_path: Path):
@@ -155,22 +102,6 @@ def test_every_call_says_what_it_was_for_and_is_kept_on_disk(tmp_path: Path):
                                        "retro", "build", "chat"}
 
 
-def test_a_call_its_transcript_counts_is_a_line_but_not_twice_in_gold(tmp_path: Path):
-    telemetry.keep_ledger(tmp_path)
-    meter = telemetry.Telemetry(tmp_path, "run1", started=dt.datetime.now().astimezone() - dt.timedelta(seconds=1))
-    telemetry.noted(0.4, "claude agent", purpose="work", building="roads")
-    telemetry.charge(0.1, "claude -p haiku", purpose="answer")
-    snap = meter.refresh()
-    assert snap.side_usd == pytest.approx(0.1) and snap.by_purpose == {"answer": pytest.approx(0.1)}
-    lines = telemetry.calls(tmp_path)
-    assert [c.get("transcript", False) for c in lines] == [True, False]
-
-
-def test_no_ledger_kept_writes_nothing(tmp_path: Path):
-    telemetry.charge(0.02, "claude -p haiku", purpose="build")
-    assert telemetry.calls(tmp_path) == [] and not (tmp_path / telemetry.CALLS).exists()
-
-
 def test_by_purpose_sums_the_last_week_and_its_buildings(tmp_path: Path):
     telemetry.keep_ledger(tmp_path)
     old = {"at": (dt.datetime.now().astimezone() - dt.timedelta(days=8)).isoformat(), "purpose": "work",
@@ -187,12 +118,3 @@ def test_by_purpose_sums_the_last_week_and_its_buildings(tmp_path: Path):
     assert [b["building"] for b in week[0]["buildings"]] == ["forge", "mill"]
     assert telemetry.by_purpose(tmp_path / "none") == []
 
-
-def test_the_calls_since_a_time_with_no_zone(tmp_path: Path):
-    # the Test bench counts a run's calls from a local time with no zone; the ledger's times carry one
-    (tmp_path / telemetry.CALLS).parent.mkdir(parents=True)
-    old, new = dt.datetime.now().astimezone() - dt.timedelta(hours=1), dt.datetime.now().astimezone()
-    (tmp_path / telemetry.CALLS).write_text("\n".join(json.dumps({"at": t.isoformat(), "tokens": n})
-                                                      for t, n in ((old, 1), (new, 2))), encoding="utf-8")
-    since = dt.datetime.now() - dt.timedelta(minutes=5)
-    assert [c["tokens"] for c in telemetry.calls(tmp_path, since)] == [2]

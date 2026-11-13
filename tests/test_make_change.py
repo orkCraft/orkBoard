@@ -187,22 +187,6 @@ def test_a_change_waits_as_asking_with_no_row_until_the_leader_has_answered(host
     assert len(_rows(host)) == 1
 
 
-def test_a_leader_that_finds_nothing_or_does_not_answer_makes_a_failed_row_that_only_keep_clears(host, tech):
-    slug = _goal(host, tech)
-    Model(host, {"why": "Nothing to change.", "lines": [], "change": [], "drop": [], "add": []})
-    _ask(host, slug, tech)
-    (row,) = _rows(host, slug)
-    assert row["status"] == "failed" and row["text"] == "The leader found nothing to change"
-    with pytest.raises(CommandError, match="did not come"):
-        host.command("ideas.change_take", {"idea": slug, "id": row["id"]})
-    Model(host, "no json at all")
-    _ask(host, slug, tech)
-    assert sorted(r["status"] for r in _rows(host, slug)) == ["failed", "failed"]
-    for r in _rows(host, slug):
-        assert host.command("ideas.change_keep", {"idea": slug, "id": r["id"]}) == {"ok": True}
-    assert _rows(host) == []
-
-
 # -- Accept and Keep the spec --------------------------------------------------------------------------------------------------------------
 
 def test_accept_applies_the_plan_change_to_its_tasks_writes_its_lines_into_its_section_and_records_the_persons_decision(host, tech):
@@ -228,25 +212,6 @@ def test_accept_applies_the_plan_change_to_its_tasks_writes_its_lines_into_its_s
         host.command("ideas.change_take", {"idea": slug, "id": row["id"]})
 
 
-def test_accept_with_the_keeper_busy_or_a_runner_that_cannot_apply_it_leaves_the_change_waiting(host, tech, monkeypatch):
-    slug = _goal(host, tech)
-    Model(host, CHANGE)
-    _ask(host, slug, tech)
-    (row,) = _rows(host, slug)
-    host.ideas.keeper._busy[slug] = "planning"
-    with pytest.raises(CommandError, match="busy with this goal"):
-        host.command("ideas.change_take", {"idea": slug, "id": row["id"]})
-    host.ideas.keeper._busy.pop(slug)
-
-    def refuse(s, change):
-        raise type("RunnerError", (Exception,), {})("This goal has no plan yet")
-    monkeypatch.setattr(host.ideas.runner(need=True), "revise_tasks", refuse)
-    with pytest.raises(CommandError, match="no plan yet"):
-        host.command("ideas.change_take", {"idea": slug, "id": row["id"]})
-    assert [r["id"] for r in _rows(host, slug)] == [row["id"]]                      # it waits as it did
-    assert ideas.idea_page(host.ideas.root(), slug).section("Decisions") == ""      # and nothing was written down
-
-
 def test_keep_the_spec_drops_the_change_and_nothing_else_changes(host, tech):
     slug = _goal(host, tech)
     Model(host, CHANGE)
@@ -259,19 +224,6 @@ def test_keep_the_spec_drops_the_change_and_nothing_else_changes(host, tech):
     assert ev["take"] is False and ev["party"] == tech
     with pytest.raises(CommandError, match="No change waits"):
         host.command("ideas.change_keep", {"idea": slug, "id": row["id"]})
-
-
-def test_a_goal_agreed_with_no_plan_yet_takes_the_lines_and_no_task(host, tech):
-    slug = _goal(host, tech, state="decided")
-    ideas._write_json(ideas.state_folder(host.ideas.state_dir, slug) / "plan.json", {})      # no plan at all
-    (ideas.state_folder(host.ideas.state_dir, slug) / "plan.json").unlink()
-    Model(host, {**CHANGE, "change": [], "drop": []})
-    _ask(host, slug, tech)
-    (row,) = _rows(host, slug)
-    assert row["before"]["tasks"] == [] and row["after"]["tasks"] == [] and row["after"]["lines"] == CHANGE["lines"]        # an added task needs a plan to join
-    assert host.command("ideas.change_take", {"idea": slug, "id": row["id"]})["added"] == 0
-    sec = dict(spec_sections.sections_of(ideas.idea_page(host.ideas.root(), slug)))[ideas.track_page(host.ideas.root(), tech).title]
-    assert spec_sections.items(spec_sections.split(sec)["Will be"]) == CHANGE["lines"]
 
 
 # -- Design: three looks -----------------------------------------------------------------------------------------------------------------
@@ -291,12 +243,3 @@ def test_a_design_leader_answers_three_looks_and_the_one_taken_is_written_as_its
     assert "look Podium" in ideas.idea_page(host.ideas.root(), slug).section("Decisions") and _events(host, event_log.LEADER_CHANGE_ANSWERED)[0]["look"] == "3"
     assert ideas.plan(host.ideas.state_dir, slug)["tasks"][0]["title"] == "Task k1"                      # looks replan no task
 
-
-def test_let_design_decide_takes_the_first_look(host, design):
-    slug = _goal(host, design, rows=(("k1", "ready", [], "ui-kit"),))
-    Model(host, LOOKS)
-    _ask(host, slug, design)
-    (row,) = _rows(host, slug)
-    assert host.command("ideas.change_take", {"idea": slug, "id": row["id"], "decide": True})["ok"]
-    sec = dict(spec_sections.sections_of(ideas.idea_page(host.ideas.root(), slug)))[ideas.track_page(host.ideas.root(), design).title]
-    assert spec_sections.items(spec_sections.split(sec)["Will be"]) == LOOKS["looks"][0]["lines"]

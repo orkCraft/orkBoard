@@ -35,13 +35,6 @@ def test_a_measure_is_cleaned_strictly_and_given_an_id_a_span_and_no_value():
             hm.clean(bad)
 
 
-def test_the_date_is_the_start_and_the_span_and_is_reached_on_the_day():
-    assert hm.date_of("2026-11-04", 28) == "2026-12-02" and hm.date_of("2026-02-01", 28) == "2026-03-01" and hm.date_of("2026-11-04T10:00:00", 7) == "2026-11-11"
-    m = {"date": "2026-12-02"}
-    assert not hm.reached(m, "2026-12-01") and hm.reached(m, "2026-12-02") and hm.reached(m, "2026-12-30") and not hm.reached({"date": ""}, "2030-01-01")
-    assert hm.day("2026-13-40") == "" and hm.day("soon") == "" and hm.day("2026-11-04T09:00:00") == "2026-11-04"
-
-
 def test_a_condition_is_met_when_every_value_that_bears_on_it_meets_its_bar_and_none_is_missing():
     def item(*ms):
         return {"measures": hm.lenient(list(ms))}
@@ -57,22 +50,8 @@ def test_a_condition_is_met_when_every_value_that_bears_on_it_meets_its_bar_and_
     assert hm.met(item(eq))["holds"] is True
 
 
-def test_a_value_is_hidden_until_its_date_is_reached_and_kept_all_the_same():
-    m = {"measures": hm.lenient([measure(date="2026-12-02", value={"n": 60, "by": "person"})])}
-    assert hm.shown(m, "2026-12-01")["measures"][0]["value"] is None and hm.shown(m, "2026-12-02")["measures"][0]["value"]["n"] == 60.0 and m["measures"][0]["value"]["n"] == 60.0
-
-
 # -- in the record: the date, the due, the values ---------------------------------------------------------------------------------------------
 
-def test_a_measure_kept_on_a_hypothesis_has_the_day_it_is_read_on_and_a_person_s_hypothesis_starts_today(state):
-    item = hyp.add(state, "Camp brings more", "installs cost less", measures=[measure()])
-    today = hm.day(hyp.ideas._now())
-    assert item["started"] == today and item["measures"][0]["date"] == hm.date_of(today, 28)
-    back = hyp.read(state)["items"][0]
-    assert back["measures"] == item["measures"] and back["started"] == today
-    prop = hyp.add(state, "A leader's", "x", by="leader", party="product", measures=[measure()])
-    assert prop["started"] == "" and prop["measures"][0]["date"] == hm.date_of(today, 28)               # worked out from today until it is kept
-    assert hyp.keep(state, prop["id"])["started"] == today
 
 
 def test_measures_are_set_changed_and_dropped_and_a_day_given_makes_the_span(state):
@@ -125,6 +104,19 @@ def test_not_sure_yet_puts_it_off_to_a_day_after_today_and_moves_the_measures_da
     assert hyp.due(state, places, "2099-01-31") == [] and len(hyp.due(state, places, "2099-02-01")) == 1
 
 
+
+
+def test_a_measure_kept_on_a_hypothesis_has_the_day_it_is_read_on_and_a_person_s_hypothesis_starts_today(state):
+    item = hyp.add(state, "Camp brings more", "installs cost less", measures=[measure()])
+    today = hm.day(hyp.ideas._now())
+    assert item["started"] == today and item["measures"][0]["date"] == hm.date_of(today, 28)
+    back = hyp.read(state)["items"][0]
+    assert back["measures"] == item["measures"] and back["started"] == today
+    prop = hyp.add(state, "A leader's", "x", by="leader", party="product", measures=[measure()])
+    assert prop["started"] == "" and prop["measures"][0]["date"] == hm.date_of(today, 28)               # worked out from today until it is kept
+    assert hyp.keep(state, prop["id"])["started"] == today
+
+
 def test_a_value_is_kept_with_who_gave_it_and_a_number_that_is_none_is_refused(state):
     item = hyp.add(state, "Camp brings more", "installs cost less", measures=[measure()])
     got = hyp.value(state, item["id"], "m1", "64.5", "person", "the ads dashboard")
@@ -135,10 +127,3 @@ def test_a_value_is_kept_with_who_gave_it_and_a_number_that_is_none_is_refused(s
             hyp.value(state, item["id"], "m1", bad)
     with pytest.raises(ValueError, match="That measure is gone"):
         hyp.value(state, item["id"], "m9", 1)
-
-
-def test_an_item_kept_before_reads_with_no_measures_and_a_bad_measure_in_the_file_is_dropped(state):
-    (state / "hypotheses.json").write_text(json.dumps({"items": [{"id": "old", "text": "Old", "signal": "s", "state": "open", "measures": [measure(), {"what": "no bar"}, "no"], "look_on": "soon", "started": 5},
-                                                                 {"id": "older", "text": "Older", "signal": "s", "state": "open"}]}))
-    old, older = hyp.read(state)["items"]
-    assert len(old["measures"]) == 1 and old["look_on"] == "" and old["started"] == "" and older["measures"] == [] and older["look_on"] == ""

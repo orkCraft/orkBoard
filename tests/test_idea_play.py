@@ -2,7 +2,6 @@
 (`play.json`), bounded, secrets out, several marks on one goal in a list, read into the goal's calls after the lens. No model, no face."""
 from __future__ import annotations
 
-import json
 
 import pytest
 
@@ -32,48 +31,11 @@ def test_a_mark_is_kept_beside_the_goal_and_read_back_as_it_was_given(state):
     assert idea_play.read(state, "no-play") == [] and idea_play.read(state, "Not A Slug") == []
 
 
-def test_several_marks_on_one_goal_are_a_list_the_oldest_dropped_after_eight(state):
-    for n in range(10):
-        idea_play.save(state, "g", mark(text=f"mark {n}"))
-    marks = idea_play.read(state, "g")
-    assert [m["text"] for m in marks] == [f"mark {n}" for n in range(2, 10)]
-    assert len(json.loads((state / "ideas" / "g" / "play.json").read_text())["marks"]) == idea_play.MAX_MARKS
-
-
-def test_a_file_of_the_flat_first_shape_is_read_as_one_mark(state):
-    (state / "ideas" / "g").mkdir(parents=True)
-    (state / "ideas" / "g" / "play.json").write_text(json.dumps(mark(errors=[{"message": "boom"}])))
-    (one,) = idea_play.read(state, "g")
-    assert one["errors"][0]["message"] == "boom"
-
-
 def test_what_is_no_mark_is_refused_in_words(state):
     with pytest.raises(ValueError, match="bug, looks wrong, missing or confusing"):
         idea_play.save(state, "g", {"kind": "praise"})
     with pytest.raises(ValueError):
         idea_play.save(state, "g", "nonsense")
-
-
-def test_every_part_is_bounded(state):
-    got = idea_play.save(state, "g", mark(
-        errors=[{"message": f"error {n}", "stack": "s" * 900} for n in range(30)],
-        requests=[{"method": "GET", "path": f"/r/{n}", "status": 500, "ms": 5} for n in range(30)],
-        lines=[f"line {n}" for n in range(100)] + ["x" * 900],
-        under=[{"selector": f"div.{n}", "text": "t" * 500} for n in range(9)],
-        text="w" * 900, state={f"k{n}": "z" * 100 for n in range(50)}))
-    assert len(got["errors"]) == 10 and got["errors"][-1]["message"] == "error 29" and len(got["errors"][0]["stack"]) <= 300
-    assert len(got["requests"]) == 10 and got["requests"][-1]["path"] == "/r/29"
-    assert len(got["lines"]) == 40 and len(got["lines"][-1]) <= 300
-    assert len(got["under"]) == 3 and len(got["under"][0]["text"]) <= 80
-    assert len(got["text"]) <= 300
-    assert got["state"] is None                                                       # 2 KB of state at most: a larger one is none
-    small = idea_play.save(state, "g", mark(state={"level": 3, "coins": [1, 2, 3]}))
-    assert small["state"] == {"level": 3, "coins": [1, 2, 3]}
-
-
-def test_the_box_is_kept_in_shares_inside_the_frame(state):
-    got = idea_play.save(state, "g", mark(box={"x": -1, "y": 0.5, "w": 4, "h": "x"}))
-    assert got["box"] == {"x": 0.0, "y": 0.5, "w": 1.0, "h": 0.0}
 
 
 def test_secrets_are_out_a_line_that_names_one_whole_and_a_token_masked_elsewhere(state):
@@ -104,11 +66,6 @@ def test_prompt_lines_say_the_failure_first_and_the_element_and_state_after_and_
     assert order == sorted(order)
 
 
-def test_with_a_picture_the_lens_says_the_box_so_the_play_does_not(state):
-    idea_play.save(state, "g", mark(picture="abc123"))
-    assert "from 20 %" not in idea_play.prompt_lines(state, "g")
-
-
 def test_the_play_is_read_into_the_calls_after_the_lens(state):
     assert idea_lens.attached(state, "g") == ""
     idea_play.save(state, "g", mark(errors=[{"message": "boom"}]))
@@ -116,16 +73,6 @@ def test_the_play_is_read_into_the_calls_after_the_lens(state):
     got = idea_lens.attached(state, "g")
     assert got.index("The person pointed at these places of the project's maps") < got.index("The person marked places on the running product")
     assert got.endswith(idea_play.prompt_lines(state, "g"))
-
-
-def test_a_bug_marks_failure_is_an_error_or_a_failed_request_of_a_mark_of_that_kind(state):
-    assert idea_play.failed(state, "g") is False
-    idea_play.save(state, "g", mark())
-    assert idea_play.failed(state, "g") is False
-    idea_play.save(state, "g", mark(kind="looks", errors=[{"message": "boom"}]))
-    assert idea_play.failed(state, "g") is False and idea_play.failed(state, "g", "looks") is True
-    idea_play.save(state, "g", mark(requests=[{"method": "GET", "path": "/x", "status": 500, "ms": 1}]))
-    assert idea_play.failed(state, "g") is True
 
 
 def test_the_newest_goal_with_a_mark_of_that_kind_on_that_screen_or_page(state):

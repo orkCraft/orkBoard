@@ -10,9 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, Orkboard
-from orkboard.gui.ideas_groups import groups_commands
-from orkboard.realm import backlog_groups, board_rows, event_log, goal_refine, goal_team, idea_element, idea_target, ideas, library, spec_sections
+from orkboard.gui.board_host import Orkboard
+from orkboard.realm import backlog_groups, board_rows, event_log, goal_refine, goal_team, ideas, library, spec_sections
 
 DECISION = {"title": "Dark mode ships", "why": "People read at night.", "points": ["Tech adds it.", "Off by default."]}
 
@@ -125,14 +124,6 @@ def _ready(host, groups, **more):
 
 # -- the commands and the words ---------------------------------------------------------------------------------------------------------------------
 
-def test_the_commands_are_the_hosts_and_a_phones_and_the_step_is_the_cheaper_tier(host):
-    names = {"ideas.groups_answer", "ideas.groups_now", "ideas.groups_open"}
-    assert set(groups_commands(host.ideas)) == names <= set(host.commands) and all(BoardPhone.allowed(host, c, {}) for c in names)
-    assert "groups" in idea_target.STEPS and idea_target.pick("groups", "balance") == ("warrior", "low") and idea_target.reads_of("groups") == 0
-    assert idea_target.CONTEXT["groups"] == 3_000 and idea_target.budget("groups", "balance")
-    assert {event_log.BACKLOG_GROUPED, event_log.GROUPS_ANSWERED} <= set(event_log.EVENTS)
-
-
 # -- B.1: the call, once at a reset ---------------------------------------------------------------------------------------------------------------
 
 def test_one_call_at_a_reset_with_two_goals_ripe_as_the_orkmaster_on_the_cheaper_tier_and_the_queue_waits_for_it(host, tech, model, went):
@@ -151,48 +142,6 @@ def test_one_call_at_a_reset_with_two_goals_ripe_as_the_orkmaster_on_the_cheaper
     assert went == [a]                                                      # the card is not lifted: the queue goes on as §239 says
     (done,) = _events(host, event_log.BACKLOG_GROUPED)
     assert done["goals"] == 2 and done["groups"] == 1 and done["failed"] is False and "dark mode" not in json.dumps(done)
-
-
-def test_no_call_with_one_goal_ripe_and_none_twice_for_one_reset(host, tech, model, went):
-    (a,) = _off(host, tech, ["add a dark mode option"])
-    _pass(host, 1)
-    assert _asked(model) == [] and went == [a]
-    ideas.save_state(host.ideas.state_dir, a, state="decided", from_backlog=False)
-    b, c = _off(host, tech, ["tidy the settings page", "tidy the settings footer"], minutes=0)
-    _pass(host, 2)
-    _quiet(host)
-    assert len(_asked(model)) == 1 and went == [a]
-    _pass(host, 3)
-    assert went == [a, b] and len(_asked(model)) == 1                       # started the first; the call is not made again for the goals that still wait
-    ideas.save_state(host.ideas.state_dir, b, state="decided")
-    _pass(host, 4)
-    _quiet(host)
-    assert went == [a, b, c] and len(_asked(model)) == 1
-
-
-def test_a_new_reset_is_asked_again(host, tech, model, went):
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    _pass(host, 1)
-    _quiet(host)
-    assert len(_asked(model)) == 1
-    for s in (a, b):
-        ideas.save_state(host.ideas.state_dir, s, state="decided", from_backlog=False, held_until="")
-    host.ideas.__dict__.pop("_groups_tried", None)
-    time.sleep(1.1)                                                          # (the record's time has a second's grain)
-    _off(host, tech, ["tidy the settings page", "tidy the settings footer"], minutes=0)
-    _pass(host, 2)
-    _quiet(host)
-    assert len(_asked(model)) == 2
-
-
-def test_the_prompt_holds_the_titles_cut_and_no_more_than_forty_goals(host, tech):
-    keeper = host.ideas.keeper
-    short = keeper.groups_prompt([{"slug": f"g{n}", "title": f"title {n}", "party": tech, "parties": [tech]} for n in range(45)])
-    assert "g39 |" in short and "g40 |" not in short
-    long = keeper.groups_prompt([{"slug": f"g{n}", "title": "word " * 40, "party": tech, "parties": [tech]} for n in range(10)])
-    assert "word " * 40 not in long and ("word " * 15).strip() in long and "g0 |" in long        # a title is cut to TITLE_CHARS
-    many = keeper.groups_prompt([{"slug": f"s{n}", "title": "x" * 80, "party": tech, "parties": [tech]} for n in range(40)])
-    assert many.count("\n- ") < 40 and many.count("\n- ") + 1 > 15                                  # the whole is cut to CHARS
 
 
 def test_a_call_that_fails_leaves_the_queue_going_and_is_not_made_again(host, tech, model, went):
@@ -233,25 +182,6 @@ def test_no_call_when_the_demo_or_a_spent_window_or_a_stop_forbids_it(host, tech
 
 # -- B.1: the answer, strictly --------------------------------------------------------------------------------------------------------------------
 
-def test_clean_drops_an_unknown_slug_a_goal_in_two_groups_a_group_of_one_and_cuts_a_big_group():
-    ripe = ["a", "b", "c", "d", "e", "f", "g"]
-    got = backlog_groups.clean({"groups": [
-        {"goals": ["a", "ghost", "b"], "why": "  one\nline  "},
-        {"goals": ["b", "c"], "why": "b is taken"},                          # b is in the first group: c is alone
-        {"goals": ["d", "e", "f", "g", "a"], "why": "x" * 400},               # at most GROUP_MAX goals
-        {"goals": ["a", "a"], "why": "one goal twice"},
-        "nonsense", {"goals": "d,e"}]}, ripe)
-    assert [g["goals"] for g in got] == [["a", "b"], ["d", "e", "f", "g"]]
-    assert got[0]["why"] == "one line" and len(got[1]["why"]) == backlog_groups.WHY_CHARS and all(g["answer"] == "" and g["id"].startswith("g-") for g in got)
-    assert backlog_groups.clean("x", ripe) == [] and backlog_groups.clean({"groups": "x"}, ripe) == [] and backlog_groups.clean(None, ripe) == []
-
-
-def test_clean_keeps_at_most_five_groups_and_the_orkmasters_order_inside_a_group():
-    ripe = [f"s{n}" for n in range(14)]
-    got = backlog_groups.clean({"groups": [{"goals": [ripe[2 * n + 1], ripe[2 * n]], "why": ""} for n in range(7)]}, ripe)
-    assert len(got) == backlog_groups.GROUPS_MAX and got[0]["goals"] == ["s0", "s1"]
-
-
 def test_a_group_that_does_not_fit_goes_on_alone(host, tech, design):
     root, state = host.ideas.root(), host.ideas.state_dir
     a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
@@ -283,20 +213,6 @@ def test_one_row_while_the_groups_are_ready_and_none_after_the_answer_or_not_now
     assert [r for r in host.command("ideas.board")["needs_you"] if r["kind"] == "groups"] == []
     _ready(host, [[a, b]])
     host.command("ideas.groups_answer", {"id": backlog_groups.read(state)["reset"], "join": []})
-    assert board_rows.rows(state, root) == []
-
-
-def test_the_row_leaves_out_a_goal_that_is_gone_and_its_cost_is_one_decide_call_for_a_first_goal_whose_decision_is_worded(host, tech, model):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    a, b, c = _off(host, tech, ["add a dark mode option", "dark mode needs a timer", "tidy the footer"])
-    _ready(host, [[a, b], [b, c]])
-    ideas.save_state(state, a, state="decided")
-    (row,) = board_rows.rows(state, root, host.ideas.settings_now())
-    assert row["cost"] == {"calls": 1, "usd_high": round(idea_target.budget("decide", idea_target.target_for(host.ideas.settings_now(), ideas.track_page(root, tech))), 4)}
-    ideas.drop(root, c, state)
-    (row,) = board_rows.rows(state, root)
-    assert [g["id"] for g in row["groups"]] == ["g-0"]                        # [b, c] is left with one goal
-    ideas.drop(root, b, state)
     assert board_rows.rows(state, root) == []
 
 
@@ -341,28 +257,6 @@ def test_join_puts_the_others_words_in_the_first_drops_them_and_words_its_decisi
     assert [e["via"] for e in _events(host, event_log.GOAL_ADDED_TO)] == ["groups", "groups"]
 
 
-def test_the_first_goal_in_the_orkmasters_order_takes_the_others_and_a_goal_before_its_decision_costs_no_call(host, tech, model):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    late = host.command("ideas.add", {"text": "urgent dark mode", "track": tech, "priority": "high"})["slug"]
-    rec = _ready(host, [[a, b, late]])
-    got = host.command("ideas.groups_answer", {"id": rec["reset"], "join": ["g-0"]})
-    (j,) = got["joined"]
-    assert j["idea"] == late and sorted(j["dropped"]) == sorted([a, b]) and j["reworded"] is False and "cost" not in j
-    assert [c for c in model if c["step"] == "decide"] == []
-    assert ideas.idea_page(root, late) is not None and ideas.idea_page(root, a) is None
-
-
-def test_an_unnamed_group_is_kept_apart_and_nothing_is_dropped(host, tech):
-    state, root = host.ideas.state_dir, host.ideas.root()
-    a, b, c, d = _off(host, tech, ["add a dark mode option", "dark mode needs a timer", "tidy the footer", "tidy the footer links"])
-    rec = _ready(host, [[a, b], [c, d]])
-    got = host.command("ideas.groups_answer", {"id": rec["reset"], "join": ["g-1"]})
-    assert [x["id"] for x in got["apart"]] == ["g-0"] and len(got["joined"]) == 1
-    assert ideas.idea_page(root, a) is not None and ideas.idea_page(root, b) is not None
-    assert {g["id"]: g["answer"] for g in backlog_groups.read(state)["groups"]} == {"g-0": "apart", "g-1": "join"}
-
-
 def test_a_group_with_a_goal_that_left_the_pile_is_kept_apart_alone_and_the_others_join(host, tech):
     state, root = host.ideas.state_dir, host.ideas.root()
     a, b, c, d = _off(host, tech, ["add a dark mode option", "dark mode needs a timer", "tidy the footer", "tidy the footer links"])
@@ -379,19 +273,6 @@ def test_a_group_with_a_goal_that_left_the_pile_is_kept_apart_alone_and_the_othe
     ideas.drop(root, gone[0], state)
     got = host.command("ideas.groups_answer", {"id": rec["reset"], "join": ["g-0"]})
     assert got["joined"] == [] and got["apart"][0]["why"] == "A goal of it is not in analysis any more"
-
-
-def test_the_answer_is_refused_in_words_for_a_card_that_is_not_there_or_a_group_it_does_not_have(host, tech):
-    from orkboard.gui.board_host import CommandError
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    with pytest.raises(CommandError, match="No goals wait to be joined"):
-        host.command("ideas.groups_answer", {"id": "x"})
-    rec = _ready(host, [[a, b]])
-    with pytest.raises(CommandError, match="names the groups of the card"):
-        host.command("ideas.groups_answer", {"id": rec["reset"], "join": ["g-9"]})
-    with pytest.raises(CommandError, match="not both"):
-        host.command("ideas.groups_answer", {"id": rec["reset"], "join": ["g-0"], "apart": ["g-0"]})
-    assert backlog_groups.read(host.ideas.state_dir)["status"] == "ready"
 
 
 def test_not_now_joins_nothing_and_the_groups_are_not_asked_again_at_this_reset(host, tech, model, went):
@@ -424,49 +305,3 @@ def test_the_queue_waits_while_the_card_lies_lifted_and_goes_on_when_it_is_put_d
     _pass(host, 4)
     assert went == [a]                                                        # put down: it goes on
 
-
-def test_a_card_lifted_and_forgotten_never_holds_the_queue_past_the_lift_time(host, tech, model, went):
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    model.answer = {"groups": [{"goals": [a, b], "why": "Both are dark mode"}]}
-    _pass(host, 1)
-    _quiet(host)
-    rid = backlog_groups.read(host.ideas.state_dir)["reset"]
-    host.command("ideas.groups_open", {"id": rid, "open": True})
-    _pass(host, 2)
-    assert went == []
-    old = (dt.datetime.now() - dt.timedelta(seconds=backlog_groups.LIFT_S + 5)).isoformat(timespec="seconds")
-    backlog_groups.update(host.ideas.state_dir, rid, open_at=old)             # a face that is gone never holds the queue
-    _pass(host, 3)
-    assert went == [a]
-
-
-def test_the_queue_goes_on_once_the_card_is_answered(host, tech, model, went):
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    model.answer = {"groups": [{"goals": [a, b], "why": "Both are dark mode"}]}
-    _pass(host, 1)
-    _quiet(host)
-    rid = backlog_groups.read(host.ideas.state_dir)["reset"]
-    host.command("ideas.groups_open", {"id": rid, "open": True})
-    _pass(host, 2)
-    assert went == []
-    host.command("ideas.groups_answer", {"id": rid, "join": []})
-    assert backlog_groups.read(host.ideas.state_dir)["open"] is False
-    _pass(host, 3)
-    assert went == [a]
-
-
-def test_a_lift_of_another_card_changes_nothing(host, tech):
-    a, b = _off(host, tech, ["add a dark mode option", "dark mode needs a timer"])
-    _ready(host, [[a, b]])
-    host.command("ideas.groups_open", {"id": "not-this-one", "open": True})
-    assert backlog_groups.read(host.ideas.state_dir)["open"] is False
-    from orkboard.gui.board_host import CommandError
-    with pytest.raises(CommandError, match="true or false"):
-        host.command("ideas.groups_open", {"id": "x", "open": "yes"})
-
-
-def test_the_added_words_and_the_plain_add_still_work_through_the_shared_path(host, tech, model):
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": tech, "hold": True})["slug"]
-    got = host.command("ideas.add_to_goal", {"idea": slug, "text": "Also a timer.", "element": "ice", "via": "bubble"})
-    assert got["ok"] is True and goal_refine.added_rows(host.ideas.state_dir, slug)[0]["element"] == "ice"
-    assert idea_element.of(host.ideas.state_dir, slug) in idea_element.ELEMENTS

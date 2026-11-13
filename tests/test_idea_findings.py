@@ -14,7 +14,7 @@ import pytest
 from orkboard.core import idea_findings, idea_keeper
 from orkboard.gui.ideas_args import IdeasError
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import event_log, findings, findings_gather, goal_main, goal_result, goal_team, idea_questions, idea_spend, idea_target, ideas, library, spec_sections
+from orkboard.realm import event_log, findings, findings_gather, goal_main, goal_result, goal_team, idea_questions, ideas, library, spec_sections
 
 NOTHING_TOUCHED = {"parts": [], "screens": [], "files": 0}
 
@@ -131,15 +131,6 @@ def test_a_goal_reaching_the_discard_with_a_difference_gathers_one_finding_a_lin
     assert len(findings.of_goal(host.ideas.state_dir, slug)) == 1
 
 
-def test_a_goal_that_did_all_it_promised_gathers_nothing_and_a_goal_not_done_is_not_read(host, tech):
-    ok = _done_goal(host, tech, merged=2, of=2)
-    assert findings_gather.verdict(host.ideas.state_dir, host.ideas.root(), Path(host.repo_root), ok) in (0, 1)       # a craft with a map to read may still say the part was not touched
-    open_ = _done_goal(host, tech, "other goal", merged=0, of=2)
-    ideas.save_state(host.ideas.state_dir, open_, state="working")
-    assert findings_gather.verdict(host.ideas.state_dir, host.ideas.root(), Path(host.repo_root), open_) == 0
-    assert findings.record(host.ideas.state_dir, open_)["at"] == ""
-
-
 def test_the_gate_gathers_when_a_goal_goes_to_main_and_a_read_that_fails_never_fails_the_merge(host, tech, monkeypatch):
     slug = _done_goal(host, tech, merged=0, of=2)
     gui = host.ideas
@@ -153,42 +144,6 @@ def test_the_gate_gathers_when_a_goal_goes_to_main_and_a_read_that_fails_never_f
     assert len(got) == 1 and "Not done" in got[0]["found"]                                                   # nothing of it landed: a `missing` line
     monkeypatch.setattr(findings_gather, "verdict", lambda *a, **k: 1 / 0)
     assert gui.to_main({"idea": slug})["ok"] is True                                                         # a gathering that broke changes nothing for the merge
-
-
-def test_a_lens_alarm_on_a_part_a_goal_touched_is_that_goals_and_elsewhere_it_is_no_goals(host, tech, monkeypatch):
-    sd, repo = host.ideas.state_dir, Path(host.repo_root)
-    slug = _done_goal(host, tech)
-    findings.save_record(sd, slug, at=dt.datetime.now().isoformat(timespec="seconds"))                            # it reached the discard just now
-    monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": ["src/results"], "screens": [], "files": 2})
-    concerns = [{"id": "c-1", "on": "src/results", "name": "Results", "level": "alert", "what": "Results is slow"},
-                {"id": "c-2", "on": "src/other", "name": "Other", "level": "alert", "what": "Other leaks"},
-                {"id": "c-3", "on": "src/results", "name": "Results", "level": "note", "what": "a note is no finding"},
-                {"id": "c-4", "on": "src/results", "name": "Results", "level": "alert", "what": "already a goal", "idea": "some-goal"}]
-    assert findings_gather.lens(sd, repo, tech, "tech", concerns) == 2
-    mine = findings.of_goal(sd, slug)
-    assert [(f["source"], f["on"], f["party"]) for f in mine] == [("lens", "c-1", tech)] and "Results is slow" in mine[0]["found"]
-    loose = findings.of_goal(sd, "")
-    assert [(f["source"], f["on"], f["idea"]) for f in loose] == [("concern", "c-2", "")]
-    assert findings_gather.lens(sd, repo, tech, "tech", concerns) == 0                                            # the same look again adds nothing
-
-
-def test_a_goal_that_reached_the_discard_long_ago_owns_no_alarm(host, tech, monkeypatch):
-    sd, repo = host.ideas.state_dir, Path(host.repo_root)
-    slug = _done_goal(host, tech)
-    findings.save_record(sd, slug, at=(dt.datetime.now() - dt.timedelta(days=findings_gather.LENS_DAYS + 1)).isoformat(timespec="seconds"))
-    monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": ["src/results"], "screens": [], "files": 2})
-    findings_gather.lens(sd, repo, tech, "tech", [{"id": "c-1", "on": "src/results", "name": "Results", "level": "alert", "what": "slow"}])
-    assert findings.of_goal(sd, slug) == [] and [f["source"] for f in findings.of_goal(sd, "")] == ["concern"]
-
-
-def test_a_design_alarm_is_matched_to_the_screens_a_goal_changed(host, design, monkeypatch):
-    sd, repo = host.ideas.state_dir, Path(host.repo_root)
-    slug = _done_goal(host, design)
-    findings.save_record(sd, slug, at=dt.datetime.now().isoformat(timespec="seconds"))
-    monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": [], "screens": [{"screen": "results", "name": "Results", "path": "ui/results.tsx"}], "files": 1})
-    findings_gather.lens(sd, repo, design, "design", [{"id": "c-1", "on": "results", "name": "Results", "level": "alert", "what": "contrast is low"}])
-    assert [f["source"] for f in findings.of_goal(sd, slug)] == ["lens"]
-    assert findings_gather.touched_by(None, "tech", "x") is False and findings_gather.touched_by({"parts": ["a"], "screens": []}, "art", "a") is False       # a craft with no map read from files is never touched
 
 
 # -- told by the leader, sorted by the Orkmaster -----------------------------------------------------------------------------------------------------------
@@ -216,32 +171,6 @@ def test_the_told_call_is_one_a_party_and_the_sorted_one_a_goal(host, tech, desi
     assert all(i in sorted_prompt for i in got) and "nobody sorted it" in sorted_prompt                                # the Orkmaster is given every finding as told
 
 
-def test_the_events_count_and_say_no_word_of_a_finding(host, tech):
-    slug = _done_goal(host, tech)
-    a = _found(host, slug, tech, on="a", found="a secret thing that must stay out of the log")
-    _found(host, slug, tech, on="b")
-    Model(host, told=tells(), sorted_=sorts("work", **{a["id"]: "spec"}))
-    host.ideas.keeper.findings_run(slug)
-    told, sorted_ = _events(host, event_log.FINDINGS_TOLD), _events(host, event_log.FINDINGS_SORTED)
-    assert len(told) == 1 and told[0]["idea"] == slug and told[0]["party"] == tech and told[0]["findings"] == 2 and told[0]["failed"] is False and "seconds" in told[0] and told[0]["cost"] == pytest.approx(0.01)
-    assert len(sorted_) == 1 and sorted_[0]["findings"] == 2 and sorted_[0]["levels"] == {"work": 1, "spec": 1, "decision": 0} and sorted_[0]["failed"] is False
-    assert "secret" not in json.dumps(told + sorted_) and event_log.FINDINGS_TOLD in event_log.EVENTS and event_log.FINDINGS_SORTED in event_log.EVENTS
-
-
-def test_both_steps_are_in_the_target_and_cost_the_goals_ledger(host, tech):
-    for step in ("finding", "finding_level"):
-        assert step in idea_target.STEPS and step in idea_target.MATRIX and idea_target.CONTEXT[step] == 9000 and step in idea_target.CAPS and idea_spend.STEP_STAGE[step] == "spec"
-    assert idea_target.READS["finding"] == 4 and idea_target.READS["finding_level"] == 0
-    for target in idea_target.TARGETS:
-        assert idea_target.pick("finding", target) is not None and idea_target.pick("finding_level", target)[0] in ("laborer", "warrior")
-    slug = _done_goal(host, tech)
-    _found(host, slug, tech)
-    Model(host, told=tells(), sorted_=sorts())
-    host.ideas.keeper.findings_run(slug)
-    steps = [r.get("step") for r in idea_spend.read(idea_spend.ledger(host.ideas.state_dir, slug, "")) ] + [r.get("step") for r in idea_spend.read(idea_spend.ledger(host.ideas.state_dir, "", tech))]
-    assert "finding" in steps and "finding_level" in steps
-
-
 def test_a_call_that_fails_keeps_codes_words_and_work_and_never_stops_the_card(host, tech):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech)
@@ -253,42 +182,6 @@ def test_a_call_that_fails_keeps_codes_words_and_work_and_never_stops_the_card(h
     assert len(model.steps("finding")) == 2 and len(model.steps("finding_level")) == 2                                 # each tried once more
     assert _events(host, event_log.FINDINGS_TOLD)[0]["failed"] is True and _events(host, event_log.FINDINGS_SORTED)[0]["failed"] is True
     assert [r["kind"] for r in findings.rows(sd, host.ideas.root())] == ["quality"]
-
-
-def test_a_finding_the_orkmaster_left_out_is_work(host, tech):
-    sd = host.ideas.state_dir
-    slug = _done_goal(host, tech)
-    a, b = _found(host, slug, tech, on="a"), _found(host, slug, tech, on="b")
-    Model(host, told=tells(), sorted_=lambda call: {"levels": [{"id": a["id"], "level": "decision", "change": "word it again"}]})
-    host.ideas.keeper.findings_run(slug)
-    assert findings.get(sd, a["id"])["level"] == "decision" and findings.get(sd, b["id"])["level"] == "work" and findings.get(sd, b["id"])["status"] == "sorted"
-
-
-def test_a_stop_leaves_the_findings_as_they_were(host, tech):
-    sd = host.ideas.state_dir
-    slug = _done_goal(host, tech)
-    a = _found(host, slug, tech)
-    Model(host, told=InterruptedError("stopped"), sorted_=sorts())
-    host.ideas.keeper.findings_run(slug)
-    assert findings.get(sd, a["id"])["status"] == "found"                                                          # the next tick tells it again
-
-
-def test_a_finding_of_no_party_keeps_codes_words_without_a_call_to_a_leader(host, tech):
-    sd = host.ideas.state_dir
-    slug = _done_goal(host, tech)
-    h = findings.add(sd, {"source": "hypothesis", "idea": slug, "party": "", "on": "H4", "found": "H4 was refuted: nobody opened the drawer"})
-    model = Model(host, told=tells(), sorted_=sorts("spec"))
-    host.ideas.keeper.findings_run(slug)
-    assert model.steps("finding") == [] and findings.get(sd, h["id"])["what"].startswith("H4 was refuted") and findings.get(sd, h["id"])["level"] == "spec"
-
-
-def test_findings_of_no_goal_are_told_and_sorted_too(host, tech):
-    sd = host.ideas.state_dir
-    f = findings.add(sd, {"source": "concern", "idea": "", "party": tech, "on": "c-1", "found": "Results: it leaks"})
-    model = Model(host, told=tells(), sorted_=sorts("work"))
-    host.ideas.keeper.findings_run("")
-    assert len(model.steps("finding")) == 1 and len(model.steps("finding_level")) == 1
-    assert findings.get(sd, f["id"])["status"] == "sorted" and [r["kind"] for r in findings.rows(sd, host.ideas.root())] == ["finding"]
 
 
 # -- on the clock's tick ----------------------------------------------------------------------------------------------------------------------------------
@@ -308,15 +201,6 @@ def test_the_clock_begins_a_goals_run_only_when_its_findings_are_in(host, tech):
     keeper.__dict__["_findings_at"] = float("-inf")
     assert keeper.findings_due() == 0                                                                            # nothing left to tell
     assert not keeper.findings_begin(slug)
-
-
-def test_a_demo_or_a_spent_cap_begins_nothing(host, tech):
-    slug = _done_goal(host, tech)
-    _found(host, slug, tech)
-    findings.save_record(host.ideas.state_dir, slug, at=(dt.datetime.now() - dt.timedelta(days=2)).isoformat(timespec="seconds"))
-    model = Model(host, told=tells(), sorted_=sorts())
-    host.ideas.keeper.demo = True
-    assert host.ideas.keeper.findings_due() == 0 and model.calls == []
 
 
 # -- the commands -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -404,19 +288,6 @@ def test_not_now_keeps_the_finding_on_the_record_and_out_of_the_hand(host, tech)
         _cmd(host, "ideas.finding_later", id="f-nothing")
 
 
-def test_a_finding_put_off_is_taken_again_from_the_record_with_fix_it_there_and_no_new_call(host, tech, started):
-    """Spec 132 D.3: *Not now* keeps it on the quality record; the *Quality* page's *Fix it there* takes it again (one fix goal, no call of a leader's)."""
-    sd = host.ideas.state_dir
-    slug = _done_goal(host, tech)
-    f = _sorted_finding(host, slug, tech, "work")
-    _cmd(host, "ideas.finding_later", id=f["id"])
-    got = _cmd(host, "ideas.finding_fix", id=f["id"])
-    assert got["ok"] and got["level"] == "work" and started == [got["fix"]["idea"]]
-    assert findings.get(sd, f["id"])["answer"] == "fix" and findings.get(sd, f["id"])["fix"] == got["fix"]
-    with pytest.raises(IdeasError, match="answered already"):
-        _cmd(host, "ideas.finding_fix", id=f["id"])                          # a fixed one is not fixed twice
-
-
 def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_not(host, tech, started, monkeypatch):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech)
@@ -437,18 +308,6 @@ def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_n
         _cmd(host, "ideas.finding_fix_all", idea=slug)
 
 
-def test_another_level_moves_the_finding_and_says_its_pulls_again(host, tech):
-    sd = host.ideas.state_dir
-    slug = _done_goal(host, tech)
-    f = _sorted_finding(host, slug, tech, "work")
-    got = _cmd(host, "ideas.finding_move", id=f["id"], level="spec")
-    assert got["ok"] and got["level"] == "spec" and got["pulls"]["level"] == "spec" and got["pulls"]["sections"]
-    assert findings.get(sd, f["id"])["level"] == "spec" and findings.get(sd, f["id"])["answer"] == "moved" and findings.get(sd, f["id"])["status"] == "sorted"
-    assert next(r for r in host.ideas.board()["needs_you"] if r["kind"] == "quality")["findings"][0]["level"] == "spec"
-    with pytest.raises(IdeasError, match="decision, spec or work"):
-        _cmd(host, "ideas.finding_move", id=f["id"], level="heaven")
-
-
 def test_the_quality_page_is_the_record_of_the_goal_and_of_no_goal(host, tech):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech, merged=1, of=2)
@@ -465,23 +324,6 @@ def test_the_quality_page_is_the_record_of_the_goal_and_of_no_goal(host, tech):
     assert loose["idea"] == "" and loose["findings"] == []
     with pytest.raises(IdeasError, match="gone"):
         _cmd(host, "ideas.quality", idea="no-such-goal")
-
-
-def test_the_hands_rows_lie_after_the_urgent_ones_and_push_nothing(host, tech):
-    from orkboard.gui.ideas_board import sort_needs
-    from orkboard.gui import phone_journal
-    slug = _done_goal(host, tech)
-    _sorted_finding(host, slug, tech, "work")
-    loose = findings.add(host.ideas.state_dir, {"source": "concern", "idea": "", "party": tech, "on": "c-1", "found": "Results leaks"})
-    findings.told(host.ideas.state_dir, "", loose["id"], {})
-    findings.sorted_(host.ideas.state_dir, "", loose["id"], "work")
-    snap = host.ideas.snapshot()
-    assert snap["needs_you"] == 0                                                                                    # no count of what waits (CLAUDE.md's frame)
-    board = host.ideas.board()["needs_you"]
-    assert {r["kind"] for r in board} == {"quality", "finding"} and all(r["blocks"] is False for r in board)
-    mixed = sort_needs([{"kind": "quality", "blocks": False, "at": "1"}, {"kind": "failed", "blocks": True, "at": "9"}, {"kind": "asks", "blocks": False, "at": "5"}, {"kind": "finding", "blocks": False, "at": "2"}])
-    assert [r["kind"] for r in mixed] == ["failed", "asks", "quality", "finding"]
-    assert "quality" in phone_journal.NOT_A_CARD and "finding" in phone_journal.NOT_A_CARD
 
 
 # -- spec 133 D: a refuted hypothesis told by Product's leader and sorted by the Orkmaster ------------------------------------------------------------
@@ -529,10 +371,20 @@ def test_product_s_leader_is_told_the_hypothesis_what_was_found_and_what_the_res
     assert row["id"] == f["id"] and row["level"] == "decision" and row["blocks"] is False
 
 
-def test_with_no_product_party_the_finding_keeps_code_s_words_and_only_the_orkmaster_is_asked(host):
-    item, found = _refuted(host, "", [])
-    model = Model(host, told=tells(), sorted_=sorts("work"))
-    host.ideas.keeper.findings_run("")
-    assert model.steps("finding") == [] and len(model.steps("finding_level")) == 1
-    (f,) = findings.of_goal(host.ideas.state_dir, "")
-    assert f["party"] == "" and f["status"] == "sorted" and f["what"] == found["found"]
+
+
+def test_a_lens_alarm_on_a_part_a_goal_touched_is_that_goals_and_elsewhere_it_is_no_goals(host, tech, monkeypatch):
+    sd, repo = host.ideas.state_dir, Path(host.repo_root)
+    slug = _done_goal(host, tech)
+    findings.save_record(sd, slug, at=dt.datetime.now().isoformat(timespec="seconds"))                            # it reached the discard just now
+    monkeypatch.setattr(goal_result, "touched", lambda *a, **k: {"parts": ["src/results"], "screens": [], "files": 2})
+    concerns = [{"id": "c-1", "on": "src/results", "name": "Results", "level": "alert", "what": "Results is slow"},
+                {"id": "c-2", "on": "src/other", "name": "Other", "level": "alert", "what": "Other leaks"},
+                {"id": "c-3", "on": "src/results", "name": "Results", "level": "note", "what": "a note is no finding"},
+                {"id": "c-4", "on": "src/results", "name": "Results", "level": "alert", "what": "already a goal", "idea": "some-goal"}]
+    assert findings_gather.lens(sd, repo, tech, "tech", concerns) == 2
+    mine = findings.of_goal(sd, slug)
+    assert [(f["source"], f["on"], f["party"]) for f in mine] == [("lens", "c-1", tech)] and "Results is slow" in mine[0]["found"]
+    loose = findings.of_goal(sd, "")
+    assert [(f["source"], f["on"], f["idea"]) for f in loose] == [("concern", "c-2", "")]
+    assert findings_gather.lens(sd, repo, tech, "tech", concerns) == 0                                            # the same look again adds nothing

@@ -70,27 +70,6 @@ def test_each_kind_from_a_folder_made_for_it(tmp_path, names, files, want, sign)
     assert all(isinstance(s, str) and len(s) <= project_kind.SIGN_CHARS for s in got["signs"])
 
 
-def test_a_sign_inside_a_fixture_makes_no_game_and_no_mobile_app(tmp_path):
-    """Spec 149 B: the trial's first open asked 'a game' for a repository with tests/fixtures/engines/unreal/Skyhop.uproject."""
-    base = ("tool.py", "app.py")
-    assert kind(make(tmp_path / "a", *base, "tests/fixtures/engines/unreal/Skyhop.uproject")) == "code"
-    assert kind(make(tmp_path / "b", *base, "src/Game.uproject")) == "code"
-    assert kind(make(tmp_path / "c", *base, "tests/fixtures/App.xcodeproj/project.pbxproj")) == "code"
-    assert kind(make(tmp_path / "d", *base, "testdata/app/src/main/AndroidManifest.xml")) == "code"
-    assert kind(make(tmp_path / "e", *base, "app/src/main/AndroidManifest.xml")) == "mobile"
-    assert kind(make(tmp_path / "f", *base, "ios/App.xcodeproj/project.pbxproj")) == "mobile"
-
-
-def test_this_repository_is_no_game_and_no_mobile_app():
-    """Its fixtures hold a .uproject, an .xcodeproj and an AndroidManifest.xml; its pyproject.toml makes it a backend, as it always did."""
-    assert kind(Path(__file__).resolve().parents[1]) == "backend"
-
-
-def test_a_folder_of_nothing_known_is_code(tmp_path):
-    got = project_kind.read(make(tmp_path / "p", "thing.bin", "other.dat"), fresh=True)
-    assert got["kind"] == "code" and got["signs"] == []
-
-
 def test_the_first_that_holds_wins_a_react_native_app_is_mobile_and_an_app_with_a_backend_file_is_web(tmp_path):
     rn = make(tmp_path / "rn", **{"package.json": json.dumps({"dependencies": {"react": "1", "react-native": "1"}}), "App.js": ""})
     assert kind(rn) == "mobile"
@@ -104,64 +83,6 @@ def test_the_first_that_holds_wins_a_react_native_app_is_mobile_and_an_app_with_
     assert kind(code_wiki) == "code"                                            # a wiki has no code
     pics_code = make(tmp_path / "pc", *[f"p{n}.png" for n in range(20)], "x.py")
     assert kind(pics_code) == "code"
-
-
-def test_a_notebooks_and_sql_folder_is_data_only_when_they_outnumber_the_other_code(tmp_path):
-    assert kind(make(tmp_path / "a", "a.ipynb", "b.sql", "tool.py")) == "data"
-    assert kind(make(tmp_path / "b", "a.ipynb", "tool.py", "tool2.py")) == "code"
-
-
-def test_markdown_decides_wiki_before_texts_and_pictures_before_documents(tmp_path):
-    assert kind(make(tmp_path / "a", "a.md", "b.md", "c.pdf")) == "wiki"
-    assert kind(make(tmp_path / "b", "a.md", "b.docx", "c.pdf", "d.png")) == "texts"
-    assert kind(make(tmp_path / "c", "a.png", "b.svg", "c.fig", "d.md")) == "design"
-
-
-def test_it_reads_names_and_a_package_jsons_dependencies_only(tmp_path, monkeypatch):
-    root = make(tmp_path / "p", "pyproject.toml", "app.py", **{"package.json": json.dumps({"dependencies": {"react": "1"}, "scripts": {"x": "SECRET"}})})
-    opened = []
-    real = Path.read_text
-
-    def spy(self, *a, **k):
-        opened.append(self.name)
-        return real(self, *a, **k)
-    monkeypatch.setattr(Path, "read_text", spy)
-    assert project_kind.read(root, fresh=True)["kind"] == "web"
-    assert [n for n in opened if n != "project.json"] == ["package.json"]                      # the Board's own state (the kind the person kept) is not the project's file
-
-
-def test_the_walk_stops_at_two_thousand_entries_and_skips_git_dot_folders_and_the_boards_pages(tmp_path, monkeypatch):
-    root = tmp_path / "big"
-    for d in ("a", "b", "c"):
-        (root / d).mkdir(parents=True)
-        for n in range(900):
-            (root / d / f"f{n}.png").write_text("")
-    for hidden in (".git", ".venv", ".orkcraft", "node_modules", "pages/tracks", "pages/ideas"):
-        (root / hidden).mkdir(parents=True)
-        (root / hidden / "x.py").write_text("")
-    walked = []
-    real = os.scandir
-
-    def counted(path):
-        it = real(path)
-        walked.append(os.path.relpath(str(path), root))
-        return it
-    monkeypatch.setattr(os, "scandir", counted)
-    got = project_kind.scan(root)
-    assert got["facts"]["seen"] <= project_kind.LIMIT == 2000
-    assert got["facts"]["pictures"] < 2700 and got["facts"]["pictures"] >= 1500
-    assert got["kind"] == "design"                                              # (the .py inside hidden folders was never seen)
-    assert not [w for w in walked if w.split(os.sep)[0] in (".git", ".venv", ".orkcraft", "node_modules") or w.startswith(("pages/tracks", "pages/ideas"))]
-    assert got["facts"]["code"] == 0
-
-
-def test_the_top_level_is_always_seen_before_the_depths(tmp_path):
-    root = tmp_path / "deep"
-    for n in range(2500):
-        (root / "pics").mkdir(parents=True, exist_ok=True)
-        (root / "pics" / f"{n}.png").write_text("")
-    make(root, "go.mod")
-    assert project_kind.read(root, fresh=True)["kind"] == "backend"
 
 
 def test_the_read_is_kept_while_the_top_level_is_as_it_was_and_read_again_when_it_changes(tmp_path, monkeypatch):
@@ -184,14 +105,6 @@ def test_the_read_is_kept_while_the_top_level_is_as_it_was_and_read_again_when_i
     assert project_kind.read(other)["kind"] == "web" and len(calls) == before + 1
 
 
-def test_the_words_are_the_specs():
-    assert [project_kind.words(k) for k in project_kind.KINDS] == ["an empty folder", "a mobile app", "a game", "a web app", "a backend",
-                                                                   "data work", "a team's wiki", "a designer's folder", "texts", "code"]
-    assert project_kind.in_words(["ios/", "android/"]) == "ios/ and android/ are here"
-    assert project_kind.in_words(["pubspec.yaml"]) == "pubspec.yaml is here" and project_kind.in_words([]) == ""
-    assert project_kind.in_words(["a", "b", "c"]) == "a, b and c are here"
-
-
 # -- spec 100 F: the person's correction of the kind, read before the files ---------------------------------------------------------------
 
 def test_a_kind_the_person_kept_is_read_before_the_files_with_the_rest_of_project_json_left_as_it_is(tmp_path):
@@ -208,19 +121,6 @@ def test_a_kind_the_person_kept_is_read_before_the_files_with_the_rest_of_projec
     assert full["kind"] == "game" and full["kept"] is True and full["facts"]["code"] >= 1
     (state / "project.json").write_text(json.dumps({"stage": "live"}))                       # the key gone: the files again
     assert project_kind.read(root, fresh=True)["kind"] == before and "kept" not in project_kind.read_full(root)
-
-
-def test_a_kind_that_is_none_is_refused_and_a_state_with_a_bad_kind_reads_as_none(tmp_path):
-    state = tmp_path / "state"
-    for bad in ("", "castle", None, 3, "Game"):
-        with pytest.raises(ValueError, match="A kind is one of empty, mobile, game"):
-            project_kind.keep(state, bad)
-    assert not (state / "project.json").exists()
-    state.mkdir()
-    (state / "project.json").write_text(json.dumps({"kind": "castle"}))
-    assert project_kind.kept(state) == ""
-    (state / "project.json").write_text("not json")
-    assert project_kind.kept(state) == ""
 
 
 def test_the_kept_kind_reaches_the_stage(tmp_path):

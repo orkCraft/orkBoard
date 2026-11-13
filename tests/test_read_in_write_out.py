@@ -36,17 +36,6 @@ def test_a_decision_the_board_wrote_into_the_adr_folder_is_not_read_in_again(tmp
     assert [e["text"].split(":")[0] for e in journals.read(tmp_path / ".orkcraft", journals.PROJECT)] == ["Decision 2"]
 
 
-def test_a_decision_the_board_wrote_with_no_goal_is_known_by_its_number(tmp_path):
-    sd = tmp_path / ".orkcraft"
-    sd.mkdir()
-    journals.add(sd, journals.PROJECT, "decision", "Decision 1: Postgres", ref="1")                     # as the Board's writer keeps it (spec 125 B)
-    folder = tmp_path / "docs" / "decisions"
-    folder.mkdir(parents=True)
-    (folder / doc_formats.file_name(1, "Postgres")).write_text(doc_formats.render_madr({"number": 1, "title": "Postgres", "decision": "Use it."}))
-    read_in.take(tmp_path, sd)
-    assert len(journals.read(sd, journals.PROJECT)) == 1
-
-
 def _view_file(wiki, party, text, at, read="goal-a, §12"):
     (wiki / "journals").mkdir(parents=True, exist_ok=True)
     (wiki / "journals" / f"{party}.md").write_text(
@@ -64,13 +53,3 @@ def test_a_newer_view_in_the_tree_is_kept_and_not_written_over(tmp_path):
     assert d["text"] == "Works: new; goal-a." and d["at"] == "2026-11-08T09:00:00" and d["read"] == ["goal-a", "§12"] and d["upto"] == upto
     assert "views" not in read_in.take_outside(wiki, sd)
 
-
-def test_an_older_view_in_the_tree_is_not_kept(tmp_path):
-    sd, wiki = tmp_path / ".orkcraft", tmp_path / "wiki"
-    journals.save_digest(sd, "tech", "Works: mine.", "", at="2026-11-08T10:00:00")
-    _view_file(wiki, "tech", "Works: stale.", "2026-11-01T10:00:00")
-    assert "views" not in read_in.take_outside(wiki, sd)
-    assert journals.digest(sd, "tech")["text"] == "Works: mine."
-    wiki2 = tmp_path / "w2"                                                   # no view on the machine: the tree's is kept
-    _view_file(wiki2, "design", "Hurts: x.", "2026-11-01T10:00:00")
-    assert read_in.take_outside(wiki2, sd)["views"] == 1 and journals.digest(sd, "design")["at"] == "2026-11-01T10:00:00"

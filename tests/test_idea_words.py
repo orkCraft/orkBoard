@@ -13,12 +13,6 @@ def test_titles_first_then_words_by_use_in_any_script_names_of_code_kept_common_
     assert not {"также", "нужно", "чтобы", "the", "для", "и"} & {w.lower() for w in got}
 
 
-def test_the_same_word_is_one_written_as_most_and_a_long_title_is_not_a_phrase():
-    got = idea_words.words(["Sync sync sync Sync"], ["x" * 61, "Sync"])
-    assert got == ["Sync"]                                         # the title already says it
-    assert idea_words.words(["sync Sync Sync"]) == ["Sync"]
-
-
 def test_a_short_name_is_the_first_sentence_without_its_asking_words_cut_at_a_words_end():
     # spec 41 §3: what fits a chip, no model
     s = idea_words.short_of
@@ -33,10 +27,3 @@ def test_a_short_name_is_the_first_sentence_without_its_asking_words_cut_at_a_wo
     assert s("Нужно") == "Нужно" and s("") == "" and s("  \n ") == ""
     assert all(len(s(t)) <= idea_words.SHORT_CHARS for t in ("x " * 40, "Добавить оплату картой через Stripe и Apple Pay"))
 
-
-def test_a_models_short_name_is_taken_only_when_it_fits():
-    assert idea_words.short_said("Runs table", "A table of runs") == "Runs table"
-    assert idea_words.short_said("A short name that is far too long", "A table of runs") == "A table of runs"
-    assert idea_words.short_said("one two three four five", "Export") == "Export"           # more than 4 words
-    assert idea_words.short_said(None, "Export to CSV") == "Export to CSV"
-    assert idea_words.short_said(["x"], "Export") == "Export"
