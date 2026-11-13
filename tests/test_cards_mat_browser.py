@@ -140,6 +140,7 @@ def test_a_change_opens_what_changed_and_a_concern_is_an_l_of_words(page_url):
 # -- goal 171 stage H: the frame every mat lies in (js/cards/matframe.js, matframe.css; decisions §300.15) ---------------------------------
 
 THREE = "163-products-tree-on-the-board"
+CHRONICLE = "134-release-keeps-the-chronicle"       # done, no reviewer applies: every check of its gate can be green
 RED = """async (slug) => { const link = await import("/static/js/link.js"), sp = await import("/static/js/cards/spreads/open.js");
   const names = ["Critical tests", "Tests of what it touched"];
   link.town.value = { ...link.town.value, main_checks: { [slug]: names.map((name, i) => ({ name, state: i ? "failed" : "passed", words: i ? "2 tests fail" : "312 passed" })) } };
@@ -322,4 +323,23 @@ def test_every_zone_label_and_meeple_of_the_track_mat_lies_whole_inside_its_fiel
           return out; }""")
         assert any("mf-zl" in g["what"] for g in got) and any("sp-meeple" in g["what"] for g in got), got
         assert all(g["inside"] for g in got), [g for g in got if not g["inside"]]
+        b.close()
+
+
+GREEN = RED.replace('state: i ? "failed" : "passed", words: i ? "2 tests fail" : "312 passed"', 'state: "passed", words: "312 passed"')
+SENT = "() => import('/static/js/mock/mocklink.js').then((m) => m.sent.value.map((x) => [x.name, x.args]))"
+
+
+def test_the_gate_mat_opened_from_the_goals_card_seals_merge_into_main_with_from_mat(page_url):
+    """Goal 113 B (H7): the seal sends `ideas.to_main {idea, sealed: true, from: "mat"}`; opened by its hand card it would send "hand" (`opened`)."""
+    with sync_playwright() as p:
+        b, pg = opened(p, page_url)
+        pg.evaluate(GREEN, CHRONICLE)
+        seal = pg.locator(".mf-foot .mf-seal")
+        seal.wait_for(timeout=5000)
+        assert seal.get_attribute("aria-disabled") != "true", seal.inner_text()
+        seal.click()
+        pg.wait_for_function("() => import('/static/js/mock/mocklink.js').then((m) => m.sent.value.some((x) => x.name === 'ideas.to_main'))", timeout=15000)
+        sent = [a for n, a in pg.evaluate(SENT) if n == "ideas.to_main"]
+        assert sent == [{"idea": CHRONICLE, "sealed": True, "from": "mat"}], sent
         b.close()
