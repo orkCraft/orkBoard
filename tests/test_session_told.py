@@ -7,7 +7,7 @@ from pathlib import Path
 
 from orkboard import brand
 from orkboard.core import idea_task
-from orkboard.realm import harnesses, steps_git
+from orkboard.realm import steps_git
 from orkboard.realm.idea_git import IdeaGit
 from tests.test_idea_runner import plan_of, reviewing, town  # noqa: F401  (town is a fixture)
 

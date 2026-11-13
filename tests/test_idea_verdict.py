@@ -8,8 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import idea_objections, event_log, goal_route, idea_questions, idea_target, ideas
-from orkboard.realm.idea_talk_parse import clean_judgement, clean_round
+from orkboard.realm import idea_objections, event_log, idea_questions, idea_target, ideas
 from tests.test_idea_talk import TECH_NO, Model, _noes, _round_one, _row, _state, _talk, _wait, card, host, model, parties  # noqa: F401  (the fixtures and the helpers of Talk's tests)
 
 

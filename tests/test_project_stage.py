@@ -8,7 +8,7 @@ import pytest
 
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_party import stage_commands
-from orkboard.realm import idea_target, party_recipes, project_kind, project_stage
+from orkboard.realm import party_recipes, project_kind, project_stage
 
 
 def test_a_stage_is_kept_in_project_json_and_read_back_and_a_stage_that_is_none_is_refused(tmp_path):

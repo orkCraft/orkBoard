@@ -12,8 +12,6 @@ import time
 
 import pytest
 
-from orkboard.core import idea_keeper
-from orkboard.core.idea_decide import body_of, clean_decision, corrected, demote, entry_of, named, worded
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import decisions_log, goal_team, idea_questions, idea_target, ideas, library, spec_sections
 

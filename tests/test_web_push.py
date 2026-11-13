@@ -3,7 +3,6 @@ round trip with a receiver key made here, the VAPID JWT, and `send` with a stubb
 from __future__ import annotations
 
 import json
-import urllib.error
 
 import pytest
 
@@ -12,8 +11,6 @@ pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import hashes  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric import ec  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature  # noqa: E402
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM  # noqa: E402
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF  # noqa: E402
 
 from orkboard.gui import web_push as w  # noqa: E402
 

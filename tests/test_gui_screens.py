@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_screens import ScreensMixin, screens_commands
 from orkboard.realm import idea_lens, idea_shots, ideas
 

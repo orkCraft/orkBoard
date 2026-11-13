@@ -5,11 +5,10 @@ from __future__ import annotations
 import io
 import json
 import sys
-from pathlib import Path
 
 import pytest
 
-from orkboard.hooks import pi_extension, warder
+from orkboard.hooks import warder
 
 
 def _warder(monkeypatch, capsys, harness: str, payload: dict) -> str:

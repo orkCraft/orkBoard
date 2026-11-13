@@ -4,12 +4,11 @@ changelog and reverts; Marketing's missing channel, long store title and short t
 Real git repositories (tests/test_commit_goal.py's: main at the start, dev ahead), no model."""
 from __future__ import annotations
 
-import datetime as dt
 from pathlib import Path
 
 import pytest
 
-from orkboard.realm import map_parts, map_signals, map_signals_crafts as crafts, release_map
+from orkboard.realm import map_parts, map_signals, map_signals_crafts as crafts
 from tests import pick_files as pf
 from tests.test_assets import put
 from tests.test_commit_goal import commit, git, land, repo, state  # noqa: F401  (the fixture)

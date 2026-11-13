@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, idea_spend, ideas, own_parties
+from orkboard.realm import event_log, idea_spend, ideas
 
 
 @pytest.fixture

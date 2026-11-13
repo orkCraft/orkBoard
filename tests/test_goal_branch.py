@@ -1,14 +1,12 @@
 """A goal's own branch (docs/specs/168 F1, decisions §283.26): realm/goal_branch.py on a real temporary repository."""
 from __future__ import annotations
 
-import json
 import subprocess
-import threading
 from pathlib import Path
 
 import pytest
 
-from orkboard.realm import goal_branch, idea_git
+from orkboard.realm import goal_branch
 from orkboard.realm.idea_git import IdeaGit
 
 GATE = '[gate]\nalways = ["tests/test_ok.py"]\n'

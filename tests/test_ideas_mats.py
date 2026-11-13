@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import board_turns, code_layers, ideas, opportunity_tree, page_talk
+from orkboard.realm import ideas, opportunity_tree
 
 REPO = Path(__file__).resolve().parents[1]
 TALK = "### Talk\n- verdict: doubt — one writer\n- stance: fine\n- for: simple\n- against: a second caller"

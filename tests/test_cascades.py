@@ -2,9 +2,8 @@
 the words. No model, no keeper."""
 from __future__ import annotations
 
-import json
 
-from orkboard.realm import cascades, event_log, idea_spend, idea_target, lexicon, slices
+from orkboard.realm import cascades, slices
 
 STANDING = [{"id": "s-aaaa1111", "party": "tech", "decision": 6, "points": ["6.2", "6.3"], "says": "Your builds are quick.", "was": "", "at": "", "replaced_by": "", "folded": False}]
 

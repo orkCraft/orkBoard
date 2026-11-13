@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
+from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, idea_photos, ideas, jobs, roles
 
 NEW_COMMANDS = {"ideas.goal_save", "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_drop",

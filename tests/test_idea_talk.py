@@ -11,10 +11,8 @@ import time
 import pytest
 
 from orkboard.core import idea_keeper
-from orkboard.core.idea_talk import TalkMixin
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import event_log, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, library, project_facts
-from orkboard.realm.idea_talk_parse import clean_assumes, clean_diagnosis, clean_round, fact_text, pick_three, touched
+from orkboard.realm import goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, library, project_facts
 
 
 @pytest.fixture

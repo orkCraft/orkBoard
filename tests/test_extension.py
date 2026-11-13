@@ -7,8 +7,6 @@ import json
 import os
 import threading
 
-import pytest
-from websockets.exceptions import InvalidStatus
 from websockets.sync.client import connect
 
 from orkboard.gui import board_host, extension

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import ideas, map_text, project_map
+from orkboard.realm import ideas, map_text
 from tests.test_commit_goal import commit, git, land, repo, state  # noqa: F401  (the fixture)
 from tests.test_system_overview import GAME, write
 

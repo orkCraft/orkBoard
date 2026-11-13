@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import event_log, goal_match, goal_refine, goal_team, idea_ripe, ideas, library, lexicon, spec_sections
+from orkboard.realm import event_log, goal_match, goal_refine, goal_team, idea_ripe, ideas, library, spec_sections
 
 
 @pytest.fixture

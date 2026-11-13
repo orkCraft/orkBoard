@@ -3,13 +3,12 @@ when they are merged in dev the next step's party plans its step and its tasks j
 keeper's call stubbed (as test_idea_sections.py's) and the runner's sessions not spawned (a task's state is set as its session would)."""
 from __future__ import annotations
 
-import json
 import time
 from threading import Event
 
 import pytest
 
-from orkboard.realm import goal_team, idea_route, ideas, roles
+from orkboard.realm import goal_team, idea_route, ideas
 from tests.test_idea_sections import _confirmed, _page, _state, host, model, parties, section  # noqa: F401  (the fixtures of the sections' tests)
 
 

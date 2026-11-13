@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_pickables import loop_parts, pickables_commands
 from orkboard.realm import goal_team, ideas, library, loop
 

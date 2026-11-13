@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.gui.ideas import Ideas
-from orkboard.realm import event_log, goal_team, harnesses, ideas, jobs, library
+from orkboard.realm import event_log, goal_team, ideas, jobs
 
 
 def stub(tier, prompt, effort="", budget=None):

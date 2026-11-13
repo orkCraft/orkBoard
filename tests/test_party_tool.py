@@ -10,9 +10,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas import Ideas
-from orkboard.realm import event_log, goal_team, harnesses, idea_target, ideas, jobs, library, party_recipes, party_resize, roles
+from orkboard.realm import event_log, goal_team, ideas, jobs, party_recipes, party_resize, roles
 
 
 def stub(tier, prompt, effort="", budget=None):

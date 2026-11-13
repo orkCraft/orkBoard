@@ -9,7 +9,6 @@ import pytest
 
 from orkboard.gui import board_cli
 from orkboard.gui.board_host import Orkboard
-from orkboard.gui.ideas_read_in import ReadInMixin, read_in_commands
 from orkboard.realm import goal_team, ideas, journals, library, project_facts, read_in
 
 MADR = """---

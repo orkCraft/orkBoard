@@ -142,3 +142,16 @@ def test_the_last_tool_asks_before_it_is_put_back(board):
     with pytest.raises(CommandError, match="not in your hand"):
         board.command("tools.put_back", {"tool": "codex"})
 
+
+def test_a_tool_in_the_hand_is_paid_by_its_key_only_when_the_key_is_there(board, monkeypatch):
+    looked(board)
+    add(board, "codex")
+    monkeypatch.delenv("CODEX_API_KEY", raising=False)
+    with pytest.raises(CommandError, match="No key found: set CODEX_API_KEY"):
+        board.command("tools.billing", {"tool": "codex", "billing": "api"})
+    monkeypatch.setenv("CODEX_API_KEY", "x")
+    got = board.command("tools.billing", {"tool": "codex", "billing": "api"})
+    assert got["hand"][0]["billing"] == "api" and settings.load().tools["codex"].billing == "api"
+    assert board.command("tools.billing", {"tool": "codex", "billing": "subscription"})["hand"][0]["billing"] == "subscription"
+    with pytest.raises(CommandError, match="not in your hand"):
+        board.command("tools.billing", {"tool": "claude", "billing": "subscription"})

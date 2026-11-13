@@ -82,3 +82,23 @@ def _prompt(town, size, kind="code"):
     plan["tasks"][0]["role"] = "architect"
     return r._prompt("demo", plan, plan["tasks"][0])
 
+
+
+
+def test_no_task_is_told_it_does_it_itself_and_a_task_is_told_the_boards_rules_are_not_its_own_only_where_they_are_written(town):
+    """Spec 152 D.3 (decisions §257.6): the Lean line is gone; in a project whose rules are written (a block in AGENTS.md) a task of any kind is told the Board's rules are not its own,
+    right after its role's part and before the finishing rules; where they are not written it is told nothing of them."""
+    from orkboard.core import idea_task
+    from orkboard.realm import agent_rules
+    roles.install(town.state, "architect", "Architect", "", "engineering", library.get("architect").instruction, ("code",))
+    assert not hasattr(idea_task, "LEAN_DOES") and not hasattr(idea_task.TaskMixin, "_does_it_itself")
+    for size in ("lean", "standard"):
+        assert "You do this task yourself" not in _prompt(town, size) and NOT_THE_BOARDS not in _prompt(town, size)    # the rules are not written
+    agent_rules.write(town.repo, "llm-wiki/general")
+    assert agent_rules.has_rules(town.repo)
+    for size, kind in (("lean", "code"), ("standard", "code"), ("lean", "review"), ("standard", "pick")):
+        prompt = _prompt(town, size, kind=kind)
+        assert "You do this task yourself" not in prompt and prompt.count(NOT_THE_BOARDS) == 1
+        assert prompt.startswith("# Your role: ") and prompt.index("# Your role: ") < prompt.index(NOT_THE_BOARDS) < prompt.index("# When you are done")
+        assert f"\n\n{NOT_THE_BOARDS}\n\n# When you are done" in prompt                                           # right after its role's part
+    assert "That page is the Board's: read it, never write to it." in _prompt(town, "standard")

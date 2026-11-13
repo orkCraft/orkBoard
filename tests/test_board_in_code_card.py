@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.gui import agent_rules_switch as switch, board_cli
+from orkboard.gui import board_cli
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.board_in_code_host import _State
-from orkboard.realm import agent_rules, board_branch, board_in_code, event_log, goal_take, ideas, lexicon
+from orkboard.realm import agent_rules, board_branch, board_in_code, event_log, goal_take, ideas
 
 ASK = "Your goals, their specs, the leaders' words and the decisions will be public, in the repository's history: a later No does not take them back."
 

@@ -15,9 +15,9 @@ import time
 import pytest
 
 from orkboard.core.idea_tree import TreeMixin as KeeperTree
-from orkboard.gui.board_host import CommandError, Orkboard
+from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_tree import TreeMixin as GuiTree, tree_commands
-from orkboard.realm import goal_team, idea_spend, idea_target, ideas, library, opportunity_tree as tree, project_facts
+from orkboard.realm import goal_team, idea_target, ideas, library, opportunity_tree as tree, project_facts
 
 COMMANDS = {"ideas.tree", "ideas.tree_set", "ideas.tree_attach", "ideas.tree_propose"}
 
