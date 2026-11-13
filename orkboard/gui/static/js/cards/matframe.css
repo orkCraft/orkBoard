@@ -32,7 +32,7 @@
 .mf-phase.is-on { background: var(--_plate); color: var(--ork-gilt-hi); border: 1px solid var(--ork-gilt); }
 
 /* words laid on the felt lie on a plate: its ground is one colour, so its contrast is one number (decisions §275.2) */
-.mf-field :is(.sp-cap, .sp-costw, .sp-field__say, .bt-undo, .bt-axis, .cards-lab, .sp-or, .sp-arrow, .sp-gk > small, .sp-chair__n, .sp-chair > small, .bt-head > span, .sp-pot > b,
+.mf-field :is(.sp-cap, .sp-costw, .sp-field__say, .bt-undo, .bt-axis, .cards-lab, .sp-or, .sp-arrow, .sp-chair__n, .sp-chair > small, .bt-head > span, .sp-pot > b,
   .tb-colh, .tb-legend, .tb-ln, .tb-empty, .tb-asked) { background: var(--_plate); padding: 2px 8px; }
 .mf-field .bt-row, .mf-field .bt-row.bt-head { background: var(--_plate); }
 

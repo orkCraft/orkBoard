@@ -295,10 +295,11 @@ def test_the_gate_mat_on_the_phone_is_laid_unscaled_and_no_check_is_cut_at_the_s
         pg = fresh(b, page_url, (390, 844))
         open_gate(pg)
         pg.wait_for_timeout(500)
-        got = pg.evaluate("""() => { const scales = [], gate = document.querySelector('.sp-gate');
+        pg.locator(".gt-line").wait_for()
+        got = pg.evaluate("""() => { const scales = [], gate = document.querySelector('.gt');
           for (let e = gate; e && e !== document.documentElement; e = e.parentElement) { const t = getComputedStyle(e).transform; if (t !== 'none') { const m = new DOMMatrix(t); scales.push(Math.hypot(m.a, m.b)); } }
-          const checks = [...document.querySelectorAll('.sp-gk')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; });
-          const words = [...gate.querySelectorAll('.sp-gk small, .sp-card__name, .sp-card__line')].map((e) => parseFloat(getComputedStyle(e).fontSize) * (e.getBoundingClientRect().width / (e.offsetWidth || 1)));
+          const checks = [...document.querySelectorAll('.gt .sp-card, .gt .mf-zone')].map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; });
+          const words = [...gate.querySelectorAll('.sp-card__name, .sp-card__line')].map((e) => parseFloat(getComputedStyle(e).fontSize) * (e.getBoundingClientRect().width / (e.offsetWidth || 1)));
           return { scales, checks, words }; }""")
         assert all(k >= 1 for k in got["scales"]), got["scales"]
         assert got["checks"] and all(left >= 0 and right <= 390 for left, right in got["checks"]), got["checks"]

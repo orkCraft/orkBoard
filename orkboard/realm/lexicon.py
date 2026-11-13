@@ -178,6 +178,11 @@ TERMS: tuple[Term, ...] = (
     _t("stage", "stage", "stages"),                                # a party's step a goal goes through, one a band; its leader words them (Concept, Build, Playtest for a Game designer; Planning, Implementation, Checking by default; spec 48, spec 59 §3)
     _t("wave", "wave", "waves"),                                   # a task's depth in its plan by `after`: a column of the Map's goal (spec 48)
     _t("gate", "gate", "gates"),                                   # the one press that merges dev into main (decisions §49.5, spec 49 §2.1)
+    _t("fix_it", "Fix it"),                                        # a red gate's way: its stage again where the goal is on its branch, a new Fix goal where it is done (decisions §303.5; js/cards/spreads/gate.js)
+    _t("fix_it_stage", "back to work: its stage again, sealed with its cost"),     # Fix it's line on the way to dev
+    _t("fix_it_goal", "makes a new Fix goal; one press, you can undo it"),         # Fix it's line on the way to main
+    _t("test_out_of_date", "The test is out of date"),             # a red gate's other way: Tech is asked and a new decision comes first (a paid pass on the seal)
+    _t("test_out_of_date_line", "asks Tech; a new decision comes first, sealed with its cost"),
     _t("recap", "While you were away"),                            # the card of what the Board did since this device's last look (spec 42 §1)
     _t("flag", "flag", "flags"),                                   # a goal the gate took into main (spec 50 §2.2); a party's old flag is its verdict met (spec 42 §2)
     _t("goal_look", "look", "looks"),                              # how a goal's screen looks: asked by the elf, picked before it is built (spec 85)
