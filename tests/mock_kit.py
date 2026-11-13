@@ -190,8 +190,19 @@ def lay_limits(data: dict) -> None:
     data["state"]["limits"] = [row("Claude", 0.62), row("Codex", 0.18)]
 
 
+def lay_gate(data: dict) -> None:
+    """The host's `ideas.gate_guards` (goal "The battle and the gate" L) for any goal: on the way to dev, one test failing under a decision, one failing test naming none (a file), one decision agreeing."""
+    ensure(data, "ideas.gate_guards", {})
+    reply(data, "ideas.gate_guards")["result"] = {"idea": "", "way": "dev", "cost": {"calls": 1, "usd_high": 0.25},
+        "failing": [{"number": 50, "title": "Orkline imports Orkboard and never the other way round", "ids": ["tests/test_board_alone.py::test_a"]}],
+        "files": [{"file": "tests/test_bare.py", "ids": ["tests/test_bare.py::test_c"]}], "agreeing": [{"number": 273, "title": "Two piles in the discard"}]}
+    data["replies"].append({"name": "ideas.gate_guards", "args": {"idea": "134-release-keeps-the-chronicle"}, "ok": True,      # a goal done in dev whose every check agrees: the way to main, the seal lit
+                            "result": {"idea": "134-release-keeps-the-chronicle", "way": "main", "cost": None, "failing": [], "files": [], "agreeing": [{"number": 273, "title": "Two piles in the discard"}]}})
+
+
 def lay_standard(data: dict) -> None:
     """Everything above, for the tests that press a goal in talk, a gate, a deck, a leader's word or a table."""
+    lay_gate(data)
     lay_examples(data)
     lay_new_goals(data)
     lay_verdicts(data)

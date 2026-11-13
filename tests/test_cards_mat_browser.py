@@ -97,10 +97,10 @@ def test_every_card_a_mat_draws_is_a_goal_a_decision_or_a_part_its_kind_in_its_t
         pg.keyboard.press("Escape")
         pg.locator(".tb").wait_for(state="detached", timeout=5000)
         pg.evaluate(RED, THREE)
-        pg.locator(".sp-gate").wait_for(timeout=5000)
+        pg.locator(".gt-line").wait_for(timeout=5000)
         gate = pg.evaluate("() => [...document.querySelectorAll('.sp-card')].map((c) => [c.dataset.cardkind, c.getAttribute('aria-label'), !!c.querySelector('.cards-c--tr .ork-sign')])")
         assert gate and all(k in ("goal", "decision", "part") and n.endswith(", a " + k) and sign for k, n, sign in gate), gate
-        assert {k for k, _, _ in gate} == {"goal", "decision"}, gate                 # the gate's checks are the decisions they guard
+        assert {k for k, _, _ in gate} == {"goal", "decision", "part"}, gate         # the gate's checks are the decisions they guard, a test naming none its file
         b.close()
 
 
@@ -169,7 +169,7 @@ def test_the_seal_is_dim_with_its_why_told_by_its_rim_never_by_opacity(page_url)
         pg.evaluate(RED, THREE)
         seal = pg.locator(".mf-foot .mf-seal")
         seal.wait_for(timeout=5000)
-        assert seal.get_attribute("aria-disabled") == "true" and "sealed" in seal.inner_text()
+        assert seal.get_attribute("aria-disabled") == "true" and "disagree" in seal.inner_text()
         look = seal.evaluate("e => [e, ...e.querySelectorAll('*')].map((x) => getComputedStyle(x).opacity).join()")
         assert set(look.split(",")) == {"1"}, look                                                                  # told by its rim, not faded
         assert seal.evaluate("e => getComputedStyle(e).outlineStyle") == "dashed"
