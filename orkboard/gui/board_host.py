@@ -203,14 +203,12 @@ class Orkboard:
     the Board's commands (`ideas.*`, to the shown one), the Files pane (`files.*`) and its Git section (`git.*`), Stop
     all (`halt`, every project's), pairing a phone (`phones.*`, added by the server), updates, `link.open`,
     `crash.window` and the onboarding's first screen (trust, the AI tools found); no class, no Mission 1, no town.
-    The page is `static/board.js`, the phone's `pwa/board-app.js`.
+    The page is `static/board.js`, on the desktop and, in its frame (`pwa/frame.js`), on a paired phone.
 
     What is the host's is built once per host, beside the projects: the AI tools' limits, this run's spend, the
     phones, updates, the onboarding and Operations (gui/ops.py, spec 38: `ops.*`, its rows in the shown project's
     Needs you); what is a project's is its Board. With no project open it is the start screen: `ideas.*` say *Open a
     folder first*, Operations works as with one."""
-
-    phone_entry = "board-app.js"    # the phone's (gui/pwa.py)
 
     def __init__(self, repo_root: Path | None = None, demo: bool = False, restore: bool = False) -> None:
         """`repo_root`: the folder opened and shown (refused in words: `ideas.IdeasError`); `restore`: the projects
@@ -414,8 +412,8 @@ class Orkboard:
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana
         with `paid`, the reserve, the projects) less the computer's (`COMPUTER_ONLY`: the onboarding, the sign-ins' flows, the
-        repository's path); `rev` names its content (gui/phones.py sends it again only when it moved). The old phone face
-        reads `v`, `project`, `look`, `sleep`, the counts, `hud` and `update`, which stay."""
+        repository's path); `rev` names its content (gui/phones.py sends it again only when it moved). `v`, `project`, `look`,
+        `sleep`, `version` and `canvases_*` are what the phone's old face read (removed, spec 94 E); `update` is `_phone_update`'s."""
         s = self.snapshot()
         root = self.repo_root
         out = {**{k: v for k, v in s.items() if k not in self.COMPUTER_ONLY},
@@ -428,7 +426,7 @@ class Orkboard:
 
     @staticmethod
     def _phone_update(u: dict[str, Any] | None) -> dict[str, Any] | None:
-        """A newer version as a phone shows it (pwa/shell-update.js): what it is, a few of its notes, whether it can
+        """A newer version as a phone shows it (js/shell/update.js, in the phone's frame): what it is, a few of its notes, whether it can
         install itself and how it goes; the error's last lines only."""
         if not u:
             return None

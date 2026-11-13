@@ -155,17 +155,15 @@ def test_a_phone_may_send_the_boards_commands_and_stop_all_only(host):
 
 
 def test_the_page_is_board_js_in_offices_look_and_the_phones_the_same_page_in_its_frame(host):
-    """Spec 117 A: the installed app loads the desktop's page (`frame.js`, then `page/board.js`); the old face is `/app/old.html`, `board-app.js`."""
+    """Spec 117 A: the installed app loads the desktop's page (`frame.js`, then `page/board.js`); the phone's old face is gone (spec 94 E)."""
     server = Server(host)
     page = server.page().decode()
     assert 'src="/static/board.js"' in page and "app.js" not in page and 'data-look="office"' in page
-    assert server.phones.entry == "board-app.js"
-    for phone in (pwa.serve("GET", "/app/"), pwa.serve("GET", "/app/", entry="board-app.js")):
-        page = phone.decode("utf-8", "replace")
-        assert 'src="frame.js"' in page and 'src="board-app.js"' not in page and 'src="app.js"' not in page
-        assert 'data-look="office"' in page and 'data-product="Orkboard"' in page
-    old = pwa.serve("GET", "/app/old.html").decode("utf-8", "replace")
-    assert 'src="board-app.js"' in old and 'src="frame.js"' not in old
+    page = pwa.serve("GET", "/app/").decode("utf-8", "replace")
+    assert 'src="frame.js"' in page and 'src="board-app.js"' not in page and 'src="app.js"' not in page
+    assert 'data-look="office"' in page and 'data-product="Orkboard"' in page
+    for gone in ("/app/old.html", "/app/board-app.js", "/app/app.css"):
+        assert pwa.serve("GET", gone).startswith(b"HTTP/1.1 404"), gone
 
 
 def test_orkboard_starts_on_the_project_and_board_is_the_old_habit(fake_repo, monkeypatch):

@@ -438,7 +438,7 @@ async def test_two_get_requests_on_one_connection_both_answered_keep_alive(fake_
                 body1 = r1.read()
                 assert b"Orkboard" in body1
 
-                conn.request("GET", "/app/board-app.js")
+                conn.request("GET", "/app/frame.js")
                 r2 = conn.getresponse()
                 assert r2.status == 200
                 assert r2.getheader("Connection", "").lower() == "keep-alive"
@@ -545,7 +545,7 @@ async def test_an_http_1_0_request_without_keep_alive_is_answered_with_the_close
     try:
         offer = server.host.command("phones.pair")
         await _listening(server)
-        data = b"GET /app/ HTTP/1.0\r\nHost: x\r\n\r\nGET /app/board-app.js HTTP/1.0\r\nHost: x\r\n\r\n"
+        data = b"GET /app/ HTTP/1.0\r\nHost: x\r\n\r\nGET /app/frame.js HTTP/1.0\r\nHost: x\r\n\r\n"
         got = await asyncio.to_thread(_raw_exchange, offer["address"], data)
         assert got.count(b"HTTP/1.1 200") == 1
         head = got.split(b"\r\n\r\n", 1)[0].decode("latin-1")
@@ -563,11 +563,11 @@ async def test_the_connection_header_is_a_list_of_options(fake_repo):
         offer = server.host.command("phones.pair")
         await _listening(server)
         kept = (b"GET /app/ HTTP/1.0\r\nHost: x\r\nConnection: Keep-Alive, Upgrade\r\n\r\n"
-                b"GET /app/board-app.js HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+                b"GET /app/frame.js HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
         got = await asyncio.to_thread(_raw_exchange, offer["address"], kept)
         assert got.count(b"HTTP/1.1 200") == 2
         assert b"Connection: keep-alive" in got.split(b"\r\n\r\n", 1)[0]
-        closed = b"GET /app/ HTTP/1.1\r\nHost: x\r\nConnection: close, foo\r\n\r\nGET /app/board-app.js HTTP/1.1\r\nHost: x\r\n\r\n"
+        closed = b"GET /app/ HTTP/1.1\r\nHost: x\r\nConnection: close, foo\r\n\r\nGET /app/frame.js HTTP/1.1\r\nHost: x\r\n\r\n"
         got = await asyncio.to_thread(_raw_exchange, offer["address"], closed)
         assert got.count(b"HTTP/1.1 200") == 1
     finally:
@@ -643,6 +643,6 @@ def test_the_phones_snapshot_is_the_pages_less_the_computers_own(fake_repo):
                 "review_count", "review_results", "canvases_new", "canvases_rev", "focus", "update", "version"):
         assert key in snap, key
     assert "paid" in snap["mana"]
-    for key in ("v", "project", "look", "sleep", "rev"):                  # what pwa/board-app.js and shell-*.js read
+    for key in ("v", "project", "look", "sleep", "rev"):                  # what the phone's old face read (spec 94 E), still sent
         assert key in snap, key
     assert snap["project"] == fake_repo.name and snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]

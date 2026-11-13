@@ -207,11 +207,11 @@ def test_the_worker_keeps_every_file_it_lists_and_with_the_computer_away_the_app
     pg = app.open()
     app.ready()
     pg.evaluate("() => navigator.serviceWorker.ready.then(() => true)")
-    pg.wait_for_function("async () => (await caches.keys()).includes('orkcraft-app-v108') && (await (await caches.open('orkcraft-app-v108')).keys()).length > 200", timeout=WAIT_MS * 3)
-    kept = pg.evaluate("async () => (await (await caches.open('orkcraft-app-v108')).keys()).map((r) => new URL(r.url).pathname)")
+    pg.wait_for_function("async () => (await caches.keys()).includes('orkcraft-app-v109') && (await (await caches.open('orkcraft-app-v109')).keys()).length > 200", timeout=WAIT_MS * 3)
+    kept = pg.evaluate("async () => (await (await caches.open('orkcraft-app-v109')).keys()).map((r) => new URL(r.url).pathname)")
     have = set(kept)
     assert {f"/app/{name}" for name in pwa.page_shell()} <= have                 # the page's files, as sw.js was told them
-    assert {"/app/", "/app/frame.js", "/app/frame.css", "/app/old.html", "/app/board-app.js"} <= have
+    assert {"/app/", "/app/frame.js", "/app/frame.css", "/app/shell-remote.js"} <= have and "/app/old.html" not in have
     rev = pg.evaluate("() => import('./page/js/link.js').then((l) => l.town.value.rev)")
     pg.wait_for_function("() => navigator.serviceWorker.controller !== null", timeout=WAIT_MS)
     assert not app.errors, "\n".join(app.errors)

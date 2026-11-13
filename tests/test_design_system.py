@@ -10,7 +10,7 @@ from orkboard.gui import server
 
 STATIC = server.STATIC
 SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "board" / "board.css",
-          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "js" / "arena" / "play.css", STATIC / "pwa" / "app.css", STATIC / "pwa" / "party.css"]
+          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "js" / "arena" / "play.css", STATIC / "pwa" / "frame.css"]
 SHEETS += sorted(p for d in ("frame", "table", "hand", "mock", "cards", "cards/spreads") for p in (STATIC / "js" / d).glob("*.css"))   # the window as two parts (spec 98): every sheet of its folders
 SHEETS += sorted((STATIC / "js" / "cards" / "tables").glob("*.css"))   # the leaders' tables (goal 170 T)
 
@@ -175,7 +175,7 @@ def test_every_crafts_head_is_in_the_copy_and_the_pages_words_are_the_glossarys(
     words = {"TIER_WORDS": {t: lexicon.term(f"tier.{t}") for t in roles.TIERS},
              "RACE_WORDS": {r: lexicon.term(f"race.{r}") for r in (*roles.RACES.values(), "skeleton")},      # the library's own race (spec 68 §1.3)
              "CRAFT_WORDS": {c: lexicon.term(f"craft.{c}") for c in roles.CRAFTS}}
-    for path in (STATIC / "js" / "orkui.js", STATIC / "pwa" / "shell-who.js"):
+    for path in (STATIC / "js" / "orkui.js",):
         js = path.read_text(encoding="utf-8")
         for name, want in words.items():
             got = dict(re.findall(r'(\w+): "([^"]+)"', re.search(rf"const {name} = \{{([^}}]*)\}}", js).group(1)))

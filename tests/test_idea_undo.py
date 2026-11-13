@@ -127,4 +127,4 @@ def test_every_page_call_of_a_sealed_command_sends_its_seal():
         for m in re.finditer(r"""["'`](%s)["'`]\s*,\s*\{[^}]*\}?""" % "|".join(map(re.escape, SEALED_BY)), path.read_text(encoding="utf-8")):
             found += 1
             assert "sealed: true" in m.group(0), f"{path.name}: {m.group(1)} sends no seal"
-    assert found >= 8
+    assert found >= 7                     # the page's own: the phone's old face's two (shell-gate.js, shell-goals.js) went with it (spec 94 E)

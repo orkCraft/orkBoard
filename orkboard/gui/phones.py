@@ -145,7 +145,6 @@ class Listener:
     def __init__(self, host, pairing: Pairing | None = None, bind: str | None = None,
                  cert_folder: Path | None = None) -> None:
         self.host = host
-        self.entry = getattr(host, "phone_entry", "board-app.js")     # the app's page's script (gui/pwa.py `serve`)
         self.pairing = pairing or Pairing()
         self.bind = bind or env.getenv(HOST_ENV) or None   # None: the LAN's address (lan_ip)
         self.cert_folder = cert_folder

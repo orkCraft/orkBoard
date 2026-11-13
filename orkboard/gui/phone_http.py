@@ -102,7 +102,7 @@ async def handle_conn(listener: Any, reader: asyncio.StreamReader, writer: async
             elif pwa.wants(path):
                 if path == pwa.PREFIX + "assets.json" and not pwa.READY.is_set():
                     await asyncio.to_thread(pwa.READY.wait, HEAD_S)   # the warm-up is hashing: off the loop
-                writer.write(pwa.serve(method, target, keep_alive=keep, entry=getattr(listener, "entry", "board-app.js")))
+                writer.write(pwa.serve(method, target, keep_alive=keep))
             else:
                 writer.write(_response(HTTPStatus.NOT_FOUND, keep_alive=keep))
 

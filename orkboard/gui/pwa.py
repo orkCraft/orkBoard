@@ -4,7 +4,6 @@ Home Screen. It speaks the protocol the phone listener speaks (gui/phones.py), w
 
     GET /app/                     the app's files (gui/static/pwa/): its page, frame, style, manifest, worker, icons
     GET /app/page/...             the desktop's page itself (gui/static/: board.js, js/**, page.css, vendor/), which the app's page loads
-    GET /app/old.html             the phone's old face (board-app.js, shell-*.js), kept until spec 94 E
     GET /ds/orkui/...             orkUI by the address the page's code names (the same files as under /app/)
     GET /app/manifest.webmanifest?k=<device token>    the same manifest, its start_url carrying the token (iOS, below)
     /ws  Sec-WebSocket-Protocol: orkcraft.v1, bearer.<device token>   a browser cannot set Authorization
@@ -62,7 +61,7 @@ MASKS = ("backs", "chair", "door", "potion", "runes", "tools")   # orkUI's other
 PLACES = ("die", "pack", "book", "chain")   # orkUI's cartoon places (0.41.0, decisions §293.6): the phone's round button, its selector and the lamp's chain draw their pictures (goal 169 H)
 STYLES = ("fonts.css", "tokens.css", "components.css")   # orkUI itself: its faces, colours and components
 STATIC = Path(__file__).resolve().parent / "static"   # the desktop's page: board.js, js/**, page.css, vendor/ (gui/server.py serves it as /static/)
-PAGE = "page/"                      # …and where the app serves it: beside the app's own board.js (the old face's), so no name is shared
+PAGE = "page/"                      # …and where the app serves it: beside the frame's own files, so no name is shared
 VENDOR_OUT = ("xterm",)             # a phone has no terminal: its module, stylesheet and licence are not served
 PREFIX = "/app/"
 DS = "/ds/orkui/"                   # orkUI by the address the page's code names (js/orkui.js `ORKUI`): its heads, marks and pixel icons
@@ -172,9 +171,8 @@ def manifest(raw: bytes, query: str) -> bytes:
     return json.dumps(data, ensure_ascii=False).encode("utf-8")
 
 
-def serve(method: str, target: str, keep_alive: bool = False, entry: str = "board-app.js") -> bytes:
-    """A whole response to a request for the app (`wants` its path). `entry`: the page's script, the listener's host's
-    (Orkboard's phone is `board-app.js`: the shell alone, spec 37 §4)."""
+def serve(method: str, target: str, keep_alive: bool = False) -> bytes:
+    """A whole response to a request for the app (`wants` its path)."""
     parts = urlsplit(target)
     if parts.path == PREFIX.rstrip("/"):
         return _head(HTTPStatus.MOVED_PERMANENTLY, "text/plain; charset=utf-8", 0, f"Location: {PREFIX}\r\n",
@@ -202,11 +200,9 @@ def serve(method: str, target: str, keep_alive: bool = False, entry: str = "boar
     suffix = ".css" if made else path.suffix
     if name == "manifest.webmanifest":
         body = manifest(body, parts.query)
-    if name in ("index.html", "old.html") and entry != "board-app.js" and entry in files():
-        body = body.replace(b'src="board-app.js"', f'src="{entry}"'.encode())
     if name == "sw.js":                      # the page's files, for the worker to keep (`page_shell`): they change with the page, not with this file
         body = body.replace(b"const PAGE = [];", f"const PAGE = {json.dumps(page_shell())};".encode())
-    if name in ("index.html", "old.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§95)
+    if name in ("index.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§95)
         body = body.replace(brand.DEFAULT.encode(), brand.name().encode())
     extra = f"Content-Security-Policy: {csp(body)}\r\n" if suffix == ".html" else ""
     if name == "sw.js":
