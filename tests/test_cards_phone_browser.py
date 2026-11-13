@@ -148,3 +148,121 @@ def test_a_move_played_on_the_mat_its_phone_card_opened_is_sent_from_the_hand(tu
         assert got == [{"slug": "173-example-2", "from": "hand"}], got
         assert not errors, errors
         b.close()
+
+
+# -- goal "The battle and the gate", stage M: the battle and the gate on the phone (decisions §303; goal 171 I) -----------------------------------------------------------
+# On the `gui` fixture's host (`?table=cards`, no ?mock=1) at 390 x 844 with touch: each mat opened from its address after a reload is the whole screen with *Back*, upright in the desktop's
+# order, its ways a row at the screen's foot that scrolls within itself, the seal after them in the screen's order and Tab's; no sideways scroll, no card cut, no text under 12 px as drawn.
+from tests import test_cards_battle_browser as battle_kit  # noqa: E402
+from tests import test_cards_gate_browser as gate_kit  # noqa: E402
+from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+
+TOUCH = dict(has_touch=True, is_mobile=True)
+NO_CUT = """(k) => { const sp = document.querySelector(`[data-spread=${k}]`), f = sp.querySelector('.mf-field'), fr = f.getBoundingClientRect(), bad = [];
+  if (f.scrollHeight - f.clientHeight > 1 || f.scrollWidth - f.clientWidth > 1) bad.push('the field scrolls');
+  for (const e of f.querySelectorAll('.mf-zone, .mf-zl, .sp-card, .bt-one, .bt-line, .gt-line, .gt-agree')) { const r = e.getBoundingClientRect();
+    if (r.width && (r.top < fr.top - 1 || r.bottom > fr.bottom + 1 || r.left < fr.left - 1 || r.right > fr.right + 1)) bad.push(e.className.toString().slice(0, 30)); }
+  const small = [...sp.querySelectorAll('*')].filter((n) => n.children.length === 0 && n.textContent.trim() && !n.closest('[aria-hidden=true]') && parseFloat(getComputedStyle(n).fontSize) < 12).map((n) => n.textContent.trim().slice(0, 20));
+  const ways = sp.querySelector('.sp-cards'), row = ways ? getComputedStyle(ways).overflowX : '';
+  return { bad, small, row, sideways: document.documentElement.scrollWidth > innerWidth }; }"""
+STOP = """(k) => { const a = document.activeElement, sp = document.querySelector(`[data-spread=${k}]`); if (!sp || !sp.contains(a)) return ['outside', true];
+  const f = a.closest('.bt-line, .gt-line') ? 'line' : a.closest('.bt-yours, .gt-yours') ? 'yours' : a.closest('.gt-guards') ? 'guards' : a.closest('[data-old]') ? a.closest('[data-old]').dataset.old : '';
+  return [f || a.dataset.way || (a.classList.contains('mf-seal') ? 'seal' : a.classList.contains('sp-shut') ? 'back' : a.tagName), a.matches(':focus-visible')]; }"""
+
+
+def mat_page(gui, address):
+    server, browser = gui
+    pg = browser.new_page(viewport={"width": 390, "height": 844}, **TOUCH)
+    seen = []
+    pg.on("pageerror", lambda e: seen.append(str(e)))
+    pg.goto(server.url + ("&table=cards" if "?" in server.url else "?table=cards") + address)
+    return pg, seen
+
+
+def tab_order(pg, kind):
+    """What Tab reaches in the mat, in order, from its first stop until it comes round; each with a visible focus."""
+    names = []
+    for _ in range(40):
+        pg.keyboard.press("Tab")
+        got = pg.evaluate(STOP, kind)
+        assert got[1], got
+        if names and got[0] == names[0]:
+            break
+        if not names or names[-1] != got[0]:
+            names.append(got[0])
+    return names
+
+
+def test_the_battle_opened_from_its_address_after_a_reload_is_the_whole_screen_upright_with_back_and_its_ways_a_row_that_scrolls(gui):
+    pg, _host = battle_kit.opened(gui, 390, 844, **TOUCH)
+    pg.evaluate("() => import('/static/js/cards/spreads/open.js').then((m) => m.openSpread({ kind: 'battle', slug: 'timer' }))")
+    pg.reload()                                                                                          # its address opens it again
+    sp = pg.locator("[data-spread=battle]")
+    sp.locator("[data-old]").first.wait_for(timeout=WAIT_MS)
+    assert sp.locator(".mf").bounding_box()["width"] >= 388 and sp.locator(".sp-shut").inner_text().strip() == "Back"
+    ys = [sp.locator(sel).first.bounding_box()["y"] for sel in (".bt-against", ".bt-line", ".bt-yours", ".sp-cards", ".mf-seal")]
+    assert ys == sorted(ys)                                                                              # the desktop's order, the ways, then the seal
+    got = pg.evaluate(NO_CUT, "battle")
+    assert got["bad"] == [] and got["small"] == [] and got["row"] == "auto" and not got["sideways"], got
+    names = tab_order(pg, "battle")
+    assert [n for n in names if n in ("§212", "§213", "line", "yours", "new", "old", "words", "seal", "back")] == ["§212", "§213", "line", "yours", "new", "old", "words", "seal", "back"], names
+    pg.keyboard.press("Escape")
+    pg.wait_for_selector("[data-spread=battle]", state="detached", timeout=WAIT_MS)
+    pg.close()
+
+
+def test_the_slip_of_an_old_card_lies_under_the_old_cards_at_the_zones_width_its_list_whole(gui):
+    pg, _host = battle_kit.opened(gui, 390, 844, **TOUCH)
+    pg.evaluate("() => import('/static/js/cards/spreads/open.js').then((m) => m.openSpread({ kind: 'battle', slug: 'timer' }))")
+    sp = pg.locator("[data-spread=battle]")
+    sp.locator("[data-old]").first.wait_for(timeout=WAIT_MS)
+    sp.locator("[data-old] button").first.click()
+    slip = sp.locator(".bt-slip")
+    slip.wait_for(timeout=WAIT_MS)
+    got = slip.evaluate("""e => { const z = e.closest('.bt-against'), cs = getComputedStyle(z), zr = z.getBoundingClientRect(), r = e.getBoundingClientRect(),
+      last = [...z.querySelectorAll('[data-old]')].pop().getBoundingClientRect();
+      return { inner: zr.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth), w: r.width, top: r.top, last: last.bottom, sh: e.scrollHeight, ch: e.clientHeight }; }""")
+    assert abs(got["w"] - got["inner"]) <= 2 and got["sh"] == got["ch"] and got["top"] >= got["last"] - 1, got
+    pg.close()
+
+
+def test_the_phones_battle_card_opens_it_and_new_wins_from_it_is_sent_from_the_hand(gui):
+    pg, host = battle_kit.opened(gui, 390, 844, **TOUCH)
+    spy = battle_kit.Spy(host, [0])
+    try:
+        card = pg.locator("[data-key='card:battle/timer']")                                             # its card in the phone's row
+        card.wait_for(state="attached", timeout=WAIT_MS)
+        card.click()
+        pg.locator("[data-spread=battle] [data-old]").first.wait_for(timeout=WAIT_MS)
+        pg.locator("[data-spread=battle] .sp-cards [data-way=new]").click()
+        pg.locator("[data-spread=battle]").wait_for(state="detached", timeout=WAIT_MS)
+        assert spy.sent("ideas.conflict") == [{"idea": "timer", "number": 212, "choice": "replace", "from": "hand"}]
+    finally:
+        spy.close()
+        pg.close()
+
+
+@pytest.mark.parametrize("red", [True, False])
+def test_the_gate_opened_from_its_address_after_a_reload_is_the_whole_screen_upright_with_back_the_ways_then_the_seal(gui, red):
+    server, _b = gui
+    slug = "phone-red" if red else "phone-green"
+    gate_kit.lay(server, slug, red=red)
+    pg, seen = mat_page(gui, f"#mat=gate:{slug}")
+    pg.reload()
+    gate = pg.locator("[data-spread=gate]")
+    gate.locator(".gt[data-way]:not([data-way=''])").wait_for(timeout=WAIT_MS)
+    assert gate.locator(".mf").bounding_box()["width"] >= 388 and gate.locator(".sp-shut").inner_text().strip() == "Back"
+    sels = [".gt-guards", ".gt-line", ".gt-yours", *([".sp-cards"] if red else []), ".mf-seal"]
+    ys = [gate.locator(sel).first.bounding_box()["y"] for sel in sels]
+    assert ys == sorted(ys)
+    got = pg.evaluate(NO_CUT, "gate")
+    assert got["bad"] == [] and got["small"] == [] and not got["sideways"], got
+    assert gate.locator(".mf-phase.is-on").inner_text().strip().lower() == "work"                       # the goal's own phase, as the desk reads it
+    names = tab_order(pg, "gate")
+    assert names.index("guards") < names.index("seal") < names.index("back"), names                      # the cards of Yours and the line are no act: Tab goes guards, the ways, the seal, Back
+    if red:
+        assert got["row"] == "auto" and names.index("guards") < names.index("fix") < names.index("stale") < names.index("seal"), names
+    gate.locator(".sp-shut").click()                                                                     # Back puts it away
+    pg.wait_for_selector("[data-spread=gate]", state="detached", timeout=WAIT_MS)
+    assert "#mat=" not in pg.url and not seen
+    pg.close()

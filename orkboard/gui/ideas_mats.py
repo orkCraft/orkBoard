@@ -23,13 +23,16 @@ from orkboard.gui.ideas_args import IdeasError, _device, _text
 from orkboard.realm import board_map, board_turns, code_layers, board_ask, event_log, goal_phase, idea_questions, idea_target, ideas, opportunity_tree, page_talk
 
 SEALED_BY = {"ideas.to_main": "merge_main", "ideas.gate_merge": "merge_main", "ideas.goal_to_dev": "send_branch", "ideas.release_out": "ship_release",
-             "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass"}
-ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer_way")      # each runs no model (tests/test_ideas_mats_closed.py); `ideas.answer` begins the keeper's pass, so it is none of them
+             "ideas.reply": "paid_pass", "ideas.ask_leader": "paid_pass", "ideas.gate_fix_stage": "fix_stage"}
+ONE_PRESS_BY = ("ideas.drop", "ideas.queue", "ideas.answer_way", "ideas.gate_fix_goal")      # each runs no model (tests/test_ideas_mats_closed.py); `ideas.answer` begins the keeper's pass, so it is none of them; gate_fix_goal keeps its own Undo (gui/ideas_battle.py)
 SEALED_ON_CARDS = {"ideas.start": "start_work"}        # sealed where a card of the hand or a mat plays it (`from: hand|mat`): starting begins paid work that cannot be undone; the older faces' presses of it (no `from`) are as they were
 
 
 def move_kind(name: str, args: dict) -> str:
-    """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer_way is a question's way."""
+    """The kind of the hand's move a command is ("" for any other): a Hold is the queue's `hold` (or the old `night`), an answer_way is a question's way. A battle's way (`ideas.conflict` played from a card or a mat, `from: hand|mat`):
+    New wins (`replace`) one press, Old wins and Your words (`keep`, `other`) the keeper's reword, sealed; with no `from` (the old table) none."""
+    if name == "ideas.conflict":
+        return {"replace": "new_wins", "keep": "paid_pass", "other": "paid_pass"}.get(args.get("choice"), "") if args.get("from") in ("hand", "mat") else ""
     if name in SEALED_BY:
         return SEALED_BY[name]
     if name in SEALED_ON_CARDS:
@@ -38,12 +41,12 @@ def move_kind(name: str, args: dict) -> str:
         return "drop"
     if name == "ideas.queue":
         return "hold" if args.get("queue") in ("hold", "night") else ""
-    return "answer" if name == "ideas.answer_way" else ""
+    return "answer" if name == "ideas.answer_way" else "fix_goal" if name == "ideas.gate_fix_goal" else ""
 
 
 def played(ideas_: Any, name: str, fn: Any) -> Any:
     """`gui/ideas.py`'s `guarded` runs a command through this: a sealed kind is refused unless the page sends its seal; a one-press move keeps its Undo and logs `move_played`."""
-    if name not in SEALED_BY and name not in ONE_PRESS_BY and name not in SEALED_ON_CARDS:
+    if name not in SEALED_BY and name not in ONE_PRESS_BY and name not in SEALED_ON_CARDS and name != "ideas.conflict":
         return fn
 
     def run(args: dict) -> Any:
@@ -55,7 +58,16 @@ def played(ideas_: Any, name: str, fn: Any) -> Any:
                 raise IdeasError(f"{idea_undo.SEALED[kind]} cannot be undone: it goes only on its seal")
             got = fn(args)      # a refusal raised above: nothing logged; it keeps no Undo
             origin = args["from"] if args.get("from") in ("hand", "mat") else ""
-            ideas_._ev(event_log.MOVE_PLAYED, args, idea=args["slug"] if isinstance(args.get("slug"), str) else "", kind=kind, **{"from": origin})
+            goal = next((args[k] for k in ("slug", "idea") if isinstance(args.get(k), str)), "")      # as `ideas.to_main`, `ideas.goal_to_dev` and `ideas.conflict` send it
+            ideas_._ev(event_log.MOVE_PLAYED, args, idea=goal, kind=kind, **{"from": origin})
+            return got
+        if kind == "new_wins":      # a battle's New wins: only the decision is kept, before and after (the wait's tick rewrites the rest of way.json)
+            goal = args["idea"] if isinstance(args.get("idea"), str) else ""
+            before = idea_undo.decision_of(ideas_.state_dir, goal) if goal else None
+            got = fn(args)
+            origin = args["from"] if args.get("from") in ("hand", "mat") else ""
+            if idea_undo.keep_decision(ideas_.state_dir, goal, before, idea_undo.decision_of(ideas_.state_dir, goal), ideas_.host.publish, origin):
+                ideas_._ev(event_log.MOVE_PLAYED, args, idea=goal, kind=kind, **{"from": origin})      # the goal, the kind and the from only: never the words
             return got
         slug = args.get("slug") if isinstance(args.get("slug"), str) else ""
         if not slug:

@@ -7,6 +7,9 @@
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 22px 30px 16px; }
 .mf-veil > .sp.mf:has(> .cards-said) { grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .mf > .cards-said { margin: 10px 8px 0; }
+@media (min-width: 701px) and (max-height: 860px) {      /* a 1280 x 800 window: the mat's chrome gives its field the room (every card and label of a mat lies inside it) */
+  .mf-veil > .sp.mf { top: 24px; padding: 12px 30px 10px; } .mf-seal { min-height: 84px; padding-block: 8px; }
+}
 .mf-veil.has-hand { bottom: 200px; }      /* a desktop mat ends above the hand that follows it, which lies at the window's foot, live (cards/mathand.css) */
 
 /* the head: the avatar, one plate with the title and its line, what the Orkmaster says on a plate, the way out */
@@ -29,10 +32,12 @@
 .mf-phases { align-self: center; display: flex; align-items: center; margin: 0; padding: 4px 6px; list-style: none; background: var(--_plate); }
 .mf-phase { padding: 2px 10px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-bronze-hi); }
 .mf-phase + .mf-phase::before { content: "\203A"; margin-right: 10px; color: var(--ork-bronze); }
+@media (max-width: 700px) { .mf-foot .sp-cards { flex-wrap: nowrap; overflow-x: auto; width: 100%; max-width: 100%; padding-bottom: 4px; }      /* the ways: one row at the foot that scrolls within itself, never the page */
+  .mf-phases { align-self: stretch; justify-content: center; } .mf-phase { padding: 2px 6px; } .mf-phase + .mf-phase::before { margin-right: 6px; } }
 .mf-phase.is-on { background: var(--_plate); color: var(--ork-gilt-hi); border: 1px solid var(--ork-gilt); }
 
 /* words laid on the felt lie on a plate: its ground is one colour, so its contrast is one number (decisions §275.2) */
-.mf-field :is(.sp-cap, .sp-costw, .sp-field__say, .bt-undo, .bt-axis, .cards-lab, .sp-or, .sp-arrow, .sp-gk > small, .sp-chair__n, .sp-chair > small, .bt-head > span, .sp-pot > b,
+.mf-field :is(.sp-cap, .sp-costw, .sp-field__say, .bt-undo, .bt-axis, .cards-lab, .sp-or, .sp-arrow, .sp-chair__n, .sp-chair > small, .bt-head > span, .sp-pot > b,
   .tb-colh, .tb-legend, .tb-ln, .tb-empty, .tb-asked) { background: var(--_plate); padding: 2px 8px; }
 .mf-field .bt-row, .mf-field .bt-row.bt-head { background: var(--_plate); }
 

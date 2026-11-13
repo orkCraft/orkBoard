@@ -201,3 +201,52 @@ def test_each_sealed_kind_played_from_hand_or_mat_logs_one_move_played_and_a_ref
                 ideas_mats.played(host.ideas, name, refuse)({"slug": "goal", "from": origin, "sealed": True})
             assert count() == before + 1
     assert not (host.ideas.state_dir / "goals" / "goal" / "undo.json").exists()
+
+
+# -- the gate mat's seals: the goal read from `idea`, the `from` as sent (goal 113 B; H7) -----------------------------------------------------
+
+from tests.test_goal_main import goal as gm_goal, repo, task as gm_task  # noqa: E402,F401  (repo: a fixture)
+
+
+@pytest.fixture
+def gate_host(repo):
+    h = Orkboard(repo)
+    yield h
+    sys.modules.pop("orkboard.core.idea_runner", None)
+
+
+def _moves(h):
+    from orkboard.realm import event_log
+    return [r for r in event_log.read(h.repo_root) if r["event"] == "move_played"]
+
+
+def test_the_gate_mats_merge_into_main_keeps_its_goal_and_its_from_as_sent_and_none_is_none(gate_host):
+    import time
+    h = gate_host
+    for n, (given, kept) in enumerate({"hand": "hand", "mat": "mat", None: "", "portal": ""}.items()):
+        slug = gm_goal(h, f"Lobby {n}")
+        gm_task(h, h.repo_root, slug, "k1", {f"lobby{n}.ts": "l\n"})
+        h.command("ideas.to_main_checks", {"idea": slug})
+        for _ in range(1000):
+            got = h.ideas._main_checks.get(slug)
+            if got and not got["running"]:
+                break
+            time.sleep(0.02)
+        h.command("ideas.to_main", {"sealed": True, "idea": slug, **({"from": given} if given is not None else {})})
+        row = _moves(h)[-1]
+        assert len(_moves(h)) == n + 1 and (row["idea"], row["kind"], row["from"]) == (slug, "merge_main", kept), (given, row)
+
+
+def test_the_gate_mats_send_to_dev_keeps_its_goal_and_its_from_as_sent_and_none_is_none(gate_host):
+    from orkboard.realm import goal_branch
+    from orkboard.realm.idea_git import IdeaGit
+    from tests.test_goal_main_branch import land
+    h = gate_host
+    for n, (given, kept) in enumerate({"hand": "hand", "mat": "mat", None: ""}.items()):
+        slug = gm_goal(h, f"Lobby {n}")
+        branch = goal_branch.begin(IdeaGit(h.repo_root), h.ideas.state_dir, slug, {"tasks": []}, "dev", 1)
+        land(h, h.repo_root, slug, "k1", branch, {f"lobby{n}.ts": "l\n"})
+        goal_branch.ready(h.ideas.state_dir, slug)
+        h.command("ideas.goal_to_dev", {"sealed": True, "idea": slug, "untested": True, **({"from": given} if given is not None else {})})
+        row = _moves(h)[-1]
+        assert len(_moves(h)) == n + 1 and (row["idea"], row["kind"], row["from"]) == (slug, "send_branch", kept), (given, row)

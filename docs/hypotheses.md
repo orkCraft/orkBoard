@@ -305,8 +305,40 @@ from, device), which keeps no word of the person's or of a leader's; both `hand`
 days, and nothing leaves the person's machine without their yes (`orkboard usage`). The days are thin until goal 170's
 last step turns the cards on: the person keeps the old table by default behind `?table=cards`, so this says little until
 then.
+The gate mat's seals (Merge into main, Send to dev) and the battle's ways now count too: their goal is read from `idea`
+and their `from` is `mat` or `hand` as sent, "" for the discard's older faces, which are never counted as `mat`.
 
 ### If it holds
 
 Keep the hand as the place the moves that wait are settled, and grow its kinds only when a move asks to be there. If
 refuted, keep the moves on their mats and drop the hand's card for any kind that is played from a mat.
+
+## H8. The person settles a rewrite of past decisions on a battle, not in chat
+
+**Status:** open. **Raised:** 2026-11-13 (goal 113).
+
+### The belief
+
+A new card that goes against past decisions is laid as a battle: the person's card below, the decisions it goes against
+above, and the person plays New wins, Old wins or their own words. If decisions are still rewritten in chat and written
+with *Changes:* outside any battle, the battle is a second place to decide that costs a read of the decisions and brings
+nothing.
+
+### What would prove it, what would refute it
+
+- **Holds** when, over the owner's weeks, more `conflict_answered` replaces (*New wins*) change decisions than are
+  written with *Changes:* outside a battle.
+- **Refuted** when the decisions written with *Changes:* outside a battle stay the more.
+
+### How we test it
+
+In the owner's weeks, on this repository first. The signal is the event `conflict_answered` (idea, number, choice,
+device), which keeps no word of the person's or of a leader's, set against the *Changes:* lines of the decisions log
+(`docs/decisions.md`); no new event. The signal stays thin while this Board's goals are run by the skills and lay no
+battle: only the window's keeper lays a conflict. Nothing leaves the person's machine without their yes
+(`orkboard usage`).
+
+### If it holds
+
+Weigh then §299.6's Merge and Not a battle, and a price on an old card. If refuted, keep the decisions rewritten where
+the person writes them and drop the battle's hand card.

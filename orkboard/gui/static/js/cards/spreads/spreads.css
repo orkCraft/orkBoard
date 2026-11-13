@@ -34,13 +34,49 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .sp-now .cards-bar { margin-top: auto; }
 .sp-ahead { display: flex; } .sp-ahead > * { margin-left: -36px; } .sp-ahead > :first-child { margin-left: 0; }
 
-/* the gate: the goal in the middle in its ring, the checks round it */
-.sp-gate { position: relative; flex: none; width: 760px; height: 520px; }
-.sp-gate__mid { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-.sp-ring { position: absolute; left: 50%; top: 50%; width: 420px; height: 420px; transform: translate(-50%, -50%); }
-.sp-ring circle { fill: none; stroke: var(--ork-portal); stroke-width: 3; stroke-dasharray: 14 10; }
-.sp-gk { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; width: 120px; }
-.sp-gk small { display: inline-flex; align-items: center; gap: 4px; font: var(--ork-type-label); text-transform: none; letter-spacing: 0; color: var(--ork-ink-read); text-align: center; }
+/* the gate (js/cards/spreads/gate.js; goal "The battle and the gate" L): upright in the mat frame, what its tests guard above, the line across, Yours below */
+.gt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; --card-w: 76px; }
+.gt .mf-zone { padding: 18px 12px 8px; }
+.gt .sp-card.is-md { --card-w: 76px; padding: 20px 6px 10px; gap: 1px; aspect-ratio: auto; min-height: 106px; }
+.gt .sp-card.is-md:has(> .sp-chk) { padding-top: 16px; padding-bottom: 26px; }      /* the check's badge lies at the card's foot corner, so the sign at the top right stays seen: the last line ends above it */
+.gt .sp-card > .sp-chk { top: auto; bottom: 4px; right: 4px; }
+.gt .sp-card.is-md[data-cardkind="part"] { --card-w: 104px; }
+[data-spread="gate"] .mf-field { padding-block: 8px 4px; }
+.gt .sp-card .sp-card__name { font-size: 12px; line-height: 15px; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.gt .sp-card .sp-card__line { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.gt .sp-card[data-cardkind="part"] .sp-card__name { font-family: var(--ork-font-code); font-size: 12px; }
+.gt .sp-card[data-cardkind="decision"] .gt-sect { display: grid; place-items: center; height: 26px; font: var(--ork-type-title); color: var(--ork-alert); }
+.gt .sp-back.is-sm { --card-w: 56px; }
+.gt-guards { flex-wrap: wrap; align-items: flex-start; max-width: 100%; }
+.gt-agree { appearance: none; padding: 0; margin: 0 10px 0 0; background: none; border: 0; color: var(--ork-ink-read); cursor: pointer; }
+.gt-agree .sp-deckl, .gt-spread .sp-deckl { position: static; }
+.gt-agree .sp-thick { width: 56px; }
+.gt-agree:focus-visible, .gt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 3px; }
+.gt-spread { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.gt-more { display: flex; align-items: flex-start; } .gt-more .sp-back { margin-left: -44px; } .gt-more .sp-back:first-child { margin-left: 0; }
+.gt-line { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; width: min(520px, 100%); padding: 2px 0; border-block: 2px solid var(--ork-edge); }
+.gt-ax, .gt-nt { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-read); }
+.gt-yours { align-items: flex-end; }
+.gt-yours .sp-card .sp-card__name, .bt-yours .sp-card .sp-card__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }      /* the goal's own name, two lines at most: its stack never grows the zone */
+.gt-yours .sp-card .sp-card__line { -webkit-line-clamp: 1; }
+.gt-stack { position: relative; isolation: isolate; margin: 0 6px 0 0; }
+.gt-stack::before, .gt-stack::after { content: ""; position: absolute; inset: 0; z-index: -1; border: 1px solid var(--ork-card-frame); background: var(--ork-raised); }
+.gt-stack::before { transform: translate(3px, -3px); } .gt-stack::after { transform: translate(6px, -6px); }
+.sp-cards .gt-way.ork-card { flex: none; display: flex; flex-direction: column; gap: 6px; width: 148px; height: 150px; aspect-ratio: auto; padding: 12px 10px; text-align: left; cursor: pointer; border: 1px solid var(--ork-card-frame); color: var(--ork-ink);
+  box-shadow: inset 0 3px 0 var(--ork-card-frame), 0 4px 0 var(--ork-room); }
+.gt-way b { font: var(--ork-type-button); } .gt-way small { font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow: hidden; }
+.gt-way:hover, .gt-way:focus-visible, .gt-way[aria-pressed="true"] { border-color: var(--ork-ink); }
+.gt-way[aria-pressed="true"] { outline: 2px solid var(--ork-action); outline-offset: 2px; }
+/* on a phone the gate is laid unscaled (its words 12 px at least as drawn): the zones one under the other, its ways a row at the foot that scrolls (goal 171 N2, this goal M) */
+@media (max-width: 900px) {
+  [data-spread="gate"] .mf-field { align-items: flex-start; }      /* a field that scrolls starts at its top: centred, its top would be cut */
+  .gt-line { width: 100%; }
+  .gt-agree .sp-deckl { display: flex; }      /* the duel's pile is hidden at this width; the gate's is its zone's first card */
+}
+@media (max-width: 700px) {
+  .sp-cards .gt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .gt-way small { display: none; }
+  [data-spread="gate"] .mf-foot .sp-note, [data-spread="gate"] .mf-t small { display: none; }
+}
 
 /* before and after */
 .sp-diff { display: flex; gap: 30px; align-items: flex-start; }
@@ -57,16 +93,6 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .sp-l del { background: color-mix(in srgb, var(--ork-danger) 22%, transparent); color: var(--ork-ink-read); text-decoration: line-through; }
 .sp-arrow { align-self: center; font: var(--ork-type-title); color: var(--ork-ink-muted); }
 @media (max-width: 900px) { .sp-diff, .sp-road { flex-direction: column; } .sp-hand { padding-left: 12px; } }
-/* the gate on a phone is laid unscaled (its words 12 px at least as drawn): the goal on top, its checks wrapped in rows under it, none cut at the screen's edge (goal 171 N2) */
-@media (max-width: 900px) {
-  .sp-gate { width: 100%; height: auto; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 16px 12px; }
-  .sp-ring { display: none; }
-  .sp-gate__mid { position: static; transform: none; flex: 0 0 100%; display: flex; justify-content: center; }
-  .sp-gk { position: static; transform: none; width: 112px; }
-  .sp-gate__mid .sp-card.is-xl { --card-w: 132px; padding: 26px 10px 22px; } .sp-gate__mid .sp-card .sp-card__name { font-size: 14px; line-height: 18px; }
-  [data-spread="gate"] .mf-field { align-items: flex-start; }      /* a field that scrolls starts at its top: centred, its top would be cut */
-}
-
 /* the hand's cards: the ways a person plays, a hand poking up from the strip's bottom */
 .sp-cards { display: flex; align-items: flex-end; gap: 12px; align-self: flex-end; }
 .sp-cards .ork-card.cards-s { --card-w: 128px; margin-bottom: -6px; }
@@ -134,37 +160,46 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
 .cards-matrow:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .cards-matrow > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-/* a battle (js/cards/spreads/battle.js; decisions §298.6): the new card, the axes, the old cards; on a phone width they stack */
-.bt { display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; }
-.bt-side { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: none; }
-.bt-olds { display: flex; gap: 14px; align-items: flex-start; }
-.bt-one { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 150px; }
-.bt-undo { font: var(--ork-type-caption); color: var(--ork-ink-read); text-align: center; }
-.bt-pile { flex-direction: row; max-width: none; } .bt-pile .sp-back { margin-left: -70px; } .bt-pile .sp-back:first-child { margin-left: 0; }
-.bt-axes { flex: 1 1 auto; min-width: 0; max-width: 520px; display: flex; flex-direction: column; gap: 8px; }
-.bt-row { display: grid; grid-template-columns: 1fr minmax(120px, 1.2fr) 1fr; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--ork-frame); background: var(--ork-panel); }
-.bt-row.bt-head { border: 0; background: none; padding-block: 0; font: var(--ork-type-label); text-transform: uppercase; letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); text-align: center; }
-.bt-cell { display: flex; gap: 8px; justify-content: center; align-items: flex-start; }
-.bt-axis { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.bt-axis b { font: var(--ork-type-label); text-transform: uppercase; letter-spacing: var(--ork-type-label-track); }
-.bt-axis small { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.bt-none { color: var(--ork-ink-faint); }
-.bt-note { margin: 4px 0 0; }
-.bt-decision .bt-sect { display: grid; place-items: center; height: 44px; font: var(--ork-type-title); color: var(--ork-alert); }
+/* a battle (js/cards/spreads/battle.js; decisions §298.6, §303): upright in the mat's frame: what it goes against above, the line of the crafts across the middle (a craft's token under its name),
+   Yours below. The cards are small so the three zones lie whole in a desktop mat, which ends above the hand; on a phone the mat is the whole screen and its field scrolls. */
+[data-spread="battle"] .mf-field { padding: 6px 12px; }
+.bt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.bt-against, .bt-yours { align-items: flex-start; padding-top: 18px; padding-bottom: 8px; }
+.bt .sp-card { --card-w: 96px; padding: 22px 8px 10px; justify-content: flex-start; aspect-ratio: auto; min-height: 134px; } .bt .sp-card .sp-card__name { font-size: 13px; line-height: 16px; }
+@media (min-width: 701px) and (max-height: 860px) {
+  .bt .sp-card { --card-w: 88px; padding: 20px 6px 8px; min-height: 96px; } .bt-tok { min-height: 26px; } .bt-craft { gap: 2px; } .bt .sp-card .sp-card__name { font-size: 12px; line-height: 15px; }
+  .bt .bt-sect { height: 22px; font: var(--ork-type-title); } .bt-against, .bt-yours { padding-top: 14px; padding-bottom: 2px; } .bt { gap: 2px; }
+  .bt-pile .sp-back { --card-w: 56px; }
+}
+.bt-one { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 270px; }
+.bt .sp-card .sp-card__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; }
+.bt-rests { font: var(--ork-type-caption); color: var(--ork-ink-read); text-align: center; background: var(--_plate); padding: 0 6px; }
+.bt-pile { flex-direction: row; max-width: none; } .bt-pile .sp-back { margin-left: -50px; } .bt-pile .sp-back:first-child { margin-left: 0; }
+.bt-decision { cursor: pointer; text-align: center; }
+.bt-decision .bt-sect { display: grid; place-items: center; height: 30px; font: var(--ork-type-heading); color: var(--ork-ink); }
+.bt-slip { align-self: stretch; max-width: 260px; max-height: 150px; overflow: auto; padding: 6px 10px; font: var(--ork-type-caption); }
+.sp-card.is-stop:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 3px; }
+.bt-slip b { display: block; font: var(--ork-type-button); } .bt-slip ul { margin: 0 0 4px; padding-left: 16px; } .bt-slip code { font-family: var(--ork-font-code); overflow-wrap: anywhere; }
+.bt-line { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 22px; flex-wrap: wrap; width: 100%; }
+.bt-line::before { content: ""; position: absolute; left: 0; right: 0; top: 12px; border-top: 2px solid var(--ork-bronze); }
+.bt-crafts { position: relative; display: flex; gap: 26px; align-items: flex-start; }
+.bt-craft { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 70px; }
+.bt-tok { min-height: 40px; display: flex; align-items: flex-start; }
+.bt-name { order: -1; margin: 0; padding: 2px 10px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-gilt); border: 1px solid var(--ork-bronze); }
+.bt-total { position: relative; margin: 0; padding: 2px 8px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-read); }
+.bt-line .cards-slip { max-width: 280px; }
 .sp-cards .bt-way.ork-card { flex: none; display: flex; flex-direction: column; gap: 6px; width: 148px; height: 150px; aspect-ratio: auto; padding: 12px 10px; text-align: left; cursor: pointer; border: 1px solid var(--ork-card-frame); color: var(--ork-ink);
   box-shadow: inset 0 3px 0 var(--ork-card-frame), 0 4px 0 var(--ork-room); }
 .bt-way b { font: var(--ork-type-button); } .bt-way small { font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow: hidden; }
-.bt-way:hover, .bt-way:focus-visible { border-color: var(--ork-ink); } .bt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.bt-way:hover, .bt-way:focus-visible, .bt-way[aria-pressed="true"] { border-color: var(--ork-ink); } .bt-way[aria-pressed="true"] { outline: 2px solid var(--ork-action); outline-offset: 2px; } .bt-way:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 [data-spread="battle"] .sp-cards { align-self: flex-end; }
-@media (max-width: 900px) {
-  .bt { flex-direction: column; gap: 14px; }
-  .bt-axes { width: 100%; max-width: none; }
-}
 @media (max-width: 700px) {
   [data-spread="battle"] .sp-t small { display: none; } [data-spread="battle"] .sp-t b { font: var(--ork-type-heading); }
-  .bt-new .sp-card.is-xl { --card-w: 150px; padding: 28px 12px 24px; } .bt-new .sp-card .cards-s__name, .bt-new .sp-card .sp-card__name { font-size: 16px; line-height: 20px; }
   [data-spread="battle"] .sp-h { padding: 12px 16px 0; } [data-spread="battle"] .sp-say { display: none; }
-  [data-spread="battle"] .sp-field { align-items: flex-start; justify-content: flex-start; padding: 12px 16px; }
-  [data-spread="battle"] .sp-cards { flex-wrap: wrap; gap: 8px; align-self: center; width: 100%; }
+  [data-spread="battle"] .sp-cards { gap: 8px; align-self: center; width: 100%; }
   .sp-cards .bt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .bt-way small { display: none; }
+  .bt-against:has(> .bt-slip) { flex-wrap: wrap; } .bt-slip { flex: 0 0 100%; max-width: none; max-height: none; overflow: visible; box-sizing: border-box; }      /* the slip lies under the old cards at the zone's width, its list whole */
 }
+/* The picked way is marked on its own card, as the seal says it (goal «The battle and the gate», Design's note on P2): its border ink and the action's
+   ring inside it, so no scrolling row clips it; written after the cards' own rules so their border does not win. */
+.mathand .bt-way.ork-card[aria-pressed="true"], .mathand .gt-way.ork-card[aria-pressed="true"], .sp-cards .bt-way.ork-card[aria-pressed="true"], .sp-cards .gt-way.ork-card[aria-pressed="true"] { border-color: var(--ork-ink); outline: 2px solid var(--ork-action); outline-offset: -5px; }

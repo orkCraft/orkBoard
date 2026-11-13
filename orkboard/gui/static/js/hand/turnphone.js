@@ -28,7 +28,7 @@ export function TurnLifted({ s }) {
 /** The opened battle: one button for its spread. */
 export function BattleLifted({ s }) {
   return html`<div class="up-turn" role="group" aria-label="Answers"><p class="body up-turn__text">${s.text}</p>
-    <button type="button" class="ork-btn primary" data-act="open-battle" onClick=${(e) => openSpread({ kind: "battle", slug: s.ref.slug, from: e.currentTarget })}>Open the battle</button></div>`;
+    <button type="button" class="ork-btn primary" data-act="open-battle" onClick=${(e) => openSpread({ kind: "battle", slug: s.ref.slug, from: e.currentTarget, opened: "hand" })}>Open the battle</button></div>`;
 }
 
 way("turn", { Lifted: TurnLifted });

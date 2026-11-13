@@ -15,11 +15,12 @@ export async function undoMove(goal, back, party = false) {
   return true;
 }
 
-/** Plays a move: `name`/`args` the command, `from` where it was pressed (hand or mat), `goal` the goal it is about, `said` what the toast says, `done` runs once it went, `back` once it is undone.
+/** Plays a move: `name`/`args` the command, `from` where it was pressed (hand or mat), `goal` the goal it is about, `said` what the toast says, `done` runs once it went (with the host's answer), `back` once it is undone.
  *  `sealed`: the seal (a move that cannot be undone): sent as such, no Undo offered. Resolves whether it went. */
 export async function playMove(name, args, { from, goal, said, done, back, sealed = false, party = false }) {
-  try { await command(name, { ...args, ...(sealed ? { sealed: true } : {}), from }, true); } catch (e) { if (e?.message !== "offline") toast(e?.message || "Refused", "error", name); return false; }
-  done?.();
+  let got;
+  try { got = await command(name, { ...args, ...(sealed ? { sealed: true } : {}), from }, true); } catch (e) { if (e?.message !== "offline") toast(e?.message || "Refused", "error", name); return false; }
+  done?.(got);
   if (sealed) toast(said);
   else toast(said, "information", "", UNDO_S, null, [{ label: UNDO, run: () => undoMove(goal, back, party) }]);
   return true;

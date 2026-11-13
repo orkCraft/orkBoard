@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.core import craft_pick
+from orkboard.core.idea_fix_stage import FixStageMixin
 from orkboard.core.idea_goal_dev import GoalDevMixin
 from orkboard.core.idea_handover import HandoverMixin
 from orkboard.core.idea_holds import Held, HoldsMixin  # noqa: F401  (Held: the runner's, raised by its session)
@@ -108,7 +109,7 @@ class Run:
     role: str = ""                 # the role it runs as (spec 34 §3): its `max_parallel` is held
 
 
-class IdeaRunner(GoalDevMixin, HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
+class IdeaRunner(FixStageMixin, GoalDevMixin, HandoverMixin, HoldsMixin, ResumeMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,

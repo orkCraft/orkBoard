@@ -415,3 +415,17 @@ def test_the_merge_of_dev_runs_its_tests_with_the_repository_free_and_refuses_a_
         host.command("ideas.gate_merge", {"sealed": True})
     assert free == [True], "another thread takes the repository's lock while the tests run"
     assert git(repo, "log", "-1", "--format=%s", "main") == "edit raced.txt"
+
+
+def test_the_tests_step_keeps_the_files_it_ran_beside_its_failures(monkeypatch, tmp_path):
+    from orkboard.realm import gate_rerun
+    from orkboard.realm.idea_git import GateRun
+    ids = ["tests/t.py::test_a", "tests/u.py::test_b"]
+    out = "\n".join(f"FAILED {i} - x" for i in ids) + "\n=== 2 failed in 1s ==="
+    def gate(*args):
+        args[-1]["run"] = GateRun(False, out, files=("tests/t.py", "tests/u.py", "tests/v.py"))
+        return False, "2 failed"
+    monkeypatch.setattr(main_checks, "_gate", gate)
+    monkeypatch.setattr(gate_rerun, "sort_out", lambda *a, **kw: gate_rerun.Sorted((), (), tuple(ids), 0, ()))
+    _ok, _words, record = main_checks._checked(None, tmp_path, "base", gate_config.Check("Tests", gate=True), threading.Event(), 30, alone=True)
+    assert record["files"] == ["tests/t.py", "tests/u.py", "tests/v.py"] and [f["id"] for f in record["failures"]] == ids

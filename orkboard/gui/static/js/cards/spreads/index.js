@@ -16,12 +16,12 @@ export function Spreads() {
   const s = spread.value;
   if (!s) return null;
   if (s.kind === "track") return html`<${Track} key=${s.slug} slug=${s.slug} opened=${s.opened} />`;
-  if (s.kind === "gate") return html`<${Gate} key=${s.slug} slug=${s.slug} />`;
+  if (s.kind === "gate") return html`<${Gate} key=${s.slug} slug=${s.slug} opened=${s.opened} />`;
   if (s.kind === "diff" && s.p) return html`<${Diff} key=${s.p.at + s.p.text} p=${s.p} />`;
   if (s.kind === "cost") return html`<${Cost} />`;
   if (s.kind === "duel") return html`<${Duel} />`;
   if (s.kind === "sort") return html`<${Sort} />`;
   if (s.kind === "deal") return html`<${Deal} key=${s.slug} slug=${s.slug} />`;
-  if (s.kind === "battle") return html`<${Battle} key=${s.slug} slug=${s.slug} />`;
+  if (s.kind === "battle") return html`<${Battle} key=${s.slug} slug=${s.slug} opened=${s.opened} />`;
   return null;
 }

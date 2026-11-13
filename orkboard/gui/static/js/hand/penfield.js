@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 
-/** `who`: the name of whom the words go to (*Design lead*); `send(text)`: sends the trimmed words; `close()`: Esc. */
-export function PenField({ at, who, send, close, ask = null }) {
-  const field = useRef(), [words, setWords] = useState("");
+/** `who`: the name of whom the words go to (*Design lead*); `send(text)`: sends the trimmed words; `value`: the words it opens with; `close()`: Esc. */
+export function PenField({ at, who, send, close, ask = null, value = "" }) {
+  const field = useRef(), [words, setWords] = useState(value);
   useEffect(() => { field.current?.focus({ preventScroll: true }); }, []);
   const go = () => { const text = words.trim(); if (text) send(text); };
   const key = (e) => {

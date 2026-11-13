@@ -89,7 +89,7 @@ def test_lifted_it_is_two_cards_side_by_side_its_ways_the_hand_and_the_earlier_o
         assert card.locator(".hand-card__name").inner_text().strip() == "Round timer on the client"
         assert card.locator(".hand-card__foot").inner_text().strip() == "Goes against §212"
         ways = pg.locator(".hand-ways-row .hand-ans")
-        assert [w.locator(".hand-ans__name").inner_text().strip() for w in ways.all()] == ["The new one replaces §212", "Keep §212", "Other…"]
+        assert [w.locator(".hand-ans__name").inner_text().strip() for w in ways.all()] == ["New wins", "Old wins", "Your words"]
         earlier = pg.locator('.hand-earlier[data-earlier="212"]')
         earlier.wait_for(timeout=WAIT_MS)
         assert "is-out" in earlier.get_attribute("class"), "it comes out of the portal, once"

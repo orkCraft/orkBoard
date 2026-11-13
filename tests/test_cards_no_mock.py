@@ -40,3 +40,19 @@ def test_nothing_off_mocks_reaches_js_mock():
     for door in (STATIC / "js" / "link.js", STATIC / "board.js"):
         lines = [ln for ln in code(door).splitlines() if re.search(r"mock/", ln)]
         assert lines and all("MOCK" in ln or "onMocks" in ln or "plate" in ln or "sheet" in ln for ln in lines), (door, lines)
+
+
+def test_gui_and_js_hold_no_battle_settle_and_no_sp_ring():
+    """Goal "The battle and the gate", stage N: `ideas.battle_settle` and the gate's ring are gone from the page, its sheets and the host."""
+    root = STATIC.parent
+    found = [str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() and p.suffix in {".js", ".css", ".py", ".html"} and "vendor" not in p.parts
+             and ("battle_settle" in text(p) or "sp-ring" in text(p))]
+    assert not found, found
+
+
+def test_off_mocks_js_cards_draws_no_battle_and_no_gate_from_js_mock():
+    """Neither mat imports js/mock/ or reads a recording: they ask the host (`ideas.battle`, `ideas.gate_guards`)."""
+    for name in ("battle.js", "gate.js"):
+        src = code(STATIC / "js" / "cards" / "spreads" / name)
+        assert "mock" not in src.lower(), name
+    assert "ideas.battle" in text(STATIC / "js" / "cards" / "spreads" / "battle.js") and "ideas.gate_guards" in text(STATIC / "js" / "cards" / "spreads" / "gate.js")

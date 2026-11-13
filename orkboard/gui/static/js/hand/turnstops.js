@@ -25,6 +25,25 @@ effect(() => {                                   // only the table of cards asks
   command("ideas.turns", {}, true).then((r) => { turns.value = r || {}; settled.value = []; }).catch(() => { turns.value = turns.peek() || {}; });
 });
 
+/** The battle's card of the hand (goal "The battle and the gate", stage J; decisions §303): on the table of cards the conflict rows of a goal's decision (the snapshot's `conflict` stops, one for each decision it goes against) are one card a goal,
+ *  however many conflicts it keeps, in place of §254.6's lifted pair. `stops`: the stops with the conflicts in them; the answer is the stops with each goal's conflicts made one `battle` stop at the first one's place. */
+export function battleStops(stops) {
+  const out = [], at = new Map();
+  for (const s of stops) {
+    if (s.kind !== "conflict") { out.push(s); continue; }
+    const slug = s.row?.idea || s.node?.slug || "";
+    if (!slug) continue;
+    if (!at.has(slug)) {
+      at.set(slug, out.length);
+      out.push({ ...s, key: `battle/${slug}`, kind: "battle", ref: { slug, against: [] }, row: { ...s.row, kind: "battle" }, label: "Battle", gem: "", gemTip: "", head: s.head, small: true, why: "", text: "", title: s.node?.short || s.node?.title || s.title, full: s.node?.title || s.full });
+    }
+    const b = out[at.get(slug)];
+    b.ref.against.push({ kind: "decision", ref: `§${s.row.number}`, title: s.row.title_then || "", number: s.row.number });
+    b.text = vsWords(b.ref.against);
+  }
+  return out;
+}
+
 /** What a battle says of what it goes against: a decision by its §, a goal by its title (*vs §240 and The table, its edge*). */
 export const vsWords = (against) => `vs ${(against || []).map((a) => (a.kind === "decision" ? a.ref : a.title)).join(" and ")}`;
 

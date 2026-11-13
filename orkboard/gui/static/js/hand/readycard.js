@@ -34,7 +34,7 @@ export function ReadyCard({ e }) {
     <span class="hand-card__label"><span class="hand-card__party">Release</span></span>
     <div class="hand-lifted__body hand-ready__body">
       <p class="body hand-ready__line">${line}</p>
-      <button type="button" class=${cls("ork-portal", { "is-sealed": sealed, "is-new": first.value })} aria-label=${labelOf(p, slug, main)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${play}></button>
+      <button type="button" class=${cls("ork-portal", { "is-sealed": sealed, "is-new": first.value })} aria-label=${labelOf(p, slug, main)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${() => play()}></button>
       <span class="hand-ready__label">${main === "main" ? "Main" : main}</span>
       ${first.value && !sealed && html`<p class="cap hand-ready__hint">Tap the portal to send it to main</p>`}
       <p class="cap hand-ready__sealed" role="status" aria-live="polite">${sealed && html`<span key=${echo.value}>Sealed: ${reason}</span>`}</p>
