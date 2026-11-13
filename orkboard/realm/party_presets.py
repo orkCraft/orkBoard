@@ -27,11 +27,6 @@ def _row(rid: str, name: str, line: str, group: str, leader: str, build: list[st
             "sizes": {s: party_recipes.sized(asked, s) for s in idea_target.SIZES}}
 
 
-def team_words(team_at: str) -> str:
-    """Why Team is not made: "" with no Team party (`team_at` ""), *Team is in this project* ("here"), else *Team is in <project>*. A Team party the project has stays."""
-    return "" if not team_at else "Team is in this project" if team_at == "here" else f"Team is in {team_at}"
-
-
 def listed(kind: str = "code", team_at: str = "", ops: bool = True) -> list[dict]:
     """The rows of New party's left half for a kind of project, in the order they are shown: the kind's crafts, then the person's own."""
     out = [_row(r["id"], r["name"], r["line"], "stage", r["leader"], r["build"], r["check"], stage=project_stage.FROM[r["id"]], craft=_craft_of(r["leader"]),

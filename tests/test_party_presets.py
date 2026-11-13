@@ -66,7 +66,6 @@ def test_a_running_party_carries_the_recurring_goals_of_its_kind_and_team_is_no_
     assert [x["id"] for x in web["run"]["routines"]] and web["run"]["routines"] == party_presets.recurring.listed("web-liveops")
     game = {r["id"]: r for r in party_presets.listed("game")}
     assert game["liveops"]["routines"] == party_presets.recurring.listed("game-liveops") and game["tech"]["routines"] == []
-    assert party_presets.team_words("") == "" and party_presets.team_words("here") == "Team is in this project" and party_presets.team_words("Mars") == "Team is in Mars"
     assert party_presets.listed("web", team_at="Mars", ops=True) == party_presets.listed("web")                         # Team says nothing now
 
 

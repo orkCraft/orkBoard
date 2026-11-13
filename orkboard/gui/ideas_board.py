@@ -18,8 +18,6 @@ from orkboard.realm import (board_in_code, board_map, board_rows, collide, event
                             look_wait, night_order, night_slot, way_down)
 from orkboard.realm.idea_git import BoardTree
 
-NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
-
 # The Board's *Work at night* (docs/specs/121-the-day-the-morning-and-the-night.md §1, §4): its words, as a face shows them.
 WORK_AT_NIGHT = {"label": "Work at night",
                  "hint": "What you decide by day is built in the night's window ({night}). Talk, hearings and sketches still run by day. "
@@ -378,12 +376,6 @@ class BoardMixin:
         ideas.save_state(self.state_dir, slug, state="working", error="", queue="")
         runner.start(slug)
         self._publish(slug)
-
-    def runner_board(self) -> dict:
-        """The Board's own settings as the runner reads them (target, night, reserves, autostart)."""
-        s = self.settings_now()
-        return {"night": s.get("night", settings.IDEAS["night"]), "autostart": bool(s.get("autostart", True)),
-                "reserve_day": s.get("reserve_day", 0.3), "reserve_night": s.get("reserve_night", 0.1)}
 
     def older_night_plans(self) -> int:
         """A plan passed before the night went, with `start_at: "night"` still in `plan`, goes to the runner: its tasks wait for the

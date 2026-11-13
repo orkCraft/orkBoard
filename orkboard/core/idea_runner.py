@@ -52,7 +52,6 @@ LIMITS_EVERY_S = 600               # how often the runner reads the quota itself
 DEFAULTS = {"max_parallel": 1, "merge_into": "dev", "push": False, "review": False}
 STOPPED = "stopped"
 LIVE = ("running", "testing")
-PAGE_KEEP = 20000
 
 FIX = """The gate after your work said no:
 

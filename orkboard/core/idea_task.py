@@ -218,21 +218,6 @@ class TaskMixin:
                 except Exception:               # a log never stops the work
                     pass
 
-    def _paced_elsewhere(self, slug: str) -> bool:
-        """Another plan of the project already runs by day because the week had room (it is not finished)."""
-        for other in self._active:
-            if other != slug and ((p := self.plan(other)) or {}).get("by_pace") and not all(t.get("state") in ("merged", "failed", "dropped") for t in p["tasks"]):
-                return True
-        return False
-
-    def _mark_pace(self, slug: str) -> None:
-        """The plan started by day by the pace: it says so (`by_pace`, which the Map and Agents read) and no longer waits for the night."""
-        plan = self.plan(slug)
-        if plan is not None and (not plan.get("by_pace") or plan.get("start_at") == "night"):
-            plan["by_pace"] = True
-            plan["start_at"] = None
-            self._write(self._dir(slug) / "plan.json", plan)
-
     def _checker_of(self, task: dict) -> str:
         """The checker's slug of a check task: its role, else the library's checker of its tag."""
         role = str(task.get("role") or "")

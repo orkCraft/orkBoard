@@ -23,9 +23,8 @@ from typing import Any
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import answer_ways, craft_tools, event_log, goal_team, hero_table, heroes, ideas, lexicon, library, look_wait, idea_target, map_parts, night_slot, party_recipes
+from orkboard.realm import answer_ways, craft_tools, event_log, goal_team, hero_table, heroes, ideas, lexicon, look_wait, idea_target, map_parts, night_slot, party_recipes
 
-ON_OFF = (("on", "On"), ("off", "Off"))
 TARGETS = (("thrift", "Thrift", "Every step on the cheaper tier; a spec reads less"), ("balance", "Balance", "Each step on its usual tier"), ("quality", "Quality", "Specs and acceptances on the elder tier"))
 TIERS = (("laborer", "Laborer", "The lightest model of its tool"), ("warrior", "Warrior", "The middle model"), ("elder", "Elder", "The strongest model"))
 LEAD_TIERS = (("", "Default", "Its own calls follow How deep"), *((v, w, f"Its own calls (Talk, its section, its acceptance) on {l[0].lower()}{l[1:]}") for v, w, l in TIERS))
@@ -91,13 +90,6 @@ class StallMixin:
         if slot == "answers":
             return goal_team.answers_of(root, chair)
         return "gate"
-
-    def _recipe_tiers(self, root: Path, chair: str) -> dict[str, str]:
-        return party_recipes.tiers_for(goal_team.leader_of(root, chair), goal_team.team_of(root, chair), goal_team.size_of(root, chair) or "standard")
-
-    def _seat_tier(self, root: Path, chair: str, seat: str) -> str:
-        a = library.get(seat)
-        return goal_team.tiers_of(root, chair).get(seat) or self._recipe_tiers(root, chair).get(seat) or (a.tier if a is not None else "warrior")
 
     def _tool_ids(self) -> list[tuple[str, str]]:
         """The AI tools signed in, `(id, name)` (the ready tools of `ideas.tools`, the order of the potions' list)."""

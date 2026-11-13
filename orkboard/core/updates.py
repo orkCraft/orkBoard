@@ -26,8 +26,5 @@ from orkboard.orkget.updates import (  # noqa: F401  (the names `*` leaves out, 
     installed_version, load_state, major, method, newer, offer, releases, remember, restart, save_state, series,
     state_path, url, version_key)
 
-MANIFEST_URL = PRODUCT.manifest
 SOURCE = PRODUCT.source
-MANUAL = PRODUCT.manual
-PYPI = PRODUCT.pypi                        # Orkboard is not on PyPI: it installs from git
 NAMES = PRODUCT.names

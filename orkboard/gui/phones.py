@@ -312,10 +312,6 @@ class Listener:
                 phone.send({"t": "state", "state": snap})
         return snap
 
-    def broadcast(self, msg: dict) -> None:
-        for phone in list(self.phones):
-            phone.send(msg)
-
     def close_device(self, device_id: str) -> None:
         for phone in [p for p in self.phones if p.id == device_id]:
             phone.close(1008, "This phone was forgotten")
