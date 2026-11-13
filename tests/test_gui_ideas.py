@@ -15,6 +15,19 @@ from orkboard.core import idea_keeper
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import idea_secrets, ideas, jobs, roles
 
+BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.plan", "ideas.start", "ideas.move",
+                  "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.track_drop", "ideas.todo", "ideas.drop", "ideas.stop",
+                  "ideas.review_list", "ideas.diff", "ideas.merge", "ideas.back", "ideas.regate", "ideas.drop_task",
+                  "ideas.stop_task", "ideas.agents", "ideas.task", "ideas.into", "ideas.log", "ideas.logs", "ideas.goal_save",
+                  "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_add", "ideas.role_drop",
+                  "ideas.kind_set", "ideas.gate", "ideas.gate_merge", "ideas.to_main_plan", "ideas.to_main", "ideas.today", "ideas.pick",
+                  "ideas.revise", "ideas.revise_answer",
+                  "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
+                  "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
+                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.seen",
+                  "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start",
+                  "ideas.talk_answer", "ideas.cause_answer", "ideas.confirm", "ideas.fork_answer", "ideas.stage", "ideas.stage_set", "ideas.project_ask", "ideas.project_answer", "ideas.project_facts", "ideas.project_fact_set", "ideas.project_kind_set", "ideas.talk_read", "ideas.loop", "ideas.loop_set", "ideas.loop_propose", "ideas.art_map", "ideas.release_map", "ideas.way_map", "ideas.screens", "ideas.pain_pin", "ideas.tree", "ideas.tree_set", "ideas.tree_attach", "ideas.tree_propose", "ideas.paid"}   # spec 105 §3: going on paid, … … the project's questions (spec 99 §8), the project's stage (spec 99 §1.2), the decision and the forks (spec 99 §6, §7), talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+
 
 
 @pytest.fixture
@@ -650,3 +663,9 @@ def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_a_g
     assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
     assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"]
 
+
+
+def test_every_board_command_is_the_hosts_and_a_phones(host):
+    assert BOARD_COMMANDS <= set(host.commands)
+    assert all(BoardPhone.allowed(host, c, {}) for c in BOARD_COMMANDS)
+    assert BOARD_COMMANDS <= set(host.command("mobile.hello")["commands"])

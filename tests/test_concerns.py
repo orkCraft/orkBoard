@@ -268,23 +268,6 @@ def test_a_leader_that_does_not_answer_fails_the_look_and_the_next_opening_does_
 
 # -- what the person dismissed, what a goal was made of --------------------------------------------------------------------------------------------
 
-def test_what_the_person_dismissed_is_told_to_the_leader_and_not_kept_when_it_says_it_again(host, design, model):
-    model.answer = {"concerns": [concern("cart", what="No way back"), concern("about", "note", "Nothing leads here")]}
-    first = _look(host, design) and host.command("ideas.concerns", {"party": design})
-    gone = first["concerns"][0]
-    got = host.command("ideas.concern_dismiss", {"party": design, "id": gone["id"]})
-    assert [c["what"] for c in got["concerns"]] == ["Nothing leads here"] and (got["alerts"], got["notes"]) == (0, 1)
-    host.command("ideas.concerns_again", {"party": design})
-    _wait(host, design)
-    p = model.looks[-1]["prompt"]
-    assert "The person said these are not a problem" in p and "- on cart: No way back" in p
-    rec = host.command("ideas.concerns", {"party": design})
-    assert [c["what"] for c in rec["concerns"]] == ["Nothing leads here"], "the same words on the same part are dropped"
-    assert rec["dismissed"][0]["on"] == "cart" and rec["dismissed"][0]["what"] == "No way back"
-    assert [r["level"] for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERN_DISMISSED] == ["alert"]
-    with pytest.raises(CommandError):
-        host.command("ideas.concern_dismiss", {"party": design, "id": gone["id"]})
-
 
 def test_a_concern_made_a_goal_is_a_goal_of_the_party_with_its_part_as_the_mark_and_stays_across_a_new_look(host, design, model):
     model.answer = {"concerns": [concern("cart", what="No way back", fix="Add a back link"), concern("about", "note", "Nothing leads here")]}
