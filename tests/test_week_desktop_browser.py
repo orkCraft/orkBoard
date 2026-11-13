@@ -88,7 +88,7 @@ def test_a_null_part_and_a_missing_price_are_left_out(gui):
     assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill", "12 results in dev, 10 the first time"]
     pg.keyboard.press("Escape")
     host.week.update(usd=None, merged=0, first_time=0)
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     _spend(pg).click()
     pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
     assert _lines(pg) == ["No results in dev in the last 7 days"]
@@ -106,14 +106,14 @@ def test_the_week_line_says_when_low_work_waits_and_last_weeks_unused_share(gui)
     for pace, words in (("even", ""), ("behind", ": Low work waits until the week comes back")):
         host.week.update(week={"left": 0.2, "rest": 1 / 7, "pace": pace, "reset": 0}, last_unused=None)
         pg.keyboard.press("Escape")
-        pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+        pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
         _spend(pg).click()
         pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
         got = _lines(pg)
         assert f"The week: 20 % left with 1 day to go{words}" in got and not [x for x in got if x.startswith("Last week ended")]
     host.week.update(week=None)
     pg.keyboard.press("Escape")
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     _spend(pg).click()
     pg.locator('.place[aria-label="This week"] .week').wait_for(timeout=WAIT_MS)
     assert not [x for x in _lines(pg) if x.startswith("The week")]                                     # no week read: no line

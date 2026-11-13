@@ -90,21 +90,6 @@ def test_there_is_no_edge_the_discard_is_the_windows_right_column_beside_the_tab
     assert not log, "\n".join(log)
 
 
-def test_release_has_no_tab_and_live_stands_at_the_leaders_rows_end(gui):
-    pg, log = open_at(gui, LaneHost())
-    try:
-        tabs = pg.evaluate("() => [...document.querySelectorAll('.table-tab[data-tab]')].map((e) => e.dataset.tab)")
-        assert tabs == ROW, "no tab for Release (decisions §283.29), Live at the row's end"
-        live, lane = box(pg, '[data-cell="live"]'), box(pg, ".release-lane")
-        assert pg.locator('[data-cell="release"], .table-tab[data-tab="release"]').count() == 0, "Release waits: no tab, its lane is the discard"
-        assert round(live["x"] + live["width"]) <= round(lane["x"]), "no tab stands over the discard: it is beside the table"
-        assert pg.locator(".ork-portal-ring__before, .ork-portal-ring__after, .portal__past, .pyramid").count() == 0, "their heads have left the ring; no past line, no pyramid"
-        assert round(box(pg, '.table-board [data-live]')["x"]) == round(live["x"]), "Live's lane under Live's tab"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_the_road_tabs_heads_wake_by_the_old_corners_rules(gui):
     pg, log = open_at(gui, LaneHost(bare=True))                                          # nothing ready, nothing at work
     try:
@@ -119,25 +104,6 @@ def test_the_road_tabs_heads_wake_by_the_old_corners_rules(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("tab,label", [("orkmaster", "Discard"), ("tech", "Tech's discard"), ("design", "Design's discard"), ("live", "Live's discard")])
-def test_the_discard_lane_is_on_every_tab_through_its_eyes(gui, tab, label):
-    pg, log = open_at(gui, LaneHost())
-    try:
-        if tab != "orkmaster":
-            pg.locator(f'.table-tab[data-tab="{tab}"]').click()
-            pg.locator(f'.table-tab[data-tab="{tab}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".release-lane__label").text_content() == label and pg.locator(".release-lane").get_attribute("aria-label") == label
-        lane, table = box(pg, ".release-lane"), box(pg, ".frame-table")
-        assert pg.locator(".frame > .release-lane").count() == 1 and round(lane["x"] + lane["width"]) == 1280 and round(lane["x"]) == round(table["x"] + table["width"]), f"on {tab}'s tab the discard is the column outside the table"
-        assert round(lane["width"]) == round(lane_width(pg)), f"on {tab}'s tab at its old width"
-        slugs = pg.evaluate("() => [...document.querySelectorAll('.release-lane [data-slug], .release-lane [data-portal-card]')].map((e) => e.dataset.slug || e.dataset.portalCard)")
-        want = {"orkmaster": ["music", "codes"], "tech": ["music"], "design": ["codes"], "live": ["music", "codes"], "release": ["music", "codes"]}[tab]
-        assert slugs == want, f"on {tab}'s tab: {slugs}"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_project_without_a_release_party_has_a_headless_discard_lane(gui):
     pg, log = open_at(gui, HandHost())                                                    # no party of the release craft
     try:
@@ -147,22 +113,6 @@ def test_a_project_without_a_release_party_has_a_headless_discard_lane(gui):
         pg.locator('.table-tab[data-tab="tech"]').click()
         pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".release-lane__label").text_content() == "Discard", "the word stays on every tab"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_in_a_1366_by_768_window_the_ready_card_and_the_first_not_seen_are_in_view_and_nothing_scrolls_the_page(gui):
-    pg, log = open_at(gui, LaneHost(), "1366x768")
-    try:
-        scroll = box(pg, ".release-lane__scroll")
-        ready, seen = box(pg, '[data-portal-card="music"]'), box(pg, '.release-lane__done [data-slug="codes"]')
-        for b in (ready, seen):
-            assert b["y"] >= scroll["y"] - 1 and b["y"] + b["height"] <= scroll["y"] + scroll["height"] + 1, f"in view: {b} in {scroll}"
-        assert ready["y"] < seen["y"], "the ready card on top"
-        assert round(ready["width"]) == round(seen["width"]) and ready["width"] > 144, "whole posts of the lane's width (goal 170 B: a post, not a hand card at 144 x 202)"
-        assert pg.evaluate("() => document.documentElement.scrollHeight - innerHeight") <= 0, "the page itself does not scroll"
-        shot(pg, "lane-1366x768")
     finally:
         pg.close()
     assert not log, "\n".join(log)

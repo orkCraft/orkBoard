@@ -185,18 +185,3 @@ def test_a_spec_through_a_leader_has_the_steps_header_with_the_seat_that_cannot_
 
 
 # -- the implementation -------------------------------------------------------------------------------------------------------------------------------
-
-def test_the_implementation_through_a_leader_is_lanes_by_its_seats_with_arrows_and_the_tasks_sent_back_after(gui):
-    pg, host, errors = start(gui, "working")
-    pg.locator('[data-view="seats"] .seat-lane').first.wait_for(timeout=WAIT_MS)
-    assert [l.get_attribute("data-lane") for l in pg.locator(".seat-lane").all()] == ["make", "check", "accept", "back"]
-    assert pg.locator('.seat-lane[data-lane="make"] [data-task]').count() == 3 and pg.locator('.seat-lane[data-lane="check"] [data-task="s3"]').count() == 1
-    assert pg.locator('.seat-lane[data-lane="back"] [data-task="s2"]').count() == 1, "a task of round 2 runs again after the acceptance"
-    assert pg.locator('.seat-lane[data-lane="make"] [data-task="s2"]').count() == 0
-    assert pg.locator(".seat-arrow").count() == 3
-    xs = [l.bounding_box()["x"] for l in pg.locator(".seat-lane").all()]
-    assert xs == sorted(xs), "left to right as the work goes"
-    assert pg.locator('.seat-lane[data-lane="check"] .seat-lane__seat[data-seat="reviewer"]').count() == 1
-    assert pg.locator(".gv").count() == 1, "what it will change stays under the lanes"
-    shot(pg, "c4-implementation.png")
-    finish(pg, errors)

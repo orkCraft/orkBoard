@@ -151,7 +151,7 @@ def test_a_move_played_on_the_mat_its_phone_card_opened_is_sent_from_the_hand(tu
 
 
 # -- goal "The battle and the gate", stage M: the battle and the gate on the phone (decisions §303; goal 171 I) -----------------------------------------------------------
-# On the `gui` fixture's host (`?table=cards`, no ?mock=1) at 390 x 844 with touch: each mat opened from its address after a reload is the whole screen with *Back*, upright in the desktop's
+# On the `gui` fixture's host (no ?mock=1) at 390 x 844 with touch: each mat opened from its address after a reload is the whole screen with *Back*, upright in the desktop's
 # order, its ways a row at the screen's foot that scrolls within itself, the seal after them in the screen's order and Tab's; no sideways scroll, no card cut, no text under 12 px as drawn.
 from tests import test_cards_battle_browser as battle_kit  # noqa: E402
 from tests import test_cards_gate_browser as gate_kit  # noqa: E402
@@ -175,7 +175,7 @@ def mat_page(gui, address):
     pg = browser.new_page(viewport={"width": 390, "height": 844}, **TOUCH)
     seen = []
     pg.on("pageerror", lambda e: seen.append(str(e)))
-    pg.goto(server.url + ("&table=cards" if "?" in server.url else "?table=cards") + address)
+    pg.goto(server.url + address)
     return pg, seen
 
 

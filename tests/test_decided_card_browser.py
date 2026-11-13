@@ -75,23 +75,10 @@ def play(pg, key):
     return lifted
 
 
-def test_each_decision_is_a_muted_card_of_its_leaders_stack_with_its_head_and_a_sign_of_decided(decided):
-    pg, host = decided
-    cards = pg.locator(CARD)
-    assert cards.count() == 1 and cards.first.get_attribute("data-key") == f"decided/{SLUG}/q1"          # two decisions of one goal and one leader are one stack: its top card shows
-    first = cards.first
-    assert "Where do the rooms live?" in first.text_content() and box(first) == (144, 202)
-    assert first.locator(".ork-race__head").count() == 1 and first.locator(".corner__kind .ork-sign.check").count() == 1       # its leader's head and the sign of *decided*
-    assert first.locator(".ork-sign.alert").count() == 0 and "alert" not in (first.get_attribute("class") or "").split()      # no alert's ring
-    assert float(first.evaluate("e => getComputedStyle(e).opacity")) < 1.0, "muted at rest"
-    lane = pg.locator(f".hand-lane:has({CARD})").get_attribute("data-lane")
-    assert lane not in (None, "0"), "under the deciding leader's lane, not the project's"
-
-
 def test_played_it_says_what_was_decided_and_why_and_has_accepted_and_replay_by_their_kinds(decided):
     pg, host = decided
     lifted = play(pg, f"decided/{SLUG}/q1")
-    assert box(lifted) == (144, 202) and "a new file" in lifted.text_content() and "rooms.ts is full" in lifted.text_content()
+    assert box(lifted) == (120, 168) and "a new file" in lifted.text_content() and "rooms.ts is full" in lifted.text_content()
     ways = pg.locator(".hand-ways-cards button[data-way-kind]")
     assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == [("go_on", "Accepted"), ("ask_more", "Replay")]
 

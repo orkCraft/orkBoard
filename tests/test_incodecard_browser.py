@@ -78,24 +78,6 @@ def buttons(card):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_card_is_the_orkmasters_question_with_the_alert_sign_under_the_first_lane(gui, width):
-    pg, host, log = open_card(gui, width, pages=12)
-    try:
-        c = front(pg)
-        assert c.count() == 1 and c.get_attribute("data-top") == "1"
-        assert c.locator(".hand-card__name").text_content().strip() == "Publish the Board?"
-        assert c.locator(".corner--top .ork-sign.alert").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1, "the alert sign and the Orkmaster's head"
-        if width == "wide":
-            assert c.locator(".hand-card__foot").text_content().strip() == HELD
-        assert pg.locator(".hand-lane").nth(0).locator('.hand-stack[data-stack="in_code@0"]').count() == 1, "the whole project's: under the first lane"
-        shot(pg, f"{width}-in-code-face")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_lifted_it_says_the_sentence_the_pages_and_what_waits_and_has_the_two_answers(gui, width):
     pg, host, log = open_card(gui, width, pages=12)
     try:

@@ -86,7 +86,7 @@ def turned_url():
 
 
 def turned(pg, url):
-    pg.goto(url + "?mock=1&table=cards")
+    pg.goto(url + "?mock=1")
     pg.locator(f"{HAND}[data-kind=turn]").first.wait_for(timeout=15000)
     pg.wait_for_timeout(600)
 
@@ -256,7 +256,7 @@ def crowded_url():
         mock_kit.reply(data, "ideas.turns")["result"]["turns"] += more
     s = serve_mock.serve(0, crowded)
     threading.Thread(target=s.serve_forever, daemon=True).start()
-    yield f"http://127.0.0.1:{s.server_port}/?mock=1&table=cards"
+    yield f"http://127.0.0.1:{s.server_port}/?mock=1"
     s.shutdown()
 
 
@@ -289,7 +289,7 @@ def test_a_narrow_desktop_window_deals_a_question_as_its_turn_card_and_its_ways_
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 700, "height": 900})
-        pg.goto(turned_url + "?mock=1&table=cards")
+        pg.goto(turned_url + "?mock=1")
         card = pg.locator(".frame-hand button.hand-card[data-kind=turn][data-goal='172-example-1']")
         card.wait_for(timeout=15000)
         card.click()

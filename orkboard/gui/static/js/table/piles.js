@@ -17,10 +17,10 @@ import { cardCost } from "../hand/cost.js";
 import { defaultTool, movesOn, waitTool } from "./lit.js";
 import { askedWords } from "./passing.js";
 import { holdWords } from "./holdwords.js";
-import { ACTIVE, AT_WORK, DECK_SHOWN, DECK_STEP, NEXT_AT, NEXT_IN, READING, WORK_SHOWN, WRITING, PILES, clock, failed, kindOf, lookAt, night, pilesOf, writing } from "./stages.js";
+import { ACTIVE, DECK_SHOWN, DECK_STEP, NEXT_AT, NEXT_IN, READING, WORK_SHOWN, clock, failed, kindOf, lookAt, night, pilesOf, writing } from "./stages.js";
 import { PILES_OLD, pilesOfOld } from "./oldpiles.js";
 
-export { ACTIVE, AT_WORK, DECK_SHOWN, DECK_STEP, NEXT_AT, NEXT_IN, READING, WORK_SHOWN, WRITING, PILES, PILES_OLD, kindOf, lookAt, pilesOf, pilesOfOld, writing };
+export { ACTIVE, DECK_SHOWN, DECK_STEP, NEXT_AT, NEXT_IN, READING, PILES_OLD, kindOf, pilesOf, pilesOfOld, writing };
 const LIVE_TASK = ["running", "testing", "picking", "failed"];
 const FOOT = 26;                                         // a card of At work behind the front one shows its foot: who, how much
 

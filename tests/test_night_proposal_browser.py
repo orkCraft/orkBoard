@@ -12,7 +12,7 @@ pytest.importorskip("playwright.sync_api")
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_concerns_desktop_browser import ConcernHost, start, system  # noqa: E402
 from tests.test_maps_desktop_browser import Refused  # noqa: E402
-from tests.test_table_desktop_browser import node as board_node, shot  # noqa: E402
+from tests.test_table_desktop_browser import node as board_node  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -73,28 +73,9 @@ def test_the_proposal_is_a_card_in_its_leaders_stack_under_its_lane(night):
     pg, host = night
     cards = pg.locator(CARD)
     assert cards.count() == 1 and cards.first.get_attribute("data-key") == f"night/{PID}"
-    assert "Proposed: Faster start" in cards.first.text_content() and box(cards.first) == (144, 202)
+    assert "Proposed: Faster start" in cards.first.text_content() and box(cards.first) == (120, 168)
     lane = pg.locator(f".hand-lane:has({CARD})").get_attribute("data-lane")
     assert lane not in (None, "0"), "under the proposing leader's lane, not the project's"
-
-
-def test_the_goal_lies_in_the_specs_pile_marked_proposed(night):
-    pg, host = night
-    system(pg)
-    card = pg.locator(f'.col-card--spec[data-goal="{SLUG}"]')
-    card.wait_for(timeout=WAIT_MS)
-    assert card.get_attribute("data-proposed") == "1" and card.locator(".col-spec__proposed").inner_text() == "proposed"
-    assert "proposed" in card.get_attribute("aria-label") and box(card) == (78, 56), "the Specs card's own size, nothing changes by what is open"
-    assert pg.locator('.col-card[data-pile="analysis"][data-goal="faster-start"]').count() == 0
-
-
-def test_played_it_has_take_and_drop_by_their_kinds_and_the_night_it_ran(night):
-    pg, host = night
-    lifted = play(pg)
-    assert box(lifted) == (144, 202) and "the night of" in lifted.text_content() and "01:00-07:00" in lifted.text_content()
-    ways = pg.locator(".hand-ways-cards button[data-way-kind]")
-    assert [(ways.nth(i).get_attribute("data-way-kind"), ways.nth(i).locator(".hand-ans__name").inner_text()) for i in range(ways.count())] == [("take", "Take"), ("drop", "Drop")]
-    pg.locator(f'.col-card--spec[data-goal="{SLUG}"][data-ringed]').wait_for(timeout=WAIT_MS)      # its goal is picked and ringed in the Specs pile while the card is up
 
 
 def test_take_sends_its_command_and_the_mark_and_the_card_go(night):
@@ -121,19 +102,5 @@ def test_the_narrow_page_deals_no_proposal_card(gui):
     pg, host, errors = start(gui, "narrow", NightHost())
     pg.wait_for_timeout(600)
     assert pg.locator(CARD).count() == 0 and pg.locator(".col-spec__proposed").count() == 0
-    pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_pictures_at_1366_by_768(gui):
-    pg, host, errors = start(gui, "wide", NightHost(), **LIT)
-    pg.locator(CARD).first.wait_for(timeout=WAIT_MS)
-    system(pg)
-    pg.locator(".col-spec__proposed").first.wait_for(timeout=WAIT_MS)
-    pg.locator('.col-pile.is-specs').hover()                                           # the deck fans: the proposed card shows its mark
-    pg.wait_for_timeout(500)
-    shot(pg, "h3-column-and-hand-with-a-proposal.png")
-    play(pg)
-    shot(pg, "h3-proposal-played.png")
     pg.context.close()
     assert not errors, "\n".join(errors)

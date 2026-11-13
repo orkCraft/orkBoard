@@ -4,7 +4,6 @@ the discard's headings are bronze plaques, and an empty lane says whose it is on
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
 
 import pytest
@@ -32,7 +31,7 @@ def open_window(gui):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".col-plab__t").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(1500)
     return pg
 
@@ -86,26 +85,6 @@ def test_the_orkmasters_tab_is_the_wood_and_a_closed_tabs_name_is_the_light_ink(
     shot(pg, "orkmaster-closed")
 
 
-def test_the_headings_are_plaques_and_an_empty_lane_says_whose_it_is_on_a_plate(gui):
-    pg = open_window(gui)
-    heads = pg.locator(".col-plab__t")
-    assert heads.count() >= 1
-    for i in range(heads.count()):
-        assert "ork-plaque" in (heads.nth(i).get_attribute("class") or ""), heads.nth(i).inner_text()
-    assert pg.locator(".release-lane__label").inner_text().strip().lower() == "discard"
-    free = pg.locator(".table-lane__free.ork-plate")
-    assert free.count() >= 1
-    plate = pg.evaluate(BG, "--ork-plate-orkmaster")
-    for i in range(free.count()):
-        text = free.nth(i).inner_text().strip()
-        name = re.fullmatch(r"(.+) is free · throw a goal here or @(.+)", text)
-        assert name and name.group(1) == name.group(2), text
-        assert free.nth(i).evaluate("(e) => getComputedStyle(e).backgroundColor") == plate
-    lane = pg.locator(".table-lane[data-free], .table-lane:has(.table-lane__free)").first
-    assert lane.get_attribute("data-race") in {"ork", "knight", "elf", "undead", "goblin", "gnome"}
-    shot(pg, "orkmaster")
-
-
 PLATES = ("--ork-plate", *[f"--ork-plate-{r}" for r in ("ork", "knight", "elf", "undead", "goblin", "gnome", "orkmaster")])
 LABELS = ".arch-name, .arch-layer__nm, .arch-ways__h, .arch-way, .arch-serves, .sys-area__nm"
 
@@ -129,23 +108,3 @@ def test_on_techs_tab_every_label_of_the_system_map_lies_on_a_flat_plate(gui):
     assert {"its doors", "its face", "its data"} <= seen, seen
     assert any(n.endswith("/") for n in seen), seen                      # the containers' names (server/, client/)
     shot(pg, "tech-system")
-
-
-def test_an_empty_slot_a_failure_leaves_has_its_words_on_a_flat_plate(gui):
-    from tests.test_thrown_browser import HandHost, fail, open_page, working
-
-    host = HandHost()
-    working(host)
-    pg, log = open_page(gui, host)
-    try:
-        pg.wait_for_timeout(300)
-        fail(host)
-        words = pg.locator('.table-thrown[data-task="w1"] .ork-plate')
-        words.wait_for(timeout=WAIT_MS)
-        assert words.inner_text().strip() == "Back here on Start again"
-        plates = [pg.evaluate(BG, n) for n in PLATES]
-        bg = words.evaluate("(e) => getComputedStyle(e).backgroundColor")
-        assert bg not in ("rgba(0, 0, 0, 0)", "transparent") and bg in plates, bg
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

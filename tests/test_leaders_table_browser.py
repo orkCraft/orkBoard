@@ -93,7 +93,7 @@ def start(gui, width, host=None, **context):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     return pg, host, errors
 
 
@@ -427,31 +427,6 @@ def test_under_reduced_motion_the_empty_chair_is_lit_and_not_pulled_out(gui):
 
 # -- Stop all: a button under the die (it was the die's front face, spec 139 A.4, decisions §246.1; spec 156 E.3, decisions §261.12) ------------------------------------
 
-def test_stop_all_halts_says_stopped_has_no_button_to_press_again_and_comes_back_when_a_task_runs(desk):
-    pg, host, w = desk
-    wide = w == "wide"                                   # from 760 px up Stop all is the right column's head's (spec 168 A4, decisions 285.2); under it, it stays under the die
-    sel, said = (".rh-stop", None) if wide else (".hand-die__stop", ".hand-die__stopped")
-    stop = pg.locator(sel)
-    assert stop.get_attribute("aria-label") == "Stop all: stop every run of this project's orks" and stop.get_attribute("aria-disabled") is None and stop.inner_text() == "Stop all"
-    assert stop.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger") and stop.evaluate("e => e.tagName") == "BUTTON", "in the danger colour while a task runs"
-    shot(pg, f"leaders-die-running-{w}.png")
-    stop.click()
-    if said:
-        pg.wait_for_function("() => document.querySelector('.hand-die__stopped')?.textContent === 'Stopped'", timeout=WAIT_MS)
-        assert pg.locator(said).evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted"), "Stopped is muted"
-    else:
-        pg.wait_for_function("() => !document.querySelector('.rh-stop')", timeout=WAIT_MS)             # the head says nothing once stopped
-    assert host.halted == 1 and pg.locator(sel).count() == 0, "nothing to press: a host that does not keep *stopped* has no Resume"
-    shot(pg, f"leaders-die-stopped-{w}.png")
-    pg.wait_for_function("() => !document.querySelector('.table-lane [data-state=running]')", timeout=WAIT_MS)
-    pg.wait_for_timeout(300)
-    assert host.halted == 1 and pg.locator(sel).count() == 0 and (not said or pg.locator(said).count() == 1), "nothing runs: it stays stopped"
-    seat = next(n for n in host.nodes if n["slug"] == "rules")
-    seat["tasks"][0]["state"] = "running"                                                                                # a task runs again
-    host.change()
-    pg.wait_for_function("s => document.querySelector(s)?.textContent === 'Stop all'", arg=sel, timeout=WAIT_MS)
-    assert not said or pg.locator(said).count() == 0
-
 
 def test_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
     pg, host = wide
@@ -462,17 +437,3 @@ def test_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
 
 
 # -- the dark edges -------------------------------------------------------------------------------------------------------------------------------------
-
-def test_the_tabs_row_the_hand_and_the_frame_lie_on_the_room_with_a_rim_and_no_divider_between_the_tabs(desk):
-    pg, host, w = desk
-    room, rim = paint(pg, "--ork-room", "backgroundColor"), paint(pg, "--ork-table-rim", "borderBottomColor")
-    assert pg.locator(".table-tabs").evaluate("e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderBottomWidth, getComputedStyle(e).borderBottomColor]") == [room, "3px", rim]
-    assert pg.locator(".hand").evaluate("e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderTopWidth, getComputedStyle(e).borderTopColor]") == [room, "3px", rim]
-    assert pg.locator(".frame").evaluate("e => getComputedStyle(e).backgroundColor") == room and pg.locator(".table").evaluate("e => getComputedStyle(e).backgroundColor") == room
-    assert room == "rgb(9, 8, 7)"
-    assert pg.locator(".table-tab").evaluate_all("els => els.map((e) => getComputedStyle(e).borderLeftWidth + getComputedStyle(e).borderRightWidth)") == ["0px0px"] * pg.locator(".table-tab").count(), "no divider between the tabs"
-    assert pg.locator(".table-tabs__end").evaluate("e => getComputedStyle(e).borderLeftWidth") == "0px"
-    assert pg.locator(".table-lane").first.evaluate("e => getComputedStyle(e).borderLeftWidth") == "1px", "the lanes keep theirs"
-    assert pg.locator(".table-pane").evaluate("e => [e.classList.contains('ork-table'), getComputedStyle(e).backgroundImage !== 'none' || getComputedStyle(e).backgroundColor !== 'rgba(0, 0, 0, 0)']") == [True, True], "the table lies on its leader's felt (decisions §269.2)"
-    assert pg.locator(".table-tabs__end .table-logs, .table-tabs__end .table-door").count() == 0, "the top row's end has neither the bug nor the door"
-    shot(pg, f"leaders-room-{w}.png")

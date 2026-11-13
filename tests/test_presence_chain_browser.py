@@ -61,12 +61,6 @@ def chain(pg):
     return pg.locator(".presence-chain")
 
 
-def open_inventory(pg):
-    """The phone's backpack (goal 169 H): the round button pressed, then its Inventory."""
-    pg.locator(".hand-up .up-round").click()
-    pg.locator('.up-sel__opt[data-place="inventory"]').click()
-
-
 def signals(pg):
     return pg.evaluate("() => [...document.querySelectorAll('.corner__kind')].map((e) => e.className + getComputedStyle(e).color)")
 
@@ -236,24 +230,6 @@ def test_the_phones_table_wears_the_felt_and_away_puts_it_out(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_the_phones_backpack_opens_the_stall_over_the_hand_and_the_way_back_closes_it(gui):
-    """Spec 161 K: on the phone the backpack shows the inventory's stall over the hand; ← closes it. Goal 169 H (decisions §292.1): the backpack is the round button's Inventory (was: the top row's small backpack, drawn open while the stall is)."""
-    host = DoorHost(HERE)
-    pg, errors = start(gui, "phone", host)
-    try:
-        assert pg.locator(".stall-merchant").count() == 0
-        open_inventory(pg)
-        pg.locator(".stall-merchant").wait_for(state="visible", timeout=WAIT_MS)
-        assert pg.locator(".stall-rug").is_visible() and pg.locator(".frame[data-over]").count() == 1
-        pg.locator("[data-stall-back]").click()
-        pg.locator(".up-top").wait_for(state="visible", timeout=WAIT_MS)
-        assert pg.locator(".stall-merchant").count() == 0 and pg.locator(".frame[data-over]").count() == 0
-        assert pg.locator(".up-sel").count() == 0, "the selector closed when Inventory was pressed"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
 def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_nothing_is_shown(gui):
     """Spec 161 K (decisions §275.3): a Tech goal shown -> Tech's race (ork); nothing shown (the feed, goal 169 F) -> the Orkmaster's wood."""
     pg, errors = start(gui, "phone", DoorHost(HERE))
@@ -274,27 +250,6 @@ def test_the_phones_table_wears_the_shown_goals_party_felt_and_the_wood_when_not
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
-
-
-def test_the_stalls_title_lies_below_the_leathers_straps_on_the_phone_and_the_desktop(gui):
-    for width in ("phone", "wide"):           # goal 169 H: the phone's backpack is the round button's Inventory
-        pg, errors = start(gui, width, DoorHost(HERE))
-        try:
-            if width == "phone":
-                open_inventory(pg)
-            else:
-                pg.locator("[data-backpack]").first.click()
-            pg.locator(".stall-merchant" if width == "phone" else ".slots-table").wait_for(state="visible", timeout=WAIT_MS)       # the desktop's table is the slots (spec 168 H1); the phone keeps the stall
-            pg.wait_for_timeout(300)
-            pane = pg.locator(".table-pane.ork-leather").bounding_box()
-            title = pg.locator(".stall-title").first.bounding_box()
-            if title is None:
-                assert width == "wide", "the phone's head shows its title"          # on the desktop a bare head (nothing picked) shows no title, only the menu in the corner
-                continue
-            assert title["y"] >= pane["y"] + 40, (width, title, pane)
-        finally:
-            pg.context.close()
-        assert not errors, "\n".join(errors)
 
 
 def test_the_chain_held_down_opens_the_persons_hours_and_a_short_press_still_turns_it(gui):

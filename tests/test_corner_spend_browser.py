@@ -8,12 +8,11 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_column_browser import open_column  # noqa: E402
+from tests.column_kit import open_column  # noqa: E402
 from tests.test_corners_browser import table  # noqa: E402,F401  (fixture)
 
 pytestmark = pytest.mark.browser
 
-CODEX = {"tokens": 12000, "usd": None, "tool": "codex"}
 PRICED = {"tokens": 5000, "usd": 0.42, "tool": "claude"}
 
 
@@ -25,45 +24,6 @@ def put(host, slug, tid, **more):
     node = next(n for n in host.nodes if n["slug"] == slug)
     next(t for t in node["tasks"] if t["id"] == tid).update(more)
     host.push()
-
-
-def test_a_codex_task_says_tokens_and_no_money_and_a_priced_one_says_dollars(table):
-    pg, host = table
-    put(host, "rules", "r1", spend=CODEX)
-    put(host, "calm", "k1", spend=PRICED)
-    codex, priced = foot(pg, "t:task:rules/r1"), foot(pg, "t:task:calm/k1")
-    codex.wait_for(timeout=WAIT_MS)
-    priced.wait_for(timeout=WAIT_MS)
-    assert codex.inner_text().strip() == "12k tok" and codex.get_attribute("data-unit") == "tokens", "Codex has no prices: tokens"
-    assert "$" not in codex.inner_text()
-    assert priced.inner_text().strip() == "$0.42" and priced.get_attribute("data-unit") == "usd", "a priced task with no window measured: money"
-    for much in (codex, priced):
-        assert much.get_attribute("data-est") is None
-        card = much.locator("xpath=ancestor::*[contains(@class,'table-card')]")
-        assert card.locator(".corner--foot").bounding_box()["height"] <= 20.5 and card.bounding_box()["width"] == 144, "it fits the foot of the 144 x 202 card"
-        fb, mb = card.locator(".corner--foot").bounding_box(), much.bounding_box()
-        assert mb["x"] + mb["width"] <= fb["x"] + fb["width"] + 0.5, "the figure stays inside the card"
-
-
-def test_the_share_of_the_window_where_it_is_measured_and_a_task_ahead_is_an_estimate(table):
-    pg, host = table
-    snap = host.snapshot
-    host.snapshot = lambda: _with_rate(snap())
-    put(host, "rules", "r1", spend={"tokens": 5000, "usd": 0.42, "tool": "claude"})
-    put(host, "calm", "k1", spend=CODEX)
-    put(host, "seat", "s1", spend=None, spend_est={"tokens": 8000, "usd": 0.7, "tool": "claude", "n": 4})
-    share, codex = foot(pg, "t:task:rules/r1"), foot(pg, "t:task:calm/k1")
-    share.wait_for(timeout=WAIT_MS)
-    assert share.inner_text().strip().endswith("%") and share.get_attribute("data-unit") == "share" and "window" in share.get_attribute("title"), "the share of the tool's window, as the mana measures it"
-    assert codex.inner_text().strip() == "12k tok", "a tool whose window is not measured stays in tokens"
-    ahead = pg.evaluate("""async () => { const c = await import('/static/js/table/corners.js'); return c.muchOf({ est: c.figureOf({ tokens: 8000, usd: 0.7, tool: 'claude' }) }); }""")
-    assert ahead["est"] is True and ahead["text"].startswith("≈ ") and ahead["unit"] == "share", ahead
-    drawn = pg.evaluate("""async () => {
-      const [{ render, h }, c] = await Promise.all([import('preact'), import('/static/js/table/corners.js')]);
-      const box = document.createElement('div'); box.style.width = '120px'; document.body.appendChild(box);
-      render(h(c.CornerFoot, { much: c.muchOf({ est: c.figureOf({ tokens: 18000, usd: null, tool: 'codex' }) }) }), box);
-      const e = box.querySelector('.corner__much'); return [e.textContent, e.dataset.est, e.dataset.unit]; }""")
-    assert drawn == ["≈ 18k tok", "1", "tokens"], "a card ahead: the party's average, marked as an estimate"
 
 
 def test_the_small_cards_time_and_figure_are_in_its_preview_only(gui):
@@ -104,9 +64,3 @@ def test_the_verdicts_by_their_signs(table):
     assert out[1]["colour"] == ink and out[2]["colour"] == ink, "! and ✗ in the ink"
     assert out[3]["colour"] == bad, "red only for a call that failed"
     assert out[4]["ring"] != "none" and out[1]["ring"] == "none" and out[2]["ring"] == "none", "the alert's ring only where a question waits"
-
-
-def _with_rate(snapshot):
-    state = snapshot["state"]
-    state["rate"] = {"usd_per_pct": 0.35, "tool": "claude", "window": "5h"}
-    return snapshot

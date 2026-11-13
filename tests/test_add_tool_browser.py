@@ -180,7 +180,7 @@ def test_a_potions_card_orders_with_the_arrows_and_by_dragging(desk, project):
     card = pg.locator('[data-lift="tool"][data-tool="codex"]')
     card.wait_for(timeout=WAIT_MS)
     tb = card.evaluate("e => [e.offsetWidth, e.offsetHeight]")
-    assert tb == [144, 202], f"the tool's card, 144 x 202 (spec 168 A1): {tb}"
+    assert tb == [120, 168], f"the tool's card, 120 x 168, the S card (cards/handcards.css): {tb}"
     card.locator('[data-left="1"]').click()
     pg.wait_for_function("() => document.querySelector('.hand-pot').dataset.provider === 'codex'", timeout=WAIT_MS)
     assert order_of(d.host) == ["codex", "claude", "agy"] and d.host.machine.main_tool == "codex", "the first is the main tool"

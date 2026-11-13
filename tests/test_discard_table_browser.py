@@ -21,7 +21,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, call, node as hand_node, open_hand, sig  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, node as hand_node, open_hand, sig  # noqa: E402
 from tests.test_portal_browser import PortalHost  # noqa: E402
 from tests.test_maps_desktop_browser import MapsHost  # noqa: E402
 from tests.test_table_desktop_browser import node  # noqa: E402
@@ -60,59 +60,6 @@ def open_maps(gui, width, done=True):
 
 
 NARROW = ("narrow",)
-
-
-@pytest.mark.parametrize("width", NARROW)
-def test_the_discard_lies_at_the_foot_of_the_projects_last_column_not_in_the_hand(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        done = pg.locator(".table-end .hand-done")
-        done.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(600)
-        assert pg.locator(".hand .hand-done, .hand .table-discard, .hand .table-end").count() == 0, "none in the hand"
-        assert pg.locator(".hand-end > :not(.hand-mana):not(.hand-die)").count() == 0, "`.hand-end` holds the Play die and the mana alone (spec 112 §3.3, decisions §190.6)"
-        pile, label = box(pg, ".table-discard"), box(pg, ".table-end__label")
-        assert pg.locator(".table-end__label").text_content() == "Discard" and label["y"] + label["height"] <= pile["y"] + 1, "the word above the pile"
-        assert (round(pile["width"]), round(pile["height"])) == CARD[width], "the hand card's size"
-        hand_card = pg.locator(".hand .hand-card").first.bounding_box()
-        assert round(hand_card["width"]) == round(pile["width"]), "the same width as a card of the hand"
-        body, hand = box(pg, ".table-body"), box(pg, ".hand")
-        assert pile["y"] + pile["height"] <= body["y"] + body["height"] and body["y"] + body["height"] - (pile["y"] + pile["height"]) <= 40, "at the column's foot, above the hand"
-        assert pile["y"] + pile["height"] <= hand["y"] + 1
-        last = box(pg, ".table-lane--free")
-        assert pile["x"] >= last["x"] - 1 and pile["x"] + pile["width"] <= last["x"] + last["width"] + 1, "in the last column, right of the lanes"
-        assert pile["x"] + pile["width"] >= last["x"] + last["width"] - 40, "aligned right"
-        lanes = pg.locator(".table-board .table-lane:not(.table-lane--free)").evaluate_all("els => els.map((e) => e.getBoundingClientRect().right)")
-        assert pile["x"] >= max(lanes) - 1, "none of the lanes lies under it"
-        narrow.no_sideways(pg)
-        shot(pg, f"{width}-project")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", NARROW)
-def test_on_a_partys_tab_the_map_ends_beside_the_pile_and_still_scrolls(gui, width):
-    pg, host, log = open_maps(gui, width)
-    try:
-        call(pg, "frame/state.js", "openTab", "art")
-        pg.locator(".mp").first.wait_for(timeout=WAIT_MS)
-        pg.locator(".table-end .hand-done").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(600)
-        pile, pane, head = box(pg, ".table-discard"), box(pg, ".table-body"), box(pg, ".table-head")
-        m = pg.locator(".mp").first.bounding_box()
-        assert abs((head["x"] + head["width"]) - (pane["x"] + pane["width"])) <= 2, "the party's header keeps the pane's whole width"
-        assert pile["y"] + pile["height"] <= pane["y"] + pane["height"] and pane["y"] + pane["height"] - (pile["y"] + pile["height"]) <= 40, "the pile at the foot"
-        assert m["y"] + m["height"] <= pile["y"] - 10, "the map ends above the pile"
-        assert pg.locator(".mp-scroll").first.evaluate("e => getComputedStyle(e).overflowY") == "auto", "the map scrolls as it did"
-        narrow.no_sideways(pg)
-        shot(pg, f"{width}-party-map")
-        call(pg, "frame/state.js", "openTab", "orkmaster")                                                                 # the project's tab again: the pile is still there
-        pg.wait_for_selector(".table-board", timeout=WAIT_MS)
-        assert pg.locator(".table-end .hand-done").count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", NARROW)
@@ -189,23 +136,6 @@ def test_the_discard_is_drawn_from_its_first_goal_done_and_not_before_at_the_nar
     assert not log, "\n".join(log)
 
 
-def test_a_post_of_the_lane_is_a_post_with_a_visible_focus_and_its_goal_reached_by_tab(gui):
-    """Holds the act of the former test of a card leaning under the pointer: the lane's card is told apart and reached (a post, not a hand card)."""
-    pg, host, log = open_lane_wide(gui)
-    try:
-        first = pg.locator(".release-lane .post-card").first
-        assert "ork-card" in first.get_attribute("class") and first.get_attribute("data-race"), "orkUI's card, its party's colour its top edge"
-        assert pg.locator(".release-lane .ork-leans, .release-lane .hand-done").count() == 0, "no hand card in the lane"
-        first.focus()
-        assert first.evaluate("e => getComputedStyle(e).boxShadow") != "none", "a focus shows"
-        button = first.locator(".post-card__goal")
-        button.focus()
-        assert button.evaluate("e => e === document.activeElement") and button.inner_text().strip(), "the goal's name is a button with its word"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_card_lifted_from_the_hand_stands_over_the_pile(gui):
     pg, host, log = open_hand(gui, width="narrow")
     try:
@@ -268,10 +198,6 @@ class LaneHost(HandHost):
         self.gate_doc["ideas"] = [g for g in self.gate_doc["ideas"] if g["slug"] == "music"]
 
 
-def open_lane_wide(gui):
-    return open_lane(gui)
-
-
 def open_lane(gui, host=None):
     pg, host, log = open_hand(gui, host=host or LaneHost(), width="wide")
     pg.locator(".release-lane .post-card").first.wait_for(timeout=WAIT_MS)
@@ -281,62 +207,3 @@ def open_lane(gui, host=None):
 
 def picked(pg, slug):
     pg.wait_for_function("(s) => import('/static/js/frame/state.js').then((m) => m.picked.value === s)", arg=slug, timeout=WAIT_MS)
-
-
-def test_on_techs_tab_the_lane_holds_techs_goals_only_its_label_is_techs_discard_and_a_card_pressed_is_picked_with_no_discard_over(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        call(pg, "frame/state.js", "openTab", "tech")
-        pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator(".release-lane__label").text_content() == "Tech's discard"
-        assert pg.locator(".release-lane .post-card[data-slug]").evaluate_all("els => els.map((e) => e.dataset.slug)") == ["music"], "Tech's goal only (Design's Room codes is not here)"
-        pg.locator('.release-lane .post-card[data-slug="music"] .post-card__goal').click()
-        picked(pg, "music")
-        assert sig(pg, "frame/state.js", "over") is None and pg.locator('[data-kind="discard"], .hand-discardview').count() == 0, "no discard view over the pane"
-        assert pg.locator('.release-lane .post-card[data-slug="music"]').get_attribute("data-picked") == "true"
-        assert sig(pg, "frame/state.js", "tab") == "tech", "Tech's tab is on the goal's route"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_goal_done_and_not_seen_pressed_is_picked_and_told_to_the_host_as_seen_and_put_away_by_esc(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        pg.locator('.release-lane__done [data-slug="codes"] .post-card__goal').click()
-        picked(pg, "codes")
-        pg.wait_for_function("() => true")
-        assert host.seen_log == ["codes"], "`ideas.seen` is sent when the card is picked"
-        assert sig(pg, "frame/state.js", "over") is None and pg.locator(".hand-discardview").count() == 0
-        pg.wait_for_selector('.release-lane__done [data-slug="codes"]', state="detached", timeout=WAIT_MS)       # a goal seen leaves *not yet seen*
-        pg.keyboard.press("Escape")
-        picked(pg, "")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_goal_ready_for_main_lies_on_top_of_the_goals_not_seen_in_the_hands_card_size(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        ready, seen = box(pg, '.release-lane [data-portal-card="music"]'), box(pg, '.release-lane__done [data-slug="codes"]')
-        assert ready["y"] < seen["y"] and round(ready["width"]) == round(seen["width"]) and ready["width"] > CARD["wide"][0], "top to bottom, whole posts of the lane's width"
-        assert pg.locator(".release-lane .portal-host.is-ring .ork-portal-ring").count() == 1 and pg.locator(".release-lane__done .ork-portal-ring").count() == 0, "the ring lies round the top post alone"
-        assert pg.locator('.release-lane .post-card[data-portal-card="music"]').get_attribute("data-portal") == "1" and pg.locator(".release-lane .post-card[data-portal]").count() == 1, "the portal's colour rings the top ready post alone"
-        assert pg.locator('.release-lane [data-portal-card="music"] [data-act="to_main"]').inner_text().strip() == "To main"
-        shot(pg, "wide-lane")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_lane_ends_over_the_hand_and_the_pane_ends_where_the_lane_begins(gui):
-    pg, host, log = open_lane(gui)
-    try:
-        lane, hand, pane = box(pg, ".release-lane"), box(pg, ".hand"), box(pg, "#table-pane")
-        assert lane["y"] + lane["height"] <= hand["y"] + 1, "the lane ends over the hand"
-        assert round(pane["x"] + pane["width"]) == round(lane["x"])
-        assert pg.evaluate("() => { const e = document.querySelector('.release-lane__scroll'); return e.scrollWidth <= e.clientWidth; }"), "nothing of the lane scrolls sideways"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)

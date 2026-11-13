@@ -57,7 +57,7 @@ def picking(gui, request):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
     pg.context.close()
@@ -78,7 +78,7 @@ def field(pg):
 
 
 def open_field(pg, text=""):
-    pg.locator(".hand .hand-plus").click()
+    pg.locator(".hand :is(.hand-plus, [data-blank-deck])").click()
     field(pg).wait_for(timeout=WAIT_MS)
     if text:
         pg.locator(".hand-field__text").fill(text)

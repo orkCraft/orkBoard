@@ -38,7 +38,7 @@ def page_url():
 
 
 def opened(pg, url):
-    pg.goto(url + "?mock=1&table=cards")
+    pg.goto(url + "?mock=1")
     pg.locator(".mock-plate__b").wait_for(timeout=15000)
     pg.locator(".cards-s[data-goal]").first.wait_for(timeout=15000)
     pg.locator(f"{HAND}[data-kind=turn]").first.wait_for(timeout=15000)

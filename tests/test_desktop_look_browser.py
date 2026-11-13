@@ -35,7 +35,7 @@ def open_window(gui):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".col-plab__t").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(1500)
     return pg
 
@@ -48,7 +48,7 @@ def rubik(pg, selector):
 
 def test_headings_buttons_and_card_text_are_rubik(gui):
     pg = open_window(gui)
-    assert rubik(pg, ".col-plab__t")
+    assert rubik(pg, ".cards-lab")
     assert rubik(pg, "button")
     fams = pg.evaluate("""() => { for (const c of document.querySelectorAll(".ork-card")) for (const e of c.querySelectorAll("*"))
       if ([...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && e.getBoundingClientRect().width) return getComputedStyle(e).fontFamily; return ""; }""")

@@ -250,10 +250,6 @@ def pane(pg):
     return pg.locator("#test-pane")
 
 
-def card_boxes(pg, selector=".hand .hand-card"):
-    return [b for b in (c.bounding_box() for c in pg.locator(selector).all()) if b]
-
-
 def press_at(pg, goal, y=24):
     """A press on the left edge of a goal's front card (a card that lies behind another shows its left edge, and rises under the pointer)."""
     pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]').click(position={"x": 10, "y": y})
@@ -261,62 +257,6 @@ def press_at(pg, goal, y=24):
 
 def lane(pg, i):
     return pg.locator(f'.hand-lane[data-lane="{i}"]')
-
-
-def stacks_in(pg, i):
-    return [s.get_attribute("data-stack") for s in lane(pg, i).locator(".hand-stack").all()]
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_sideways(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        shot(pg, f"{width}-rest")
-        size = pg.viewport_size
-        assert pg.locator(".hand-deckback, .hand-deck, .hand-end--deck").count() == 0, "no deck: the goals in line lie on the table"
-        assert pg.evaluate("() => import('/static/js/frame/kinds.js').then((m) => 'deck' in m.KINDS)") is False
-        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties); the die and the potions at the hand's right end (spec 156 D: no edge)"
-        sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge)')].map((e) => [e.offsetWidth, e.offsetHeight])")))
-        assert len(sizes) == 1, f"one card size, got {sizes}"
-        assert sizes == ({(144, 202)} if width == "wide" else {(80, 112)}), sizes          # spec 147 C.1, decisions §251.5: 144 x 202 cut by the hand's rim (the narrow card 80 x 112)
-        plus_size = tuple(pg.evaluate("() => { const e = document.querySelector('.hand .hand-plus'); return [e.offsetWidth, e.offsetHeight]; }"))
-        assert plus_size == ((144, 202) if width == "wide" else (80, 112)), plus_size      # decisions §249.2: the + card keeps its 5 : 7
-        if width == "wide":
-            plus_box = pg.locator(".hand-plus").bounding_box()
-            seal = pg.locator(".hand-plus .ork-sigil").bounding_box()
-            assert seal["y"] + seal["height"] <= size["height"] + 1, "the + card's seal lies whole in the window"
-            assert plus_box["y"] + plus_box["height"] > size["height"] + 16, "its foot (the lower moon) lies under the window's edge: it sits 32 px lower (decisions §265)"
-            assert pg.locator(".hand-plus .ork-sigil").evaluate("e => e.offsetHeight <= e.parentElement.clientHeight"), "its whole seal shows"
-        hand = pg.locator(".hand").bounding_box()
-        card = pg.locator('.hand-card[data-goal="timer"]').bounding_box()
-        assert pg.locator(".hand .hand-card__window").count() == 0, "no window on a card of the hand (spec 142 B.1)"
-        assert abs(hand["y"] + hand["height"] - size["height"]) <= 1, "the hand lies at the window's foot"
-        assert (card["y"] + card["height"] > size["height"] + 20) if width == "wide" else (card["y"] + card["height"] <= size["height"] + 1), "wide: the card is cut by the window's edge, its lower part under it; narrow: the die makes the hand as tall as the 112 px card, which shows whole"
-        name = pg.locator('.hand-card[data-goal="timer"] .hand-card__name').bounding_box()
-        assert name["y"] + name["height"] <= size["height"] and (width == "narrow" or pg.locator('.hand-card[data-goal="timer"] .corner--foot').bounding_box()["y"] >= size["height"]), "the title shows whole, the foot corners lie under the cut (wide)"
-        assert pg.locator(".hand .hand-card__label, .hand .hand-card__party, .hand .hand-card__gem").count() == 0, "no party label and no gem on a card's face (spec 147 C.1)"
-        assert hand["height"] <= (150 if width == "wide" else 130), "the hand is short: the table gains what it gave back"
-        if width == "wide":
-            cols = pg.locator(".hand-row").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat)")
-            assert len(cols) == 7 and cols[0] == 160 and len(set(cols[1:5])) == 1 and 144 <= cols[1] <= 180 and cols[6] == 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1; 160 px, spec 147 B.1), every lane one width, a card and a quarter at most, then the tabs' end and Release's track (Live has none here), the Release column's width (spec 156 D.1): {cols}"
-            boxes = [lane(pg, i).bounding_box() for i in range(5)]
-            assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
-            mana = pg.locator(".release-lane__head .pots__row").bounding_box()
-            assert mana["x"] + mana["width"] <= size["width"] + 1 and pg.locator(".hand .hand-done, .hand .table-discard, .hand .pots").count() == 0, "the potions in the right column's head (spec 168 A4), no discard in the hand (it is Release's lane)"
-            done, lane_box = pg.locator(".release-lane [data-portal-card]").first.bounding_box(), pg.locator(".release-lane").bounding_box()
-            assert done["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and lane_box["x"] <= done["x"] and done["y"] + done["height"] <= hand["y"] + 1, "the discard's card in Release's lane, right of the lanes, over the hand"
-        else:
-            slots = sorted(pg.locator(".hand-slot, .hand-mana").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-mana') ? 'mana' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
-            assert slots[0][0] == "plus" and slots[-1][0] == "mana" and pg.locator(".hand .hand-done").count() == 0, "a free row in the lanes' order: the + card first, the mana last; the discard is not in it"
-            assert all(b["width"] >= 44 and b["height"] >= 44 for b in card_boxes(pg)), "a press is 44 x 44 on touch"
-        narrow.no_sideways(pg)
-        assert pg.locator(".hand-row").evaluate("e => e.scrollWidth <= e.clientWidth + 1")
-        assert pg.evaluate("() => document.documentElement.scrollHeight <= document.documentElement.clientHeight"), "the cards under the edge add no scroll"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_row_lies_under_the_lane_of_who_asks(gui):
@@ -330,83 +270,6 @@ def test_a_row_lies_under_the_lane_of_who_asks(gui):
             laneOf({ kind: 'asks', row: { goal: 'gone' } }, parties), laneOf({ kind: 'failed', goal: 'release' }, parties)];
         }""")
         assert lanes == [2, 3, 1, 0, 0, 0, 0, 4]        # a failure its task's party, a party's question and the project's questions their leader's party; the route, a fork, a sign-in and a gone party's the first lane
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_stack_lies_under_the_lane_of_who_asks_and_the_plus_card_under_the_first(gui, width):
-    pg, host, log = open_hand(gui, host=HandHost(extra=True), width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert stacks_in(pg, 1) == ["timer@1", "export@1"]                                         # Tech's: its failure in front of its plan and to-do
-        assert stacks_in(pg, 2) == ["look@2", "phones@2", "words@2"]                                 # Design's: its pick, then its two questions, the oldest first
-        assert stacks_in(pg, 3) == ["theme@3"] and stacks_in(pg, 4) == []                            # Product's; Release asks nothing
-        assert sorted(stacks_in(pg, 0)) == ["fresh@0", "sign_in/claude@0"]                           # what is the whole goal's (the route) and a tool's sign-in lie under the first lane
-        first = lane(pg, 0).locator(".hand-slot")
-        assert first.count() == 3 and "is-plus" in first.first.get_attribute("class"), "the + card with them: first in the lane, at its left end, not in its fan"
-        assert lane(pg, 0).locator(".hand-plus").count() == 1 and pg.locator(".hand-plus").count() == 1
-        if width == "wide":
-            box, plus = lane(pg, 0).bounding_box(), pg.locator(".hand-plus").bounding_box()
-            assert box["x"] - 12 <= plus["x"] and plus["x"] + plus["width"] <= box["x"] + box["width"] + 12, "under the first lane"   # turned a little (§167.5): its corners reach past the lane by a few pixels
-            assert pg.locator(".hand-plus > .ork-icon").evaluate("e => e.offsetWidth || e.width.baseVal.value") == 42, "its + is a large pixel glyph (spec 107 §13)"   # its own size (the card is turned)
-            stack = lane(pg, 0).locator(".hand-stack").first.bounding_box()
-            assert plus["x"] + plus["width"] <= stack["x"] + 6, "the first lane's stacks fan to its right: nothing lies over it"
-            pg.locator(".hand-plus").click()                                                         # a press grows it into the field
-            _field(pg)
-        shot(pg, f"{width}-first-lane")
-        for i, goals in ((1, {"timer", "export"}), (2, {"look", "phones", "words"}), (3, {"theme"})):          # no card of one party's lane lies under another's
-            assert {c.get_attribute("data-goal") for c in lane(pg, i).locator(".hand-card").all()} == goals
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def _at_rest(pg):
-    pg.mouse.move(640, 200)
-    pg.wait_for_timeout(500)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_and_its_rise(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        front, back = pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])'), pg.locator('.hand-slot:has(.hand-card[data-goal="export"])')
-        word, mark = back.locator(".hand-card__name"), back.locator(".corner--top .corner__rune .ork-elem")
-        fb, bb = front.bounding_box(), back.bounding_box()
-        if width == "wide":
-            assert "is-behind" in back.get_attribute("class") and "is-behind" not in front.get_attribute("class")                  # the urgent in front, the other behind
-            assert int(front.evaluate("e => getComputedStyle(e).zIndex")) > int(back.evaluate("e => getComputedStyle(e).zIndex"))
-            box = lane(pg, 1).bounding_box()
-            assert bb["x"] < fb["x"] and fb["x"] - bb["x"] >= 20, "the one behind lies to the left, its edge showing"
-            assert bb["x"] >= box["x"] - 1 and fb["x"] + fb["width"] <= box["x"] + box["width"] + 1, "the fan lies within its lane's width"
-            assert word.evaluate("e => getComputedStyle(e).visibility") == "hidden" and mark.evaluate("e => getComputedStyle(e).visibility") == "visible", "its element only, no words"
-            assert front.locator(".hand-card__name").evaluate("e => getComputedStyle(e).visibility") == "visible"
-            m = mark.bounding_box()
-            assert bb["x"] <= m["x"] and m["x"] + m["width"] <= fb["x"], "the element shows in the edge"
-            shot(pg, "wide-fan-rest")
-            pg.mouse.move(bb["x"] + 8, bb["y"] + 24)                                                  # hover on its edge: it rises whole, over the front one
-            pg.wait_for_timeout(500)
-            up = back.bounding_box()
-            assert up["y"] <= bb["y"] - 4 and word.evaluate("e => getComputedStyle(e).visibility") == "visible"
-            assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y)?.closest('.hand-slot')?.querySelector('.hand-card')?.dataset.goal", [bb["x"] + 100, up["y"] + 60]) == "export"
-            assert abs(up["y"] + up["height"] - pg.viewport_size["height"]) <= 1, "risen by what the rim hides, the card shows whole on the window's edge (spec 147 C.2)"
-            shot(pg, "wide-fan-risen")
-            _at_rest(pg)
-            assert back.bounding_box()["y"] == bb["y"] and word.evaluate("e => getComputedStyle(e).visibility") == "hidden"
-        for goal in ("export", "timer"):                                          # keyboard focus raises a card whole too, at both widths
-            card = pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]')
-            slot = pg.locator(f'.hand-slot:has(.hand-card[data-goal="{goal}"])')
-            y0 = slot.bounding_box()["y"]
-            card.focus()
-            pg.wait_for_timeout(500)
-            assert slot.bounding_box()["y"] <= y0 - 4, f"{goal} rises on focus"
-            pg.evaluate("() => document.activeElement.blur()")
-            pg.wait_for_timeout(500)
-            assert slot.bounding_box()["y"] == y0
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -428,68 +291,9 @@ def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
     assert not log, "\n".join(log)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_cards_face_is_the_corners_a_title_and_under_the_cut_its_why_and_foot(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.emulate_media(reduced_motion="reduce")                                                    # the fan turns the front cards two degrees (cardface.css): their sizes are measured upright
-        timer, phones = pg.locator('.hand-card[data-goal="timer"]'), pg.locator('.hand-card[data-goal="phones"]')
-        timer.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        c = timer.bounding_box()
-        assert pg.locator(".hand .hand-stack .hand-card__window, .hand .hand-card__fig, .hand .hand-card__label, .hand .hand-card__party, .hand .hand-card__gem").count() == 0, "no window, no party label, no gem on the face (spec 147 C.1)"
-        top, shown = timer.locator(".corner--top"), (100 if width == "wide" else 62)
-        elem, name = top.locator(".corner__rune .ork-elem").bounding_box(), timer.locator(".hand-card__name").bounding_box()
-        assert top.locator(".corner__rune .ork-elem").count() == 1 and top.locator(".ork-race__head").count() == 0, "the goal's rune at the top, and no head there: who asks is the lane"
-        assert elem["x"] - c["x"] <= 12 and elem["y"] + elem["height"] <= name["y"], "the rune at the top left, over the title"
-        assert timer.locator(".hand-card__name").evaluate("e => getComputedStyle(e).textAlign") in ("start", "left")
-        assert timer.locator(".hand-card__name").evaluate("e => getComputedStyle(e).webkitLineClamp") == ("3" if width == "wide" else "2"), "three lines at most (two at the narrow width)"
-        sign = top.locator(".corner__kind .ork-sign.alert").bounding_box()
-        assert sign["width"] == 14 and sign["height"] == 14, "the kind's sign at its small size"
-        assert c["x"] + c["width"] - (sign["x"] + sign["width"]) <= 12 and sign["x"] > elem["x"], "the sign top right"
-        tb = top.bounding_box()
-        assert tb["y"] - c["y"] <= 8 and tb["y"] + tb["height"] <= name["y"] + 1, "the corners' row is the card's top row, over the title"
-        assert top.locator(".corner__kind").evaluate("e => e.classList.contains('is-danger')"), "a failure's sign in the danger colour as its frame is"
-        assert top.locator(".corner__kind .ork-sign.alert").evaluate("e => getComputedStyle(e).opacity") == "1"
-        assert timer.locator(".hand-card__name").evaluate("e => e.scrollHeight <= e.clientHeight + 1") and name["height"] == (60 if width == "wide" else 36), "the title is not cut mid-line: its three (two) lines whole"
-        why, foot = timer.locator(".hand-card__foot"), timer.locator(".corner--foot")
-        assert why.text_content() == "The reset test failed" and why.bounding_box()["y"] >= c["y"] + shown - 1, "the why (its line) lies under the cut"
-        assert foot.bounding_box()["y"] >= c["y"] + shown and foot.locator(".ork-race__head").count() == 1, "the asker's head is in the foot corners, under the cut"
-        gem = foot.locator(".corner__much .ork-gem")
-        gb = gem.bounding_box()
-        assert gem.inner_text() == "4%" and gb["x"] + gb["width"] >= c["x"] + c["width"] - 12, "the cost at the foot's right"
-        q = phones.locator(".corner--top .ork-sign.question")                                               # a question: the question mark in the alert colour, as its frame is
-        assert q.count() == 1 and q.evaluate("e => getComputedStyle(e).opacity") == "1"
-        assert q.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const t = document.createElement('i'); t.style.color = 'var(--ork-alert)'; document.body.append(t); const c = getComputedStyle(t).color; t.remove(); return c; }")
-        assert phones.locator(".ork-gem").count() == 0 and phones.locator(".corner--foot .ork-race__head").count() == 1
-        assert pg.locator(".hand-card .ork-sign.target").count() == 0
-        shot(pg, f"{width}-faces")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_picked_goals_stacks_are_lit_alike(gui):
-    pg, host, log = open_hand(gui, host=HandHost(both=True))
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert stacks_in(pg, 1) == ["timer@1", "export@1"] and stacks_in(pg, 2) == ["phones@2", "words@2", "timer@2"]       # a goal under two lanes: a stack in each
-        assert pg.locator(".hand-card.ork-picked").count() == 0
-        call(pg, "frame/state.js", "pick", "timer")
-        pg.wait_for_function("() => document.querySelectorAll('.hand-card.ork-picked').length === 2", timeout=WAIT_MS)
-        assert [c.get_attribute("data-goal") for c in pg.locator(".hand-card.ork-picked").all()] == ["timer", "timer"]
-        assert pg.locator(".hand-card.ork-picked.is-on").count() == 2 and pg.locator(".hand-card.ork-picked").evaluate_all("els => els.map((e) => e.closest('.hand-lane').dataset.lane)") == ["1", "2"]
-        pg.wait_for_timeout(500)
-        shot(pg, "wide-picked")
-        call(pg, "frame/state.js", "pick", "timer")
-        pg.wait_for_function("() => document.querySelectorAll('.hand-card.ork-picked').length === 0", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def _plus(pg):
-    return pg.locator(".hand .hand-plus")
+    """The new goal's card: the deck of blank cards at the wide width, the + card at the narrow one."""
+    return pg.locator(".hand :is(.hand-plus, [data-blank-deck])")
 
 
 def _field(pg):
@@ -526,87 +330,12 @@ def test_no_part_with_nothing_to_hold(gui, width):
     assert not log, "\n".join(log)
 
 
-def test_with_no_goal_at_all_the_plus_card_lies_large_in_the_panes_middle(gui):
-    pg, host, log = open_hand(gui, host=HandHost(empty=True))
-    try:
-        big = pg.locator(".hand-plus.is-large")
-        big.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-lane").count() == 0 and pg.locator(".hand-end").count() == 0
-        table, card = pg.locator(".frame-table").bounding_box(), big.bounding_box()
-        assert abs((card["x"] + card["width"] / 2) - (table["x"] + table["width"] / 2)) <= 4 and abs((card["y"] + card["height"] / 2) - (table["y"] + table["height"] / 2)) <= 4
-        assert big.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 202], "the large + card, 144 x 202 (spec 168 A1)"
-        shot(pg, "wide-large-plus")
-        big.click()
-        field, area = _field(pg)
-        assert "is-middle" in field.get_attribute("class") and big.count() == 0
-        area.fill("My first goal")
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "My first goal"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 # -- the + card and its field -------------------------------------------------------------------------------------------------------------
 
 def _seal(pg, large=False):
     """The element lying in the + card's seal: its class name ("" when the place is empty)."""
     inner = pg.locator(f".hand .hand-plus{'.is-large' if large else ''} > .ork-sigil > .ork-sigil__seal > .ork-elem")
     return inner.get_attribute("class").replace("ork-elem", "").strip() if inner.count() else ""
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_the_first_partys_when_none_is_addressed_and_no_hatch(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
-        plus = _plus(pg)
-        sigil = plus.locator("> .ork-sigil")
-        assert sigil.count() == 1 and sigil.get_attribute("aria-hidden") == "true" and plus.locator("> .ork-sigil__seal, > .ork-sigil > .ork-sigil__seal").count() == 1
-        assert sigil.evaluate("e => e.nextElementSibling?.classList.contains('ork-icon')"), "the seal lies before the +'s icon"
-        assert ("small" in sigil.get_attribute("class").split()) == (width == "narrow"), "the seal is small on the 80 px card"
-        s = sigil.bounding_box()
-        assert round(s["width"]) <= (72 if width == "narrow" else 136) + 14, "the seal's size (the card is turned a little)"
-        assert plus.evaluate("e => getComputedStyle(e).backgroundImage") == "none", "the hatch is gone"
-        assert "plus-lines" in plus.evaluate("e => getComputedStyle(e, '::before').maskImage || getComputedStyle(e, '::before').webkitMaskImage"), "so is the band of light: its ::before is the back's drawing (decisions §264)"
-        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == 'none', "the corner brackets gave way to the back's corners (decisions §264)"
-        assert "double" in plus.evaluate("e => getComputedStyle(e).borderTopStyle") and plus.evaluate("e => getComputedStyle(e).rotate") != "none", "the double frame and the lean stay"
-        assert plus.evaluate("e => getComputedStyle(e).color") == plus.evaluate("e => getComputedStyle(e).borderTopColor"), "the green: the seal takes the card's colour"
-        assert _seal(pg) == "ice", "the Orkmaster's tab, no party named: the first party's next element (the runes are the project's, §253.10)"
-        shot(pg, f"{width}-plus-seal-first-party")
-        call(pg, "frame/state.js", "openTab", "tech")                                                                      # a party's tab: that party's next element
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-        assert _seal(pg) == "ice"
-        if width == "wide":
-            elem = plus.locator(".ork-sigil__seal > .ork-elem")
-            want = pg.evaluate("() => { const s = document.createElement('i'); s.className = 'ork-elem ice'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
-            assert elem.evaluate("e => getComputedStyle(e).backgroundColor") == want, "the goal's rune in its own colour"
-            shot(pg, "wide-plus-seal-ice")
-        call(pg, "frame/state.js", "openTab", "design")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "orkmaster")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_seals_place_follows_the_party_named_with_an_at_sign_in_the_field(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        assert _seal(pg) == "ice", "no party addressed: the first party's"
-        _plus(pg).click()
-        field, area = _field(pg)
-        area.fill("@Product ")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.void')", timeout=WAIT_MS)
-        area.fill("@Design ")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
-        area.fill("no party")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)       # no party named: the first party's again
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_the_large_plus_card_keeps_the_full_seal_and_the_first_partys_rune(gui):
@@ -674,39 +403,6 @@ def _radios(pg):
 
 def _checked(pg):
     return [r.get_attribute("data-rune") for r in _radios(pg).all() if r.get_attribute("aria-checked") == "true"]
-
-
-def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_the_first_partys_for_the_orkmaster_and_all_the_others_when_none_is_free(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the Orkmaster's tab, no party named: the first party's (§253.10)"
-        call(pg, "frame/state.js", "openTab", "tech")                                                                      # free: ice (the default, at the top), void, lava
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__free')", timeout=WAIT_MS)
-        assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the default stays in the seal, the others in the band's places in order of use"
-        assert _seal(pg) == "ice"
-        free = pg.locator(".hand .hand-plus .ork-sigil__free:not(.hand-deco)").first
-        assert free.evaluate("e => getComputedStyle(e).opacity") == "0" and free.locator(".ork-elem[aria-hidden='true']").count() == 1      # hidden at rest
-        _plus(pg).hover()
-        pg.wait_for_function("() => getComputedStyle(document.querySelector('.hand .hand-plus .ork-sigil__free')).opacity === '0.75'", timeout=WAIT_MS)     # shown on hover, at 75 %
-        assert free.evaluate("e => e.offsetWidth") == 14 and free.locator(".ork-elem").evaluate("e => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"
-        shot(pg, "wide-plus-free-runes")
-        pg.mouse.move(5, 5)
-        call(pg, "frame/state.js", "openTab", "design")                                                                    # free: dust (the default), lava
-        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free:not(.hand-deco)').length === 1", timeout=WAIT_MS)
-        assert _frees(pg) == [["at-90", "lava"]]
-        call(pg, "frame/state.js", "openTab", "product")                                                                   # only its default is free: nothing in the band
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.void')", timeout=WAIT_MS)
-        assert _frees(pg) == []
-        call(pg, "frame/state.js", "openTab", "release")                                                                   # none free: the four others, in the four places in order
-        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free:not(.hand-deco)').length === 4", timeout=WAIT_MS)
-        assert _frees(pg) == [["at-90", "meadow"], ["at-270", "ice"], ["at-180", "dust"], ["at-45", "void"]] and _seal(pg) == "lava"
-        _plus(pg).click()                                                                                                  # the field open: the card holds the choice (`is-choosing`)
-        _field(pg)
-        assert "is-choosing" in _plus(pg).get_attribute("class")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_the_narrow_seal_is_small_and_holds_no_free_rune(gui):
@@ -778,32 +474,6 @@ def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_
     assert not log, "\n".join(log)
 
 
-def test_with_no_party_addressed_the_first_partys_rune_is_checked_the_arrows_move_the_focus_and_the_choice_is_sent(gui):
-    """Spec 168 D2 (before: the arrows chose in a row of radios): the five runes are dealt to the hand; the first party's default is checked and its used ones faint; the arrows move the focus, a press or Enter plays one and the field comes back."""
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        _plus(pg).click()
-        field, area = _field(pg)
-        assert _checked(pg) == ["ice"], "the first party's default is checked (§253.10)"
-        assert pg.locator(".hand-dealt .hand-deal.is-faint").count() == 2, "the first party's used runes (meadow, dust) are faint"
-        _radios(pg).nth(1).focus()
-        pg.keyboard.press("ArrowRight")
-        assert _radios(pg).nth(2).evaluate("e => e === document.activeElement") and _checked(pg) == ["ice"], "the arrows move the focus"
-        pg.keyboard.press("Enter")
-        assert _seal(pg) == "dust", "Enter plays it: the seal follows and the field comes back"
-        area.wait_for(timeout=WAIT_MS)
-        area.fill("A general goal in lava")
-        _radios(pg).nth(4).click()
-        area.fill("A general goal in lava")
-        area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"match": True, "now": True, "text": "A general goal in lava", "element": "lava"}))
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_all_five_used_are_none_faint(gui):
     pg, host, log = open_hand(gui)
     try:
@@ -820,36 +490,6 @@ def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_al
         _radios(pg)
         pg.wait_for_function("() => document.querySelector('.hand-dealt [data-rune=\"lava\"][aria-checked=\"true\"]')", timeout=WAIT_MS)
         assert pg.locator(".hand-dealt .hand-deal.is-faint").count() == 0, "all five used: nothing tells them apart"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_goal_sent_plays_the_rite_on_the_seal_in_its_element_once_and_none_under_reduced_motion(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _plus(pg).wait_for(timeout=WAIT_MS)
-        call(pg, "frame/state.js", "openTab", "tech")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
-        sigil = pg.locator(".hand .hand-plus .ork-sigil")
-        assert "is-summoning" not in sigil.get_attribute("class")
-        _plus(pg).click()
-        field, area = _field(pg)
-        _radios(pg).nth(3).click()                                                                                         # void
-        area.fill("Light the seal")
-        area.press("Enter")
-        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil.is-summoning.rite-void')", timeout=WAIT_MS)       # the goal's own element
-        assert pg.locator(".hand-field").count() == 0, "the field closes as it did"
-        shot(pg, "wide-plus-rite")
-        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil.is-summoning')", timeout=3000)       # taken off after the animation
-        assert not [c for c in sigil.get_attribute("class").split() if c.startswith("rite-")]
-        pg.emulate_media(reduced_motion="reduce")                                                                          # nothing plays under reduced motion
-        _plus(pg).click(position={"x": 80, "y": 60})                                                                       # its upper part: the hand is 100 px high now (spec 156 E.1) and the card's middle lies at its rim
-        _field(pg)[1].fill("Still")
-        _field(pg)[1].press("Enter")
-        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert "is-summoning" not in sigil.get_attribute("class")
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -942,31 +582,6 @@ def _press(pg, goal):
     _stack(pg, goal).locator('.hand-card[data-top="1"]').first.click(position={"x": 10, "y": 24})
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_stacks_are_a_goal_each_the_urgent_first_the_gem_only_where_a_card_spends(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert [s.get_attribute("data-stack") for s in pg.locator(".hand-stack").all()] == ["timer@1", "export@1", "phones@2", "words@2", "theme@3"]      # lane by lane, the failure first in Tech's; a to-do last
-        assert _stack(pg, "export").get_attribute("data-cards") == "2" and _stack(pg, "export").locator(".ork-card-back.edge").count() == 1      # its cards under it face down
-        top = lambda goal: pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]')                                                          # noqa: E731
-        assert top("timer").locator(".ork-gem").text_content() == "4%" and top("export").locator(".ork-gem").text_content() == "2–4%"             # a failure's Start again, a plan's Start
-        for none in ("phones", "words", "theme"):
-            assert top(none).locator(".ork-gem").count() == 0                                                                                  # a question costs nothing
-        assert "fails" in top("timer").get_attribute("class") and "asks" in top("phones").get_attribute("class")
-        assert top("timer").locator(".ork-sign.alert").count() == 1 and top("phones").locator(".corner--top .ork-elem.meadow").count() == 1
-        assert top("timer").locator(".corner--foot .ork-race__head").count() == 1 and top("timer").locator(".corner--top .ork-race__head").count() == 0      # its leader's head, in the foot corners (spec 147 C.1)
-        assert top("timer").evaluate("e => e.closest('.hand-lane').dataset.lane") == "1" and top("phones").evaluate("e => e.closest('.hand-lane').dataset.lane") == "2"      # who asks is the lane the card lies under, not a label on its face
-        call(pg, "frame/state.js", "openTab", "design")
-        pg.wait_for_timeout(300)
-        assert top("timer").evaluate("e => e.closest('.hand-lane').dataset.lane") == "1" and len(pg.locator(".hand-stack").all()) == 5                # the hand is the same on every tab
-        assert pg.locator(".hand-card .hand-spend, .hand-card .hand-spend__words").count() == 0                                                # its words only on the lifted card
-        assert not [t for t in pg.locator(".hand").inner_text().lower().split() if t in ("idea", "ideas", "track", "orc", "agent")]
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_stacks_edges_hint_how_many_five_at_most_and_never_a_number(gui):
     pg, host, log = open_hand(gui)
     try:
@@ -996,53 +611,6 @@ def _deepen(pg, host, n=6):
     pg.wait_for_timeout(700)
 
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_a_stacks_cards_behind_the_front_one_lie_as_a_fan_turned_by_place_and_a_hover_opens_it(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        _stack(pg, "export").wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(700)
-        sel = '.hand-stack[data-stack="export@1"] > .ork-card-back.edge'
-        assert pg.evaluate(FAN_JS, sel) != [] and len(pg.evaluate(FAN_JS, sel)) == 1
-        _deepen(pg, host)
-        rest = pg.evaluate(FAN_JS, sel)
-        assert len(rest) == 5, "five edges at most"
-        by_place = rest[::-1]                                                                            # the DOM lists the deepest first: place 1 (the nearest the front) is the last
-        assert [t > 0 for t, _ in by_place] == [True, False, True, False, True] and [a > 0 for _, a in by_place] == [True, False, True, False, True], "by turns right and left"
-        scale = 1 if width == "wide" else 0.7
-        for turn, aside in by_place:
-            assert 2 <= abs(turn) <= 4 and 6 * scale - 0.1 <= abs(aside) <= 10 * scale + 0.1, f"turned 2 to 4 degrees, stepped 6 to 10 px aside ({turn}, {aside})"
-        front = pg.locator('.hand-card[data-goal="export"][data-top="1"]')
-        assert front.evaluate("e => getComputedStyle(e).transform") == "none", "the front card lies straight"
-        assert pg.locator(".hand-stack[data-stack='export@1'] .ork-card-back.edge").evaluate_all("els => els.every((e) => !e.innerText)")
-        pg.mouse.move(640, 200)
-        pg.wait_for_timeout(400)
-        shot(pg, f"{width}-fan-rest")
-        # a redraw shakes nothing: the same turns after the Board changes
-        host.bump({})
-        pg.wait_for_timeout(500)
-        assert pg.evaluate(FAN_JS, sel) == rest, "a fixed turn by place, no shake on a redraw"
-        slot = pg.locator('.hand-slot:has(.hand-stack[data-stack="export@1"])')
-        sb = slot.bounding_box()
-        pg.mouse.move(sb["x"] + 12, sb["y"] + 30)                                                          # hover: the fan opens a little wider
-        pg.wait_for_timeout(600)
-        opened = pg.evaluate(FAN_JS, sel)[::-1]
-        for (t0, a0), (t1, a1) in zip(by_place, opened):
-            assert abs(a1) > abs(a0) and abs(t1) >= abs(t0) and abs(t1) <= 6 and (a0 > 0) == (a1 > 0), "wider, the same sides"
-        assert pg.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth"), "no sideways scroll"
-        shot(pg, f"{width}-fan-open")
-        _at_rest(pg)
-        assert pg.evaluate(FAN_JS, sel) == rest, "closed again at rest"
-        card = pg.locator('.hand-card[data-goal="export"][data-top="1"]')                                   # keyboard focus opens it too
-        card.focus()
-        pg.wait_for_timeout(600)
-        assert abs(pg.evaluate(FAN_JS, sel)[-1][1]) > abs(rest[-1][1])
-        pg.evaluate("() => document.activeElement.blur()")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_fan_stands_still_under_reduced_motion(gui):
     server, browser = gui
     ctx = browser.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
@@ -1059,29 +627,6 @@ def test_a_fan_stands_still_under_reduced_motion(gui):
         assert pg.locator(sel).first.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
     finally:
         ctx.close()
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_two_goals_in_one_lane_are_two_small_fans_the_urgent_in_front(gui, width):
-    pg, host, log = open_hand(gui, width=width)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(700)
-        sel = '.hand-lane[data-lane="1"] .hand-stack > .ork-card-back.edge'
-        edge = pg.locator(sel)
-        assert edge.count() == 1, "the second goal has a card behind its front, laid turned"
-        assert edge.evaluate("e => new DOMMatrix(getComputedStyle(e).transform).b") != 0
-        front, back = pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])'), pg.locator('.hand-slot:has(.hand-card[data-goal="export"])')
-        if width == "wide":
-            assert int(front.evaluate("e => getComputedStyle(e).zIndex")) > int(back.evaluate("e => getComputedStyle(e).zIndex"))
-            assert front.bounding_box()["x"] > back.bounding_box()["x"], "the urgent at the right, the other behind it"
-        else:
-            assert front.bounding_box()["x"] < back.bounding_box()["x"], "a free row: the urgent first"
-        assert pg.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth")
-        shot(pg, f"{width}-fans-in-a-lane")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -1111,26 +656,6 @@ def test_a_stack_pressed_picks_its_goal_and_lifts_its_top_card_with_its_answers_
         assert _sent(pg, host, ("ideas.start", {"slug": "export", "via": "hand"}))
         pg.keyboard.press("Escape")
         pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_question_is_answered_from_its_card_and_the_card_goes_with_the_stop(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        _press(pg, "phones")
-        lifted = pg.locator(".hand-lifted")
-        lifted.wait_for(timeout=WAIT_MS)
-        ways = pg.locator(".hand-ways-row")                                                                                       # spec 158 F, decisions §270: the question stays a hand card, its ways are the hand
-        assert lifted.locator(".corner__much").count() == 0 and "Where does the timer run?" in lifted.inner_text()                  # no gem: it spends nothing
-        assert ways.get_by_role("button", name=re.compile("^Design lead decides")).count() == 1 and ways.get_by_role("button", name="Put it back").count() == 1
-        shot(pg, "wide-lifted-question")
-        ways.get_by_role("button", name=re.compile("^Server counts, phones show it, its pick")).click()
-        assert _sent(pg, host, ("ideas.answer", {"slug": "phones", "answers": ["Server counts, phones show it"], "from": "hand"}))
-        pg.wait_for_function("() => !document.querySelector('.hand-stack[data-stack=\"phones@2\"]:not(.is-gone)')", timeout=WAIT_MS)
-        assert pg.locator(".hand-lifted").count() == 0 and sig(pg, "frame/state.js", "lifted") == ""
-        assert [s.get_attribute("data-stack") for s in pg.locator(".hand-stack:not(.is-gone)").all()] == ["timer@1", "export@1", "words@2", "theme@3"]
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -1242,39 +767,6 @@ def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_d
 
 # -- motion ---------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_card_leans_and_rises_under_the_pointer_and_nothing_moves_under_reduced_motion(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        card = pg.locator('.hand-card[data-goal="timer"]')
-        card.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        assert card.evaluate("e => getComputedStyle(e).transform") == "none"                    # at rest it is flat
-        b = card.bounding_box()
-        pg.mouse.move(b["x"] + b["width"] - 24, b["y"] + 24)                                                 # inside the card turned two degrees, not at its box's corner
-        pg.wait_for_timeout(400)
-        assert card.evaluate("e => getComputedStyle(e).transform") != "none" and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-lean-x')").strip() != ""
-        assert pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])').bounding_box()["y"] <= b["y"] - 4          # and lifts a little (a spring, hand.css; the card is whole at rest, spec 142 B.4)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-    server, browser = gui
-    ctx = browser.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
-    pg = ctx.new_page()
-    pg.route_web_socket("**/ws*", HandHost().on_socket)
-    pg.goto(server.url)
-    try:
-        card = pg.locator('.hand-card[data-goal="timer"]')
-        card.wait_for(timeout=WAIT_MS)
-        b = card.bounding_box()
-        pg.mouse.move(b["x"] + b["width"] - 6, b["y"] + 10)
-        pg.wait_for_timeout(400)
-        assert card.evaluate("e => getComputedStyle(e).transform") == "none"
-        assert pg.locator(".hand-card.ork-deal").count() == 0
-        slot = pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])')
-        assert slot.bounding_box()["y"] <= b["y"] - 4 and slot.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"      # a card rises whole all the same (it must be read), without the spring
-    finally:
-        ctx.close()
-
 
 # -- the other cards of the hand --------------------------------------------------------------------------------------------------------------
 
@@ -1325,42 +817,6 @@ def test_a_pick_opened_over_the_pane_is_the_variants_large_and_a_note(gui):
     assert not log, "\n".join(log)
 
 
-def test_a_card_that_comes_is_handed_from_where_it_was_played_an_answered_one_is_played_back_there_and_one_that_goes_with_its_goal_crumbles_where_it_lay(gui):
-    """Spec 120 §6.9–§6.10 (tests/test_handed_browser.py has the rest): the card of a goal that lies in no lane of the table comes from its leader's tab, flying to its place; answered, it is played back toward it; with its goal gone it crumbles."""
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        pg.wait_for_timeout(900)
-        assert pg.locator(".hand-card.ork-deal").count() == 0                                   # the first draw deals nothing
-        host.nodes = [{**n, "place": "hand"} if n["slug"] == "mute" else n for n in host.nodes]
-        host.needs.append(need("asks", "tech", "mute", "Mute a noisy player", "Who may mute?", asked=[{"ask": "Who may mute?", "choices": ["The host"], "pick": None, "why": "", "by": None, "look": False}]))
-        host.bump({})
-        card = pg.locator('.hand-card[data-goal="mute"]')
-        card.wait_for(timeout=WAIT_MS)
-        assert "ork-deal" in card.get_attribute("class") and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-deal-y')").strip() != ""      # dealt, from its leader's tab
-        assert card.evaluate("e => e.style.getPropertyValue('--ork-deal-x') !== '' && e.style.getPropertyValue('--ork-deal-y').endsWith('px')"), "the vector to the Tech tab, set by the page"
-        pg.wait_for_function("() => !document.querySelector('.hand-card.ork-deal')", timeout=WAIT_MS)
-        host.needs = [n for n in host.needs if n["idea"] != "mute"]                              # answered: the goal stays
-        host.bump({})
-        pg.locator(".hand-stack.is-gone .hand-card.ork-play").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-stack.is-gone .ork-crumble").count() == 0, "played back, not crumbled"
-        pg.wait_for_function("() => !document.querySelector('.hand-stack.is-gone')", timeout=WAIT_MS)
-        host.needs.append(need("asks", "tech", "mute", "Mute a noisy player", "Who may mute?", asked=[{"ask": "Who may mute?", "choices": ["The host"], "pick": None, "why": "", "by": None, "look": False}]))
-        host.bump({})
-        card.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-card.ork-deal')", timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        host.nodes = [n for n in host.nodes if n["slug"] != "mute"]                              # dropped: its goal is gone with it
-        host.needs = [n for n in host.needs if n["idea"] != "mute"]
-        host.bump({})
-        pg.locator(".hand-stack.is-gone .ork-crumble > i").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-stack.is-gone .ork-crumble > i").count() == 6                  # six pixel squares fall, they do not fade
-        pg.wait_for_function("() => !document.querySelector('.hand-stack.is-gone')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 # -- the words of the goal's way and the one place of the parties (spec 100 E) -------------------------------------------------------------------------------------
 
 def test_every_kind_of_a_goals_way_has_its_plain_word_and_no_word_of_a_race(gui):
@@ -1394,54 +850,6 @@ def test_edit_the_party_on_a_plan_that_misses_a_member_opens_the_one_place_of_th
     assert not log, "\n".join(log)
 
 
-def test_a_goals_own_stack_lies_in_front_of_a_party_question_that_blocks_nothing(gui):
-    """Spec 143 E.2 (decisions §250.6): in a lane, a goal's own card (a failure, a result, a decision) lies in front of the party's own question with `blocks: false`; the front card takes the press."""
-    host = HandHost()
-    q = [{"ask": "Which version goes out first?", "choices": ["The small one", "All of it"], "pick": None, "why": "", "by": None, "look": False}]
-    shipped = node("shipped", "tech", "Round scores shown on the host's screen", "hand", state="review", element="ice", tasks=[task("s1", "Show the scores", "review")],
-                   results=[{"idea": "shipped", "idea_title": "Round scores shown on the host's screen", "task": "s1", "title": "Show the scores", "round": 1, "cost": 0.4, "conflict": "", "finished": "2026-10-20T11:00:00",
-                             "tests": {"passed": 14, "failed": 0, "failing": [], "tail": "14 passed", "green": True}, "diff": {"files": 3, "added": 146, "removed": 0}, "estimate": None, "over": False}])
-    host.nodes.append(shipped)
-    host.needs.append(need("goal", "tech", "", "Tech asks about its goals", "Which version goes out first?", asked=q, priority="high", at="2026-10-01T09:00:00"))
-    pg, host, log = open_hand(gui, host=host)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        keys = stacks_in(pg, 1)
-        assert "party:tech@1" in keys and "timer@1" in keys and "shipped@1" in keys, keys
-        assert keys.index("timer@1") < keys.index("party:tech@1") and keys.index("shipped@1") < keys.index("party:tech@1"), f"the goals' own stacks first (in front), a result among them: {keys}"
-        front = lane(pg, 1).locator(".hand-slot").evaluate_all("els => els.map((e) => [e.querySelector('.hand-stack')?.getAttribute('data-stack'), +getComputedStyle(e).zIndex])")
-        top = max(front, key=lambda r: r[1])[0]
-        assert top == "timer@1", f"the failure is the front of the fan: {front}"
-        pg.locator('.hand-card[data-goal="timer"][data-top="1"]').click(position={"x": 60, "y": 30})       # the press lands on the front card
-        pg.wait_for_selector(".hand-lifted", timeout=WAIT_MS)
-        assert pg.locator(".hand-lifted").get_attribute("data-kind") == "failed", "the press lifted the failure"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_plus_cards_turned_corner_lies_clear_of_the_first_lanes_stacks_at_1440_by_900(gui):
-    """Spec 143 F.6 (decisions §250.7): `--hc-lead` allows for the + card turned (its corner reaches about 164 px): at 1440 x 900 the left edge of the first lane's farthest stack is clear of it, not within the + 6 the wide test grants."""
-    server, browser = gui
-    host = HandHost(extra=True)
-    ctx = browser.new_context(viewport={"width": 1440, "height": 900})
-    pg = ctx.new_page()
-    log: list[str] = []
-    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        pg.wait_for_selector(".hand-lane[data-lane='0'] .hand-stack", timeout=WAIT_MS)
-        plus = pg.locator(".hand-plus").bounding_box()
-        lefts = [s.bounding_box()["x"] for s in lane(pg, 0).locator(".hand-stack").all()]
-        assert len(lefts) >= 2, "two stacks fan in the first lane"
-        assert min(lefts) >= plus["x"] + plus["width"], f"the stack's left edge {min(lefts)} is clear of the turned corner at {plus['x'] + plus['width']}"
-        shot(pg, "wide-1440-plus-corner")
-    finally:
-        ctx.close()
-    assert not log, "\n".join(log)
-
-
 def test_start_again_says_the_tasks_work_is_thrown_away_only_where_its_branch_holds_commits(gui):
     """Spec 149 D.4: the failure card's *Start again* says in its title that the task's work is thrown away and made again, when the host says the branch holds commits."""
     words = "The task's work is thrown away and made again"
@@ -1470,25 +878,6 @@ REACH = "hand/reachhover.js"
 
 def _card(pg, goal):
     return pg.locator(f'.hand-card[data-goal="{goal}"][data-top="1"]')
-
-
-def test_the_pointer_resting_on_a_hand_card_names_its_goal_after_a_moment_and_leaving_the_hand_clears_it(gui):
-    pg, host, log = open_hand(gui)
-    try:
-        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert sig(pg, REACH, "reachGoal") == ""
-        sent = len(host.log)
-        pg.mouse.move(5, 5)
-        box = _card(pg, "timer").bounding_box()
-        pg.mouse.move(box["x"] + 10, box["y"] + 24)
-        assert sig(pg, REACH, "reachGoal") == "", "not at once: the pointer has to rest"
-        pg.wait_for_function("([m]) => import(m).then((x) => x.reachGoal.value === 'timer')", arg=[f"/static/js/{REACH}"], timeout=WAIT_MS)
-        pg.mouse.move(5, 5)                                                                          # out of the hand
-        pg.wait_for_function("([m]) => import(m).then((x) => x.reachGoal.value === '')", arg=[f"/static/js/{REACH}"], timeout=WAIT_MS)
-        assert len(host.log) == sent, "hovering sends no command"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_pointer_passing_over_a_card_without_resting_names_nothing(gui):

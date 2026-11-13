@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_column_browser import open_column  # noqa: E402
+from tests.column_kit import open_column  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -87,43 +87,6 @@ def test_a_small_card_hovered_or_focused_is_shown_at_144_by_202_after_a_moment_a
         pg.locator("#sm-test .sm").nth(2).hover()
         pg.wait_for_selector("[data-preview=face]:has-text('Goal bad')", timeout=WAIT_MS)
         assert pg.locator("[data-preview]").count() == 1, "one at a time"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_fan_and_the_deck_backs_are_previewed_with_their_goals_name_and_have_no_native_title(gui):
-    pg, host, log = open_column(gui)
-    try:
-        pg.wait_for_selector(".col-card--fan", timeout=WAIT_MS)
-        pg.emulate_media(reduced_motion="reduce")
-        backs = pg.locator(".col-card--down")
-        assert backs.count() >= 6
-        assert backs.evaluate_all("els => els.map((e) => e.getAttribute('title'))") == [None] * backs.count(), "no native title on any back"
-        fan = pg.locator(".col-card--fan")
-        label = fan.nth(2).get_attribute("aria-label")
-        assert label.startswith("Kick a player from the lobby"), label
-        fan.nth(2).hover(position={"x": 6, "y": 50})
-        pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
-        said = pg.locator("[data-preview=back]")
-        assert said.bounding_box()["width"] == 144 and said.bounding_box()["height"] == 202
-        assert "Kick a player from the lobby" in said.inner_text() and "waits for the Orkmaster" in said.inner_text(), "the goal's name and its state's line"
-        assert label == "Kick a player from the lobby: waits for the Orkmaster"
-        pg.keyboard.press("Escape")
-        assert pg.locator("[data-preview]").count() == 0
-        pg.mouse.move(700, 600)
-        pg.wait_for_timeout(200)
-        fan.nth(3).focus()
-        pg.wait_for_selector("[data-preview=back]", timeout=WAIT_MS)
-        assert "Host can skip a round" in pg.locator("[data-preview=back]").inner_text()
-        assert pg.evaluate("() => document.activeElement.getAttribute('data-goal')") == "raw2", "focus stays on the back"
-        deck = pg.locator(".col-card--spec").first
-        deck.focus()
-        pg.wait_for_selector("[data-preview=back]:has-text('Round timer on phones')", timeout=WAIT_MS)
-        assert pg.locator("[data-preview]").count() == 1
-        pg.mouse.move(700, 600)
-        pg.evaluate("() => document.activeElement.blur()")
-        pg.wait_for_function("() => !document.querySelector('[data-preview]')", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)

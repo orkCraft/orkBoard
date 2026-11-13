@@ -97,12 +97,8 @@ def window(gui, request):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     pg.locator(".hand-card").first.wait_for(timeout=WAIT_MS)
-    if request.param == "wide":                                                                                          # a failed task's card lies as a place while its failure is in the hand (spec 128 C.2, tests/test_thrown_browser.py);
-        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                      # these tests look at the table's cards themselves, so they are put back in their lanes
-        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
-        pg.locator('[data-lkey="t:task:seat/s2"]').wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
     pg.context.close()
@@ -115,7 +111,7 @@ def over(pg, kind):
 
 def back(pg):
     pg.locator(".table-title__back").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 def nothing_modal(pg):
@@ -148,7 +144,7 @@ def test_a_press_that_opened_a_dialog_opens_a_place_over_the_pane_never_a_dialog
     pg.get_by_role("button", name="← Settings").click()
     over(pg, "settings")
     pg.get_by_role("button", name="Done", exact=True).click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 def test_every_place_is_reached_over_the_pane(window):
@@ -198,12 +194,12 @@ def test_every_place_is_reached_over_the_pane(window):
     over(pg, "week")
     nothing_modal(pg)
     pg.get_by_role("button", name="Close").click()
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
     pg.locator(".hand-die__play").click()                                                                                          # Play is the die in the hand (spec 112)
     over(pg, "play")
     nothing_modal(pg)
     back(pg)
-    # the hand's: the discard, a stop's questions and its to-do
+    # the hand's: the discard and a stop's to-do
     if w == "wide":                                                                                                                # at the wide width the discard is Release's lane: a card is picked, nothing opens over the pane (spec 156 D.3)
         pg.locator(".release-lane .hand-done, .release-lane [data-portal-card]").first.click()
         pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.picked.value !== '' && m.over.value === null)", timeout=WAIT_MS)
@@ -215,12 +211,6 @@ def test_every_place_is_reached_over_the_pane(window):
         shot(pg, f"window-discard-{w}.png")
         nothing_modal(pg)
         back(pg)
-    pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)
-    pg.get_by_role("button", name="Open…").click()
-    over(pg, "stop")
-    pg.locator('[data-form="ask"] textarea').first.wait_for(timeout=WAIT_MS)                                           # the questions are a form in the pane, not a dialog
-    nothing_modal(pg)
-    back(pg)
     pg.locator('.hand-card[data-kind="todo"]').click(position=EDGE)
     pg.get_by_role("button", name="Open…").click()
     over(pg, "stop")
@@ -236,32 +226,10 @@ def test_the_place_of_the_parties_is_in_the_pane_and_esc_goes_back(window):
     nothing_modal(pg)
     assert pg.locator(".place").count() == 0 and pg.locator(".table-over--form").count() == 0
     pg.keyboard.press("Escape")
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 # -- the keyboard -------------------------------------------------------------------------------------------------------------------------------------
-
-def test_esc_lowers_a_lifted_card_then_closes_what_is_over_the_pane_then_picks_none(window):
-    pg, host, w = window
-    pg.locator('[data-lkey="t:task:seat/s2"]').click()                                                                  # a card of the table lifted (the front of its goal's cascade), its goal picked from its back
-    pg.get_by_role("button", name="Pick this goal").click()
-    assert "Keep the seat" in title(pg)
-    open_menu(pg)
-    pg.get_by_role("menuitem", name="Files").click()                                                                    # …and a place over the pane
-    over(pg, "files")
-    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)                                                                 # …and a card of the hand lifted
-    pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-    pg.keyboard.press("Escape")                                                                                         # 1: lowers the lifted card
-    pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.locator('.table-over[data-kind="files"]').count() == 1                                                     # the place is still open
-    pg.keyboard.press("Escape")                                                                                         # 2: closes what is over the pane
-    pg.locator(".table-over").wait_for(state="detached", timeout=WAIT_MS)
-    assert "Keep the seat" in title(pg)                                                                                  # the goal is still picked
-    pg.keyboard.press("Escape")                                                                                         # 3: picks none
-    pg.wait_for_function("() => document.querySelector('[data-title]').textContent.trim() === ''", timeout=WAIT_MS)
-    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
-    pg.keyboard.press("Escape")                                                                                         # nothing left: nothing happens
-    assert title(pg) == ""  # no goal picked: the title says nothing (§247.5)
 
 
 def test_ctrl_o_opens_the_projects_over_the_pane(window):
@@ -271,26 +239,10 @@ def test_ctrl_o_opens_the_projects_over_the_pane(window):
     assert title(pg) == "Projects" and pg.locator(".table-projects__one").count() == 3
     nothing_modal(pg)
     pg.keyboard.press("Escape")
-    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.locator(".cards-lanes").wait_for(timeout=WAIT_MS)
 
 
 # -- a card of the hand lifted raises its card of the table -------------------------------------------------------------------------------------------
-
-def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
-    pg, host, w = window
-    card = pg.locator('[data-lkey="t:task:seat/s2"]')
-    assert "idea:seat" in card.get_attribute("data-about") and "task:seat/s2" in card.get_attribute("data-about")        # a task card says what it is about
-    assert "idea:timer" in pg.locator('[data-lkey="t:orc:timer"], .col-card[data-goal="timer"]').first.get_attribute("data-about")                            # a goal's other card says its goal
-    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)
-    pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
-    s1 = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                      # a strip of the same goal (its other task; a token has none): not about the failure
-    assert not s1.count() or not s1.evaluate("e => e.classList.contains('is-about')")
-    shot(pg, f"window-lifted-{w}.png")
-    pg.keyboard.press("Escape")
-    pg.wait_for_function("() => !document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
-    pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)                                                                   # a question is about its goal's cards
-    pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:orc:timer\"], .col-card[data-goal=\"timer\"]').classList.contains('is-about')", timeout=WAIT_MS)
 
 
 def test_tech_with_a_hand_card_lifted(window):

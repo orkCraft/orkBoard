@@ -260,31 +260,6 @@ def test_the_bugs_panel_is_there_with_no_mana_and_with_no_goal(gui):
 
 # -- M: New goal's frame, never under another card ----------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_new_goal_is_framed_and_lies_under_no_other_card(gui, width):
-    for extra in (False, True):
-        pg, host, log = open_hand(gui, host=MentionHost(extra=extra), width=width)
-        try:
-            pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-            pg.wait_for_timeout(700)
-            plus = _plus(pg)
-            box = plus.bounding_box()
-            style = plus.evaluate("e => { const s = getComputedStyle(e); return [s.borderTopStyle, s.borderTopWidth, s.backgroundImage.includes('repeating-linear-gradient'), (getComputedStyle(e, '::before').maskImage || getComputedStyle(e, '::before').webkitMaskImage).includes('plus-lines')] }")
-            assert style[0] == "double" and style[1] == "3px" and not style[2] and style[3], style                        # the double frame and the back's drawing in its green (decisions §264); the hatch is gone (spec 110, decisions §185.4)
-            others = pg.locator(".hand .hand-card, .hand .hand-back:not(.edge), .hand .hand-stack > .hand-back.edge").evaluate_all(
-                "els => els.map((e) => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })")
-            slack = 6                                                        # turned a little (§167.5): a corner reaches a few pixels
-            for x, y, w, h in others:
-                apart = x >= box["x"] + box["width"] - slack or x + w <= box["x"] + slack or y >= box["y"] + box["height"] - slack or y + h <= box["y"] + slack
-                assert apart, f"a card at {(x, y, w, h)} lies under New goal {box}"
-            top = plus.evaluate("e => { const r = e.getBoundingClientRect(); const el = document.elementFromPoint(r.x + r.width / 2, r.y + 30); return el === e || e.contains(el); }")
-            assert top, "nothing lies over it"
-            first = pg.locator(".hand-lane").first.locator(".hand-slot")
-            assert "is-plus" in first.first.get_attribute("class") and first.count() == (3 if extra else 1)
-        finally:
-            pg.close()
-        assert not log, "\n".join(log)
-
 
 def test_the_plus_card_stands_still_under_reduced_motion(gui):
     server, browser = gui

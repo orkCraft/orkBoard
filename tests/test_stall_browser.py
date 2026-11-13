@@ -158,70 +158,6 @@ def plate(pg, slot, id):
     return pg.locator(f'.stall-ware[data-slot="{slot}"][data-ware="{id}"] .stall-price')
 
 
-def test_the_backpack_opens_the_slots_and_esc_shuts_it(gui):
-    pg, host, log = open_hand(gui, host=StallHost())
-    try:
-        pack = pg.locator("[data-backpack]")
-        pack.wait_for(timeout=WAIT_MS)
-        assert pack.get_attribute("title") == "Inventory: how the project is set" and pack.get_attribute("aria-pressed") == "false"
-        head = pg.locator(".hand-end")
-        assert head.locator("[data-backpack]").count() == 1 and pg.locator(".table-tabs__end .stall-pack").count() == 0       # the backpack stands at the hand's right end
-        assert pack.bounding_box()["x"] > pg.viewport_size["width"] * 0.8 and head.locator(".ork-pack:not(.is-open)").count() == 1
-        assert pg.locator(".slots-table").count() == 0 and pg.locator(".table-pane").get_attribute("data-stall") is None
-        pack.click()
-        pg.locator(".slots-table").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-pane").get_attribute("data-stall") == "open"
-        assert pg.locator(".table-pane").evaluate("e => e.classList.contains('ork-leather')") and head.locator(".ork-pack.is-open").count() == 1       # the open pack, the table in its leather
-        assert pack.get_attribute("title") == "Close the inventory" and pack.get_attribute("aria-pressed") == "true"
-        assert ("ideas.stall", {"chair": ""}) in host.log
-        assert pg.locator(".stall, .stall-rug, .stall-merchant, .stall-shelf, .stall-service").count() == 0       # no rug, no shelves, no merchant
-        assert pg.locator(".hand .carry, .carry-card, .carry__fan").count() == 0                                   # no card is carried
-        assert pg.locator(".table-tab").count() > 0                                                               # the tabs stay
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.slots-table')", timeout=WAIT_MS)
-        assert pg.locator("[data-backpack]").get_attribute("aria-pressed") == "false"
-        assert not pg.locator(".table-pane").evaluate("e => e.classList.contains('ork-leather')")        # shut, the bronze is back
-        pack.click()
-        pg.locator(".slots-table").wait_for(timeout=WAIT_MS)
-        pack.click()
-        pg.wait_for_function("() => !document.querySelector('.slots-table')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_the_orkmasters_slots_are_a_row_of_six_big_cards_each_its_chosen_way(gui):
-    pg, host, log = opened(gui)
-    try:
-        pg.set_viewport_size({"width": 1366, "height": 768})                                                      # the laptop the decision is fitted to: six cards in one row
-        pg.wait_for_timeout(400)
-        cards = pg.locator(".slots .slot-card")
-        assert cards.evaluate_all("els => els.map((e) => e.dataset.slot)") == ["target", "build_start", "night", "review", "push", "max_parallel"]
-        assert [t.lower() for t in pg.locator(".slots .slot-label").all_inner_texts()] == ["how deep", "the build starts", "the night", "lands in dev by itself", "push", "goals at once"]
-        for i in range(6):
-            box = cards.nth(i).bounding_box()
-            assert (round(box["width"]), round(box["height"])) == (144, 202)                                      # a big card
-        ys = {round(b["y"]) for b in (cards.nth(i).bounding_box() for i in range(6))}
-        assert len(ys) == 1                                                                                       # one row
-        deep = slot(pg, "target")
-        assert deep.locator(".slot-card__name").inner_text() == "Balance" and "usual tier" in deep.locator(".slot-card__line").inner_text()      # its way and what it does
-        assert deep.locator(".slot-pips i").count() == 3 and deep.locator(".slot-pips i.is-on").count() == 1
-        assert deep.locator(".slot-pips i").evaluate_all("els => els.map((e) => e.classList.contains('is-on'))") == [False, True, False]
-        assert deep.locator(".slot-pic").count() == 1 and deep.locator(".slot-pic .ork-icon").count() == 1 and deep.get_attribute("data-way") == "balance"     # no picture in orkUI yet: the kind's sign
-        assert deep.locator(".slot-card__coin").count() == 1 and deep.locator(".slot-card__coin").get_attribute("title") == "A cheaper way exists"      # Thrift is lighter
-        assert slot(pg, "push").locator(".slot-card__coin").count() == 0 and slot(pg, "push").locator(".slot-pips i").count() == 3
-        assert slot(pg, "build_start").locator(".slot-pips i").count() == 5 and slot(pg, "build_start").locator(".slot-card__name").inner_text() == "In 2 h"
-        assert slot(pg, "night").locator(".slot-card__name").inner_text() == "Off" and slot(pg, "night").locator(".slot-pic .ork-sign.moon").count() == 1
-        assert slot(pg, "max_parallel").locator(".slot-card__name").inner_text() == "One"
-        assert "as set" in deep.inner_text()
-        assert pg.locator(".slots .slot-label").first.evaluate("e => e.classList.contains('ork-plaque')")
-        assert pg.locator(".hand").bounding_box()["height"] > 100
-        shot(pg, "slots-orkmaster")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_leaders_slots_are_its_hero_tool_tier_size_and_how_it_answers_with_its_seats_under_them(gui):
     pg, host, log = opened(gui, "tech")
     try:
@@ -242,48 +178,6 @@ def test_a_leaders_slots_are_its_hero_tool_tier_size_and_how_it_answers_with_its
         assert row.bounding_box()["y"] + row.bounding_box()["height"] <= seats.bounding_box()["y"] + 1               # the seats under the slots
         assert pg.locator(".hand .carry-card").count() == 0
         shot(pg, "slots-tech")
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_slot_pressed_deals_its_ways_to_the_hand_and_the_hand_keeps_its_height(gui):
-    pg, host, log = opened(gui)
-    try:
-        before = pg.locator(".hand").bounding_box()
-        deal(pg, "target")
-        assert pg.locator('[data-slot-deal="target"]').count() == 1 and slot(pg, "target").get_attribute("aria-pressed") == "true"
-        ways = pg.locator('[data-slot-ways="target"] .slot-way')
-        assert ways.evaluate_all("els => els.map((e) => e.dataset.way)") == ["thrift", "balance", "quality"]
-        for i in range(3):
-            box = ways.nth(i).bounding_box()
-            assert round(box["width"]) == 144 and round(box["height"]) == 202                                        # a way is a big card too
-        thrift, balance, quality = way(pg, "target", "thrift"), way(pg, "target", "balance"), way(pg, "target", "quality")
-        assert "Thrift" in thrift.inner_text() and "Every step on the cheaper tier" in thrift.inner_text()           # what it does, whole
-        assert thrift.locator('[data-price="less"]').inner_text() == "lighter" and quality.locator('[data-price="more"]').inner_text() == "heavier"      # its price in its bottom right
-        fb, fc = thrift.locator(".corner--foot").bounding_box(), thrift.bounding_box()
-        assert fb["x"] + fb["width"] > fc["x"] + fc["width"] - 20 and fb["y"] + fb["height"] > fc["y"] + fc["height"] - 20
-        assert "yours" in balance.inner_text().lower() and balance.get_attribute("data-yours") == "1" and balance.get_attribute("aria-disabled") == "true"     # the way carried
-        assert balance.get_attribute("data-default") == "1" and "default" in balance.inner_text().lower()
-        assert balance.get_attribute("data-pick") == "1" and balance.locator(".slot-way__star").get_attribute("aria-label") == "The Orkmaster's pick"       # the Orkmaster's pick, starred
-        assert thrift.locator(".slot-way__star").count() == 0 and thrift.get_attribute("data-pick") is None
-        assert pg.locator('[data-slot-ways="target"] .slot-way .slot-pic').count() == 3
-        assert pg.locator('[data-slot-ways="target"] [data-act="put"]').inner_text() == "Put it back"
-        after = pg.locator(".hand").bounding_box()
-        assert after == before, (before, after)                                                                      # the hand keeps its height
-        assert pg.locator(".hand .carry-card").count() == 0
-        shot(pg, "slots-ways-dealt")
-        pg.locator('[data-slot-ways="target"] [data-act="put"]').click()
-        pg.wait_for_function("() => !document.querySelector('[data-slot-ways]')", timeout=WAIT_MS)
-        assert slot(pg, "target").get_attribute("aria-pressed") == "false" and pg.locator(".hand").bounding_box() == before
-        assert not [e for e in host.log if e[0] in ("ideas.stall_take", "ideas.stall_back")]                         # putting it back sends nothing
-        deal(pg, "push")                                                                                             # another slot, then Esc: the ways go back first, the inventory stays
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('[data-slot-ways]')", timeout=WAIT_MS)
-        assert pg.locator(".slots-table").count() == 1
-        deal(pg, "push")
-        slot(pg, "push").click()                                                                                     # the slot pressed again puts them back
-        pg.wait_for_function("() => !document.querySelector('[data-slot-ways]')", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)

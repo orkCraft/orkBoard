@@ -44,7 +44,7 @@ def window(gui, host, width=WIDE, errors=None, cards=True, **ctx):
     errors = [] if errors is None else errors
     pg = start(gui, width, errors, host, **ctx)
     if cards:
-        pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+        pg.locator(".cards-lane").first.wait_for(timeout=WAIT_MS)
     die(pg).wait_for(timeout=WAIT_MS)
     return pg, errors
 

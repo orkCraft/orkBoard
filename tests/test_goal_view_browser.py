@@ -77,13 +77,17 @@ class GoalHost(HandHost):
 
 def open_goals(gui, width="wide"):
     pg, host, log = open_hand(gui, host=GoalHost(), width=width)
-    pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+    pg.wait_for_selector(".hand-die", timeout=WAIT_MS)
     return pg, host, log
 
 
+def pick(pg, slug):
+    pg.evaluate("(s) => import('/static/js/frame/state.js').then((m) => m.pick(s))", slug)
+    pg.wait_for_function("(s) => import('/static/js/frame/state.js').then((m) => m.picked.value === s)", arg=slug, timeout=WAIT_MS)
+
+
 def pick_music(pg):
-    pg.locator('.col-card[data-goal="music"]').click()
-    pg.wait_for_function("() => document.querySelector('.table-board--plan, .gv')", timeout=WAIT_MS)
+    pick(pg, "music")
 
 
 def open_tab(pg, slug):
@@ -92,47 +96,6 @@ def open_tab(pg, slug):
 
 def texts(pg, selector):
     return [t.strip() for t in pg.locator(selector).all_inner_texts()]
-
-
-def test_a_goal_at_work_picked_shows_at_tech_what_it_will_change_in_cards_with_their_lines_the_contract_as_a_diff_and_a_small_map_lit(gui):
-    pg, host, log = open_goals(gui)
-    try:
-        open_tab(pg, "tech")
-        pg.wait_for_selector(".table-sys", timeout=WAIT_MS)
-        assert pg.locator(".gv").count() == 0, "nothing picked: the System as it was"
-        pick_music(pg)
-        view = pg.locator('.gv[data-view="will"][data-party="tech"]')
-        view.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-sys").count() == 0, "the view takes the map's place"
-        pg.wait_for_selector(".gv-card", timeout=WAIT_MS)
-        pg.wait_for_selector('.gv-card[data-part="src/net"]', timeout=WAIT_MS)
-        assert "what it will change" in view.locator(".gv-title").inner_text().lower() and "music in the lobby" in view.locator(".gv-title").inner_text().lower()
-        cards = {c.get_attribute("data-part"): c for c in view.locator(".gv-card").all()}
-        assert set(cards) == {"src/lobby", "src/score", "src/old", "src/net"}, "the section's parts, then the part they use read only"
-        kind = lambda part: cards[part].locator(".gv-kind").text_content().strip()  # noqa: E731
-        assert (kind("src/lobby"), kind("src/score"), kind("src/old"), kind("src/net")) == ("New", "Changes", "Goes", "Read only")
-        assert cards["src/score"].locator("b").first.inner_text() == "score", "a part named as the map names it"
-        assert texts(pg, '.gv-card[data-part="src/lobby"] .gv-lines li') == ["+ a lobby"] and texts(pg, '.gv-card[data-part="src/score"] .gv-lines li') == ["~ keep rounds"]
-        assert pg.locator('.gv-card[data-part="src/lobby"] .gv-lines li.is-add').count() == 1 and pg.locator('.gv-card[data-part="src/score"] .gv-lines li.is-chg').count() == 1
-        diff = view.locator(".gv-diff").inner_text()
-        assert "+ src/lobby — a lobby" in diff and "~ src/score — keep rounds" in diff and "- src/old" in diff, "Tech's contract as a diff"
-        assert pg.locator(".gv-diff .add").count() == 1 and pg.locator(".gv-diff .del").count() == 1
-        # the side: the small whole map with its parts lit, the section's Done when, its tasks here
-        lit = pg.eval_on_selector_all(".gv-mini__b.is-lit", "els => els.map((e) => e.dataset.id).sort()")
-        assert lit == ["src/lobby", "src/old", "src/score"], "the parts it touches are lit, a new part beside the map"
-        assert pg.eval_on_selector_all(".gv-mini__b.is-read", "els => els.map((e) => e.dataset.id)") == ["src/net"]
-        assert pg.locator(".gv-mini__b").count() == 5
-        assert texts(pg, ".gv-done li") == ["Rounds keep their score", "The lobby opens"]
-        assert texts(pg, ".gv-tasks li") == ["Make the lobby · done", "Keep the rounds · waiting"], "its tasks at Tech, not Design's or Product's"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.gv-mini__b.is-lit')).backgroundColor") == pg.evaluate(
-            "() => { const s = document.createElement('i'); s.style.color = 'var(--ork-elem-meadow)'; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; }"), "lit in the goal's rune colour"
-        # a part pressed opens the leader's bubble with it
-        cards["src/score"].click()
-        pg.wait_for_selector('.table-ask__bubble[data-ask="tech"]', timeout=WAIT_MS)
-        assert sig(pg, "table/ask.js", "askOpen") == "tech" and sig(pg, "table/ask.js", "askPart") == {"id": "src/score", "name": "score"}
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_at_design_the_screens_a_goal_changes_are_cards_with_now_and_will_be_and_a_leader_it_does_not_touch_says_so(gui):
@@ -179,34 +142,6 @@ def test_esc_and_the_titles_cross_pick_nothing_and_the_leaders_map_is_back(gui):
     assert not log, "\n".join(log)
 
 
-def test_a_goal_done_picked_from_the_discard_shows_what_it_changed_against_what_its_spec_promised_and_its_done_when_checked(gui):
-    pg, host, log = open_goals(gui)
-    try:
-        open_tab(pg, "tech")
-        pg.wait_for_selector(".table-sys", timeout=WAIT_MS)
-        pg.locator('.release-lane [data-slug="codes"], .release-lane [data-portal-card="codes"]').first.click()
-        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.picked.value === 'codes')", timeout=WAIT_MS)
-        assert sig(pg, "frame/state.js", "picked") == "codes" and sig(pg, "frame/state.js", "over") is None, "the goal pressed in the discard is the goal picked, nothing over the pane (spec 156 D.3)"
-        view = pg.locator('.gv[data-view="changed"][data-party="tech"]')
-        view.wait_for(timeout=WAIT_MS)
-        assert pg.locator('.table-tab[aria-selected="true"]').get_attribute("data-tab") == "tech", "the open tab stays"
-        pg.wait_for_selector('.gv-card[data-part="src/score"]', timeout=WAIT_MS)
-        assert "against what its spec promised" in view.locator(".gv-title").inner_text().lower()
-        words = {c.get_attribute("data-part"): c.locator(".gv-kind").text_content().strip() for c in view.locator(".gv-card").all()}
-        assert words == {"src/score": "✓ As promised", "src/lobby": "≠ Not quite", "src/extra": "+ More than promised", "src/old": "✗ Not done"}
-        assert pg.locator('.gv-card[data-part="src/lobby"] .gv-lines li.is-dif').count() == 1, "Not quite carries the leader's line"
-        assert "keep rounds" in pg.locator('.gv-card[data-part="src/score"]').inner_text()
-        assert texts(pg, ".gv-done li") == ["✓ Rounds keep their score", "The lobby opens"] and "done when, checked" in view.locator(".gv-side").inner_text().lower()
-        assert pg.locator(".gv-diff").count() == 0, "a goal done has its parts judged, not its contract drawn"
-        assert [a for n, a in host.log if n == "ideas.goal_result"][0] == {"idea": "codes"}
-        # nothing picked again: Esc
-        pg.keyboard.press("Escape")
-        pg.wait_for_selector(".table-sys", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_the_play_die_wears_the_picked_goals_rune_says_play_and_the_goal_and_plays_it(gui):
     pg, host, log = open_goals(gui)
     try:
@@ -236,8 +171,7 @@ def test_the_play_die_wears_the_picked_goals_rune_says_play_and_the_goal_and_pla
         pg.wait_for_function("() => !document.querySelector('.hand-die').dataset.elem", timeout=WAIT_MS)
         assert play.get_attribute("aria-label").startswith("Play") and ":" not in play.get_attribute("aria-label").replace("Play: the project", "")
         # a goal not yet at work does not give the die its rune
-        pg.locator('.col-card[data-goal="fresh"]').click()
-        pg.wait_for_selector('.col-card[data-goal="fresh"].ork-picked, .col-card[data-goal="fresh"][aria-pressed="true"], [data-lift="acts"]', timeout=WAIT_MS)
+        pick(pg, "fresh")
         assert die.get_attribute("data-elem") is None, "a goal in review has nothing to play yet"
     finally:
         pg.close()

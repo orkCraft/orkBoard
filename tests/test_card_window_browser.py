@@ -7,10 +7,9 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_hand_desktop_browser import HandHost, open_hand  # noqa: E402
-from tests.test_table_desktop_browser import TableHost, watch  # noqa: E402
+from tests.test_table_desktop_browser import TableHost  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -116,28 +115,6 @@ class PicHost(HandHost):
                 n["picture"] = DOT
 
 
-def test_the_hands_card_shows_the_window_under_its_cut_in_place_of_the_why_and_is_no_taller(gui):
-    """Spec 148 B.1, decisions §252: a goal with a picture shows it under the cut where the why was; without one the why words stay."""
-    pg, host, log = open_hand(gui, host=PicHost(), width="wide")
-    try:
-        failed = pg.locator('.hand-card[data-kind="failed"]').first
-        plan = pg.locator('.hand-card[data-kind="plan"]').first
-        failed.wait_for(timeout=WAIT_MS)
-        win = failed.locator(".hand-card__foot.has-window .card-win")
-        assert win.get_attribute("data-window") == "card-picture" and win.locator("img").get_attribute("src") == DOT
-        assert failed.locator(".hand-card__foot").inner_text().strip() == "" and "The reset test failed" not in failed.inner_text(), "the picture in place of the why words"
-        top = failed.evaluate("e => e.querySelector('.hand-card__foot .card-win').getBoundingClientRect().top - e.getBoundingClientRect().top")
-        assert top >= 100, f"under the hand's cut, which shows 100 px: {top}"
-        assert failed.evaluate("e => e.offsetHeight") == plan.evaluate("e => e.offsetHeight") == 202, "the card is no taller"
-        assert plan.locator(".card-win").count() == 0 and "2 tasks" in plan.locator(".hand-card__foot").text_content(), "no picture: the why words"
-        failed.hover()
-        pg.wait_for_timeout(500)
-        assert failed.locator(".corner--foot").is_visible() and win.is_visible(), "risen, the card shows its window and its foot"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
 def test_a_fork_with_a_picture_on_each_side_shows_the_two_side_by_side(gui):
     pg, host, log = open_hand(gui, host=PicHost(), width="wide")
     try:
@@ -145,25 +122,6 @@ def test_a_fork_with_a_picture_on_each_side_shows_the_two_side_by_side(gui):
           return [m.sidePictures({ row: { sides: [{ picture: a }, { picture: b }] } }), m.sidePictures({ row: { sides: [{ picture: a }, {}] } }), m.sidePictures({ row: {} }),
                   m.hasWindow({ row: { sides: [{ picture: a }, { picture: b }] } }), m.hasWindow({ node: {}, row: {} }), m.hasWindow({ node: { picture: a } })]; }""", [DOT, PIC])
         assert got == [[DOT, PIC], [], [], True, False, True], got
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_at_works_front_card_has_the_window_where_now_was(gui):
-    """Spec 148 B.2: the goal's picture between the name and the foot in place of what it does now; the card keeps its size."""
-    pg, host, log = open_hand(gui, host=PicHost(), width="wide")
-    try:
-        card = pg.locator('.col-card[data-goal="timer"]')
-        card.wait_for(timeout=WAIT_MS)
-        win = card.locator("> .card-win")
-        assert win.get_attribute("data-window") == "card-picture" and win.locator("img").get_attribute("src") == DOT
-        assert card.locator(".col-now").count() == 0, "in place of what it does now"
-        assert abs(card.evaluate("e => e.offsetWidth / e.offsetHeight") - 5 / 7) < 0.01, "5 : 7 still"
-        order = card.evaluate("e => [...e.children].map((c) => c.className.split(' ')[0])")
-        assert order == ["corner", "col-nm", "table-card__win", "col-foot"], order
-        name, foot, w = card.locator(".col-nm").bounding_box(), card.locator(".corner--foot").bounding_box(), win.bounding_box()
-        assert w["height"] >= 28 and w["y"] >= name["y"] + name["height"] - 1 and w["y"] + w["height"] <= foot["y"] + 1, "between the name and the foot"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -201,30 +159,3 @@ class LaneHost(TableHost):
                 n["picture"] = DOT
             if n["slug"] == "bar":
                 n["tasks"][1]["short"] = "Check colours"
-
-
-def test_a_lane_card_draws_the_goals_picture_or_the_tasks_words_where_it_would_draw_a_sign_alone(gui):
-    """Spec 148 B.4, decisions §252: a lane's card keeps its window as before (steps, failure, made); where the type's sign stood alone it is the goal's picture, else the task's words."""
-    errors: list[str] = []
-    server, browser = gui
-    host = LaneHost()
-    pg = narrow.page(browser, "wide")
-    watch(pg, errors)
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        pg.locator(".table-card").first.wait_for(timeout=WAIT_MS)
-        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)
-        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
-        pic = pg.locator('[data-lkey="t:task:calm/k1"] .table-card__win')
-        pic.wait_for(timeout=WAIT_MS)
-        assert pic.get_attribute("data-window") == "card-picture" and pic.locator("img").get_attribute("src") == DOT, "the goal's picture where the sign stood alone"
-        words = pg.locator('[data-lkey="t:task:bar/a2"] .table-card__win')
-        assert words.get_attribute("data-window") == "card-words" and words.inner_text().strip() == "Check the bar's colours", "else the task's words (its whole title)"
-        assert pg.locator('[data-lkey="t:task:rules/r1"] .table-card__win').get_attribute("data-window") == "sign", "no picture and no longer words: the type's sign as before"
-        assert pg.locator('[data-lkey="t:task:seat/s2"] .table-card__win').first.get_attribute("data-window") == "fail", "a failed card keeps its failure"
-        card = pg.locator('[data-lkey="t:task:calm/k1"]')
-        assert abs(card.evaluate("e => e.offsetWidth / e.offsetHeight") - 5 / 7) < 0.012, "5 : 7 still"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)

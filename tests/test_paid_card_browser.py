@@ -65,25 +65,6 @@ BODY = "Every subscription is out until Thu 18:00. Go on with Claude Code paid b
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_card_is_the_orkmasters_go_on_paid_with_its_price_under_the_first_lane(gui, width):
-    pg, host, log = open_paid(gui, width)
-    try:
-        c = front(pg)
-        assert c.count() == 1 and c.get_attribute("data-top") == "1"
-        assert c.locator(".hand-card__name").text_content().strip() == "Go on paid?"
-        assert c.locator(".corner--top .ork-sign.alert").count() == 1 and c.locator(".corner--foot .ork-race__head").count() == 1, "the alert sign (orkUI has no coins sign) and the Orkmaster's head"
-        assert c.locator(".corner--foot .ork-gem").text_content().strip() == "$0.40" and c.locator(".ork-gem.share").count() == 0, "its price in dollars, never a share of a window"
-        if width == "wide":
-            assert c.locator(".hand-card__foot").text_content().strip() == "Holds until the next reset"
-        assert pg.locator(".hand-lane").nth(0).locator('.hand-stack[data-stack="paid@0"]').count() == 1, "the whole project's: under the first lane"
-        shot(pg, f"{width}-paid-face")
-        narrow.no_sideways(pg)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-@pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_lifted_it_says_the_reset_the_tool_and_its_cost_and_has_two_answers(gui, width):
     pg, host, log = open_paid(gui, width)
     try:

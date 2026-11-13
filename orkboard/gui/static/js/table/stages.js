@@ -4,7 +4,7 @@
 // A failure stays in its stage's pile (the danger's ring). The pile ids keep their names in the code (`analysis` = Ideas, `review` = Specs, `work` = Implementation). Pure: a node in, its place out.
 import { board } from "../board/store.js";
 
-export const READING = "reading", WRITING = "writing", AT_WORK = "at work", NEXT_IN = "next in", NEXT_AT = "next at";          // the words under a pile's title (realm/lexicon.py column_*)
+export const READING = "reading", NEXT_IN = "next in", NEXT_AT = "next at";          // the words under a pile's title (realm/lexicon.py column_*)
 
 export const IDEAS = ["raw", "reading", "asks", "routed", "talk", "decided"];                  // the idea, Talk and the decision: Ideas (an agreed decision's wait too: `decided`)
 export const SPECS = ["sketch", "sections", "planning", "ready", "plan"];                      // the sections being written, the plan, the spec made and its wait: Specs
@@ -12,8 +12,6 @@ const WORKING = ["working", "failed"];
 const PAST_WAITING = ["running", "testing", "picking", "review", "failed"];                   // a task past waiting: its goal is at work
 export const ACTIVE = ["reading", "planning", "talk", "sketch", "sections"];                  // the Orkmaster or its leaders are on it: its ring runs
 export const DECK_SHOWN = 5, WORK_SHOWN = 6, DECK_STEP = 3;                                   // the cards drawn of the deck (the front and four behind) and of Implementation (the front and five behind); the rest wait their turn, never counted
-
-export const PILES = [["analysis", "Ideas"], ["review", "Specs"], ["work", "Implementation"]];
 
 /** A spec being written now (sections, its sketch, the Orkmaster's own draft that no decision has confirmed): its card's ring fills as it is written, not as a wait runs down. */
 export const writing = (n) => n.state === "sketch" || n.state === "sections" || (n.state === "planning" && !n.agreed);

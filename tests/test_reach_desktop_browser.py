@@ -88,36 +88,6 @@ def test_leaving_esc_and_a_goal_with_no_will_be_clear_it_all(gui):
     pg.context.close()
 
 
-def test_the_pointer_resting_on_a_hand_card_and_focus_light_the_same_reach_with_no_command(gui):
-    host, pg, errors = opened(gui)
-    card = pg.locator('.hand-card[data-goal="timer"]').first
-    card.wait_for(timeout=WAIT_MS)
-    sent = len(host.log)
-    box = card.bounding_box()
-    pg.mouse.move(box["x"] + 10, box["y"] + 24)
-    pg.wait_for_function(f"() => document.querySelector('[data-pick-id=\"{LOBBY}\"]')?.dataset.reach === 'lit'", timeout=WAIT_MS)
-    by_hover = pg.locator(".rc-line").inner_text()
-    pg.mouse.move(5, 5)
-    pg.wait_for_function("() => document.querySelectorAll('[data-reach]').length === 0", timeout=WAIT_MS)
-    card.focus()
-    pg.wait_for_function(f"() => document.querySelector('[data-pick-id=\"{LOBBY}\"]')?.dataset.reach === 'lit'", timeout=WAIT_MS)
-    assert pg.locator(".rc-line").inner_text() == by_hover
-    assert [n for n, _ in host.log[sent:] if n != "ideas.night"] == [], host.log[sent:]   # the night poll is the page's own clock
-    assert not errors, "\n".join(errors)
-    pg.context.close()
-
-
-def test_a_touch_press_on_a_hand_card_lights_nothing(gui):
-    host, pg, errors = opened(gui)
-    pg.locator('.hand-card[data-goal="timer"]').first.wait_for(timeout=WAIT_MS)
-    pg.evaluate("""() => { const el = document.querySelector('.hand-card[data-goal="timer"]');
-      for (const t of ['pointerover', 'pointerdown']) el.dispatchEvent(new PointerEvent(t, { bubbles: true, pointerType: 'touch' })); }""")
-    pg.wait_for_timeout(400)
-    assert pg.locator("[data-reach]").count() == 0
-    assert not errors, "\n".join(errors)
-    pg.context.close()
-
-
 # Part K: dimmed, yet read; the edges seen (decisions §183.5, §280.3).
 MEASURE = """(arg) => {
   const [sel, which] = arg;

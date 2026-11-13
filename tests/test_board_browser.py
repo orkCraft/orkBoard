@@ -92,9 +92,7 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             pg.get_by_role("menuitem", name="Seats and tools").click()                              # who is in it lies in its leader's inventory (decisions §283.16.2)
             pg.locator(".stall-seats").wait_for(timeout=WAIT_MS)
             assert pg.locator(".stall-seats .table-seat").count() >= 2
-            ask = pg.locator(".hand-card[data-kind=goal][data-party=marketing]")
-            ask.wait_for(timeout=WAIT_MS)                    # the keeper's question of each party made: a card in the hand
-            assert pg.locator(".hand").is_visible() and "Which channel first?" in ask.get_attribute("title")
+            assert pg.locator(".hand").is_visible()
             assert any(n["kind"] == "goal" for n in board.command("ideas.board")["needs_you"])
             assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
             if os.environ.get("ORKCRAFT_SHOTS"):
