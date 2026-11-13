@@ -1,4 +1,4 @@
-"""Orkboard's host (docs/specs/37-board-and-line.md §4, decisions §50): what the Board needs from its host, and the
+"""Orkboard's host (docs/specs/37-board-and-line.md §4): what the Board needs from its host, and the
 host `orkboard` serves.
 
     board = BoardHost(repo_root, owner, bus=…, toast=…, call=…, budget_ok=…, limits=…, day_logs=…)

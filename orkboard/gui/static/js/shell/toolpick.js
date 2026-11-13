@@ -25,9 +25,6 @@ export function useTools() {
 /** The tool a party runs on: its own, else the Main tool (a row of `ideas.tools`); undefined when the list is not known. */
 export const toolRow = (tools, id) => tools?.tools.find((t) => t.id === (id || tools.main));
 
-/** Whether the tool the party would run on has no tiers of its own: it runs its own model, so a size's tiers and its price do not apply. */
-export const runsOwn = (tools, id) => toolRow(tools, id)?.tiers === false;
-
 const word = (t) => `${t.name}${t.tiers ? "" : " · runs its own model"}`;
 
 /** **Its AI tool**. `value`: the party's tool ("" the Main tool); `onChange(id)`. `id`: the select's id (one on a page). */

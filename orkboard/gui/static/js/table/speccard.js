@@ -5,8 +5,6 @@ import { html, cls } from "../html.js";
 import { Elem } from "../orkui.js";
 import { backSpec, withPreview } from "./preview.js";
 
-export const SPEC_W = 78, SPEC_H = 56;
-
 /** One card of the deck. `say`: its state in words (its label and its preview's line); `share`: the ring (0 to 1, in eighths); `asks`: it waits for the person; `writing`: its spec is being written (its rune glows where `glow`); `look`: the clock time its look ends at; `bad`: a failure;
  *  `own`: its dim and its hatch (piles.js `lit`); `on`: it is the goal picked. */
 export function SpecCard({ n, i, say, proposed, share, asks, writing, look, glow, bad, own, on, onPress }) {

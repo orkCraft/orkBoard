@@ -1,7 +1,7 @@
 // The board's state (docs/specs/29a-board-focus.md §6–7): what the host last said of the goals and ideas, the page of
 // the open idea, and the one way to ask the host. The v1 shell (js/shell/store.js) refreshes it with Review.
-import { signal, batch } from "@preact/signals";
-import { command, toast, say } from "../link.js";
+import { signal } from "@preact/signals";
+import { command, toast } from "../link.js";
 import { answerThrough } from "../remoteway.js";
 
 export const board = signal(null);          // ideas.board
@@ -33,14 +33,6 @@ export function busy() {
   return !!b && b.ideas.some((i) => BUSY.includes(i.state));
 }
 
-/** An idea's state in the person's words (§7). */
-export function stateWords(i) {
-  const p = i.progress || { done: 0, total: 0 };
-  return say({ raw: "new", reading: "drafting", asks: "asks you", ready: "ready", planning: "planning", proposed: "proposed",
-    plan: "plan ready", working: `working ${p.done}/${p.total}`, done: "done", failed: "needs you" }[i.state] || i.state);
-}
-
-export const PRIORITY_WORDS = { high: "High", normal: "Normal", low: "Low" };
 const PRIORITY_ORDER = ["high", "normal", "low"];
 
 /** The parties a person can choose for a goal (spec 35 §3: General is the system's, never listed), by priority, then the person's order. */

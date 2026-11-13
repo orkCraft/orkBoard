@@ -85,14 +85,6 @@ export function Switch({ label, options, value = "", onPick, cls: extra = "" }) 
   </div>`;
 }
 
-/** The tabs' marks, orkUI's pixel icons: the Board a list, Agents a robot (a head says a craft, not every agent), Review an eye. */
-export function TabMark({ tab }) {
-  return html`<${Icon} name=${{ board: "list-box", agents: "robot" }[tab] || "eye"} />`;
-}
-
-/** What needs the person, by kind, as orkUI's icon (Needs you, desktop and phone alike). */
-export const NEED_ICONS = { goal: "flag", asks: "warning-diamond", plan: "list-box", todo: "checkbox", failed: "square-alert", proposal: "lightbulb" };
-
 // The words of a head, as realm/lexicon.py says them (tier.*, race.*, craft.*; tests/test_design_system.py keeps them so).
 export const TIER_WORDS = { elder: "Veteran", warrior: "Seasoned", laborer: "Novice" };
 export const RACE_WORDS = { peon: "ork", elf: "elf", goblin: "goblin", gnome: "gnome", lich: "lich", skeleton: "skeleton" };

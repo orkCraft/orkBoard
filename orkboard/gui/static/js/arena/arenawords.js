@@ -2,7 +2,7 @@
 // `ideas.gate`, `ideas.today` and the snapshot. No signal and no template here; the parts of the window (arena.js and its
 // neighbours) draw what these say. The backend writes no words: the member's state, a task's foot and a stop's text are said here.
 import { leftToDo, TASK_STATE } from "../board/maplayout.js";
-import { memberWords, soFarWords, todayWords } from "../board/mapstage.js";
+import { soFarWords, todayWords } from "../board/mapstage.js";
 import { holdWords, hhmm } from "../board/store.js";
 import { TIER_WORDS, RACE_WORDS } from "../orkui.js";
 import { kindCount } from "./pickwords.js";
@@ -60,7 +60,6 @@ export const openTasks = (n) => (n.tasks || []).filter(leftToDo);
 /** *k/n*: a party's done goals of all its goals (decisions §63.2); its tooltip says it (*k of n goals done*). */
 export const countOf = (g, nodes = []) => ({ done: g.done ?? nodes.filter((n) => n.state === "done").length, all: g.ideas ?? nodes.length });
 export const countWords = (g, nodes) => { const c = countOf(g, nodes); return `${c.done}/${c.all}`; };
-export const countTip = (g, nodes) => { const c = countOf(g, nodes); return `${c.done} of ${c.all} goals done`; };
 export const costWords = (g) => [soFarWords(g.usd), todayWords(g.today)].filter(Boolean).join(" · ");
 
 // -- the stops: what waits for the person ----------------------------------------------------------------------------------------
@@ -115,8 +114,6 @@ export function partyOf(g, nodes) {
   return { lead, members: [...team.filter((m) => m.band === "build"), ...team.filter((m) => m.band === "check")] };
 }
 
-export const BAND_WORDS = { lead: "Leads", build: "Builds", check: "Checks" };
-export const BAND_KEYWORD = { lead: "Leads:", build: "Takes:", check: "Checks:" };
 /** A party's stage in a band (`g.stages`, spec 59 §3): its word (*Concept*, *Build*, *Playtest* with a Game designer) and its seats. A party with no `stages`
  *  (an older host) says today's words and no seats. */
 const STAGE_TODAY = { lead: "Planning", build: "Implementation", check: "Checking" };
@@ -129,22 +126,8 @@ export function phaseOf(n, t) {
 }
 export const ROWS = ["now", "next", "later"];
 export const rowName = (phase) => ROWS[Math.min(phase, ROWS.length - 1)];
-/** The label of a row on the field (spec 82 §0). */
-export const ROW_LABEL = { now: "Now", next: "Next", later: "Later" };
 /** A task's phase (0 now, 1 next, 2 later): the host's `row` (1–3, `map_stage.row_of`, spec 82 §2: one row across the whole field), else its goal's own wave (`phaseOf`). */
 export const phaseFor = (n, t) => (Number.isInteger(t.row) && t.row >= 1 ? t.row - 1 : phaseOf(n, t));
-
-/** A member's open tasks of the goals at work, in its column's order: the one at work nearest it, then failed, in Review, ready, waiting, held (the
- *  front of a stack first); each with its phase and the row it lies in (*now*, *next*, *later*). `order`: the Board's order of the goals is `nodes`'. */
-export function columnOf(m, nodes) {
-  const items = [];
-  nodes.filter(atWork).forEach((n, i) => openTasks(n).forEach((t, j) => {
-    if (t.by.slug === m.slug) { const phase = phaseFor(n, t); items.push({ n, t, at: i * 1000 + j, phase, row: rowName(phase) }); }
-  }));
-  return items.sort((a, b) => (RANK[a.t.state] ?? 9) - (RANK[b.t.state] ?? 9) || a.t.wave - b.t.wave || a.at - b.at);
-}
-/** The merged tasks of a member, over all the party's goals (*✓ k in dev*). */
-export const mergedBy = (m, nodes) => nodes.reduce((k, n) => k + (n.tasks || []).filter((t) => t.state === "merged" && t.by.slug === m.slug).length, 0);
 
 /** A column's items as its rows by phase, each row its stacks: one per goal (in the Board's order, `nodes`'), the front card first.
  *  `list`: items as the column shows them ([{it: {n, t, row}, …}]); [{row, stacks: [{goal, items: [...]}]}], a row with nothing not there. */
@@ -159,9 +142,6 @@ export function rowsOf(list, nodes) {
 /** The role of ideas.agents behind a party member. */
 export const roleOf = (agents, slug) => (agents?.roles || []).find((r) => r.role === slug) || null;
 
-const modelOf = (roles, role) => {
-  const id = role?.model || "", label = (roles?.models || []).find((x) => x.id === id)?.label || "";
-  const named = /\(([^)]+)\)/.exec(label);
   return named ? named[1] : TIER_WORDS[id] ? "" : id;
 };
 
@@ -210,15 +190,6 @@ export function nowOf(m, col, planning, isLead) {
   const next = failed && run.length ? line(name(failed), "cross") : picking && run.length ? line(`asks you to pick: ${name(picking)}`, "alert") : rv && run.length ? line(`${rv} in Review`)
     : nx && run.length ? line(`next: ${name(nx)}`) : line("");
   return { now, next };
-}
-
-/** A member's state in words, its colour class and what a screen reader hears. */
-export function memberView(m, stats, line, race) {
-  const words = memberWords(m) || "free";
-  const tone = m.state === "needs" ? "is-needs" : m.state === "work" ? "" : "is-quiet";
-  const label = [m.name, `${race ? `${race}, ` : ""}${stats.harness.name}, ${stats.level}`, words, stats.runsTip,
-    `${stats.price === "—" ? "no price yet" : `${stats.price} a run`}`, line.now.text].filter(Boolean).join(", ");
-  return { words, tone, label: `${label}. A click shows its work.` };
 }
 
 /** The sign on a member's head (spec 49 §5.2, orkUI's signs): cross on the danger ground for a failure, alert on the alert ground for another stop, work while at
@@ -278,8 +249,6 @@ export function taskFoot(t, n) {
   if (t.state === "ready") return t.note || "next";
   return TASK_STATE[t.state] || t.state;
 }
-/** The sign at a card's top right: work, cross; "" for the rest. */
-export const taskMark = (t) => (RUN.includes(t.state) ? "work" : t.state === "failed" ? "cross" : "");
 
 /** The tasks that wait for `src` (they list it in `after`), in the same goal, not done. */
 export function waitersOf(n, src) {
@@ -288,13 +257,6 @@ export function waitersOf(n, src) {
 /** The tasks `t` waits for: the ones it lists in `after` that are not done yet. */
 export function waitsForOf(n, t) {
   return openTasks(n).filter((a) => a.id !== t.id && (t.after || []).includes(a.id));
-}
-/** A card's dependency lines (the spread's, spec 50 §3.6): *<before> waits for <short>* (*waits for the build*), *<after> n wait for it*. [{sign, text}] */
-export function depLines(n, t) {
-  const on = waitsForOf(n, t), by = waitersOf(n, t), out = [];
-  if (on.length) out.push({ sign: "before", text: `waits for ${followsBuild(t, n) ? "the build" : on.map((x) => x.short || x.title).join(", ")}` });
-  if (by.length) out.push({ sign: "after", text: `${by.length} ${by.length === 1 ? "waits" : "wait"} for it` });
-  return out;
 }
 
 // -- the results --------------------------------------------------------------------------------------------------------------------
@@ -307,13 +269,6 @@ export function resultsOf(nodes) {
 
 // -- the party line ---------------------------------------------------------------------------------------------------------------------
 
-/** What is at work now, for the party line: [{who, task, goal}] for every running task of the goals at work, and the leader reading ([{who, reading}]). */
-export function nowParts(nodes, lead, readingTitle, doing = "reading") {
-  const bits = [];
-  for (const n of nodes.filter(atWork)) for (const t of n.tasks.filter((x) => RUN.includes(x.state))) bits.push({ who: t.by.name, task: t.short || t.title, goal: n.short || n.title });
-  if (readingTitle) bits.push({ who: lead, reading: readingTitle, doing });           // `doing`: *judging* in Ideation (spec 65 §8)
-  return bits;
-}
 /** The same in plain words (a tooltip): *Backend at work on Credential table (WebAuthn register) · …*, else *nothing at work right now*. */
 export const nowWords = (parts) => (parts.length ? parts.map((b) => (b.reading ? `${b.who} at work ${b.doing || "reading"} “${b.reading}”` : `${b.who} at work on ${b.task} (${b.goal})`)).join(" · ") : "nothing at work right now");
 
@@ -328,11 +283,6 @@ export function gateOf(gate) {
 }
 
 // -- today ---------------------------------------------------------------------------------------------------------------------------------
-
-/** Today's rows of the goal shown, and the gate's (it has no goal): newest first. */
-export const todayOf = (today, goal) => (today?.events || []).filter((e) => !e.goal || e.goal === goal);
-export const TODAY_TONE = { ok: "is-ok", danger: "is-no", muted: "is-muted", alert: "is-alert", ink: "" };
-export const todayTip = (e) => `${e.at} · ${e.title} · ${e.words}`;
 
 // -- the limits ---------------------------------------------------------------------------------------------------------------------------
 
@@ -491,12 +441,6 @@ export function byUrgency(stops) {
   return stops.map((s, i) => [s, i]).sort(([a, i], [b, j]) => urgencyOf(a) - urgencyOf(b) || ageOf(a).localeCompare(ageOf(b)) || i - j).map(([s]) => s);
 }
 
-/** Each stop of a party (`g`) with the party it belongs to — its name, leader (head and name) — and whether it is another party's than the one shown. */
-function inParty(stops, g, shown) {
-  const party = { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster" };
-  return stops.map((s) => ({ ...s, g, party, other: party.slug !== shown }));
-}
-
 /** *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3, decisions §104.9): what dev holds that main lacks, one card for the batch, its answer *Merge into main*; none when nothing
  *  waits or dev and main are one branch (`ideas.gate`). The goals' titles are its text (*k commits ready for main* when no goal's are among them). */
 export function gateStop(gate, shown, ork = null) {
@@ -508,30 +452,6 @@ export function gateStop(gate, shown, ork = null) {
     head: ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null, title, full: title,
     text: n ? gate.ideas.map((i) => i.title).join(" · ") : plural(gate.files, "file", "files"),
     g: null, party: { slug: shown, name: "", head: null, lead: "" }, other: false };
-}
-
-/** Every stop of the project (§2.1): each party's Needs you rows, failed tasks and Pick one, then the tools' sign-ins; `keep(partySlug, stop)` is the filter (only the picked goals'),
- *  the party shown's results join them when `withResults` (spec 90 §2.3: always on the desktop's party), and the gate's batch when `gate` (`ideas.gate`) has one. In urgency's order (§2.3). */
-export function handOf({ map, needs, order, shown, keep, withResults = false, gate = null }) {
-  const out = [];
-  for (const g of goalsOf(map, order)) {
-    const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes, map?.project?.orkmaster || null);
-    if (withResults && g.slug === shown) mine.push(...resultsOf(nodes).map((r) => resultStop(r, nodes)));
-    out.push(...inParty(mine.filter((s) => keep(g.slug, s)), g, shown));
-  }
-  out.push(...signInStopsOf(needs, shown));
-  const ready = gate ? gateStop(gate, shown, map?.project?.orkmaster || null) : null;
-  if (ready) out.push(ready);
-  return byUrgency(out);
-}
-
-/** Where the k-th most urgent of `n` stops lies in the row (§2.3): the most urgent in the middle, the next to its right, the next to its left, and so outward. */
-export function laidOut(n) {
-  const row = [];
-  for (let k = 0; k < n; k += 1) { if (k % 2) row.push(k); else row.unshift(k); }
-  const at = new Array(n);
-  row.forEach((k, place) => { at[k] = place; });
-  return at;
 }
 
 /** A fan's turn, rise and order for the item at place `i` of `n` (the middle ones higher): the values of `--rot`, `--dy` and `--z`. A long hand turns less. */

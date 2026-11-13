@@ -57,7 +57,3 @@ export function TPile({ ctx, id, title, line = "", sign = "work", n = 3, open = 
 /** A card face down; pressed, it turns up (`onTurn`). */
 export const TBack = ({ name, onTurn }) => html`<button type="button" class="tb-faced" data-card="face-down" aria-label=${`${name}, face down. Press to turn it.`} onClick=${onTurn}></button>`;
 
-/** The foot of a leader's table: what to do with its cards. */
-export function TableFoot() {
-  return html`<footer class="tb-hand" aria-label="Your words on this table"><p class="tb-note">Press a card to turn it over; ask its leader about any part.</p></footer>`;
-}

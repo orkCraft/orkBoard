@@ -20,13 +20,6 @@ export const gather = signal(null);        // the gather waiting (spec 63 §3.1)
 
 export const DEAL_KEEP_MS = 6000;
 let dealTimer = 0;
-/** A plan is started by a press in the hand: its tasks, new on the field, travel from `from` (the stop's box, a rect) to their places (motion.js `useColumn`). Dropped after 6 s. */
-export function dealWaits(goal, from) {
-  clearTimeout(dealTimer);
-  const mine = { goal, from, at: Date.now() };
-  deal.value = mine;
-  dealTimer = setTimeout(() => dropDeal(mine), DEAL_KEEP_MS);
-}
 /** The deal is played, refused or late: nothing waits. With `mine`, only that deal is dropped (a newer press keeps its own). */
 export function dropDeal(mine) {
   if (mine && deal.value !== mine) return;
@@ -34,15 +27,7 @@ export function dropDeal(mine) {
   deal.value = null;
 }
 
-const GATHER_KEEP_MS = 6000;
 let gatherTimer = 0;
-/** A new party is saved: its seats' heads (`from`, the leader's first) gather onto its heading's head (partylist.js `PartyList`), in the first render that shows it once the dialog has closed. Dropped after 6 s. */
-export function gatherWaits(party, from) {
-  clearTimeout(gatherTimer);
-  const mine = { party, from, at: Date.now() };
-  gather.value = mine;
-  gatherTimer = setTimeout(() => dropGather(mine), GATHER_KEEP_MS);
-}
 /** The gather is played, refused or late: nothing waits. With `mine`, only that one is dropped. */
 export function dropGather(mine) {
   if (mine && gather.value !== mine) return;
@@ -50,18 +35,3 @@ export function dropGather(mine) {
   gather.value = null;
 }
 
-/** The goals of a party the board shows: the ones picked; [] shows all (§3.5). */
-export const shownGoals = (party) => picks.value[party] || [];
-/** A press on a goal's row: picked, or taken out when it was. */
-export function togglePick(party, goal) {
-  const now = picks.value[party] || [];
-  picks.value = { ...picks.value, [party]: now.includes(goal) ? now.filter((x) => x !== goal) : [...now, goal] };
-}
-export function clearPicks(party) {
-  if (party === undefined) { picks.value = {}; } else if ((picks.value[party] || []).length) { picks.value = { ...picks.value, [party]: [] }; }
-}
-
-/** Another party is shown: what was hovered, spread or opened on the last one goes (the picks stay with their party). */
-export function leaveParty() {
-  solo.value = ""; taskHover.value = ""; stopLook.value = ""; stopAbout.value = null; dropDeal(); dropGather(); spread.value = null; rawOpen.value = false; flagsOpen.value = false; sentOpen.value = false; flagsAll.value = false;
-}

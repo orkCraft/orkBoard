@@ -7,8 +7,6 @@ import { Elem, Sign } from "../orkui.js";
 import { raceOf } from "./felt.js";
 import { withPreview } from "./preview.js";
 
-export const SMALL_W = 56, SMALL_H = 78;
-
 /** The dots of a route: `parties` are the party objects (`{slug, leader}`) or their slugs, `done` the slugs (or parties) that are done; one `{slug, race, done}` each, in the route's order. */
 export function dotsOf(parties = [], done = []) {
   const over = new Set((done || []).map((d) => (typeof d === "string" ? d : d?.slug)));

@@ -3,7 +3,7 @@
 // through table/post.js's head and body. **L**: a card opened; pressed, an M turns back upright and grows over the table
 // (`openCard`), Esc or Close puts it away and the focus goes back to the card it came from. A craft's verdict on a goal is a
 // **token** on its S (verdict.js, §298.3). Layout only (cards.css).
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
@@ -87,18 +87,6 @@ export function CardM({ p, more = 0, onOpen, onPick, onMore = null }) {
     ${mat && html`<${MatFoot} mat=${mat} />`}
     ${more > 0 && onMore && html`<button type="button" class="cards-m__more" onClick=${onMore}><${Icon} name="chevron-down" /><span>More from ${whoOf(p.leader).name}</span></button>`}
   </article>`;
-}
-
-/** A question is answered in the hand (decisions §145, §296.4): a question token pressed raises its goal's card there:
- *  the card is pressed, which opens its ways. After the L is put away, so the focus lands on the hand's card. */
-export function answerInHand(slug) {
-  setTimeout(() => {
-    const c = document.querySelector(`.frame-hand button.hand-card[data-goal="${CSS.escape(slug)}"]`);
-    if (!c) return;
-    c.scrollIntoView?.({ block: "nearest", inline: "nearest" });
-    c.focus();
-    c.click();
-  }, 0);
 }
 
 /** The card opened: `{kind: "post", p, from}` or `{kind: "goal", n, line, acts, from}`; null when none. */

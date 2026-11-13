@@ -71,22 +71,6 @@ export function forgetChecks() {
   // Keep explanations when the discard closes.
 }
 
-const STATE = { failed: 3, running: 2, waiting: 1, passed: 0 };
-
-/** The skeletons of a list of checks: one for each of the first two and one for the rest (the third and, folded into it, the fourth and more). Each is `{at, tier, name, state, words, label}`: `state` the worst of the
- *  checks it stands for (failed, then running, then waiting, passed), `label` its words for the title and a screen reader (*Tests: checking*, *Tests: passed*, *Regression: 2 tests fail*). */
-export function skeletonsOf(list) {
-  const out = [];
-  for (let at = 0; at < Math.min(3, list.length); at += 1) {
-    const mine = at < 2 ? [list[at]] : list.slice(2);
-    const worst = mine.reduce((a, c) => (STATE[c.state] > STATE[a.state] ? c : a), mine[0]);
-    const name = mine.length > 1 ? `${mine[0].name} and ${mine.length - 1} more` : mine[0].name;
-    const words = worst.state === "failed" ? `${worst.name}: ${worst.words || "red"}` : `${name}: ${worst.state === "passed" ? "passed" : "checking"}`;
-    out.push({ at, tier: SKELETONS[at], name, state: worst.state, words, label: words });
-  }
-  return out;
-}
-
 /** The line over the portal while the checks run, and the sealed line when one is red (*Sealed: Regression is red: 2 tests fail*). */
 export const CHECKING = "Checking the way into main";
 export function sealedWords(list) {

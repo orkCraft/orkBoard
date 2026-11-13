@@ -7,9 +7,6 @@ export function dayWord(day) {
   return m && Number(m[2]) >= 1 && Number(m[2]) <= 12 ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]}` : "";
 }
 
-/** A chapter's name: the version's own, or *The week of 3 Nov*. */
-export const chapterName = (c) => (c.kind === "week" ? `The week of ${dayWord(c.day)}` : c.name || dayWord(c.day));
-
 export const UNRELEASED = "Unreleased";
 
 /** The title of a decision's entry or a goal as it was, opened over the pane from the past (chronicle.js): *Decision §238*, *The goal as it was*; the tab's own name leads (*through Design*) on a party's tab. */

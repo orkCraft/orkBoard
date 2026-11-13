@@ -166,33 +166,6 @@ export function useColumn(ref, items, key, signOf, deals = false) {
   return view.list.map((x) => ({ ...x, it: latest.get(x.key) || x.it, fresh: view.fresh.includes(x.key) || (view.dealt.includes(x.key) && risen.has(x.key)), dealt: view.dealt.includes(x.key) && !risen.has(x.key) }));
 }
 
-/** A list that does not shift while one of its items is raised (the stops along the bottom): what changes waits until the pointer leaves or
- *  the focus goes, at most HOLD_MS — but not what the raised one lost (it was answered): that goes at once. */
-export function useHeld(ref, items, key) {
-  const [shown, setShown] = useState(items);
-  const now = useRef(items);
-  now.current = items;
-  const hold = useRef(0);
-  const sig = items.map(key).join("|");
-  const apply = () => { clearTimeout(hold.current); hold.current = 0; setShown(now.current); };
-  useLayoutEffect(() => {                                   // before the paint: a stop that leaves goes in the frame its task changes (spec 58 §4)
-    const el = ref.current;
-    if (!held(el)) { apply(); return; }
-    const raised = [...el.querySelectorAll("[data-key]")].find((x) => x.matches(":hover, :focus-within"));
-    if (raised && !items.some((i) => key(i) === raised.dataset.key)) { apply(); return; }
-    if (!hold.current) hold.current = setTimeout(apply, HOLD_MS);
-  }, [sig]);
-  useEffect(() => {
-    const el = ref.current;
-    const release = () => setTimeout(() => { if (hold.current && !held(el)) apply(); }, 0);
-    el?.addEventListener("pointerleave", release);
-    el?.addEventListener("focusout", release);
-    return () => { el?.removeEventListener("pointerleave", release); el?.removeEventListener("focusout", release); clearTimeout(hold.current); };
-  }, []);
-  const latest = new Map(items.map((i) => [key(i), i]));
-  return shown.map((x) => latest.get(key(x)) || x);
-}
-
 /** A stop that leaves the hand (answered, or withdrawn) fades where it stands (spec 58 §4): it stays in the list for GHOST_MS as a ghost (`ghost: true`; `raised` when it was raised,
  *  under the pointer or the focus, so that it fades up there), at the place it had, then the hand closes the gap. It is made in the render that rereads the Board, the one in which its
  *  task changes. None under `prefers-reduced-motion` or while the page is hidden. Returns `items` with the ghosts in. */
@@ -221,31 +194,4 @@ export function useLeaving(ref, items, key) {
   return out;
 }
 
-/** The quiet reward: `value` changed after the first read — the element lights once (≈ 0.6 s, in steps), then is as it was. */
-export function useLit(ref, value) {
-  const was = useRef(value);
-  useEffect(() => {
-    if (was.current !== value && plays() && ref.current && typeof ref.current.animate === "function") {
-      ref.current.animate([{ background: "var(--ork-ink)", color: "var(--ork-on-ink)" }, { background: "transparent" }], { duration: LIT_MS, easing: "steps(4, end)" });
-    }
-    was.current = value;
-  }, [value]);
-}
-
-let struck = STRUCK_MAX;                                     // the heads that may still play in this refresh (the effects of one render run in one task)
-/** A member's head (`ref`) struck or calling: its sign (`mark`) changed after the first read to ✗ (`cross`) or ! (`alert`) — it plays `is-struck` or `is-calling` once. None for a head under the
- *  pointer or the focus (its member's button), past the third in a refresh, or when motion does not play; the sign then simply stands. */
-export function useStruck(ref, mark) {
-  const was = useRef(mark);
-  useEffect(() => {
-    const el = ref.current, before = was.current;
-    was.current = mark;
-    if (before === mark || (mark !== "cross" && mark !== "alert") || !el || !plays() || held(el.closest("button")) || struck <= 0) return;
-    if (struck-- === STRUCK_MAX) setTimeout(() => { struck = STRUCK_MAX; }, 0);
-    const name = mark === "cross" ? "is-struck" : "is-calling";
-    el.classList.remove("is-struck", "is-calling");
-    void el.offsetWidth;                                     // a second change within the first one's moment starts again
-    el.classList.add(name);
-    setTimeout(() => el.classList.remove(name), STRUCK_MS + 50);
-  }, [mark]);
-}
+                                     // the heads that may still play in this refresh (the effects of one render run in one task)

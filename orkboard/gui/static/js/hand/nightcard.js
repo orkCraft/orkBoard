@@ -24,9 +24,6 @@ export function nightWords(r) {
   return n ? `The night: ${n} ${n === 1 ? "goal" : "goals"} in dev` : "The night: no goal reached dev";
 }
 
-/** The screens of a goal said in a line: *Results · Lobby*; "" with none. */
-export const screensWords = (g) => (g.screens || []).map((s) => s.name).filter(Boolean).join(" · ");
-
 // -- the record --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 export const nightRecord = signal(null);                        // ideas.night, null when the night did nothing (or the host does not know the command)

@@ -120,36 +120,6 @@ export function useSystem(on, party) {
   return { doc, err, look, changed, none, seen: () => seen.current(), rearrange };
 }
 
-/** The party's tab: the one last pressed on this device (System at first); the first answer of the System opens it on System when something changed since the last look, unless a tab was pressed. */
-export function usePartyTab(on, party, sys) {
-  const key = `${TAB}${town.value?.projects?.current || ""}.${party}`;
-  const [tab, setTab] = useState(() => (["board", "modules"].includes(read(key)) ? read(key) : "system"));
-  const decided = useRef(false);
-  useEffect(() => {
-    if (!on || decided.current || !sys.doc) return;
-    decided.current = true;
-    if (sys.changed) setTab(sys.doc.overview ? "system" : "modules");           // an answer with no overview (a host from before spec 90): the changes where they are seen
-  }, [on, sys.doc]);
-  const press = (id) => { decided.current = true; write(key, id); setTab(id); };
-  return [on ? tab : "board", press];
-}
-
-/** The three tabs over the party's table (spec 90 §6.7). ← → (Home, End) move between them. */
-export function PartyTabs({ tab, setTab, name }) {
-  const key = (e) => {
-    const at = TABS.findIndex(([id]) => id === tab), step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-    const to = e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : step ? (at + step + TABS.length) % TABS.length : -1;
-    if (to < 0) return;
-    e.preventDefault();
-    setTab(TABS[to][0]);
-    e.currentTarget.querySelectorAll("[role=tab]")[to]?.focus();
-  };
-  return html`<div class="ork-tabs sys-tabs" role="tablist" aria-label=${name} onKeyDown=${key}>
-    ${TABS.map(([id, word]) => html`<button type="button" key=${id} role="tab" class="ork-tab" id=${`ptab-${id}`} data-tab=${id} aria-selected=${String(id === tab)} aria-controls="ppanel"
-      tabindex=${id === tab ? 0 : -1} onClick=${() => setTab(id)}>${word}</button>`)}
-  </div>`;
-}
-
 // -- the reveal ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /** Plays what changed once, on the first answer the tab shows (`doc`): the step is -1 while the map stands as it was, i while the i-th goal of `order` plays, DONE after (and at once when nothing plays). */

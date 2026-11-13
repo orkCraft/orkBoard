@@ -188,22 +188,6 @@ function flyCopy(el, origin, i = 0) {
   return () => { a.cancel(); done(); };
 }
 
-/** The keys that came since the last draw (not the first draw, not under reduced motion): they are dealt, one after another, for DEAL_MS. `{key: i}`. Read while drawing, so that
- *  a card is dealt in the very frame it is first drawn. */
-export function useDealt(keys) {
-  const seen = useRef(null), live = useRef({}), [, tick] = useState(0), now = new Set(keys);
-  if (seen.current === null || reduced()) seen.current = now;
-  else {
-    const came = keys.filter((k) => !seen.current.has(k));
-    seen.current = now;
-    if (came.length) {
-      came.forEach((k, i) => { live.current[k] = i; });
-      setTimeout(() => { for (const k of came) delete live.current[k]; tick((n) => n + 1); }, DEAL_MS + came.length * 40);
-    }
-  }
-  return { ...live.current };                                                 // a new object each draw: a component that reads signals skips a draw whose props are the same
-}
-
 /** `items` with the ones that left kept where they lay for the crumble: `[{item, gone}]`. A card that goes under reduced motion goes at once. */
 export function useGone(items, key) {
   const was = useRef(null), [ghosts, setGhosts] = useState([]), id = items.map(key).join("|");

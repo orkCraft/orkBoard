@@ -28,9 +28,3 @@ export function answersOf(row) {
 /** The open waits of a goal: the ones whose flag is not raised yet. */
 export const waitsOf = (n) => (n?.waits_for || []).filter((w) => !w.flag);
 
-/** *waits for Backend · Auth API* (more than one: joined with a comma); "" for a goal that waits for none. */
-export function waitsForWords(n) {
-  const w = waitsOf(n);
-  return w.length ? `waits for ${w.map((x) => `${x.party_name || x.party} · ${x.title}`).join(", ")}` : "";
-}
-
