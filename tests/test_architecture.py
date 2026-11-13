@@ -274,3 +274,14 @@ def test_the_one_post_imports_none_of_the_windows_state_the_store_or_the_phones_
     text = (ROOT / "gui/static/js/table/post.js").read_text(encoding="utf-8")
     mods = re.findall(r'^import .* from "([^"]+)"', text, re.M)
     assert mods and not [m for m in mods if any(x in m for x in ("frame/", "shell/", "pwa/", "data.js", "board/"))], mods
+
+
+def test_decision_refs_is_pure_and_short():
+    """Goal "The battle and the gate" C (decisions §303): realm/decision_refs.py reads files only: no git, no model, no write, no gui; under 600 lines."""
+    path = ROOT / "realm/decision_refs.py"
+    text = path.read_text(encoding="utf-8")
+    assert len(text.splitlines()) < 600
+    mods = {m for _l, m in _imports(path)}
+    assert not {m for m in mods if m.split(".")[0] in {"subprocess", "os", "shutil", "socket", "urllib", "http", "requests"}
+                or m.startswith(("orkboard.gui", "orkboard.core", "orkboard.realm.harnesses"))}, mods
+    assert not any(w in text for w in ("write_text", "write_bytes", ".unlink(", ".mkdir(", "Popen"))
