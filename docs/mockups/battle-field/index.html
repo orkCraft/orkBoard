@@ -53,51 +53,18 @@ body[data-face="phone"] .plate .full { display: none; } body[data-face="phone"] 
 body[data-face="phone"] .plate b { font-size: 17px; line-height: 22px; }
 /* zones */
 .zone { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; position: relative; z-index: 2; }
-.oldz { align-items: flex-start; gap: 18px; padding-top: var(--pad); padding-bottom: 70px; }
-.newz { align-items: flex-start; padding-top: 66px; }
 .linezone { position: relative; height: 0; z-index: 3; }
 .line { position: absolute; left: 3%; right: 3%; top: -1px; height: 2px; background: var(--ork-bronze); }
 /* leaders' columns */
-.cols { position: absolute; left: 30%; top: 0; translate: -50% 0; display: flex; gap: 26px; }
-.lc { position: relative; width: var(--tk); height: 0; }
-.lc .tie { position: absolute; left: 50%; width: 4px; translate: -50% 0; top: calc(-10px - var(--tk) / 2); height: calc(20px + var(--tk)); background: var(--ork-bronze); border-radius: 2px; }
-.tk { position: absolute; left: 0; width: var(--tk); height: var(--tk); border-radius: 50%; background: var(--ork-room); border: 3px solid var(--hue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 3px 0 var(--ork-plate); }
-.tk img { width: 112%; height: 112%; object-fit: cover; object-position: center 20%; }
-.tk.was { bottom: 10px; opacity: .8; } .tk.is { top: 10px; }
 .tech { --hue: var(--ork-party-ork); } .design { --hue: var(--ork-party-elf); } .product { --hue: var(--ork-party-knight); }
 /* move chips */
-.mv { position: absolute; right: 80px; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 150px; text-align: center; z-index: 4; }
-body[data-face="phone"] .mv { right: 4px; width: 84px; }
-.mv.up { bottom: 8px; } .mv.dn { top: 8px; }
 .chip { position: relative; width: var(--chp); height: var(--chp); border-radius: 50%; background: var(--ork-plate); border: 5px solid var(--ork-bronze-hi); box-shadow: 0 4px 0 var(--ork-room); display: grid; place-items: center; }
 .chip i { width: 55%; height: 55%; background: var(--ork-ink-read); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
 .chip kbd { position: absolute; right: -8px; bottom: -6px; }
 .chip.armed { border-color: var(--ork-gilt-hi); box-shadow: 0 0 0 3px var(--ork-ink), 0 7px 0 3px var(--ork-room); }
 .chip.armed i { background: var(--ork-gilt-hi); }
-.mv b { font: var(--ork-type-heading); font-size: 14px; line-height: 17px; padding: 1px 7px; background: var(--ork-plate); border-radius: 4px; }
-.mv small { font: 600 12px/15px var(--ork-font-text); color: var(--ork-mana); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; }
-body[data-face="phone"] .mv b { font-size: 12px; line-height: 15px; padding: 1px 5px; } body[data-face="phone"] .mv small { font-size: 11px; line-height: 13px; padding: 1px 4px; }
 /* cards */
-.col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.card { position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); overflow: hidden; padding: 12px 10px 10px; background: var(--ork-card); border: 2px solid var(--ork-card-frame);
   border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); display: flex; flex-direction: column; gap: 4px; }
-.card .sg { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; background: var(--ork-ink-read); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
-.card .kind { font: var(--ork-type-label); text-transform: uppercase; letter-spacing: .08em; font-size: 10px; line-height: 14px; color: var(--ork-ink-muted); }
-.card b { font: 700 16px/1.25 var(--ork-font-text); margin-top: 6px; padding-right: 6px; }
-.card .ln { font-size: 13px; line-height: 1.35; color: var(--ork-ink-read); }
-.card .id { margin-top: auto; font: 500 11px/1 var(--ork-font-code); color: var(--ork-ink-faint); }
-.newwrap { position: relative; }
-.card.sel { width: var(--nw); height: calc(var(--nw) * 1.4); border-color: var(--ork-ink); box-shadow: 0 0 0 2px var(--ork-ink), 0 5px 0 2px var(--ork-room); }
-.card.sel .kind { color: var(--ork-gilt); } .card.sel b { font-size: 19px; } .card.sel .ln { font-size: 14px; }
-.rest { white-space: nowrap; padding: 2px 6px; text-align: center; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: 400 12px/15px var(--ork-font-text); color: var(--ork-ink-muted); }
-.pile { position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); margin-left: 10px; flex: none; }
-.pile .ork-card-back { position: absolute; width: 100%; box-shadow: none; }
-.pile .ork-card-back:nth-child(1) { left: 12px; top: 12px; opacity: .6; } .pile .ork-card-back:nth-child(2) { left: 8px; top: 8px; opacity: .8; }
-.pile .ork-card-back:nth-child(3) { left: 4px; top: 4px; } .pile .ork-card-back:nth-child(4) { left: 0; top: 0; }
-.rewrite { position: absolute; right: -24px; top: -26px; width: 34px; height: 34px; z-index: 6; }
-.rewrite .chip { --chp: 34px; border-width: 3px; box-shadow: 0 3px 0 var(--ork-room); }
-.rewrite .chip kbd { right: -10px; bottom: -8px; font-size: 10px; line-height: 12px; padding: 0 4px; }
-.rewrite .lab { position: absolute; left: calc(100% - 8px); top: 40px; font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
 .desk-only { display: block; } body[data-face="phone"] .desk-only { display: none; }
 /* pouch */
 .pouchbar { position: absolute; z-index: 6; display: flex; align-items: center; gap: 10px; left: 190px; bottom: 26px; }
@@ -107,26 +74,146 @@ body[data-face="phone"] .mv b { font-size: 12px; line-height: 15px; padding: 1px
 .pouchbar .tk { position: static; --tk: 38px; width: 38px; height: 38px; }
 .pouchbar .tk.add { background: var(--ork-plate); border: 2px dashed var(--ork-bronze-hi); color: var(--ork-bronze-hi); font: 700 20px/1 var(--ork-font-text); }
 /* phone */
-body[data-face="phone"] .oldz { flex: 0 0 auto; gap: 8px; padding: var(--pad) 8px 70px; justify-content: flex-start; }
-body[data-face="phone"] .newz { flex: 0 0 auto; padding-top: 76px; justify-content: flex-start; padding-left: 26px; }
-body[data-face="phone"] .pile { width: 40px; margin-left: 4px; }
-body[data-face="phone"] .pile .ork-card-back { width: 36px; }
-body[data-face="phone"] .pile .ork-card-back:nth-child(1) { left: 4px; top: 4px; } body[data-face="phone"] .pile .ork-card-back:nth-child(2) { left: 3px; top: 3px; }
-body[data-face="phone"] .pile .ork-card-back:nth-child(3) { left: 1px; top: 1px; }
-body[data-face="phone"] .card { padding: 8px 6px 6px; }
-body[data-face="phone"] .card .sg { width: 12px; height: 12px; top: 5px; right: 5px; }
-body[data-face="phone"] .card .kind { display: none; } body[data-face="phone"] .card.sel .kind { display: block; }
-body[data-face="phone"] .card b { font-size: 13px; margin-top: 2px; padding-right: 12px; } body[data-face="phone"] .card.sel b { font-size: 17px; padding-right: 6px; margin-top: 6px; }
-body[data-face="phone"] .card .ln { display: none; } body[data-face="phone"] .card.sel .ln { display: block; font-size: 14px; }
-body[data-face="phone"] .card .id { font-size: 9px; } body[data-face="phone"] .card.sel .id { font-size: 10px; }
-body[data-face="phone"] .rest { font-size: 11px; line-height: 13px; padding: 1px 3px; }
 body[data-face="phone"] .back kbd { display: none; }
 body[data-face="phone"] .pouchbar { left: 98px; bottom: 14px; gap: 6px; }
 body[data-face="phone"] .pouchbar .tk { --tk: 30px; width: 30px; height: 30px; border-width: 2px; }
 body[data-face="phone"] .pouchbar .row { gap: 4px; } body[data-face="phone"] .pouchbar .cap { font-size: 12px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---- v3 ---- */
+:root { --ch: 196px; --g: 30px; }
+body[data-face="phone"] { --ch: 140px; --nw: 190px; }
+.oldz { align-items: flex-start; gap: 18px; padding-top: var(--pad); padding-bottom: 70px; }
+.newz { align-items: flex-start; padding-top: 66px; }
+.col { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+.card { --g: 30px; position: relative; width: var(--cw); height: var(--ch); padding: 8px 8px 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px;
+  background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); }
+.card .hd { width: 52px; height: 52px; object-fit: contain; flex: none; }
+.card b.t { font: 700 16px/1.2 var(--ork-font-text); }
+.card .ln { font-size: 13px; line-height: 1.35; color: var(--ork-ink-read); }
+.disp { background: color-mix(in srgb, var(--ork-alert) 30%, transparent); border-bottom: 2px solid var(--ork-alert); padding: 0 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.dbar { display: none; }
+.card.sel { --g: 36px; width: var(--nw); height: auto; padding: 10px 12px 44px; gap: 5px; border-color: var(--ork-ink); box-shadow: 0 0 0 2px var(--ork-ink), 0 5px 0 2px var(--ork-room); }
+.card.sel .hd { width: 66px; height: 66px; } .card.sel b.t { font-size: 19px; } .card.sel .ln { font-size: 14px; }
+/* corner gems */
+.gw { position: absolute; z-index: 2; filter: drop-shadow(0 2px 0 var(--ork-room)); }
+.gw.tl { left: 5px; top: 5px; } .gw.tr { right: 5px; top: 5px; }
+.gem { display: grid; place-items: center; width: var(--g); height: var(--g); background: var(--rim, var(--ork-bronze-hi)); position: relative; }
+.gem .in { position: absolute; inset: 3px; background: var(--ork-plate); display: grid; place-items: center; font: 700 calc(var(--g) * .5)/1 var(--ork-font-text); color: var(--ork-gilt-hi); }
+.gem.circle, .gem.circle .in { border-radius: 50%; }
+.gem.rect { width: calc(var(--g) * 1.12); height: calc(var(--g) * .86); border-radius: 8px; } .gem.rect .in { border-radius: 5px; }
+.gem.hex, .gem.hex .in { clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.gem.shield, .gem.shield .in { clip-path: polygon(0 0, 100% 0, 100% 56%, 50% 100%, 0 56%); }
+.gem.shield .in { inset: 3px 3px 4px; padding-bottom: 14%; }
+.gem.mana .in { background: var(--ork-mana); color: var(--ork-on-ink); }
+.gem .ru { width: 62%; height: 62%; background: var(--ork-ink-read); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.gem.sig { --rim: var(--ork-alert); }
+.card .when { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; font: 500 11px/14px var(--ork-font-text); color: var(--ork-ink-muted); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; }
+.card .act { position: absolute; right: 6px; bottom: 6px; padding: 2px 10px; font: 700 12px/14px var(--ork-font-text); color: var(--ork-on-ink); background: var(--ork-action); border-radius: 4px; box-shadow: 0 2px 0 var(--ork-room); }
+.crack { display: none; position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; color: var(--ork-ink); }
+.crack polyline { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: miter; vector-effect: non-scaling-stroke; opacity: .6; }
+.rest { white-space: nowrap; padding: 2px 6px; text-align: center; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: 400 12px/15px var(--ork-font-text); color: var(--ork-ink-muted); }
+.rest .p, .rest .pp { display: none; }
+.pile { position: relative; width: var(--cw); height: var(--ch); margin-left: 10px; flex: none; }
+.pile .ork-card-back { position: absolute; width: 100%; box-shadow: none; height: 100%; aspect-ratio: auto; }
+.pile .ork-card-back:nth-child(1) { left: 12px; top: 12px; opacity: .6; } .pile .ork-card-back:nth-child(2) { left: 8px; top: 8px; opacity: .8; }
+.pile .ork-card-back:nth-child(3) { left: 4px; top: 4px; } .pile .ork-card-back:nth-child(4) { left: 0; top: 0; }
+.pile.thin { display: none; }
+.newwrap { position: relative; }
+.rewrite { position: absolute; left: -17px; top: 50%; width: 34px; height: 34px; margin-top: -17px; z-index: 6; }
+.rewrite .chip { --chp: 34px; border-width: 3px; box-shadow: 0 3px 0 var(--ork-room); }
+.rewrite .chip kbd { right: auto; left: -12px; bottom: -8px; font-size: 10px; line-height: 12px; padding: 0 4px; }
+.rewrite .lab { position: absolute; right: calc(100% + 8px); top: 8px; font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+/* leaders as squads */
+.cols { position: absolute; left: 22%; top: 0; translate: -50% 0; display: flex; gap: 26px; }
+.lc { position: relative; width: var(--tk); height: 0; }
+.lc .tie { position: absolute; left: 50%; width: 4px; translate: -50% 0; top: calc(-10px - var(--tk) / 2); height: calc(20px + var(--tk)); background: var(--ork-bronze); border-radius: 2px; }
+.lc .lab { position: absolute; left: 50%; translate: -50% 0; top: calc(10px + var(--tk) + 6px); font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.tk { position: absolute; left: 0; width: var(--tk); height: var(--tk); border-radius: 50%; background: var(--ork-room); border: 3px solid var(--hue); display: grid; place-items: center; overflow: hidden; box-shadow: 0 3px 0 var(--ork-plate); }
+.tk img { width: 112%; height: 112%; object-fit: cover; object-position: center 20%; }
+.tk.was { bottom: 10px; rotate: -10deg; } .tk.is { top: 10px; rotate: 10deg; }
+.tk.lit { overflow: visible; box-shadow: 0 0 0 3px var(--ork-ink), 0 6px 0 3px var(--ork-room); } .tk.lit img { border-radius: 50%; }
+.tk.dim { opacity: .5; filter: saturate(.35); }
+.tk.und { border-style: dashed; opacity: .6; filter: saturate(.35); }
+/* the clash */
+.medal { position: absolute; left: 50%; top: 0; width: 48px; height: 48px; translate: -50% -50%; border-radius: 50%; background: var(--ork-plate); border: 4px solid var(--ork-bronze-hi); box-shadow: 0 4px 0 var(--ork-room); z-index: 5; display: grid; place-items: center; }
+.medal i { width: 26px; height: 26px; background: var(--ork-bronze-hi); -webkit-mask: url(emblems/battle.png) center / contain no-repeat; mask: url(emblems/battle.png) center / contain no-repeat; }
+.ribbon { position: absolute; left: 50%; top: -14px; width: 450px; padding: 3px 22px 4px 36px; z-index: 4; background: var(--ork-plaque); border-top: 2px solid var(--ork-bronze); border-bottom: 2px solid var(--ork-bronze);
+  font: 600 13px/20px var(--ork-font-text); color: var(--ork-ink); clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%); }
+/* the move */
+.mv { position: absolute; right: 80px; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 150px; text-align: center; z-index: 4; }
+.mv.up { bottom: 8px; } .mv.dn { top: 8px; }
+.mv b { font: var(--ork-type-heading); font-size: 14px; line-height: 17px; padding: 1px 7px; background: var(--ork-plate); border-radius: 4px; }
+.mv small { font: 600 12px/15px var(--ork-font-text); color: var(--ork-mana); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; }
+.mv .chip.armed { border-color: var(--ork-gilt-hi); box-shadow: 0 0 0 3px var(--ork-ink), 0 7px 0 3px var(--ork-room); }
+.plate .ork-pennant { scale: 1.4; transform-origin: 50% 100%; }
+/* states */
+body[data-state="preview-new"] .crack { display: block; }
+body[data-state="preview-new"] .oldz .gem.shield { --rim: var(--ork-ink); scale: 1.18; }
+body[data-state="preview-new"] .oldz .gem.shield .in { background: var(--ork-bronze-hi); color: var(--ork-on-ink); }
+body[data-state="preview-new"] .rest { border-color: var(--ork-alert); color: var(--ork-ink); } body[data-state="preview-new"] .rest .n { display: none; } body[data-state="preview-new"] .rest .p { display: inline; }
+body[data-face="phone"][data-state="preview-new"] .rest .p { display: none; } body[data-face="phone"][data-state="preview-new"] .rest .pp { display: inline; }
+body[data-state="preview-old"] .card.sel { opacity: .45; } body[data-state="preview-old"] .mv.dn .chip { box-shadow: 0 4px 0 var(--ork-room); border-color: var(--ork-bronze-hi); }
+.must { display: none; position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 7; padding: 4px 10px; background: var(--ork-plate); border: 2px solid var(--ork-alert); border-radius: 4px; font: 700 14px/18px var(--ork-font-text); white-space: nowrap; }
+body[data-state="preview-old"] .must { display: block; }
+.veil, .lift { display: none; }
+body[data-state="inspect"] .veil { display: block; position: absolute; inset: 0; z-index: 30; background: color-mix(in srgb, var(--ork-room) 72%, transparent); }
+body[data-state="inspect"] .lift { display: block; position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 31; width: 420px; }
+.lift .card { width: 420px; height: auto; --g: 48px; padding: 16px 22px 52px; gap: 8px; box-shadow: 0 10px 0 var(--ork-room); border-color: var(--ork-edge); }
+.lift .card .hd { width: 88px; height: 88px; } .lift .card b.t { font-size: 26px; } .lift .card .ln { font-size: 16px; line-height: 1.45; }
+.lift .card .gw.tl, .lift .card .gw.tr { left: 10px; top: 10px; } .lift .card .gw.tr { left: auto; right: 10px; }
+.lift .sec { width: 100%; text-align: left; font: var(--ork-type-label); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--ork-ink-muted); margin-top: 4px; }
+.lift ul { list-style: none; margin: 0; padding: 0; width: 100%; text-align: left; font: 500 12px/18px var(--ork-font-code); color: var(--ork-ink-read); }
+.lift .keeper { width: 100%; display: flex; gap: 10px; align-items: center; text-align: left; font: 500 14px/18px var(--ork-font-text); color: var(--ork-ink-read); }
+.lift .keeper img { width: 34px; height: 34px; }
+.lift .card .when { font-size: 12px; left: 10px; bottom: 10px; }
+.lift .close { position: absolute; right: 0; bottom: calc(100% + 12px); display: flex; gap: 8px; align-items: center; padding: 6px 10px; font: var(--ork-type-button); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: var(--ork-radius-control); }
+/* phone */
+body[data-face="phone"] .oldz { flex: 0 0 auto; gap: 6px; padding: var(--pad) 8px 100px; justify-content: flex-start; }
+body[data-face="phone"] .newz { flex: 0 0 auto; padding-top: 112px; justify-content: center; }
+body[data-face="phone"] .cols { left: 23%; gap: 16px; }
+body[data-face="phone"] .card { --g: 22px; padding: 6px 5px 22px; gap: 2px; }
+body[data-face="phone"] .card .hd { width: 36px; height: 36px; }
+body[data-face="phone"] .card b.t { font-size: 13px; line-height: 1.2; }
+body[data-face="phone"] .card .ln { display: none; }
+body[data-face="phone"] .dbar { display: block; width: 70%; height: 3px; background: var(--ork-alert); margin-top: 2px; flex: none; }
+body[data-face="phone"] .card .when { font-size: 9px; line-height: 11px; padding: 0 3px; left: 4px; bottom: 4px; }
+body[data-face="phone"] .gem .ru { display: none; }
+body[data-face="phone"] .card.sel { --g: 30px; width: var(--nw); padding: 8px 10px 40px; gap: 4px; }
+body[data-face="phone"] .card.sel .hd { width: 56px; height: 56px; } body[data-face="phone"] .card.sel b.t { font-size: 17px; } body[data-face="phone"] .card.sel .ln { display: block; font-size: 14px; }
+body[data-face="phone"] .card.sel .gem .ru { display: block; }
+body[data-face="phone"] .card.sel .act { font-size: 12px; }
+body[data-face="phone"] .rest { display: none; }
+body[data-face="phone"][data-state="preview-new"] .rest { display: block; font-size: 10px; line-height: 12px; padding: 1px 3px; }
+body[data-face="phone"] .pile:not(.thin) { display: none; }
+body[data-face="phone"] .pile.thin { display: block; width: 12px; height: var(--ch); margin-left: 6px; background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: 3px;
+  box-shadow: 4px 0 0 var(--ork-card-frame), 8px 0 0 var(--ork-card), 12px 0 0 var(--ork-card-frame); }
+body[data-face="phone"] .mv { right: 4px; width: 84px; }
+body[data-face="phone"] .mv b { font-size: 12px; line-height: 15px; padding: 1px 5px; } body[data-face="phone"] .mv small { font-size: 11px; line-height: 13px; padding: 1px 4px; }
+body[data-face="phone"] .medal { width: 40px; height: 40px; border-width: 3px; } body[data-face="phone"] .medal i { width: 22px; height: 22px; }
+body[data-face="phone"] .ribbon { left: 50%; translate: -50% 0; top: 52px; width: 204px; padding: 3px 8px 4px; font-size: 11px; line-height: 15px; text-align: center; clip-path: none; border-left: 2px solid var(--ork-bronze); border-right: 2px solid var(--ork-bronze); }
+body[data-face="phone"] .rewrite .lab { top: 8px; }
 </style>
 </head>
 <body data-face="desk">
+<script>try { var _q = new URLSearchParams(location.search); if (_q.get("state")) document.body.dataset.state = _q.get("state"); } catch (e) {}</script>
 <script>try { if (new URLSearchParams(location.search).get("face") === "phone") document.body.dataset.face = "phone"; } catch (e) {}</script>
 <div class="stage"><div class="field" data-party="ork">
   <div class="grain" id="grain" aria-hidden="true"></div>
@@ -137,19 +224,21 @@ body[data-face="phone"] .pouchbar .row { gap: 4px; } body[data-face="phone"] .po
   </div>
 
   <div class="zone oldz">
-    <div class="col"><div class="card" style="--m:url(../../../design-system/orkui/signs/page.svg)"><i class="sg"></i><span class="kind">Decision</span><b>Release is a craft as any</b><span class="ln">Product, Tech and Design stand beside it.</span><span class="id">§274</span></div><span class="rest">3 goals · 2 tests</span></div>
-    <div class="col"><div class="card" style="--m:url(../../../design-system/orkui/signs/page.svg)"><i class="sg"></i><span class="kind">Decision</span><b>Two piles in the discard</b><span class="ln">Dev and main, side by side.</span><span class="id">§273</span></div><span class="rest">4 goals · 1 test</span></div>
-    <div class="col"><div class="card" style="--m:url(../../../design-system/orkui/signs/page.svg)"><i class="sg"></i><span class="kind">Decision</span><b>To main is the person's act</b><span class="ln">After the gate's tests, never before.</span><span class="id">§274.2</span></div><span class="rest">2 goals</span></div>
-    <div class="col desk-only"><div class="card" style="--m:url(../../../design-system/orkui/signs/page.svg)"><i class="sg"></i><span class="kind">Decision</span><b>The hand holds what the person decides</b><span class="ln">Places sit at its right.</span><span class="id">§145</span></div><span class="rest">5 goals · 3 tests</span></div>
-    <div class="col"><div class="pile" aria-hidden="true"><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div></div></div>
+<div class="col"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">5</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/ladder.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><b class="t">Release is a craft as any</b><i class="dbar"></i><span class="ln"><span class="disp">Its gate runs before To main.</span></span><span class="when"><em style="font-style:normal" class="full">decided </em>8 Nov</span><svg class="crack" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><polyline points="12,0 28,30 18,52 40,78 30,104 52,140"/><polyline points="78,0 66,24 80,50 62,70 74,96 60,140"/></svg></div><span class="rest"><span class="n">3 goals · 2 tests</span><span class="p">re-check 3 goals · 2 tests</span><span class="pp">re-check 5</span></span></div>
+<div class="col"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">5</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/staff.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/dryad-elder.png" alt=""><b class="t">Two piles in the discard</b><i class="dbar"></i><span class="ln"><span class="disp">To main sits in the right pile.</span></span><span class="when"><em style="font-style:normal" class="full">decided </em>2 Nov</span><svg class="crack" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><polyline points="50,0 40,28 58,56 44,86 60,112 48,140"/><polyline points="90,20 76,44 88,70 72,96"/></svg></div><span class="rest"><span class="n">4 goals · 1 test</span><span class="p">re-check 4 goals · 1 test</span><span class="pp">re-check 5</span></span></div>
+<div class="col"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">2</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/hook.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/unicorn-elder.png" alt=""><b class="t">To main is the person's act</b><i class="dbar"></i><span class="ln"><span class="disp">Only after the gate's tests.</span></span><span class="when"><em style="font-style:normal" class="full">decided </em>9 Nov</span><svg class="crack" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><polyline points="20,0 34,26 24,56 42,84 32,116 46,140"/><polyline points="70,0 82,30 66,58 80,88"/></svg></div><span class="rest"><span class="n">2 goals</span><span class="p">re-check 2 goals</span><span class="pp">re-check 2</span></span></div>
+<div class="col desk-only"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">8</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/diamond.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><b class="t">The hand is the person's</b><i class="dbar"></i><span class="ln"><span class="disp">Release comes before the hand.</span></span><span class="when"><em style="font-style:normal" class="full">decided </em>21 Oct</span><svg class="crack" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><polyline points="8,10 26,34 16,64 38,92 28,120 40,140"/><polyline points="64,0 74,28 60,54 78,82 66,112"/></svg></div><span class="rest"><span class="n">5 goals · 3 tests</span><span class="p">re-check 5 goals · 3 tests</span><span class="pp">re-check 8</span></span></div>
+    <div class="col"><div class="pile" aria-hidden="true"><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div></div><div class="pile thin" aria-hidden="true"></div></div>
   </div>
 
   <div class="linezone">
     <i class="line"></i>
+    <div class="ribbon">Both decide when Release runs: before To main, or after it.</div>
+    <div class="medal" aria-hidden="true"><i></i></div>
     <div class="cols">
-      <div class="lc tech"><i class="tie"></i><span class="tk was tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech's leader, against"></span><span class="tk is tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech's leader, for"></span></div>
-      <div class="lc product"><i class="tie"></i><span class="tk was product"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product's leader, against"></span><span class="tk is product"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product's leader, for"></span></div>
-      <div class="lc design"><i class="tie"></i><span class="tk was design"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design's leader, against"></span><span class="tk is design"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design's leader, for"></span></div>
+      <div class="lc tech"><i class="tie"></i><span class="tk was tech lit"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech's leader backs the old card"></span><span class="tk is tech dim"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech's leader does not back the new card"></span><span class="lab desk-only">Tech</span></div>
+      <div class="lc product"><i class="tie"></i><span class="tk was product und"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product's leader, undecided"></span><span class="tk is product und"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product's leader, undecided"></span><span class="lab desk-only">Product</span></div>
+      <div class="lc design"><i class="tie"></i><span class="tk was design dim"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design's leader does not back the old card"></span><span class="tk is design lit"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design's leader backs the new card"></span><span class="lab desk-only">Design</span></div>
     </div>
     <div class="mv up"><span class="chip" style="--m:url(../../../design-system/orkui/signs/page.svg)"><i></i><kbd>1</kbd></span><b>Old wins</b></div>
     <div class="mv dn"><span class="chip armed" style="--m:url(../../../design-system/orkui/signs/sword.svg)"><i></i><kbd>2</kbd></span><b>New wins</b><small>2 mana · press again</small></div>
@@ -157,8 +246,9 @@ body[data-face="phone"] .pouchbar .row { gap: 4px; } body[data-face="phone"] .po
 
   <div class="zone newz">
     <div class="newwrap">
-      <div class="card sel" style="--m:url(../../../design-system/orkui/signs/sword.svg)"><i class="sg"></i><span class="kind">New · battle</span><b>Release runs after To main</b><span class="ln">The lich opens the gate once main has taken the goal.</span><span class="id">goal/release-order</span></div>
+      <div class="card sel" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle sig"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/hourglass.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/lich-elder.png" alt=""><b class="t">Release runs after To main</b><span class="ln">The lich opens the gate once main has taken the goal.</span><span class="when">at work 2 d</span><span class="act">Start</span></div>
       <div class="rewrite"><span class="chip" style="--m:url(../../../design-system/orkui/icons/src/pencil.svg)"><i></i><kbd>3</kbd></span><span class="lab">Rewrite</span></div>
+      <span class="must">Must be rewritten</span>
     </div>
   </div>
 
@@ -167,6 +257,15 @@ body[data-face="phone"] .pouchbar .row { gap: 4px; } body[data-face="phone"] .po
     <i class="pouch" aria-hidden="true"></i>
     <div class="row"><span class="tk tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech"></span><span class="tk design"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design"></span><span class="tk product"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product"></span><span class="tk add" title="Ask another…">+</span></div>
   </div>
+</div>
+<div class="veil" aria-hidden="true"></div>
+<div class="lift"><span class="close">Esc · Back</span>
+  <div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">5</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/ladder.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><b class="t">Release is a craft as any</b>
+    <span class="ln">Release is a craft as any other: it has its own party, its race and its gate. <span class="disp">Its gate runs before To main</span>, so the person decides To main with the gate's tests in hand.</span>
+    <span class="sec">What rests on it</span>
+    <ul><li>goal/pennant-colours · goal/release-order · goal/gate-record</li><li>test_gate_before_main · test_release_craft</li></ul>
+    <div class="keeper"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""><span>Kept by Tech's leader</span></div>
+    <span class="when">decided 8 Nov</span></div>
 </div>
 <div class="prop tl" aria-hidden="true"><img src="props/battle-tl.png" alt=""></div>
 <div class="prop tr" aria-hidden="true"><img src="props/battle-tr.png" alt=""></div>
