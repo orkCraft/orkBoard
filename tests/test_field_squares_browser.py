@@ -270,8 +270,9 @@ def test_the_seals_ring_is_whole_while_the_runes_are_offered_three_of_orkuis_own
         pg.wait_for_function("() => [...document.querySelectorAll('.hand .hand-plus .ork-sigil__free')].every((e) => getComputedStyle(e).opacity === '0.75')", timeout=WAIT_MS)      # all lit at three quarters
         assert pg.locator(".hand .hand-plus .ork-sigil__free").count() == 5
         call(pg, "frame/state.js", "openTab", "orkmaster")
-        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
-        assert pg.locator(".hand .hand-plus .ork-sigil__free").count() == 0, "no party, no free runes, and none of the three: the band as before"
+        # spec 149 J.2 (supersedes §187.3's "" with no party): the runes are the project's, the same at every party, so on the Orkmaster's tab (no party addressed) the first party's are read
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
+        assert pg.locator(".hand .hand-plus .ork-sigil__free").count() == 5, "no party addressed: the project's runes and the three of orkUI's, as at a party"
     finally:
         pg.close()
     assert not log, "\n".join(log)

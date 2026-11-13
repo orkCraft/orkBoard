@@ -180,7 +180,7 @@ def test_the_orkmasters_piles_are_the_columns_a_fan_a_deck_and_at_work_standing_
         size = lambda loc: loc.evaluate("(e) => [e.offsetWidth, e.offsetHeight]")  # noqa: E731
         fan = piles.locator(".col-fan .col-card--fan")
         assert fan.count() >= 3 and all(size(b) == [56, 78] for b in fan.all()), "the Orkmaster's hand: a fan of 56 x 78 backs"
-        assert piles.locator(".col-fan").evaluate("(e) => e.offsetWidth") <= 144 and piles.locator(".col-card--fan .ork-sigil.small").count() == fan.count() and fan.first.locator(".ork-elem").count() == 1, "never wider than 144, a rune in each one's middle"
+        assert piles.locator(".col-fan").evaluate("(e) => e.offsetWidth") <= 144 and piles.locator(".col-card--fan .ork-card-back.small").count() == fan.count() and piles.locator(".col-card--fan .ork-sigil").count() == 0 and fan.first.locator(".ork-elem").count() == 1, "never wider than 144, a rune in each one's middle (the ring of runes is the small back's own, orkUI 0.30.0: decisions §254.4-6, no ring drawn over it)"
         assert piles.locator(".col-card--fan.is-reading").count() == 1, "the goal being read lifted"
         deck = piles.locator(".col-card--deck")
         front = deck.first

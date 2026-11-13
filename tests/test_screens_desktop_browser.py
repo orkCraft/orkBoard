@@ -282,7 +282,8 @@ def test_the_files_name_opens_it_over_the_pane_and_back_returns_to_the_map(scree
     card(pg, "home").click()
     pg.locator(".scr-back__file").click()
     pg.locator(".table-over").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".table-title__pt").inner_text().lower() == "screens · src/screens/welcome.tsx"
+    # goal 171 stage H (71631f80, the mat's frame as a playmat): where the file came from is the mat's own title, the party's table, no longer the map's name
+    assert pg.locator(".table-title__pt").inner_text().lower() == "design's table · src/screens/welcome.tsx"
     pg.get_by_role("button", name="Back").first.click()
     pg.locator(".scr-map").wait_for(timeout=WAIT_MS)
     assert pg.locator(".scr-card.is-lit").count() == 1                                                              # the card it came from is lit
