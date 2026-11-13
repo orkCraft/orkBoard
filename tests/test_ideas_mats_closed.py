@@ -89,3 +89,27 @@ def test_the_stage_again_goes_only_on_its_seal_and_reaches_no_runner(host, monke
         with pytest.raises(CommandError, match="Run its stage again cannot be undone: it goes only on its seal"):
             host.command("ideas.gate_fix_stage", {"idea": "goal", "from": origin})
     assert _board(host) == board
+
+
+def test_new_wins_is_one_press_runs_no_model_and_its_reverse_puts_the_decision_back(host, monkeypatch):
+    """Goal "The battle and the gate" I: `ideas.conflict` `replace` from the hand is a one-press kind (`new_wins`); `keep` and `other` are sealed."""
+    from orkboard.realm import spec_sections
+
+    def boom(*a, **k):
+        raise AssertionError("a model was reached")
+    for entry in ENTRIES:
+        if hasattr(host.ideas.keeper, entry):
+            monkeypatch.setattr(host.ideas.keeper, entry, boom)
+    monkeypatch.setattr(harnesses.Harness, "call", boom)
+    sd = host.ideas.state_dir
+    ideas.save_state(sd, "goal", state="decided")
+    spec_sections.save_record(sd, "goal", {"decision": {"title": "T", "confirmed": False, "changes": [], "conflicts": [{"number": 2, "point": "p", "answer": ""}]}})
+    before = spec_sections.record(sd, "goal")
+    args = {"idea": "goal", "number": 2, "choice": "replace", "from": "hand"}
+    assert idea_undo.way(ideas_mats.move_kind("ideas.conflict", args)) == "press"
+    assert [idea_undo.way(ideas_mats.move_kind("ideas.conflict", {**args, "choice": c})) for c in ("keep", "other")] == ["sealed", "sealed"]
+    assert ideas_mats.move_kind("ideas.conflict", {**args, "from": ""}) == ""
+    host.command("ideas.conflict", args)
+    assert spec_sections.record(sd, "goal") != before
+    host.command("ideas.undo", {"idea": "goal"})
+    assert spec_sections.record(sd, "goal")["decision"] == before["decision"]

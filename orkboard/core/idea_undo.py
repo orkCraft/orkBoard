@@ -17,12 +17,13 @@ from pathlib import Path
 from typing import Callable
 
 from orkboard.core import bus
-from orkboard.realm import ideas, lexicon
+from orkboard.realm import idea_ripe, ideas, lexicon, spec_sections
 
 # The hand's moves, a closed table: each kind is one press with its reverse, or sealed (a move that cannot be undone). No kind is neither.
 ONE_PRESS = {"drop": "put the page and its state back",
              "hold": "put the state back",
              "answer": "put the page and its state back",
+             "new_wins": "put the decision back and forget the wait it began",      # a battle's New wins (`ideas.conflict` `replace`, decisions §303.4): only way.json's `decision` is kept, never the whole file
              "fix_goal": "remove the Fix goal it laid"}          # Fix it on a goal done whose way to main went red (decisions §303.5): the record keeps the goal laid, none before
 SEALED = {"merge_main": "Merge into main", "send_branch": "Send to a branch", "ship_release": "Ship a release", "paid_pass": "a paid pass", "start_work": "Start the work",
           "fix_stage": lexicon.term("fix_stage")}          # Fix it on a goal unmerged on its branch whose way to dev went red: one task added, the goal at work (core/idea_fix_stage.py)
@@ -83,6 +84,23 @@ def keep(state_dir: Path, slug: str, kind: str, before: dict, after: dict, publi
     return True
 
 
+def decision_of(state_dir: Path, slug: str) -> object:
+    """The goal's decision as way.json keeps it (None with none): the one thing New wins changes and its Undo compares. The rest of the file (the wait's tick rewrites it) is not."""
+    return spec_sections.record(state_dir, slug).get("decision")
+
+
+def keep_decision(state_dir: Path, slug: str, before: object, after: object, publish: Callable[..., None] | None = None, origin: str = "") -> bool:
+    """The Undo of New wins just played: the decision before and after, nothing else of way.json. False when the decision did not change."""
+    if before == after:
+        return False
+    row = {"kind": "new_wins", "before": {"decision": before}, "after": {"decision": after}}
+    with ideas.LOCK:
+        ideas._write(record_path(state_dir, slug), json.dumps(row, ensure_ascii=False, indent=1) + "\n")
+    if publish is not None:
+        publish(bus.MOVE_PLAYED, idea=slug, kind="new_wins", origin=origin)
+    return True
+
+
 def read(state_dir: Path, slug: str, party: bool = False) -> dict | None:
     try:
         row = json.loads(record_path(state_dir, slug, party).read_text(encoding="utf-8"))
@@ -100,6 +118,17 @@ def undo(root: Path, state_dir: Path, slug: str, publish: Callable[..., None] | 
         row = read(state_dir, slug, party)
         if row is None or (kind and row["kind"] != kind):
             raise ValueError(NOTHING)
+        if row["kind"] == "new_wins":
+            if decision_of(state_dir, slug) != row["after"].get("decision"):
+                raise ValueError(CHANGED_SINCE)
+            way = spec_sections.record(state_dir, slug)
+            way["decision"] = row["before"].get("decision")                  # the decision as it was; the rest of the file stays as the wait's tick has it
+            spec_sections.save_record(state_dir, slug, way)
+            idea_ripe.drop(state_dir, slug)                                   # the wait New wins began is forgotten
+            record_path(state_dir, slug, party).unlink(missing_ok=True)
+            if publish is not None:
+                publish(bus.MOVE_UNDONE, idea=slug, kind="new_wins")
+            return {"kind": "new_wins"}
         whose = row.get("laid") or slug                          # the goal whose page and state the move changed: `slug`, or the one it laid
         now, files = snapshot(root, state_dir, whose, party), _files(root, state_dir, whose, party)
         names = [n for n in files if row["before"].get(n) != row["after"].get(n)]
