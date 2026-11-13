@@ -142,7 +142,6 @@ TERMS: tuple[Term, ...] = (
     _t("proposal", "proposal", "proposals"),                       # a goal the keeper proposes at night, for the morning (spec 35 §8)
     *WINDOW,                                                         # the window's words (realm/lexicon_table.py)
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
-    _t("team_party", "Team"),                                      # a party that holds the person's Operations, put in one project of their choosing; only one across all of them (spec 92 §3). Not `team`, a party's agents
     _t("run", "Run"),                                              # a project's running when it runs: an app, a site, a service, code, data; a stage party by the project's kind, with recurring goals (spec 92 §1)
     _t("upkeep", "Upkeep"),                                        # a project's running when it is kept true: a wiki, a design, texts (spec 92 §1)
     _t("liveops", "LiveOps"),                                      # a game's running, after launch: events, numbers, small fixes (spec 91 §7); Run and Upkeep are the other kinds'
