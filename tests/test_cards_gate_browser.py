@@ -123,6 +123,20 @@ def test_a_red_gate_lies_upright_every_card_inside_its_field_with_the_decision_i
         spy.close()
 
 
+SIGN_HIT = """() => [...document.querySelectorAll('[data-spread=gate] .gt-guards .sp-card')].map((c) => { const s = c.querySelector('.cards-c--tr'), r = s.getBoundingClientRect(),
+  hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return [c.dataset.cardkind, s.contains(hit), !!r.width]; })"""
+
+
+@pytest.mark.parametrize("size", SIZES + [(390, 844)])
+def test_the_no_token_never_hides_the_kind_sign_of_a_decision_or_a_part(gui, size):
+    server, _ = gui
+    lay(server, "sign-goal", red=True)
+    pg, _seen = open_gate(gui, "sign-goal", size)
+    hits = pg.evaluate(SIGN_HIT)
+    assert {k for k, _, _ in hits} == {"decision", "part"} and all(ok and w for _, ok, w in hits), hits
+    pg.close()
+
+
 @pytest.mark.parametrize("size", SIZES)
 def test_with_every_check_agreeing_the_pile_lies_alone_and_the_seal_is_lit(gui, size):
     server, _ = gui

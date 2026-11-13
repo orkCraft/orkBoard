@@ -109,7 +109,7 @@ export function Battle({ slug, opened }) {
         <p class="bt-total ork-plate">No total</p>
         ${tok && html`<${Slip} leader=${tok.leader} checks=${tok.checks} />`}
       </div>
-      <${Zone} label="Yours" class="bt-yours"><${SpCard} party=${n.goal} n=${faceOf(n)} name=${title} size="md" label=${`${title}, the new card`} /></${Zone}>
+      <${Zone} label="Yours" class="bt-yours"><${SpCard} party=${n.goal} n=${faceOf(n)} name=${title} size="md" stop=${true} label=${`${title}, the new card`} /></${Zone}>
     </div>
   </${SpreadFrame}>`;
 }

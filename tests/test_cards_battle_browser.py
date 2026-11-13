@@ -280,9 +280,9 @@ def test_tab_goes_through_the_old_cards_the_line_yours_the_hands_ways_and_the_se
                 break
         names = [s[0] for s in seen]
         assert all(s[1] for s in seen), seen
-        for want in ("§212", "§213", "line", "new", "old", "words", "reword", "close"):
+        for want in ("§212", "§213", "line", "yours", "new", "old", "words", "reword", "close"):
             assert want in names, names
-        assert names.index("§212") < names.index("§213") < names.index("line") < names.index("new") < names.index("old") < names.index("words") < names.index("reword") < names.index("close")
+        assert names.index("§212") < names.index("§213") < names.index("line") < names.index("yours") < names.index("new") < names.index("old") < names.index("words") < names.index("reword") < names.index("close")
     finally:
         spy.close()
         pg.close()
