@@ -7870,3 +7870,29 @@ the face. The aim: what is new is added fast. So:
    VS Code frame is `tests/test_extension.py` and `vscode`'s own tests.
 
 The owner's call.
+
+## 309. An ordinary test checks what a person or another module sees through a public entry; one to three tests a path, its branches one parametrized test; no test of the inside (13 November 2026, the owner)
+
+Changes: the habit, in the ordinary tests, of one test for each small branch, message and private helper of a feature. Kept: 308 (the
+browser tests, which this carries to the ordinary ones), `tests/test_architecture.py`, `tests/test_board_alone.py`,
+`tests/test_updates.py`, `tests/test_gui_wording.py` (the exact visible words `CLAUDE.md` asks for), `tests/test_design_system.py`,
+`tests/test_gate_*.py`, and the decisions' and specs' sections a test still names (`realm/decision_refs.py`).
+
+Why: the person, 13 November 2026: the ordinary tests were 313 files, 5336 tests and 107k lines (five minutes), most of them ten tests
+to a small feature, so a rebuild of a feature meant mending dozens of tests that said nothing the person could see. The aim as in
+308: what is new is added fast. So:
+1. **A test checks what a person or another module sees through a public entry**: a command, an event on the bus, a file of the
+   Board, a server's answer, a function the other modules call.
+2. **One to three tests a path.** The branches of one path are one parametrized test, not ten functions.
+3. **No test of the inside**: the names of private functions, the order of calls, the exact words of an inner message, the content of
+   a constant. The exact visible words stay where `CLAUDE.md` asks for them (`tests/test_gui_wording.py`).
+4. **A test that duplicates another goes**, and **a test that depends on time, threads or order and is red at times is mended or
+   removed** (as 308.4).
+5. **A test's name in a decision or spec holds that section** (`realm/decision_refs.py`): when a test goes, the section it
+   alone held is checked; one wholly about what was removed leaves the log (306), any other stays held by another test or by the
+   section's own words.
+6. **The paths held**, as in 308.5: the Board (goals, parties, phases), the gate and To main, Talk and the decisions, the settings,
+   the phone's pairing, the updates, the architecture. A cut is checked by the lines of code it leaves unrun: a line of a path of the
+   person's that only the removed test ran gets one test back.
+
+The owner's call.

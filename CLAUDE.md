@@ -59,6 +59,9 @@ package (`orkcraft`).
 - **The VS Code extension** (`vscode/`) is a frame, not a second face: it starts `orkboard --serve <folder>`
   (`gui/extension.py`) and shows the page in an editor tab. It draws nothing of the Board itself; a change to what the
   Board shows is made in `gui/`. Its tests: `cd vscode && npm test`.
+- **An ordinary test checks a path through a public entry** (decisions §309): one to three tests a path, its branches one
+  parametrized test; none for the inside (private names, order of calls, inner messages, constants); a duplicate or an unstable one is
+  removed. The critical tests and `tests/test_gui_wording.py` are kept.
 - **Browser tests are a person's paths** (decisions §308): what they pressed and what changed on the Board, at one width; no
   pixel, size, colour, animation timing or markup order; pure logic of the page in node (`tests/test_*_js.py`); a test that is
   red always is mended or removed.
