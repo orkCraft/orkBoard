@@ -228,6 +228,8 @@ def test_old_wins_lights_the_seal_with_its_cost_said_before_anything_is_sent_and
     pg, spy = battle_open(gui, "mat", lefts=(0,))
     try:
         pg.locator(".frame-hand .mathand [data-way=old]").click()
+        picked = pg.locator(".frame-hand .mathand [data-way=old]").evaluate("(e) => { const s = getComputedStyle(e); return [s.outlineStyle, s.outlineWidth]; }")
+        assert picked == ["solid", "2px"], picked                                                   # the picked way is marked on its own card (Design's note on P2)
         seal = pg.locator("[data-spread=battle] .mf-seal")
         assert seal.get_attribute("aria-disabled") is None and "Old wins" in seal.inner_text() and "A paid pass" in seal.inner_text() and "$" in seal.inner_text()
         assert not spy.log                                                                          # nothing is sent before the seal

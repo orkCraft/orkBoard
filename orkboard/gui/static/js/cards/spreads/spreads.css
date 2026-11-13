@@ -200,3 +200,6 @@ button.sp-back { cursor: pointer; } button.sp-back:focus-visible { outline: 2px 
   .sp-cards .bt-way.ork-card { width: auto; height: auto; padding: 8px 12px; } .bt-way small { display: none; }
   .bt-against:has(> .bt-slip) { flex-wrap: wrap; } .bt-slip { flex: 0 0 100%; max-width: none; max-height: none; overflow: visible; box-sizing: border-box; }      /* the slip lies under the old cards at the zone's width, its list whole */
 }
+/* The picked way is marked on its own card, as the seal says it (goal «The battle and the gate», Design's note on P2): its border ink and the action's
+   ring inside it, so no scrolling row clips it; written after the cards' own rules so their border does not win. */
+.mathand .bt-way.ork-card[aria-pressed="true"], .mathand .gt-way.ork-card[aria-pressed="true"], .sp-cards .bt-way.ork-card[aria-pressed="true"], .sp-cards .gt-way.ork-card[aria-pressed="true"] { border-color: var(--ork-ink); outline: 2px solid var(--ork-action); outline-offset: -5px; }
