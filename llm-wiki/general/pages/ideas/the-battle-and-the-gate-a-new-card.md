@@ -8,7 +8,6 @@ priority: normal
 short: The battle and the gate
 phase: talk
 route: product, design, tech
-asks: person
 by: claude-code
 schema: 3
 ---
@@ -40,10 +39,15 @@ The first goal taken after 171 (the person, 12 November 2026, on the gate still 
 
 ## Open questions
 - What lays a battle on this Board? (**The decision's conflicts** / Conflicts and the Orkmaster's route / The gate now, the battle later) — only keeper.decide's call names a conflict (§254.6), and no Talk on this Board has said no: a battle from other words would be invented · The decision's conflicts: The hand's conflict card becomes a battle; skill-run goals lay none · Conflicts and the Orkmaster's route: Routing names a goal's decisions too; heavier, it takes goal 166 in · The gate now, the battle later: Gate and H7's from land now; the battle waits for a source here
+  - Answered: The decision's conflicts: the hand's conflict card becomes a battle; skill-run goals lay none (the person, 2026-11-13)
 - What prices an old card's undoing? (**What rests on it, read by code** / An empty zone, who fills it / The Orkmaster prices each) — no host prices a card yet (171 left every cost empty); the goals and tests naming §N are what a rewrite breaks, free to read (§301.2) · What rests on it, read by code: The goals, decisions and tests naming its §; no mana shown · An empty zone, who fills it: The zone says the Orkmaster prices it; the battle shows no cost · The Orkmaster prices each: A mana price on each old card; a paid pass a battle, its cost said first
+  - Answered: What rests on it, read by code: the goals, decisions and tests naming its §; no mana shown (the person, 2026-11-13)
 - What lies above the gate's line? (**What its tests name** / A map Tech keeps / The checks by name, as today) — 298 of 523 test files already name the decisions they guard (decisions §N), read free by code (§301.2); a check stays the decision it guards (§300.4) · What its tests name: Failing tests' decisions face up; a test naming none lies as its file · A map Tech keeps: Exact; one more file each new test must keep up · The checks by name, as today: No reading; cards that stand for no decision, against §300.4
+  - Answered: What its tests name: failing tests' decisions face up; a test naming none lies as its file (the person, 2026-11-13)
 - Which ways does a battle deal? (**The host's three, one face** / §299.6's four, as drawn / Both faces kept) — ideas.conflict answers replace, keep and other; one choice on two faces with different ways is learnt twice (Nielsen 4) · The host's three, one face: The conflict card opens the battle: New wins, Old wins, your words · §299.6's four, as drawn: Merge and Not a battle join the host; Merge a leaders' paid pass · Both faces kept: §254.6's pair stays as it is; the battle mat lays four beside it
+  - Answered: The host's three, one face: the conflict card opens the battle: New wins, Old wins, your words (the person, 2026-11-13)
 - What does the gate's Fix it do? (**By where it is** / Its stage again, always / A Fix goal, always) — a red on the way to dev leaves the goal unmerged on goal/<slug>; on the way to main it is done, and the host refuses a done goal's change: «make a new goal of it» · By where it is: Stage again before dev; a Fix goal after, as the host says of a done goal · Its stage again, always: One card always; a done goal reopened, against the host's «make a new goal» · A Fix goal, always: Findings' path as built; even a goal not in dev gets a second card
+  - Answered: By where it is: its stage again before dev; a Fix goal after, as the host says of a done goal (the person, 2026-11-13)
 
 ## Decisions
 

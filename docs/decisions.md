@@ -8575,3 +8575,29 @@ what can be played there now, as in a collectible card game. So:
 6. **On a phone** the hand is the foot of the mat's screen, a row that scrolls; a zone pressed narrows it.
 
 The owner's call.
+
+## 303. A battle is laid from the decision's conflicts, its three ways the host's on one face; what an old card's undoing costs is what rests on it; above the gate's line the decisions its tests name; a red gate's Fix it by where the goal is (13 November 2026, the owner)
+
+Changes: 299.6 (a battle's ways: the host's three, not four; an old card's cost to undo: what rests on it, read by code, no mana),
+254.6 (the conflict's lifted pair: the battle is its one face), 300.8 (the gate's checks: the decisions its tests name). Kept: 299.6's
+layout (upright; the cards it goes against above, the line across the middle, the new card below over the hand), 300.8 (the gate a
+battle nobody disputes), 301 (no mock data), 302.
+
+Why: the goal *The battle and the gate* (split from goal 171), its Talk (Product, Design, Tech: doubt) and the person's answers,
+13 November 2026: «1а 2а 3а 4а 5а». What lays a battle, what prices an old card and what a check guards must be the Board's own
+data, read by the host (§301.1); no Talk on this Board has said no, no host prices a card, and 298 of 523 test files already name the
+decisions they guard. So:
+1. **A battle is laid from the decision's conflicts**: the conflicts `keeper.decide` names (§254.6) are the cards a battle goes
+   against; the hand's conflict card becomes the battle's card, pressed it opens the battle. A goal run by the skills, which makes no
+   such call, lays none.
+2. **An old card's cost to undo is what rests on it**, read by code and free (§301.2): the goals, the decisions and the tests that name
+   its §, counted under it; no mana is shown.
+3. **Above the gate's line lie the decisions its tests name**: a failing test's `decisions §N` face up, each the gate's token on it (no);
+   a test naming none lies as its file.
+4. **A battle deals the host's three ways on one face** (`ideas.conflict`): *New wins* (replace), *Old wins* (keep), *Your words*
+   (other). *Merge* and *Not a battle* of §299.6 are not dealt. A way that begins a leader's pass is sealed with its cost said
+   (§302.4); one that does not is one press with its Undo.
+5. **A red gate's Fix it is by where the goal is**: on the way to dev (the goal on its own branch, unmerged) its stage runs again; on
+   the way to main (the goal done) a Fix goal is made, as the host says of a done goal («make a new goal of it»).
+
+The owner's call.
