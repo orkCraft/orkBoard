@@ -1,6 +1,6 @@
-"""Spec 120 D (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §4.3–§4.5, §7) on the host: `ideas.hearing`, `ideas.throw` and `ideas.ripe_hold`; one row a goal; each throw doing what
+"""Spec 120 D (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §4.3–§4.5, §7) on the host: `ideas.hearing`, `ideas.throw` and `ideas.unthrow`; one row a goal; each throw doing what
 it says (go and the person's words confirm the decision once it is worded, smaller words the goal, later waits on a goal, drop drops it); a fork thrown by its side; a late throw
-refused in plain words; the seam of the wait. The model call is stubbed (`keeper.call`) as Talk's tests do."""
+refused in plain words. The model call is stubbed (`keeper.call`) as Talk's tests do."""
 from __future__ import annotations
 
 import time
@@ -12,7 +12,7 @@ from orkboard.realm import event_log, idea_questions, ideas, spec_sections
 from tests.test_idea_decide import git  # noqa: F401
 from tests.test_idea_talk import DECIDED, TECH_NO, _noes, _objections, _row, _state, _talk, _until_state, host, model, parties  # noqa: F401  (the fixtures)
 
-COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.unthrow", "ideas.ripe_hold", "ideas.ripe_back"}
+COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.unthrow"}
 
 
 def _throw(host, slug, **args):
@@ -263,23 +263,6 @@ def test_a_fork_thrown_again_after_it_was_answered_is_refused(host, parties, mod
         host.command("ideas.throw", {"idea": slug, "moment": "fork", "dir": "right"})
     with pytest.raises(CommandError, match="This was decided already"):
         host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})                              # a fork's goal has no Talk to throw
-
-
-# -- the wait's seam ----------------------------------------------------------------------------------------------------------------------------
-
-def test_hold_holds_a_running_wait_and_says_so_plainly_when_none_runs(host, parties, model):
-    from orkboard.realm import idea_ripe
-    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    with pytest.raises(CommandError, match="Nothing waits to start by itself"):
-        host.command("ideas.ripe_hold", {"idea": slug})
-    assert idea_ripe.begin(host.ideas.state_dir, slug, "high", "low") is not None
-    assert host.command("ideas.ripe_hold", {"idea": slug}) == {"ok": True}
-    assert idea_ripe.of(host.ideas.state_dir, slug)["held"] is True
-    with pytest.raises(CommandError, match="Nothing waits to start by itself"):
-        host.command("ideas.ripe_hold", {"idea": slug})                                                                       # held already
-    with pytest.raises(CommandError, match="That goal is gone"):
-        host.command("ideas.ripe_hold", {"idea": "nobody"})
-
 
 
 # -- Undo of a throw (spec 120 §6.7, `ideas.unthrow`) -----------------------------------------------------------------------------------------------

@@ -13,7 +13,7 @@
 **Talk by itself** (spec 120 §2.1, decisions §198.2): `ideas.add` of a routed goal calls `route_auto`, which sends it to Talk as **Talk** would when nothing stops it (`route_stop`: the keeper may run, the
 Claude window is not spent, the week's limits are not low, nothing is paid, and it is not the short way); else its route card is dealt as before. **While the project is stopped** (spec 139 B.2, gui/ideas_halt.py) `route_auto`, `route_tick` (its queue too) and `ripe_tick` start nothing.
 **The wait of an agreed goal** (§3.5): `ripe_tick`
-counts it down only while a face is open and has the leaders confirm the decision at its end; `ripe_hold_goal` is **Hold** (D's `ideas.ripe_hold` calls it).
+counts it down only while a face is open and has the leaders confirm the decision at its end; `ripe_hold_goal` is **Hold** (a window spent, a stop or a paid tool calls it).
 
 **The seams.** Until Talk (part D) and the sections (part E) are built, `ideas.talk` and `ideas.route_start` hand the goal to today's draft, so it still moves:
 `getattr(self.keeper, "talk" | "sections")` is called when the keeper has it, with the state already set (`talk` / `sections`); the route is in
@@ -387,8 +387,8 @@ class RouteMixin:
         return self._state(slug)["state"] if ideas.idea_page(self.root(False), slug) is not None else ""
 
     def ripe_hold_goal(self, slug: str, by: str = "person", why: str = "") -> float | None:
-        """**Hold**: the wait of the goal stopped (`idea_ripe.hold`), the event `ripe_held`, the faces told. The time that was left; None when there was no wait to hold. `ideas.ripe_hold`
-        calls it for the person (`by` "person"); a window spent, a stop or a paid tool call it with the reason."""
+        """**Hold**: the wait of the goal stopped (`idea_ripe.hold`), the event `ripe_held`, the faces told. The time that was left; None when there was no wait to hold.
+        A window spent, a stop or a paid tool call it with the reason."""
         left = idea_ripe.hold(self.state_dir, slug, by, why)
         if left is not None:
             self._ev(event_log.RIPE_HELD, idea=slug, left_s=left, why=by if not why else why)
