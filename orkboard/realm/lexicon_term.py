@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Term:
-    key: str        # the concept: a building type id, a resource, a screen
+    key: str        # the concept: what it is (`track`, `phase.talk`), or the code's id of an ork (`orc.fields`)
     word: str       # its word (singular)
     many: str = ""  # its plural, when it has one
-    was: str = ""   # the Camp word the code wrote for it before, when that differs ("" when the same)
+    was: str = ""   # the spelling it had before, when that differs ("" when the same)
     was_many: str = ""
 
 

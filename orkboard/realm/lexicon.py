@@ -1,19 +1,17 @@
-"""The product's words: one word for each concept (CLAUDE.md, Wording).
+"""Orkboard's words: one word for each concept (CLAUDE.md, Wording).
 
-    term("watchtower")             == "External listeners"
+    term("track")                  == "party"
     term("ork", many=True)         == "orks"
-    words("Spawn Ork in the Barracks") == "Add ork in the Agent pool"
+    words("3 ideas on the map")    == "3 goals on the table"
 
-Camp and Office were two vocabularies once; now there is one, and they are two looks (`look.camp`,
-`look.office`) that change only how the town is drawn. A concept keeps its Camp word when it
-says *who* (the orks, the Workchief, the town, its buildings and roads, renown) and takes a plain word
-when it says *what a thing does, what it costs or what it risks* (a building's function, the spend,
-autonomy, a file). `TERMS` is the glossary (docs/reference.md shows it as a table). A concept that
-took a plain word keeps the Camp spelling it had in `was`: older code and older towns still write it,
-and `words` says such a label in today's word. It is meant for the interface (titles, labels, hints,
-toasts), not for what people or agents wrote.
+An ork keeps its orkish name (the Orkmaster, the Taskmaster, a Grunt); everything else takes the word
+for what it does, what it costs or what it risks (a party, a goal, the spend, Stop all). `TERMS` is the
+glossary: a new concept gets its one word there, and new code writes that word. A concept whose word
+changed keeps the spelling it had in `was` (the code's `track` is a party, its `idea` a goal, an old
+*deck* is *in line*), and `words` says such a label in today's word. It is meant for the interface
+(titles, labels, hints, toasts), not for what people or agents wrote.
 
-Pure module, no Textual.
+Pure module.
 """
 from __future__ import annotations
 
@@ -25,119 +23,44 @@ from orkboard.realm.lexicon_term import Term, _t     # noqa: F401  (the glossary
 
 
 
-# The glossary. Building types are keyed by their catalog id (realm/catalog.py), their resident
-# orks by `orc.<type id>`; the rest by what they are.
+# The glossary, keyed by what each concept is; an ork keeps the key the code gave it (`orc.fields` the
+# Taskmaster, `orc.barracks` a Grunt).
 TERMS: tuple[Term, ...] = (
-    # -- who: the world keeps the Camp's words -------------------------------------------------------
+    # -- who: the orks, and the words of orkestration ------------------------------------------------
     _t("ork", "ork", "orks"),
-    _t("orkspace", "orkspace", "orkspaces"),
     _t("orkestration", "orkestration"),
     _t("orkestrate", "orkestrate"),
-    _t("town", "town", "towns"),
-    _t("building", "building", "buildings"),
-    _t("landscape", "landscape"),                                  # the things in the land that need no ork (docs/design/landscape.md)
-    _t("hut", "hut", "huts"),
-    _t("road", "road", "roads"),
-    _t("cart", "cart", "carts"),
-    _t("biome", "biome", "biomes"),
-    _t("terrain", "terrain"),
-    _t("clan", "clan"),
-    _t("steward", "steward", "stewards"),
     _t("keeper", "steward", "stewards", "keeper", "keepers"),     # a building's steward, asked in plain words
-    _t("war_map", "War Map"),
-    _t("orc.town_hall", "Workchief", "", "Warchief"),             # the hall's steward: the chat behind Ask me anything
-    _t("town_hall", "Town Hall"),
-    _t("road_planner", "Road planner"),                            # lays a road from words (realm/road_planner.py)
-    _t("road_rule", "Road rule", "Road rules"),                    # what a building's steward does with a road's carts (a `steward` handler)
-    _t("building_retro", "Building retro"),
-    _t("night_round", "Night round"),                              # the boards' stewards look over the work at night (realm/nightround.py)
-    _t("script_first", "Script-first"),                            # its work is code; its ork wakes on an error or a 👎
-    _t("yard", "yard", "yards"),                                   # a script-first building: no ork lives in it (docs/design/yards.md)
-    _t("visiting", "visiting"),                                    # a yard's ork while it is there: woken, asked or asking
-    _t("ork_work", "Ork work"),                                    # the Task Fields' orks' kanban
-    # -- growth (docs/design/growth.md) ---------------------------------------------------------------
-    _t("renown", "Renown"),                                        # a building's level I–III (realm/growth.py)
-    _t("mascot", "mascot", "mascots"),                             # the operator's, from the onboarding
-    _t("deed", "deed", "deeds"),                                   # what the camp learned to do
-    _t("item", "item", "items"),                                   # decor on the camp's grass (growth.items)
-    # -- you: the portrait's menu (docs/design/portrait.md) -------------------------------------------
-    _t("portrait", "portrait"),                                    # the person in the HUD's left corner
-    _t("home", "Home"),                                            # the person's house by the Review gate (v3 §4.13)
-    _t("look", "Look", "Looks"),                                   # how the town is drawn: never its words
-    _t("look.camp", "Camp"),                                       # the default look: sprites, the mascot, flames
-    _t("look.office", "Office"),                                   # the calm look: monochrome, its only pictures the races' heads
-    _t("dnd", "Do not disturb"),                                   # sounds, pushes, the Workchief's news wait
-    _t("warchief_council", "The Workchief's council"),             # the Town Hall's door in the home's menu
+    _t("dnd", "Do not disturb"),                                   # pushes to a paired phone wait, until it is turned off or its time ends (settings `dnd_until`, gui/phone_push.py)
     # -- what a thing does, costs or risks: plain words ---------------------------------------------
-    _t("ghost", "preview"),                                        # Build's placing outline; "ghost" is no old spelling
-                                                                   # any more: the ghosts are a kin (Wandering Ghost)
-    _t("loot", "output", "", "loot"),
-    _t("cart_type", "content type", "content types"),            # message, doc, ticket… (realm/content.py)
-    _t("fog_of_war", "new orkspace", "", "fog of war"),            # the War Map's foot: + Orkspace
-    _t("rhythm", "rhythm", "rhythms"),                             # how often a ready town works: every day, week, month
-    # resources (HUD)
+    # today's spend under the AI tools' limits (the snapshot's `hud.gold`, `hud.lumber`: table/over.js)
     _t("gold", "spend", "", "gold"),
     _t("lumber", "context", "", "lumber"),
-    _t("meat", "ork slots", "", "meat"),
-    _t("food", "ork slots", "", "food"),
-    _t("treasury", "Budget", "", "Treasury"),
-    _t("logins", "Login", "Logins"),
     _t("maker", "maker", "makers"),
     _t("picture_maker", "Picture maker"),
     _t("sound_maker", "Sound maker"),
     _t("its_makers", "Its makers"),
     _t("set_a_cap", "Set a cap"),
     _t("ai_tool", "AI tool", "AI tools"),
-    # a model's tier says how seasoned the mind is (realm/tiers.py; docs/design/warchief-line-and-cards.md §6)
+    # a model's tier says how seasoned the mind is (realm/tiers.py), drawn as the gear on a head
     _t("tier.laborer", "Novice", "Novices", "Laborer", "Laborers"),
     _t("tier.warrior", "Seasoned", "", "Warrior", "Warriors"),
     _t("tier.elder", "Veteran", "Veterans", "Elder"),                          # a CLI an ork thinks with: Claude Code, Codex… (realm/harnesses.py)
     _t("tool_error", "Tool error", "Tool errors"),                 # an AI tool failed: Switch, Retry, Details (realm/tool_errors.py)
     _t("sign_in", "Sign-in", "Sign-ins"),                          # a tool's own way to sign in to its account (realm/sign_in.py; Sign in the button)
-    _t("main_tool", "Main tool", "Main tools"),                    # the AI tool decisions run on (realm/harnesses.py)                               # tokens kept on this machine (realm/logins.py)
+    _t("main_tool", "Main tool", "Main tools"),                    # the AI tool decisions run on (realm/harnesses.py)
     # screens and actions
     _t("war_horn", "Stop all", "", "War Horn"),
-    _t("war_tent", "Terminals", "", "War Tent"),
-    _t("orders", "Answers", "", "Orders"),
-    _t("war_raven", "Phone", "Phones", "War Raven", "War Ravens"),   # a phone paired with the town (docs/design/mobile.md)
+    _t("war_raven", "Phone", "Phones", "War Raven", "War Ravens"),   # a phone paired with the computer (gui/pairing.py; Settings → Phones)
     _t("place", "place", "places"),                                # one at the hand's right, each opening a table: the die, the backpack, the history book (decisions §145)
     _t("update", "update", "updates"),                             # a newer Orkboard (core/updates.py, docs/updates.md)
-    _t("critical_update", "critical update", "critical updates"),  # …that installs by itself when the town opens
+    _t("critical_update", "critical update", "critical updates"),  # …that installs by itself when Orkboard opens
     _t("major_update", "major update", "major updates"),           # …that starts a later line (0.1 → 0.2), offered louder
-    _t("standing_orders", "Instructions", "", "Standing orders"),   # what an ork is told to do
-    _t("awaiting_orders", "Awaiting an answer", "", "Awaiting Orders"),
-    _t("garrison", "Orks", "", "Garrison"),
-    _t("spawn_ork", "Add ork", "", "Spawn Ork"),
-    _t("recruit", "Add ork", "", "Recruit"),
-    _t("recruiter", "Ork setup", "", "Recruiter"),
-    _t("raise", "Set up", "", "Raise"),
-    _t("raising", "Setting up the town", "", "Raising the town"),
-    _t("town_scroll", "Town file", "Town files", "Town Scroll", "Town Scrolls"),
-    _t("project", "Project", "Projects"),                           # the folder an orkspace works in (docs/design/projects.md)
-    _t("account", "Account", "Accounts"),                           # a sign-in of the person's own (docs/design/google-account.md)
-    _t("charter", "charter", "charters"),                           # the town's real goal, after the tutorial (spec 03)
-    _t("town_builder", "Town planner", "", "Town Builder"),
-    _t("town_retro", "Weekly retro", "", "Town retro"),
-    _t("retro_freedom", "Autonomy", "", "Freedom"),                 # how freely a steward applies its retro's changes
-    _t("freedom.chains", "Propose only", "", "In chains"),
-    _t("freedom.clock", "Apply if unanswered", "", "On the clock"),
-    _t("freedom.free", "Apply at once", "", "Unchained"),
-    _t("chronicles", "History", "", "Chronicles"),
-    # the night's council of orks (realm/elders.py, realm/fastpath.py ROLES): orks, so their Camp name, whatever the look
-    _t("elders", "Elders", "Elders"),                               # never "Elder" alone: that was the heaviest tier
-    _t("builders", "Building designer", "", "Mason & Artisan"),
-    _t("orc.farseer", "Farseer", "Farseers"),     # the Elders' product manager: reads a day with the Mechanic
-    # the Town Hall's own orks
-    _t("orc.mason", "Mason"),
-    _t("orc.artisan", "Artisan"),
-    _t("orc.warder", "Warder"),
-    _t("orc.pathfinder", "Pathfinder"),
-    _t("orc.treasurer", "Treasurer"),
-    _t("council_word", "Review board", "", "Council"),
-    # the Task Fields' other two parts (one board: the orks' kanban, the person's checklist, the notes)
+    _t("project", "Project", "Projects"),                           # the folder Orkboard opens, with its Board (gui/board_projects.py)
+    # a to-do, a party, the Target and an agent
     _t("chore", "to-do", "to-dos", "chore", "chores"),             # a to-do of the person's own
     _t("track", "party", "parties", "track", "tracks"),            # a team you picked and the goals dealt to it, in order (decisions §63; the code's track, goal)
-    _t("steward_goal", "Target"),                                  # the Steward's setting: what the retros improve it towards (spec 32); "Goal" is today's word for a goal
+    _t("steward_goal", "Target"),                                  # the Board's one setting, Thrift, Balance or Quality, and a party's size's (spec 35 §11.1, spec 75 §5.5; board/target.js); "Goal" is today's word for a goal
     _t("agent", "agent", "agents"),                                # a role: a model, an instruction, a limit (realm/roles.py, spec 34)
     # an agent's craft, drawn as the head of its race in orkUI (realm/roles.py CRAFTS, RACES; decisions §53): the race says
     # what the agent does, the gear on its head its tier (a novice bare, a seasoned in iron, a veteran hooded)
@@ -151,7 +74,7 @@ TERMS: tuple[Term, ...] = (
     _t("party_proposal", "party proposal", "party proposals"),      # the night's proposal to take a checker out of a party (spec 43 §4)
     _t("own_party", "your party", "your parties"),                  # a party the person saved from one of theirs, kept in their own folder and picked in any project (spec 43 §6)
     _t("party_price", "This party"),                                # about what a goal costs with a party, before it starts (spec 43 §3)
-    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `finding` is the Mine's, `quality_finding` the quality card's)
+    _t("check_finding", "finding", "findings"),                    # one thing a check found: where, what goes wrong, fixed or left (spec 43 §0; `quality_finding` is the quality card's)
     _t("tag", "tag", "tags"),                                      # a task's kind of work: who of the team does it (roles.TASK_KINDS)
     _t("craft.engineering", "Engineering"),                        # an ork: the Taskmaster, the Grunts, a role of code
     _t("craft.design", "Design"),                                  # an elf
@@ -174,7 +97,7 @@ TERMS: tuple[Term, ...] = (
     _t("segment", "segment", "segments"),                          # whom a goal is for, a product manager's lens
     _t("task_kind", "task type", "task types"),                    # code · tests · docs · text for people · research
     _t("ask", "Ask"),                                              # the line on the open tab and its button: a quick question about the project, answered once, never a card (spec 106)
-    _t("board_map", "Map"),                                        # a project's parties, goals and tasks on one screen (spec 39; not the camp's War Map)
+    _t("board_map", "Map"),                                        # a project's parties, goals and tasks on one screen (spec 39)
     _t("stage", "stage", "stages"),                                # a party's step a goal goes through, one a band; its leader words them (Concept, Build, Playtest for a Game designer; Planning, Implementation, Checking by default; spec 48, spec 59 §3)
     _t("wave", "wave", "waves"),                                   # a task's depth in its plan by `after`: a column of the Map's goal (spec 48)
     _t("gate", "gate", "gates"),                                   # the one press that merges dev into main (decisions §49.5, spec 49 §2.1)
@@ -217,7 +140,6 @@ TERMS: tuple[Term, ...] = (
     _t("recommended_answer", "recommended answer", "recommended answers"),   # the choice the Taskmaster picks for its question (spec 41 §9)
     _t("idea", "goal", "goals", "idea", "ideas"),                 # a goal: a page with its spec and plan, done in dev, its flag raised in main (spec 29, 50; the code's idea)
     _t("proposal", "proposal", "proposals"),                       # a goal the keeper proposes at night, for the morning (spec 35 §8)
-    _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
     *WINDOW,                                                         # the window's words (realm/lexicon_table.py)
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
     _t("team_party", "Team"),                                      # a party that holds the person's Operations, put in one project of their choosing; only one across all of them (spec 92 §3). Not `team`, a party's agents
@@ -225,121 +147,22 @@ TERMS: tuple[Term, ...] = (
     _t("upkeep", "Upkeep"),                                        # a project's running when it is kept true: a wiki, a design, texts (spec 92 §1)
     _t("liveops", "LiveOps"),                                      # a game's running, after launch: events, numbers, small fixes (spec 91 §7); Run and Upkeep are the other kinds'
     _t("recurring_goal", "recurring goal", "recurring goals"),     # a goal that comes back every day, week or month once it is done; a running party proposes some when it is made (spec 92 §2; realm/recurring.py)
-    _t("card_context", "context"),                                 # a card's wiki pages, 📜 (realm/cardlore.py)
-    _t("todo_plan", "plan", "plans"),                              # a to-do's steps from a light model, 🧭
-    _t("personal_card", "personal"),                               # a card that never reaches a model, 🔒
-    _t("settling_task", "waiting to go"),                          # a task held before it goes, ⏳ (realm/settle.py)
-    _t("not_urgent", "Not urgent"),                                # a task that waits longer and gathers more, 🐢
-    _t("joined_task", "joined"),                                   # a card that goes with another one as one task, ↳
-    # the Agent pool's areas in work and design briefs (docs/design/barracks-designs.md)
+    # a task's area in work: two tasks whose areas meet do not land side by side (realm/claims.py, core/idea_landing.py)
     _t("claim", "Area in work", "Areas in work"),                   # the files an open task changes, until merged
     _t("overlap", "Overlap", "Overlaps"),                           # a task on another open task's area
-    _t("design_brief", "Design brief", "Design briefs"),            # the design a planned task leaves in its PR
-    _t("remark", "Comment", "Comments"),                            # what the person said about a part of the window
-    _t("comment_mode", "Comment mode"),                             # a press on any part of the window comments on it
     _t("fix", "Fix", "Fixes"),                                      # Claude Code started on Orkboard's own code with the logs, to fix it and push to main (spec 119, decisions §197)
-    # what is wanted, on the cart: it decides the Agent pool's path (docs/design/barracks-flows.md)
-    _t("want", "Kind of work", "Kinds of work"),                    # `want`, set by a building, never by the text
-    _t("want.change", "Code change"),                               # a branch and a pull request
-    _t("want.reply", "Reply"),                                      # a draft reply, through the Review gate
-    _t("want.doc", "Document"),                                     # a design, a decision, a brief
-    _t("want.routine", "Routine"),                                  # what is already scripted
-    _t("want.know", "Keep"),                                        # a page or a note in the Wiki
-    _t("want.reply+change", "Reply, or a code change when it asks for one"),   # a chat's two kinds (paths.REPLY_OR_CHANGE)
-    # what a model call was for (sources/telemetry.py PURPOSES), as the Spend window's *By purpose* says it
-    _t("purpose.work", "Orks' tasks"),
-    _t("purpose.sort", "Sorting"),
-    _t("purpose.plan", "Planning"),
-    _t("purpose.review", "Review boards"),
-    _t("purpose.check", "Checks"),
-    _t("purpose.ingest", "Wiki ingest"),
-    _t("purpose.answer", "Answering orks' questions"),
-    _t("purpose.look", "Watching sources"),
-    _t("purpose.retro", "Retros"),
-    _t("purpose.build", "New buildings, orks and roads"),
-    _t("purpose.chat", "The Workchief's chat"),
-    # where a source of External listeners speaks: the groups of its Add a source (realm/quickadd.py GROUPS)
-    _t("source_group.messengers", "Messengers"),                    # Slack, Discord
-    _t("source_group.mail", "Mail"),                                # Gmail
-    _t("source_group.code", "Code"),                                # GitHub, GitLab
-    _t("source_group.calendar", "Calendar"),                        # none yet: the group shows once a service has it
-    _t("source_group.other", "Other"),                              # Jira, Confluence, Figma
-    # the Wiki's librarian (docs/design/wiki-librarian.md)
-    _t("quick_note", "Quick note", "Quick notes"),                  # a note left for the wiki with one click
-    _t("to_discuss", "To discuss"),
-    _t("calendar_import", "Imported calendar", "Imported calendars"),  # a .ics file or an iCal link a Calendar reads (realm/calendar_imports.py)
-    _t("ical_link", "iCal link", "iCal links"),                     # a calendar's secret address: kept in the keychain                                 # an item a meeting should cover
-    _t("open_item", "Open item", "Open items"),                     # an item waiting for a meeting with someone
-    _t("quality_check", "Quality check", "Quality checks"),         # the wiki's lint on a schedule
-    _t("agent_rules", "Rules for AI tools"),                        # what every AI tool is told about a wiki (docs/design/wiki-folders-rules.md)
-    _t("fold", "Fold"),                                             # a hut shows its title bar only (docs/design/folded-cards.md)
-    _t("map_view", "Map view"),                                     # the town from above, no cards (docs/design/map-view.md)
-    # the Mine's research (docs/design/mine.md)
-    _t("finding", "Finding", "Findings"),                           # one claim of a report, with its sources (the Mine's; the quality card's is `quality_finding`, spec 132)
-    _t("confirmed", "Confirmed"),                                   # two models, two sites (realm/research.py check)
-    _t("disputed", "Disputed"),                                     # the tools disagree; the person decides
-    _t("single", "One source"),                                     # one tool or one site said it
-    _t("dig_round", "Round", "Rounds"),                             # a pass of search over the open findings
-    # the Audio briefing (docs/design/audio-briefing.md)
-    _t("episode", "episode", "episodes"),                           # a text spoken, a file to listen to
-    # -- building types (catalog ids): named by what they do -----------------------------------------
-    _t("pit", "Drop file here", "", "The Pit"),
-    _t("watchtower", "External listeners", "External listeners", "Watchtower", "Watchtowers"),
-    _t("signpost", "Router", "Routers", "Signpost", "Signposts"),
-    _t("mill", "Transformer", "", "The Mill"),
-    _t("horn", "Sound alerts", "", "The Horn"),
-    _t("fields", "Task board", "", "Task Fields"),
-    _t("barracks", "Agent pool", "", "Barracks"),
-    _t("council", "Review board", "", "Clan Fire"),
-    _t("war_drum", "Calendar", "", "War Drum"),
-    _t("forest", "File tree", "", "File Forest"),
-    _t("scrolls", "Wiki", "", "Scroll Dump"),
-    _t("mine", "Research", "", "The Mine"),                         # "Mine" alone stays: a Task board's lane says it
-    _t("gramophone", "Audio briefing", "", "The Gramophone"),
-    _t("lab", "Test bench"),                                        # a building on its test cases (docs/design/test-bench.md)
-    _t("ux_lab", "UX bench", "", "Alchemy Tower"),            # a building's look (docs/design/improve-buildings.md)
-    _t("lake", "Inspector", "", "Lake of Insight"),
-    _t("forge", "Branches & PRs", "", "The Forge"),
-    _t("loot_vault", "Review gate", "", "Loot Vault"),
-    _t("crag", "Metrics", "", "Tally Crag"),
-    _t("catapult", "Publisher", "", "The Catapult"),
-    _t("workshop", "Script", "Scripts", "Workshop", "Workshops"),
-    # -- the orks who live in them: their orkish names, whatever the look (CLAUDE.md, Wording) ---------
-    _t("orc.pit", "Scavenger"),
-    _t("orc.watchtower", "Lookout"),
-    _t("orc.signpost", "Grot Pointa"),
-    _t("orc.mill", "Miller"),
-    _t("orc.horn", "Hornblower"),
-    _t("orc.fields", "Taskmaster"),
-    _t("orc.barracks", "Grunt", "Grunts"),
-    _t("orc.council", "Chieftain", "Chieftains"),
-    _t("orc.war_drum", "Drummer"),
-    _t("orc.forest", "Woodcutter"),
-    _t("orc.scrolls", "Scroll Scrapper"),
-    _t("orc.gramophone", "Bard"),
-    _t("orc.lab", "Mechanic", "Mechanics", "Gearhead", "Gearheads"),  # the Test bench's: a senior AI engineer
-    _t("orc.ux_lab", "Alchemist", "Alchemists"),        # the UX bench's: a senior UI/UX designer
-    _t("orc.mine", "Prospector", "Prospectors"),
-    _t("orc.lake", "Seer"),
-    _t("orc.forge", "Smith", "Smiths"),
-    _t("orc.loot", "Quartermaster"),
-    _t("orc.crag", "Crag Carver"),
-    _t("orc.catapult", "Loader"),
-    _t("orc.workshop", "Tinker"),
-    _t("orc.custom", "Peon", "Peons"),
+    # -- the orks of a goal's work, by their orkish names (CLAUDE.md, Wording) -----------------------
+    _t("orc.fields", "Taskmaster"),                                 # plans a goal's work in stages and tasks (llm-wiki/general/roles/taskmaster.md)
+    _t("orc.barracks", "Grunt", "Grunts"),                          # an ork in Tech: does a task in its own worktree (llm-wiki/general/roles/grunt.md)
+    _t("orc.warder", "Warder"),                                     # judges an AI tool's commands and keeps the secrets' files from the orks (hooks/warder.py)
     *SLOTS,                                                          # the inventory and a way's kind (realm/lexicon_table.py)
 )
 
-# Short names the interface uses for a building as well as its full title.
-_ALSO = {"lake": ("Lake",), "pit": ("Pit",), "mill": ("Mill",), "horn": ("Horn",), "forge": ("Forge",),
-         "catapult": ("Catapult",), "gramophone": ("Gramophone",), "town_hall": ("Town hall",),
-         # the Test bench was the Alchemist's Lab with a Brewmaster before: older towns keep those
-         "lab": ("Alchemist's Lab",), "orc.lab": ("Brewmaster",)}
+# Short spellings a concept was also written in, beside its `was` (none left).
+_ALSO: dict[str, tuple[str, ...]] = {}
 
 # Whole phrases first: where a word for word would read wrong.
-_PHRASES = {"Into the pit": "Dropped",
-            "Not enough food": "No ork slots left", "Treasury empty": "Budget spent",
-            "Halt All Operations": "Stop all", "Halt All": "Stop all"}
+_PHRASES = {"Halt All Operations": "Stop all", "Halt All": "Stop all"}
 
 SOURCES = (__file__, lexicon_table.__file__)      # the files the glossary is written in, each word with the line that says where it comes from
 _BY_KEY = {t.key: t for t in TERMS}
@@ -351,7 +174,7 @@ def known(key: str) -> bool:
 
 
 def term(key: str, many: bool = False) -> str:
-    """The word for `key`: `term("road", many=True)` → roads."""
+    """The word for `key`: `term("track", many=True)` → parties."""
     t = _BY_KEY[key]
     return (t.many or t.word) if many else t.word
 
@@ -368,7 +191,7 @@ def _pairs() -> list[tuple[str, str]]:
             out.setdefault(t.was, t.word)
         if t.was_many:
             out.setdefault(t.was_many, t.many or t.word)
-        if t.was.startswith("The "):                        # "The Mill" is also "the Mill" mid-sentence
+        if t.was.startswith("The "):                        # "The new one replaces §<n>" is also "the new one …" mid-sentence
             out.setdefault("the " + t.was[4:], t.word)
     return sorted(out.items(), key=lambda kv: len(kv[0]), reverse=True)
 
@@ -382,14 +205,14 @@ _UPPER = {old.upper(): new for old, new in _PAIRS}
 def _alternation() -> str:
     names: list[str] = []
     for old, _ in _PAIRS:
-        names += [old, old.upper()]                         # a heading may shout: 🧌 GARRISON
+        names += [old, old.upper()]                         # a heading may shout: TRACKS
         if old[:1].islower():                               # a common noun also opens a sentence
             names.append(old[:1].upper() + old[1:])
     return "|".join(re.escape(n) for n in sorted(set(names), key=len, reverse=True))
 
 
-# A name stands alone: not inside another word (`ork` in `work` or in `Orkboard`, `town` in `downtown`)
-# nor in a path (`./loot/`, `loot/screenshots`, `src/roads.py`): those name files, not concepts.
+# A name stands alone: not inside another word (`map` in `roadmap`, `track` in `racetrack`, `idea` in `ideas_map`)
+# nor in a path (`./ideas/`, `ideas/screenshots`, `src/tracks.py`): those name files, not concepts.
 _WORD = re.compile(rf"(?<![\w\-/\\.])(?:{_alternation()})(?![\w\-/\\]|\.\w)")
 
 
@@ -404,10 +227,10 @@ def _swap(m: re.Match) -> str:
 
 
 def words(text: str) -> str:
-    """`text` in today's words: `🗼 Watchtower` → `🗼 External listeners`, `3 chores` → `3 to-dos`.
+    """`text` in today's words: `📯 War Horn` → `📯 Stop all`, `3 chores` → `3 to-dos`.
 
-    Proper names (Watchtower, War Horn) match as written; common nouns (chore, loot) in any case,
-    keeping it (`Chores` → `To-dos`, `GARRISON` → `ORKS`). Emoji stay — `modes.plain` takes them off."""
+    Proper names (War Horn, War Raven) match as written; common nouns (chore, track) in any case,
+    keeping it (`Chores` → `To-dos`, `TRACKS` → `PARTIES`). Emoji stay."""
     if not text:
         return text
     return _WORD.sub(_swap, str(text))
@@ -431,17 +254,5 @@ def table() -> list[tuple[str, str]]:
 
 
 def glossary() -> list[tuple[str, str, str]]:
-    """(key, word, the Camp word it replaced or "") for every concept, in the glossary's order."""
+    """(key, word, the spelling it replaced or "") for every concept, in the glossary's order."""
     return [(t.key, t.word, t.was or t.was_many) for t in TERMS]
-
-
-def want_word(want: str) -> str:
-    """The kind of work in words (`reply` → Reply); "" for none or a word not known."""
-    key = f"want.{want}"
-    return term(key) if want and key in _BY_KEY else ""
-
-
-def purpose_word(purpose: str) -> str:
-    """What a model call was for in words (`review` → Review boards); the word itself when not known."""
-    key = f"purpose.{purpose}"
-    return term(key) if key in _BY_KEY else purpose
