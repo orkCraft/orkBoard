@@ -20,6 +20,7 @@ Every page takes `?face=desk` (1440 × 900) or `?face=phone` (390 × 844). Shots
 **Pictures** (prompts in `docs/pictures-cartoon.md`; the final cuts are orkUI's, these are the mockups'):
 - `sheets/` the taken sheets: C1–C8 (the scenes' corner props, now unused on the mats: §311.1), G1–G5, H2's ork's hand;
 - `surfaces/` F1–F5 and H1 (the tavern table, the parchment, the workbench, the scribe's desk, the backpack's leather, the pocket);
+- the hand's cards past the row are dealt over every slot as strips (the drum, §313), a strip showing its price gem only;
 - `props/header-bar.png` (G1), `props/signs/` (G2), `props/crafts/` (G3, white masks), `props/chips/undo.png` (G4) and
   `props/chips/obj-{die,token,card}.png` (the hand's three things, cut bare from G4 until G6 is taken), `props/hand-ork-*.png`
   (H2), `props/hand-pocket.png` (H1, the slots' pockets);
