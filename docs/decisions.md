@@ -8036,3 +8036,14 @@ balanced drum*; *a note on a phone opens on its own screen, the mat shows its he
    taken).
 
 The owner's call.
+
+## 312. Back is an arrow embossed on the header's left cap (14 November 2026, the owner)
+
+Changes: 311.1 (*‹ Back* (Esc) at its left, a word). Kept: 311 but this.
+
+Why: the person, on the mockups of decision §311: *Back can be an icon, embossed on the left edge of the mat's header*. So:
+1. **The header bar's left cap is Back**: a chunky arrow stamped into its bronze (a shade darker, a lighter lower edge), the whole
+   cap the button, Esc its key, *Back* its name for a screen reader and its title; a hard ring on focus. No word *Back* on a mat.
+2. **The mat's word and its line stand in the bar's middle**; the same cap is Back on a phone's note screen (§311.6).
+
+The owner's call.
