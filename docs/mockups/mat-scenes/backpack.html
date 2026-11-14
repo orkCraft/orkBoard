@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backpack team mat</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+
+:root { --ph: 96px;
+  --cw: 128px; --ch: 160px; --tk: 46px; --pouch: 76px; --prop: 164px; --em: 40px; --band: 90px;
+  --PW: 540px; --hcw: 104px; --hch: 146px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--ork-room); color: var(--ork-ink); font: var(--ork-type-body); overflow: hidden; }
+body[data-face="desk"] { width: 1440px; height: 900px; }
+body[data-face="phone"] { width: 390px; height: 844px; --cw: 64px; --ch: 88px; --tk: 38px; --pouch: 36px; --prop: 91px; --em: 32px; --band: 50px;
+  --PW: 290px; --hcw: 66px; --hch: 92px; }
+.stage { position: absolute; inset: 2.5%; }
+.field { position: absolute; inset: 0; border: 4px solid var(--ork-bronze); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); overflow: hidden; background: var(--ork-room); }
+.field::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: brightness(.5); }
+.prop { position: absolute; z-index: 20; pointer-events: none; filter: brightness(.47) saturate(.9); }
+.prop img { display: block; max-width: var(--prop); max-height: var(--prop); width: auto; height: auto; }
+.prop.tl { left: -4px; top: -4px; } .prop.tr { right: -4px; top: -4px; } .prop.bl { left: -4px; bottom: -4px; } .prop.br { right: -4px; bottom: -4px; }
+body[data-face="phone"] .prop.bl, body[data-face="phone"] .prop.br { display: none; }
+.top { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; z-index: 5; }
+.back { position: absolute; top: 14px; left: 190px; display: flex; gap: 8px; align-items: center; padding: 6px 10px; font: var(--ork-type-button);
+  background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: var(--ork-radius-control); color: var(--ork-ink); white-space: nowrap; }
+body[data-face="desk"] .back { top: 22px; }
+kbd { font: 500 11px/14px var(--ork-font-code); padding: 1px 5px; border: 1px solid var(--ork-edge); border-radius: 4px; color: var(--ork-ink-muted); background: var(--ork-raised); }
+.plate { position: relative; text-align: center; padding: 6px 18px 8px; background: var(--ork-plate); border: 2px solid var(--ork-bronze); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); }
+.plate b { display: flex; justify-content: center; align-items: center; gap: 10px; min-height: var(--em); font: var(--ork-type-title); letter-spacing: var(--ork-type-title-track); color: var(--ork-gilt); }
+.plate b i.em { width: var(--em); height: var(--em); background: var(--ork-bronze-hi); flex: none; -webkit-mask: var(--e) center / contain no-repeat; mask: var(--e) center / contain no-repeat; }
+.plate span { display: block; font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.plate .short { display: none; }
+body[data-face="phone"] .top { top: 22px; left: 98px; right: 96px; justify-content: flex-start; }
+body[data-face="phone"] .back { left: 0; top: 10px; } body[data-face="phone"] .back kbd { display: none; }
+body[data-face="phone"] .plate { flex: 1; margin-left: 68px; padding: 3px 4px 5px; }
+body[data-face="phone"] .plate span { font-size: 12px; line-height: 15px; }
+body[data-face="phone"] .plate b { font-size: 17px; line-height: 22px; }
+body[data-face="phone"] .plate .full { display: none; } body[data-face="phone"] .plate .short { display: inline; }
+.tk { position: relative; width: var(--tk); height: var(--tk); border-radius: 50%; background: var(--ork-room); border: 3px solid var(--hue, var(--ork-party-ork)); display: grid; place-items: center; overflow: hidden; box-shadow: 0 3px 0 var(--ork-plate); flex: none; }
+.tk img { width: 112%; height: 112%; object-fit: cover; object-position: center 20%; }
+.tech { --hue: var(--ork-party-ork); } .design { --hue: var(--ork-party-elf); } .product { --hue: var(--ork-party-knight); }
+/* cards */
+.card { --g: 28px; position: relative; width: var(--cw); height: var(--ch); padding: 8px 6px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px;
+  background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); }
+.card .hd { width: 46px; height: 46px; object-fit: contain; flex: none; }
+.card b.t { font: 700 14px/1.2 var(--ork-font-text); }
+.card .ln { font-size: 12px; line-height: 1.3; color: var(--ork-ink-read); }
+.gw { position: absolute; z-index: 2; filter: drop-shadow(0 2px 0 var(--ork-room)); }
+.gw.tl { left: 5px; top: 5px; } .gw.tr { right: 5px; top: 5px; }
+.gem { display: grid; place-items: center; width: var(--g); height: var(--g); background: var(--rim, var(--ork-bronze-hi)); position: relative; }
+.gem .in { position: absolute; inset: 3px; background: var(--ork-plate); display: grid; place-items: center; font: 700 calc(var(--g) * .5)/1 var(--ork-font-text); color: var(--ork-gilt-hi); }
+.gem.circle, .gem.circle .in { border-radius: 50%; }
+.gem.rect { width: calc(var(--g) * 1.12); height: calc(var(--g) * .86); border-radius: 8px; } .gem.rect .in { border-radius: 5px; }
+.gem.hex, .gem.hex .in { clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.gem.shield, .gem.shield .in { clip-path: polygon(0 0, 100% 0, 100% 56%, 50% 100%, 0 56%); }
+.gem.shield .in { inset: 3px 3px 4px; padding-bottom: 14%; }
+.gem.mana .in { background: var(--ork-mana); color: var(--ork-on-ink); }
+.gem .ru { width: 62%; height: 62%; background: var(--ork-ink-read); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.gem .ks { display: none; width: 66%; height: 66%; background: var(--ork-ink-read); -webkit-mask: var(--k) center / contain no-repeat; mask: var(--k) center / contain no-repeat; }
+.gem.sig { --rim: var(--ork-alert); }
+.card .when { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; font: 500 11px/14px var(--ork-font-text); color: var(--ork-ink-muted); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; }
+.card .act { position: absolute; right: 6px; bottom: 6px; padding: 2px 10px; font: 700 12px/14px var(--ork-font-text); color: var(--ork-on-ink); background: var(--ork-action); border-radius: 4px; box-shadow: 0 2px 0 var(--ork-room); }
+/* on S the kind wins (the rune shows from M) */
+body[data-face="phone"] .card { --g: 20px; padding: 5px 4px 20px; gap: 1px; }
+body[data-face="phone"] .card .hd { width: 30px; height: 30px; }
+body[data-face="phone"] .card b.t { font-size: 11px; line-height: 1.15; }
+body[data-face="phone"] .card .ln { display: none; }
+body[data-face="phone"] .gem .ru { display: none; } body[data-face="phone"] .gem .ks { display: block; }
+body[data-face="phone"] .card .when { font-size: 9px; line-height: 11px; padding: 0 3px; left: 3px; bottom: 3px; }
+.gw.tl { left: 4px; top: 4px; }
+body[data-face="phone"] .pf { display: none; } .card .when { white-space: nowrap; }
+body[data-face="phone"] .card b.t { font-size: 10px; }
+/* buttons */
+.btn { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap;
+  background: var(--ork-plate); border: 2px solid var(--ork-bronze-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); }
+.btn i.ic { width: 18px; height: 18px; background: var(--ork-ink-read); flex: none; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.btn.ready { border-color: var(--ork-gilt-hi); box-shadow: 0 0 0 2px var(--ork-ink), 0 5px 0 2px var(--ork-room); } .btn.ready i.ic { background: var(--ork-gilt-hi); }
+.btn.dim { opacity: .5; border-style: dashed; box-shadow: none; filter: saturate(.4); }
+.note { font: 600 12px/15px var(--ork-font-text); color: var(--ork-ink-read); background: var(--ork-plate); padding: 2px 7px; border-radius: 4px; text-align: center; }
+.note.warn { color: var(--ork-alert); } .note.mana { color: var(--ork-mana); }
+/* pouch */
+.pouchbar { position: absolute; z-index: 6; left: 1020px; bottom: 40px; display: flex; align-items: center; gap: 8px; }
+.pouch { width: var(--pouch); height: var(--pouch); background: var(--ork-bronze-hi); flex: none; -webkit-mask: url(../battle-field/emblems/pouch.png) center / contain no-repeat; mask: url(../battle-field/emblems/pouch.png) center / contain no-repeat; }
+.pouchbar .cap { position: absolute; left: 0; bottom: calc(100% + 4px); white-space: nowrap; display: flex; gap: 8px; align-items: center; font: 600 13px/16px var(--ork-font-text); background: var(--ork-plate); padding: 2px 8px; border-radius: 4px; }
+.pouchbar .trow, .pouchbar .trow.desk-only { display: grid; grid-template-columns: repeat(2, 36px); gap: 6px; }
+.pouchbar .tk { --tk: 36px; }
+.pouchbar .tk.add { background: var(--ork-plate); border: 2px dashed var(--ork-bronze-hi); color: var(--ork-bronze-hi); font: 700 20px/1 var(--ork-font-text); }
+/* the hand in its pocket */
+.hand { position: absolute; z-index: 8; left: 50%; bottom: 14px; translate: -50% 0; width: var(--PW); --H: calc(var(--PW) * 717 / 1944); height: calc(var(--H) + var(--hch) * .65); }
+.pocket { position: absolute; left: 0; right: 0; bottom: 0; height: var(--H); z-index: 2; pointer-events: none; --sl: calc(var(--H) * 427 / 717);
+  border-style: solid; border-width: 0 var(--sl); border-image: url(props/hand-pocket.png) 0 427 0 427 fill / 0 var(--sl) / 0 stretch; }
+.hcards { position: absolute; left: 0; right: 0; bottom: calc(var(--H) - var(--hch) * .35); z-index: 1; display: flex; justify-content: center; gap: 10px; }
+.hcards .card { --g: 22px; width: var(--hcw); height: var(--hch); padding: 6px 4px 6px; flex: none; }
+.hcards .card .hd { width: 38px; height: 38px; } .hcards .card b.t { font-size: 13px; }
+.hcards .card .ln { display: block; font-size: 11px; }
+.hcards .card.blank { background: color-mix(in srgb, var(--ork-card) 55%, var(--ork-room)); border-style: dashed; border-color: var(--ork-bronze-hi); box-shadow: none; }
+.hcards .card .key { position: absolute; right: 4px; bottom: 4px; }
+body[data-face="phone"] .hcards { gap: 6px; }
+body[data-face="phone"] .hcards .card { --g: 18px; } body[data-face="phone"] .hcards .card .hd { width: 26px; height: 26px; } body[data-face="phone"] .hcards .card b.t { font-size: 10.5px; }
+body[data-face="phone"] .hcards .card .ln { display: none; }
+.hplate { position: absolute; z-index: 3; left: 34%; width: 32%; top: 76%; height: 21%; display: grid; place-items: center; background: var(--ork-plate); border: 2px solid var(--ork-bronze); border-radius: var(--ork-radius-control);
+  font: var(--ork-type-heading); color: var(--ork-gilt); white-space: nowrap; }
+body[data-face="phone"] .hplate { font-size: 11px; line-height: 13px; border-width: 1px; }
+.waitpile { position: absolute; z-index: 3; right: calc(100% + 14px); bottom: 26px; width: 66px; height: 92px; }
+.waitpile .ork-card-back { position: absolute; left: 0; top: 0; width: 100%; height: 100%; aspect-ratio: auto; box-shadow: none; }
+.waitpile .ork-card-back:nth-child(1) { left: -9px; top: 9px; opacity: .55; } .waitpile .ork-card-back:nth-child(2) { left: -6px; top: 6px; opacity: .75; } .waitpile .ork-card-back:nth-child(3) { left: -3px; top: 3px; opacity: .9; }
+.waitpile .cap { position: absolute; left: -10px; top: calc(100% + 14px); white-space: nowrap; font: 600 11px/14px var(--ork-font-text); color: var(--ork-ink-read); background: var(--ork-plate); padding: 1px 6px; border-radius: 4px; }
+body[data-face="phone"] .waitpile { width: 34px; height: 48px; right: auto; left: -38px; bottom: 16px; }
+body[data-face="phone"] .pouchbar { left: auto; right: 6px; bottom: 22px; }
+body[data-face="phone"] .waitpile .cap { display: none; }
+body[data-face="phone"] .pouchbar .trow { display: none !important; }
+.desk-only { display: block; } body[data-face="phone"] .desk-only { display: none; }
+.phone-only { display: none; } body[data-face="phone"] .phone-only { display: block; }
+
+.field::before { background: url(surfaces/f5-backpack.jpg) 0 0 / 520px 520px; }
+body[data-face="phone"] .field::before { background-size: 330px 330px; }
+.tabs { position: absolute; z-index: 5; top: 122px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; }
+.tab { position: relative; padding: 6px 22px 8px; font: var(--ork-type-button); color: var(--ork-ink-muted); background: var(--ork-leather-lo); border: 2px dashed var(--ork-bronze); border-top: 0; border-radius: 0 0 14px 14px; box-shadow: 0 3px 0 var(--ork-room); white-space: nowrap; }
+.tab.open { color: var(--ork-gilt-hi); background: var(--ork-plate); border: 2px solid var(--ork-gilt); border-top: 0; padding-bottom: 12px; }
+body[data-face="phone"] .tabs { top: 100px; gap: 5px; left: 6px; right: 6px; }
+body[data-face="phone"] .tab { padding: 4px 9px 6px; font-size: 12px; line-height: 15px; border-radius: 0 0 9px 9px; }
+.dg { position: absolute; z-index: 3; left: 90px; right: 90px; top: 172px; display: grid; grid-template-columns: 200px repeat(7, 1fr); gap: 6px; }
+body[data-face="phone"] .dg { display: none; }
+.ph { display: grid; place-items: center; text-align: center; min-height: 40px; padding: 2px 4px; font: 600 13px/16px var(--ork-font-text); color: var(--ork-ink-read); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 6px; }
+.ph.foc { color: var(--ork-gilt-hi); border: 2px solid var(--ork-gilt); }
+.seat { height: 84px; display: grid; grid-template-columns: 58px 1fr; gap: 6px; align-items: center; padding: 4px 8px 4px 4px; background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); }
+.seat img.hd { width: 58px; height: 58px; object-fit: contain; }
+.seat b { display: block; font: 700 14px/17px var(--ork-font-text); }
+.seat b small { font: 500 12px/15px var(--ork-font-text); color: var(--ork-ink-muted); }
+.tool { display: inline-flex; gap: 5px; align-items: center; margin: 2px 0; padding: 1px 6px; font: 600 11px/15px var(--ork-font-text); color: var(--ork-ink-read); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; }
+.tool img { width: 14px; height: 14px; image-rendering: pixelated; }
+.price { display: block; font: 600 12px/15px var(--ork-font-text); color: var(--ork-mana); }
+.seat.empty { background: transparent; border: 2px dashed var(--ork-bronze-hi); box-shadow: none; }
+.seat.empty img { opacity: .6; } .seat.empty .price { color: var(--ork-ink-read); }
+.seat.foc { border-color: var(--ork-gilt-hi); }
+.cell { height: 84px; display: grid; place-items: center; background: color-mix(in srgb, var(--ork-card) 40%, var(--ork-room)); border: 1px solid var(--ork-bronze-lo); border-radius: 8px; position: relative; }
+.cell.dimc { opacity: .62; } .cell.dimc .lbl { position: absolute; bottom: 4px; font: 500 10px/12px var(--ork-font-text); color: var(--ork-ink-muted); }
+.cell.void { border: 1px dashed var(--ork-bronze); background: transparent; }
+.cell.foc { border: 3px solid var(--ork-gilt-hi); box-shadow: 0 0 0 2px var(--ork-ink), 0 5px 0 2px var(--ork-room); z-index: 2; background: color-mix(in srgb, var(--ork-card) 65%, var(--ork-room)); }
+.cell.rowfoc { border-color: var(--ork-bronze-hi); }
+.chp { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--hue); background: var(--ork-room); display: grid; place-items: center; overflow: hidden; box-shadow: 0 3px 0 var(--ork-plate); }
+.chp img { width: 112%; height: 112%; object-fit: cover; object-position: center 20%; }
+.moves { position: absolute; z-index: 4; left: 90px; top: 498px; display: flex; gap: 12px; }
+.moves .btn { font-size: 13px; padding: 5px 10px; }
+.pl { display: none; }
+body[data-face="phone"] .pl { display: block; position: absolute; z-index: 3; left: 12px; right: 12px; top: 136px; }
+.seatsrow { display: flex; gap: 14px; justify-content: center; margin-bottom: 8px; }
+.seatsrow .sx { display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 11px/13px var(--ork-font-text); color: var(--ork-ink-read); }
+.seatsrow .sx span { background: var(--ork-plate); padding: 0 5px; border-radius: 4px; }
+.seatsrow .tk { --tk: 44px; }
+.seatsrow .tk.und { border-style: dashed; background: var(--ork-plate); }
+.step { display: flex; align-items: center; justify-content: space-between; height: 36px; margin-bottom: 3px; padding: 0 8px 0 10px; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 6px; font: 600 13px/16px var(--ork-font-text); color: var(--ork-ink-read); }
+.step.dimc { opacity: .65; }
+.step.foc { border: 2px solid var(--ork-gilt-hi); color: var(--ork-gilt-hi); box-shadow: 0 0 0 2px var(--ork-ink); }
+.step .chp { width: 28px; height: 28px; border-width: 2px; }
+.step .ch2 { display: flex; gap: 3px; }
+body[data-face="phone"] .moves { left: 10px; right: 10px; top: 486px; gap: 5px; }
+body[data-face="phone"] .moves .btn { font-size: 12px; padding: 4px 8px; gap: 4px; } body[data-face="phone"] .moves kbd { display: none; }
+body[data-face="phone"] .moves .btn i.ic { display: none; }
+.hcards .card.seatc { padding-top: 4px; }
+body[data-face="phone"] { --prop: 64px; }
+body[data-face="phone"] .top { left: 70px; right: 62px; }
+body[data-face="phone"] .plate { margin-left: 68px; padding: 3px 2px 5px; }
+body[data-face="phone"] .field { --em: 26px; }
+body[data-face="phone"] .plate b { font-size: 13px; gap: 4px; } body[data-face="phone"] .plate b .tk { --tk: 26px !important; }
+body[data-face="phone"] .back { left: 0; }
+body[data-face="phone"] .hcards .card .gem .in { font-size: 8px !important; }
+.hcards .card.blank { margin-left: 22px; align-items: center; justify-content: center; }
+.hcards .card.blank b.plus { font: 700 34px/1 var(--ork-font-text); color: var(--ork-bronze-hi); }
+.hcards .card .price { font-size: 11px; line-height: 13px; }
+body[data-face="phone"] .hcards .card.blank { margin-left: 8px; }
+body[data-face="phone"] .hcards .card .price { display: none; }
+
+</style>
+</head>
+<body data-face="desk">
+<script>try { var _q = new URLSearchParams(location.search); if (_q.get("state")) document.body.dataset.state = _q.get("state"); if (_q.get("face") === "phone") document.body.dataset.face = "phone"; } catch (e) {}</script>
+<div class="stage"><div class="field" data-party="ork"><div class="top"><span class="back">&lsaquo; Back <kbd>Esc</kbd></span><div class="plate"><b><span class="tk tech" style="--tk:34px"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech's leader"></span><i class="em" style="--e:url(../battle-field/emblems/slots.png)" aria-hidden="true"></i>Tech's backpack</b><span><em class="full" style="font-style:normal">The Team &middot; who does which step</em><em class="short" style="font-style:normal">The Team</em></span></div></div><div class="tabs"><span class="tab">Hero</span><span class="tab">How it is set</span><span class="tab open">Team</span><span class="tab">Cards</span></div><div class="dg"><span></span><span class="ph">Talk</span><span class="ph">Spec</span><span class="ph">Work: Red</span><span class="ph">Work: Green</span><span class="ph foc">Work: Refactor</span><span class="ph">Work: Released small</span><span class="ph">Accept</span><div class="seat"><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><div><b>Shaman <small>(leader)</small></b><span class="tool"><img src="../../../design-system/orkui/marks/harness-claude.png" alt="">Claude Code</span><span class="price">&asymp; 1.2 mana a goal</span></div></div><span class="cell dimc"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span><span class="lbl">always</span></span><span class="cell dimc"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span><span class="lbl">always</span></span><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span><span class="cell"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span></span><span class="cell dimc"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span><span class="lbl">always</span></span><div class="seat foc"><img class="hd" src="../../../design-system/orkui/races/peon-laborer.png" alt=""><div><b>Grunt <small>(an ork)</small></b><span class="tool"><img src="../../../design-system/orkui/marks/harness-codex.png" alt="">Codex</span><span class="price">&asymp; 0.6 mana a goal</span></div></div><span class="cell void"></span><span class="cell void"></span><span class="cell"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span><span class="cell"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span><span class="cell foc"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span><span class="cell void"></span><span class="cell void"></span><div class="seat empty"><img class="hd" src="../../../design-system/orkui/chair/chair-empty.png" alt=""><div><b>Seat one sooner <small></small></b><span class="price">An empty chair: the goal goes faster</span></div></div><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span><span class="cell void"></span></div><div class="pl"><div class="seatsrow"><div class="sx"><span class="tk tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Shaman, the leader"></span><span>Shaman</span></div><div class="sx"><span class="tk tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt="Grunt"></span><span>Grunt</span></div><div class="sx"><span class="tk und"><img src="../../../design-system/orkui/chair/chair-empty.png" alt="Empty chair" style="object-fit:contain"></span><span>Empty chair</span></div></div><div class="step dimc"><span>Talk</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span></span></div><div class="step dimc"><span>Spec</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span></span></div><div class="step"><span>Work: Red</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span></div><div class="step"><span>Work: Green</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span></div><div class="step foc"><span>Work: Refactor</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/peon-laborer.png" alt=""></span></span></div><div class="step"><span>Work: Released small</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span></span></div><div class="step dimc"><span>Accept</span><span class="ch2"><span class="chp tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""></span></span></div></div><div class="moves"><span class="btn"><i class="ic" style="--m:url(../../../design-system/orkui/icons/src/robot.svg)"></i>Its tool <kbd>T</kbd></span><span class="btn"><i class="ic" style="--m:url(../../../design-system/orkui/icons/src/sliders.svg)"></i>Its tier <kbd>R</kbd></span><span class="btn"><i class="ic" style="--m:url(../../../design-system/orkui/icons/src/trash.svg)"></i>Take off the chair <kbd>X</kbd></span></div><div class="pouchbar" style=""><span class="cap desk-only">Ask a leader <kbd>Q</kbd></span><i class="pouch" aria-hidden="true"></i><div class="trow desk-only"><span class="tk tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech"></span><span class="tk design"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design"></span><span class="tk product"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product"></span><span class="tk add" title="Ask another">+</span></div></div><div class="hand"><div class="waitpile" aria-label="Moves that wait"><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div><span class="cap desk-only">Moves that wait</span></div><div class="hcards"><div class="card seatc" data-kind="seat"><span class="gw tl"><span class="gem hex mana"><i class="in" style="font-size:10px">1.2</i></span></span><span class="gw tr"><span class="gem hex"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/staff.svg)"></i><i class="ks" style="--k:url(../../../design-system/orkui/signs/work.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><b class="t">Shaman (leader)</b><span class="ln">Claude Code</span></div><div class="card seatc" data-kind="seat"><span class="gw tl"><span class="gem hex mana"><i class="in" style="font-size:10px">0.6</i></span></span><span class="gw tr"><span class="gem hex"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/hook.svg)"></i><i class="ks" style="--k:url(../../../design-system/orkui/signs/work.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/peon-laborer.png" alt=""><b class="t">Grunt</b><span class="ln">Codex</span></div><div class="card blank" data-kind="seat"><b class="plus">+</b><b class="t">New seat</b><span class="ln desk-only" style="display:block">a blank chair</span><kbd class="key">N</kbd></div></div><div class="pocket"></div><div class="hplate">Seats</div></div><div class="prop tl" aria-hidden="true"><img src="props/backpack-tl.png" alt=""></div><div class="prop tr" aria-hidden="true"><img src="props/backpack-tr.png" alt=""></div><div class="prop bl" aria-hidden="true"><img src="props/backpack-bl.png" alt=""></div><div class="prop br" aria-hidden="true"><img src="props/backpack-br.png" alt=""></div></div></div></body></html>
