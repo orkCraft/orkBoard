@@ -582,6 +582,25 @@ Piles (§309.3); the same top as C7's patches.
 One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. A scribe's desk top of worn dark brown leather inlaid in dark oak: a stitched seam along the leather's edge where it meets the wood, a few scuffs, one faint ink stain; never green. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
 ```
 
+### C8. The backpack's corners (attach the tavern board, C1 and O3a)
+The backpack's mats (§300.13: a hero, how a seat is set, its team, its cards) lie in the backpack's own scene, not in their kinds'
+(the person, 14 November 2026; to be written with the backpack's decision): the inside of the open backpack, its leather and its
+straps as §272.1 says, its mats still known by their layout and the emblem in their title.
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. The SAME worn brown leather, stitching and gilt buckles as the attached backpack. Each prop is seen STRAIGHT FROM ABOVE, lying on the inside of an open leather backpack, drawn as if in a CORNER: it lies on a small patch of that dark leather in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a thick leather strap hanging over the top edge, a big gilt buckle on it, a few stitches.
+2 (TOP RIGHT corner of its tile): the same strap and buckle mirrored, its end frayed, a small bone charm tied to the buckle on a string.
+3 (BOTTOM LEFT corner of its tile): a rolled blanket tied with two thin cords, a small waterskin beside it.
+4 (BOTTOM RIGHT corner of its tile): a tinderbox, a flint, a short coil of rope and two loose coins.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### F5. The inside of the backpack (attach the tavern board, C8 and O3a)
+The backpack's mats (C8); the same leather as C8's patches and O3a's backpack.
+```
+One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. The inside of a worn leather backpack: dark brown leather panels sewn together, a few stitched seams crossing it in long straight lines, a patch sewn over one worn spot, a few scuffs; the same leather as the attached backpack, never green. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
+```
+
 ## Every set the final build needs (12 November 2026)
 
 One prompt a set, each written whole above: copy it as it is, attach what it names. *Made* is in orkUI; *to take* waits for a take
@@ -606,5 +625,5 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | W1–W3 | the races' tools; the tiers' marks | made (orkUI 0.42.0) |
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
-| C1–C7 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles | C1 taken (14 November 2026); C2–C7 to take |
-| F1–F4 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk | to take |
+| C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1 taken (14 November 2026); C2–C8 to take |
+| F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | to take |
