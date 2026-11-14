@@ -8062,3 +8062,23 @@ everything over one card. So:
    row there are no strips.
 
 The owner's call.
+
+## 314. The front of the hand holds the likeliest answers and the weightiest messages (14 November 2026, the owner)
+
+Changes: 302.1 and 313 (the order of the hand's cards, unsaid until now). Kept: 302, 311, 313.
+
+Why: the person, on the drum of §313: *a rule that the front holds the cards of the likeliest answers and the most important
+messages*. A drum hides most of the hand behind its front; what the person most likely plays must not need a turn. So:
+1. **The hand is ordered, its front first**: the row's cards from the left, then the first strip over each, and so on (§313's
+   dealing follows this order); keys 1, 2, 3… follow it; turning the drum brings the next in rank.
+2. **A question's ways** (the likeliest answers): **the way its leader recommends first, starred** (§272.2's star), then the ways
+   the route's tokens back most (more **+**, fewer **!**), then the cheaper; the blank card (*Your words*, N) is in the hand's
+   fan, never in this order.
+3. **The moves that wait** (the weightiest messages): a **risk that blocks** first, then a **question** a goal at work waits on,
+   then a seal to press (into main, a release), then the rest; within one rank the one waiting longest first.
+4. **A mat's own cards** (a zone's kind, §302.2): a keeper's offer for the zone first (§302.2), then the cards the zone's
+   framework uses most, then the rest by their names.
+5. **The order is read by code** from the Board (the leader's recommendation in its question, the tokens, the prices, the times);
+   no pass is run to order a hand.
+
+The owner's call.
