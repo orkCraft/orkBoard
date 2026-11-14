@@ -611,9 +611,11 @@ One wide leather pocket for the hand of cards of a fantasy tavern card game of o
 ```
 
 ### H2. The person's hand, an ork's, in six poses (attach the tavern board, C1, O3a and K1)
-The hand at the left end of the hand's rail (talk of 14 November 2026, to be written with the hand's decision): it says whose move
-it is by its pose, holds the moves that wait (the pile laid on its palm by code, its thickness the count), carries the leaders'
-tokens' pouch at its wrist (Q) and takes a played card back (Z). The person's race is only a look, never a craft: the glove is
+The person's hand is a button at the field's bottom right, the same on the desktop and the phone (talk of 14 November 2026, to be
+written with the hand's decision): pressed (Space) it opens as a fan of what it holds: the blank *New <kind>* (N), the leaders'
+tokens (Q), the die (D), the backpack (B), the book (K), Undo (Z); its pose says whose move it is: at rest (a fist), your move
+(pointing at the hand's cards), waiting on the leaders (drumming), the fan open (open), done (a thumb, Z undoes), a card dragged
+back to it (catching). The sheet below was taken with the hand coming from the bottom left; code mirrors it. The person's race is only a look, never a craft: the glove is
 neutral bronze and leather, no party's colour; only the fingers' ends show the race. A line under it always says the pose in
 words. The other races' hands are taken on this sheet's model once it is approved.
 ```
@@ -652,6 +654,6 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
 | C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | all taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`) |
-| H2 | the person's hand, an ork's, six poses (the other races after it) | to take |
+| H2 | the person's hand, an ork's, six poses (the other races after it) | taken (14 November 2026): drawn from the bottom left, mirrored by code to come from the bottom right; cut in `docs/mockups/mat-scenes/props/hand-ork-*.png` (rest, open, waiting, point, done, catch) |
 | H1 | the hand's pocket | taken (14 November 2026), `docs/mockups/mat-scenes/props/hand-pocket.png` |
 | F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | F1–F4 taken (14 November 2026), in `docs/mockups/mat-scenes/surfaces/`: F1 came grey (tinted warm by code, or taken again *warm dark brown*), F2 blotchy and not tiling top to bottom (to take again: *one even tone, two or three faint stains*), F3 as asked, F4 a leather inlay between two bands of oak (laid as a frame: the oak at the field's edges, the leather stretched); F5 taken |
