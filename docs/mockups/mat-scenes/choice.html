@@ -27,16 +27,17 @@ kbd { font: 500 11px/14px var(--ork-font-code); padding: 1px 5px; border: 1px so
 .undo .uc svg { width: 28px; height: 28px; fill: none; stroke: var(--ork-gilt-hi); stroke-width: 3; stroke-linejoin: miter; }
 .undo .uc svg path.h { fill: var(--ork-gilt-hi); stroke: none; }
 .undo .uw { padding: 0 6px; background: var(--ork-plate); border-radius: 4px; }
-.uplate { display: none; position: absolute; z-index: 16; left: 82px; bottom: 16px; padding: 5px 12px 6px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap; }
+.uplate { display: none; position: absolute; z-index: 16; left: 82px; bottom: 4px; padding: 5px 12px 6px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap; }
 .uplate small { display: block; font: 500 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
 body[data-state="undo"] .undo { opacity: 1; }
 body[data-state="undo"] .undo .uc { outline: 3px solid var(--ork-gilt-hi); outline-offset: 2px; border-color: var(--ork-gilt-hi); }
 body[data-state="undo"] .undo .uw { display: none; }
 body[data-state="undo"] .uplate { display: block; }
-body[data-face="phone"] .undo { left: 6px; bottom: 6px; width: 52px; font-size: 11px; line-height: 13px; }
+body[data-state="undo"] .foot, body[data-state="pick"] .foot { display: none; }
+body[data-face="phone"] .undo { left: 21px; bottom: 186px; width: 52px; font-size: 11px; line-height: 13px; }
 body[data-face="phone"] .undo .uc { width: 44px; height: 44px; border-width: 3px; }
 body[data-face="phone"] .undo .uc svg { width: 24px; height: 24px; }
-body[data-face="phone"] .uplate { left: 58px; bottom: 10px; padding: 3px 8px 4px; font-size: 13px; line-height: 16px; }
+body[data-face="phone"] .uplate { left: 74px; bottom: 192px; padding: 3px 8px 4px; font-size: 13px; line-height: 16px; }
 body[data-face="phone"] .uplate small { font-size: 11px; line-height: 14px; }
 .uplate .sm { display: none; } body[data-face="phone"] .uplate .sm { display: inline; } body[data-face="phone"] .uplate .lg { display: none; }
 
@@ -148,10 +149,11 @@ body[data-face="phone"] .note .lg { display: none; } body[data-face="phone"] .no
 .drum .card { margin-top: 0; z-index: 2; rotate: 0deg; }
 .drumplate { position: absolute; right: calc(100% + 6px); top: 0; width: 98px; padding: 2px 6px; text-align: center; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: 600 11px/14px var(--ork-font-text); color: var(--ork-ink); }
 body[data-state="pick"] .row4 .card.focus { translate: 0 -36px; }
-body[data-face="phone"] .hand { left: 2px; right: 2px; bottom: 42px; height: 190px; }
-body[data-face="phone"] .row4 { left: 8px; gap: 2px; padding-top: 14px; }
-body[data-face="phone"] .pilebox, body[data-face="phone"] .foot { display: none; }
-body[data-face="phone"] .rail { bottom: 22px; }
+body[data-face="phone"] .hand { left: 21px; right: 21px; bottom: 0; height: 200px; }
+body[data-face="phone"] .row4 { left: 0; gap: 8px; padding-top: 14px; }
+body[data-face="phone"] .foot { display: none; }
+body[data-face="phone"] .pilebox { left: 52px; bottom: 190px; }
+body[data-face="phone"] .rail { bottom: 20px; left: -12px; right: -12px; }
 body[data-face="desk"] .only-phone, body[data-face="phone"] .only-desk { display: none; }
 
 /* the person's hand: raised, with its three chips in a narrow column above it at the right edge */
@@ -170,10 +172,10 @@ body[data-face="desk"] .only-phone, body[data-face="phone"] .only-desk { display
 .chip .tiny i { width: 14px; height: 14px; background: var(--ork-gilt-hi); -webkit-mask: url(../../../design-system/orkui/icons/src/lightbulb.svg) center / contain no-repeat; mask: url(../../../design-system/orkui/icons/src/lightbulb.svg) center / contain no-repeat; }
 .chip .tiny u { position: absolute; right: -6px; bottom: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--ork-bronze-hi); }
 .chip .tiny u::before { content: ""; position: absolute; inset: 2px; background: var(--ork-room); -webkit-mask: url(../../../design-system/orkui/icons/src/plus.svg) center / contain no-repeat; mask: url(../../../design-system/orkui/icons/src/plus.svg) center / contain no-repeat; }
-body[data-face="phone"] .me { width: 60px; height: 330px; }
+body[data-face="phone"] .me { z-index: 7; width: 60px; height: 380px; }
 body[data-face="phone"] .me .handimg { height: 64px; }
-body[data-face="phone"] .me .line { right: 70px; bottom: 16px; font-size: 11px; line-height: 14px; padding: 1px 6px; }
-body[data-face="phone"] .me .opts { right: 0px; bottom: 68px; gap: 6px; }
+body[data-face="phone"] .me .line { display: none; right: 70px; bottom: 16px; font-size: 11px; line-height: 14px; padding: 1px 6px; }
+body[data-face="phone"] .me .opts { right: 0px; bottom: 184px; gap: 6px; }
 body[data-face="phone"] .me .opt { width: 52px; font-size: 11px; line-height: 13px; gap: 2px; }
 body[data-face="phone"] .me .opt .chip { width: 44px; height: 44px; border-width: 3px; }
 body[data-face="phone"] .me .opt .w { padding: 0 4px; }
@@ -190,13 +192,15 @@ body[data-state="pick"] .me { display: none; }
 body[data-state="pick"] .pickblank { display: block; position: absolute; z-index: 14; right: 30px; bottom: 20px; }
 body[data-state="pick"] .pickblank .card { transform: rotate(2deg); }
 body[data-state="pick"] .pickblank .lab { display: block; margin: 8px auto 0; width: max-content; padding: 2px 8px; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: 600 12px/16px var(--ork-font-text); color: var(--ork-ink); }
-body[data-face="phone"][data-state="pick"] .pickblank { z-index: 7; right: 4px; bottom: 66px; }
+body[data-face="phone"][data-state="pick"] .pickblank { z-index: 7; right: 2px; bottom: 40px; }
 body[data-face="phone"][data-state="pick"] .pickblank .bt { visibility: hidden; }
-body[data-face="phone"][data-state="pick"] .pickblank .lab { position: absolute; z-index: 15; right: 2px; bottom: -58px; margin: 0; font-size: 11px; line-height: 14px; padding: 2px 6px; }
+body[data-face="phone"][data-state="pick"] .pickblank .lab { position: absolute; z-index: 15; right: 2px; bottom: -38px; margin: 0; font-size: 11px; line-height: 14px; padding: 2px 6px; }
 body[data-state="pick"] .finger { display: block; position: absolute; z-index: 16; bottom: 0; width: 100px; height: 70px; overflow: hidden; pointer-events: none; left: 136px; }
 .finger img { position: absolute; left: -10px; top: 22px; width: 132px; filter: drop-shadow(0 3px 0 var(--ork-room)); height: auto; rotate: -53deg; }
-body[data-face="phone"][data-state="pick"] .finger { left: 4px; height: 106px; }
-body[data-face="phone"] .finger img { top: 58px; }
+body[data-face="phone"][data-state="pick"] .undo { bottom: 228px; }
+body[data-face="phone"][data-state="pick"] .pilebox { bottom: 232px; }
+body[data-face="phone"][data-state="pick"] .finger { left: 23px; height: 66px; }
+body[data-face="phone"] .finger img { top: 18px; }
 
 body { --rep: round; --surface: url(surfaces/f2-parchment.jpg); --tile: 420px 420px; --tint: sepia(.3) saturate(1.1) contrast(.6) brightness(.5); }
 body[data-face="phone"] { --tile: 280px 280px; }
@@ -220,8 +224,10 @@ body[data-face="phone"] .view .lab { display: none; }
 body[data-face="phone"] .box { padding: 2px 6px; font-size: 11px; line-height: 15px; }
 body[data-face="phone"] .arr { width: 14px; }
 body[data-face="phone"] .view .cost { font-size: 12px; margin-top: 3px; }
-body[data-face="phone"] .grid { left: 14px; top: 136px; gap: 22px 10px; width: auto; }
-body[data-face="phone"] .grid .note { left: calc(100% + 22px); width: 106px; --thl: 24px; }
+body[data-face="phone"] .grid { left: 10px; top: 136px; gap: 22px 8px; width: auto; }
+body[data-face="phone"] .grid .note { left: calc(100% + 20px); width: 78px; --thl: 20px; }
+body[data-face="phone"] .grid .note .nh img { display: none; }
+body[data-face="phone"] .grid .note .paper { padding: 6px 6px 11px 12px; }
 body[data-face="phone"] .grid .note .nl.dim, body[data-face="phone"] .grid .note .nl.ok { display: none; }
 
 </style>
