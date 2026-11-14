@@ -218,6 +218,34 @@ body[data-face="phone"] .dbar { height: 2px; }
 body[data-face="phone"] .card:not(.sel) .gem .ru { display: none; }
 body[data-face="phone"] .card:not(.sel) .gem .ks { display: block; width: 66%; height: 66%; }
 .disp { background: none; }
+
+/* ---- the gate (?state=gate | gate-green): the same table, a battle against the tests ---- */
+body[data-state^="gate"] :is(.top, .zone, .linezone, .pouchbar, .prop):not(.g) { display: none; }
+body:not([data-state^="gate"]) .g { display: none; }
+.plate.gp b i { -webkit-mask-image: url(emblems/gate.png); mask-image: url(emblems/gate.png); }
+.medal.gm i { -webkit-mask-image: url(emblems/gate.png); mask-image: url(emblems/gate.png); }
+.cwrap { position: relative; }
+.no { position: absolute; right: -12px; bottom: 30px; z-index: 6; width: 40px; height: 40px; border-radius: 50%; background: var(--ork-plate); border: 5px solid var(--ork-danger); box-shadow: 0 3px 0 var(--ork-room); display: grid; place-items: center; }
+.no i { width: 62%; height: 62%; background: var(--ork-danger); -webkit-mask: url(../../../design-system/orkui/signs/cross.svg) center / contain no-repeat; mask: url(../../../design-system/orkui/signs/cross.svg) center / contain no-repeat; }
+.tname { max-width: calc(var(--cw) + 20px); text-align: center; padding: 2px 6px; background: var(--ork-plate); border: 1px solid var(--ork-danger); border-radius: 4px; font: 500 12px/15px var(--ork-font-code); color: var(--ork-ink); overflow-wrap: anywhere; }
+.gstack { position: relative; padding-bottom: 24px; }
+.gstack .se { position: absolute; left: 0; right: 0; top: 0; bottom: calc(24px - var(--i) * 8px); background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: var(--ork-radius-card); box-shadow: 0 3px 0 var(--ork-plate); }
+.gstack .se:nth-child(even) { background: color-mix(in srgb, var(--ork-card) 80%, var(--ork-room)); }
+.gstack .card.sel { position: relative; z-index: 2; }
+body[data-state="gate-green"] .fail { display: none; }
+.green { display: none; } body[data-state="gate-green"] .mv.green { display: flex; } body[data-state="gate-green"] .ribbon.green { display: block; }
+body[data-state="gate-green"] .oldz.g { justify-content: center; }
+.mv.mid { top: calc(var(--chp) / -2); }
+.mv.mid b { margin-top: 0; }
+.mv.up.fail { bottom: 28px; }
+body[data-face="phone"] .top.g { right: 90px; }
+body[data-face="phone"] .top.g .plate { margin-left: 70px; padding: 3px 4px 5px; }
+body[data-face="phone"] .tname { font-size: 10px; line-height: 12px; padding: 1px 3px; }
+body[data-face="phone"] .no { width: 30px; height: 30px; border-width: 4px; right: -8px; bottom: 26px; }
+body[data-face="phone"] .gstack { padding-bottom: 20px; }
+body[data-face="phone"] .gstack .se { bottom: calc(20px - var(--i) * 6px); }
+body[data-face="phone"] .oldz.g { padding-bottom: 108px; }
+body[data-face="phone"] .mv.mid { top: calc(var(--chp) / -2); }
 </style>
 </head>
 <body data-face="desk">
@@ -260,7 +288,22 @@ body[data-face="phone"] .card:not(.sel) .gem .ks { display: block; width: 66%; h
     </div>
   </div>
 
-  <div class="pouchbar">
+  <div class="top g"><span class="back">&lsaquo; Back <kbd>Esc</kbd></span><div class="plate gp"><b><i aria-hidden="true"></i>Gate</b><span><em class="full" style="font-style:normal">Pairing the phone &middot; on its way to dev</em><em class="short" style="font-style:normal">Pairing &middot; to dev</em></span></div></div>
+  <div class="zone oldz g">
+<div class="col fail"><div class="cwrap"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">5</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/staff.svg)"></i><i class="ks"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/dryad-elder.png" alt=""><b class="t">Tabs stand on chairs</b><span class="ln">The phone's heads in rings.</span><span class="when">decided 10 Nov</span></div><span class="no" title="no" role="img" aria-label="no: this test fails"><i></i></span></div><span class="tname">test_pairing_times_out</span></div>
+<div class="col fail"><div class="cwrap"><div class="card" data-kind="decision"><span class="gw tl"><span class="gem shield"><i class="in">8</i></span></span><span class="gw tr"><span class="gem rect"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/diamond.svg)"></i><i class="ks"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder.png" alt=""><b class="t">No mock data</b><span class="ln">Every mat on the Board's own data.</span><span class="when">decided 12 Nov</span></div><span class="no" title="no" role="img" aria-label="no: this test fails"><i></i></span></div><span class="tname">test_no_mock_data</span></div>
+    <div class="col"><div class="pile" aria-label="6 decisions the tests agree with"><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div><div class="ork-card-back"></div></div><div class="pile thin" aria-hidden="true"></div></div>
+  </div>
+  <div class="linezone g"><i class="line"></i>
+    <div class="ribbon fail">2 tests fail: they guard &sect;294 and &sect;301</div><div class="ribbon green">All 14 tests agree: nothing goes against a decision</div>
+    <div class="medal gm" aria-hidden="true"><i></i></div>
+    <div class="mv up fail"><span class="chip" style="--m:url(../../../design-system/orkui/icons/src/clock.svg)"><i></i><kbd>1</kbd></span><b>The test is out of date</b><small>asks Tech &middot; a new decision first</small></div>
+    <div class="mv dn fail"><span class="chip armed" style="--m:url(../../../design-system/orkui/icons/src/hammer.svg)"><i></i><kbd>2</kbd></span><b>Fix it</b><small>its stage runs again</small></div>
+    <div class="mv mid green"><span class="chip armed" style="--m:url(../../../design-system/orkui/icons/src/git-merge.svg)"><i></i><kbd>Enter</kbd></span><b>Send to dev</b></div>
+  </div>
+  <div class="zone newz g"><div class="newwrap gstack"><i class="se" style="--i:3"></i><i class="se" style="--i:2"></i><i class="se" style="--i:1"></i>
+    <div class="card sel" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle sig"><i class="in"><i class="ru" style="--m:url(../../../design-system/orkui/runes/spiral.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/peon-laborer.png" alt=""><b class="t">Pairing the phone</b><span class="ln">Three stages: its gate runs before dev.</span><span class="when">at work 2 d</span></div></div></div>
+<div class="pouchbar">
     <span class="cap">Ask a leader <kbd>Q</kbd></span>
     <i class="pouch" aria-hidden="true"></i>
     <div class="row"><span class="tk tech"><img src="../../../design-system/orkui/races/shaman-elder.png" alt="Tech"></span><span class="tk design"><img src="../../../design-system/orkui/races/dryad-elder.png" alt="Design"></span><span class="tk product"><img src="../../../design-system/orkui/races/unicorn-elder.png" alt="Product"></span><span class="tk add" title="Ask another…">+</span></div>
@@ -275,6 +318,10 @@ body[data-face="phone"] .card:not(.sel) .gem .ks { display: block; width: 66%; h
     <div class="keeper"><img src="../../../design-system/orkui/races/shaman-elder.png" alt=""><span>Kept by Tech's leader</span></div>
     <span class="when">decided 8 Nov</span></div>
 </div>
+<div class="prop tl g" aria-hidden="true"><img src="../mat-scenes/props/gate-tl.png" alt=""></div>
+<div class="prop tr g" aria-hidden="true"><img src="../mat-scenes/props/gate-tr.png" alt=""></div>
+<div class="prop bl g" aria-hidden="true"><img src="../mat-scenes/props/gate-bl.png" alt=""></div>
+<div class="prop br g" aria-hidden="true"><img src="../mat-scenes/props/gate-br.png" alt=""></div>
 <div class="prop tl" aria-hidden="true"><img src="props/battle-tl.png" alt=""></div>
 <div class="prop tr" aria-hidden="true"><img src="props/battle-tr.png" alt=""></div>
 <div class="prop bl" aria-hidden="true"><img src="props/battle-bl.png" alt=""></div>
