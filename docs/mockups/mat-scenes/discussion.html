@@ -265,6 +265,9 @@ body[data-face="desk"] .fab .short { display: none; }
 .drum .edge { position: absolute; bottom: 3px; width: 3px; height: 138px; background: var(--ork-card); border: 1px solid var(--ork-card-frame); border-radius: 2px; z-index: 1; }
 .drum .edge.l { left: calc(var(--k) * -3px); } .drum .edge.r { right: calc(var(--k) * -3px); }
 .drumplate { display: none; }
+.row4 .drum .card.focus { translate: none; }
+body[data-state="pick"] .row4 .drum:has(.card.focus) { translate: 0 -36px; }
+.drumslot { rotate: 0deg; }
 .drum .card .key { display: none; }
 body[data-face="phone"] .me { z-index: 14; width: 60px; height: 100px; }
 body[data-face="phone"] .me .handimg.rest { height: 56px; right: -22px; bottom: -14px; }
