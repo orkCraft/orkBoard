@@ -168,21 +168,20 @@ body[data-face="phone"] .handbtn { height: 104px; } body[data-face="phone"] .han
 body[data-face="phone"] .handline { right: 6px; bottom: 108px; font-size: 12px; line-height: 15px; padding: 2px 7px; }
 body[data-face="phone"] .hand .rail { right: 124px; } body[data-face="phone"] .hand .hrow { right: 124px; }
 .hand .rail { right: 190px; }
-.fanveil { position: absolute; inset: 0; z-index: 9; background: color-mix(in srgb, var(--ork-room) 42%, transparent); }
-.fan { position: absolute; inset: 0; z-index: 10; pointer-events: none; --R: 300px; --cx: calc(100% - 86px); --cy: calc(100% - 78px); }
-.fan .it { position: absolute; left: calc(var(--cx) + var(--R) * cos(var(--a))); top: calc(var(--cy) - var(--R) * sin(var(--a))); translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; rotate: calc(var(--a) - 135deg); }
-.fan .it > .pl { rotate: calc(135deg - var(--a)); }
+.fanveil { position: absolute; inset: 0; z-index: 9; background: color-mix(in srgb, var(--ork-room) 58%, transparent); }
+.fan { position: absolute; inset: 0; z-index: 10; pointer-events: none; --R: 420px; --cx: calc(100% - 86px); --cy: calc(100% - 124px); }
+.fan .it { position: absolute; --ae: calc(178deg - (178deg - var(--a)) * var(--spread, 1)); left: calc(var(--cx) + var(--R) * cos(var(--ae))); top: calc(var(--cy) - var(--R) * sin(var(--ae))); translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; }
 .fan .chipb { width: 56px; height: 56px; border-radius: 50%; background: var(--ork-plate); border: 4px solid var(--ork-bronze-hi); box-shadow: 0 3px 0 var(--ork-room); display: grid; place-items: center; overflow: hidden; }
 .fan .chipb img { width: 34px; height: 34px; image-rendering: auto; }
 .fan .pl { display: flex; gap: 5px; align-items: center; font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 7px; border-radius: 4px; white-space: nowrap; color: var(--ork-ink); }
-.fan .card.s { rotate: 0deg; }
+.fan .card.s { rotate: calc((var(--ae) - 160deg) * -.8); }
 .fan .tokcl { display: flex; gap: 2px; }
 .fan .tokcl .tok .ring { width: 26px; height: 26px; } .fan .tokcl .tok .ring img { width: 17px; height: 17px; }
 .fan .packw { transform: scale(1.5); transform-origin: center; }
 .fan .undo { width: 36px; height: 50px; position: relative; }
 .fan .undo .ork-card-back { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; box-shadow: none; }
 .fan .undo b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 22px/1 var(--ork-font-text); color: var(--ork-gilt-hi); }
-body[data-face="phone"] .fan { --R: 214px; --cx: calc(100% - 62px); --cy: calc(100% - 56px); }
+body[data-face="phone"] .fan { --spread: 1.45; --R: 262px; --cx: calc(100% - 50px); --cy: calc(100% - 140px); }
 body[data-face="phone"] .fan .chipb { width: 48px; height: 48px; border-width: 3px; } body[data-face="phone"] .fan .chipb img { width: 28px; height: 28px; }
 body[data-face="phone"] .fan .pl { font-size: 11px; padding: 0 5px; }
 body[data-face="phone"] .fan .tokcl .tok .ring { width: 22px; height: 22px; } body[data-face="phone"] .fan .tokcl .tok .ring img { width: 14px; height: 14px; }
