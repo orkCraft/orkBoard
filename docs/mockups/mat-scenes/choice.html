@@ -28,11 +28,13 @@ kbd { font: 500 11px/14px var(--ork-font-code); padding: 1px 5px; border: 1px so
 .prop.bl { left: 0; bottom: 0; --prop: 110px; transform-origin: 50% 100%; transition: none; }
 body[data-face="phone"] .prop.bl { --prop: 72px; }
 .undoplate { display: none; position: absolute; z-index: 21; left: 120px; bottom: 14px; padding: 5px 12px 6px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap; }
+.undoplate .sm { display: none; } body[data-face="phone"] .undoplate .sm { display: inline; } body[data-face="phone"] .undoplate .lg { display: none; }
 .undoplate small { display: block; font: 500 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
 body[data-state="undo"] .prop.bl { filter: none; rotate: -14deg; translate: 0 -6px; outline: 3px solid var(--ork-gilt-hi); outline-offset: 2px; border-radius: 4px; }
 body[data-state="undo"] .undoplate { display: block; }
-body[data-face="phone"] .undoplate { left: 8px; bottom: 84px; padding: 3px 9px 4px; font-size: 13px; line-height: 16px; }
-body[data-face="phone"] .undoplate small { font-size: 11px; line-height: 14px; }
+body[data-face="phone"] .undoplate { left: 4px; bottom: 82px; padding: 3px 7px 4px; font-size: 13px; line-height: 16px; }
+body[data-face="phone"] .undoplate .sm { display: none; } body[data-face="phone"] .undoplate .sm { display: inline; } body[data-face="phone"] .undoplate .lg { display: none; }
+.undoplate small { font-size: 11px; line-height: 14px; }
 
 /* top: back and the title plate */
 .top { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; z-index: 5; }
@@ -210,7 +212,7 @@ body[data-face="phone"] { --tile: 280px 280px; }
 .grid { position: absolute; left: 540px; top: 210px; width: 252px; display: grid; grid-template-columns: 104px 104px; gap: 28px 44px; z-index: 3; }
 .grid .card { overflow: visible; }
 .grid .note { left: calc(100% + 26px); top: 116px; --thl: 26px; }
-.grid .card .hd { width: 24px; height: 24px; margin-top: 1px; }
+.grid .card .hd { width: 30px; height: 30px; margin-top: 1px; }
 .grid .card b.t { font-size: 11px; line-height: 12px; margin-top: 2px; }
 body[data-face="phone"] .view { top: 76px; left: 6px; right: 8px; width: auto; translate: none; padding: 5px 8px 6px; }
 body[data-face="phone"] .view .lab { display: none; }
@@ -220,8 +222,8 @@ body[data-face="phone"] .view .cost { font-size: 12px; margin-top: 3px; }
 body[data-face="phone"] .grid { left: 4px; top: 150px; gap: 22px 10px; width: auto; }
 body[data-face="phone"] .grid .note { left: calc(100% + 24px); width: 112px; --thl: 24px; }
 body[data-face="phone"] .grid .note .nl.dim { display: none; }
-body[data-state="pick"][data-face="desk"] .finger { left: 590px; top: 560px; }
-body[data-state="pick"][data-face="phone"] .finger { left: 50px; top: 540px; }
+body[data-state="pick"][data-face="desk"] .finger { left: 385px; top: 567px; }
+body[data-state="pick"][data-face="phone"] .finger { left: 81px; top: 540px; }
 
 </style>
 </head>
@@ -245,7 +247,7 @@ body[data-state="pick"][data-face="phone"] .finger { left: 50px; top: 540px; }
 </div>
 <div class="prop tr" aria-hidden="true"><img src="props/choice-tr.png" alt=""></div>
 <div class="prop bl" aria-hidden="true"><img src="props/choice-bl.png" alt=""></div>
-<button class="undoplate" type="button">Undo <kbd>Z</kbd><small>Way set aside</small></button>
+<button class="undoplate" type="button">Undo <kbd>Z</kbd><small><span class="lg">Way set aside</span><span class="sm">Set aside</span></small></button>
 </div></div>
 </body>
 </html>
