@@ -167,6 +167,11 @@ body[data-face="phone"] .row.book { flex-direction: row; gap: 4px; justify-conte
 body[data-face="phone"] .axis { left: 10px; right: 10px; top: 290px; }
 body[data-face="phone"] .dmark { top: 300px; } body[data-face="phone"] .day { font-size: 13px; padding: 2px 6px; }
 
+/* two props, top right and bottom left (the person, 14 November 2026): Back holds the top left, a new card the bottom right */
+.prop.tl,.prop.br{display:none!important}
+.prop.bl{display:block!important}
+/* on the phone the foot is the hand's: the top right only */
+[data-face="phone"] .prop.bl{display:none!important}
 </style>
 </head>
 <body data-face="desk">
