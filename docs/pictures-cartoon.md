@@ -610,6 +610,23 @@ by code in three: its two ends kept, its middle stretched to the hand's width.
 One wide leather pocket for the hand of cards of a fantasy tavern card game of orks and goblins, one image, 2:1, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. The SAME worn brown leather, stitching and brass as the attached backpack. Seen STRAIGHT FROM THE FRONT and a little from above, flat: the FRONT of a long open pocket lying across the whole image, its top edge a thick rolled lip with a stitched seam just under it, EMPTY behind (cards are put in it later), its two ends rounded and held by a brass rivet each, a small patch sewn near the left end, one scuff near the right. The MIDDLE of the pocket, between the two ends, is plain leather with the same seam all along it and NOTHING else, so it can be stretched. In the lower half of the front, in the middle, a plain flat rectangle of slightly darker leather left EMPTY (a plate with words goes there later). Dark and quiet: the cards standing in it must be the brightest thing. A flat mid-grey background (#3a3a3a) around it. No cards, no people, no text, letters or numbers.
 ```
 
+### H2. The person's hand, an ork's, in six poses (attach the tavern board, C1, O3a and K1)
+The hand at the left end of the hand's rail (talk of 14 November 2026, to be written with the hand's decision): it says whose move
+it is by its pose, holds the moves that wait (the pile laid on its palm by code, its thickness the count), carries the leaders'
+tokens' pouch at its wrist (Q) and takes a played card back (Z). The person's race is only a look, never a craft: the glove is
+neutral bronze and leather, no party's colour; only the fingers' ends show the race. A line under it always says the pose in
+words. The other races' hands are taken on this sheet's model once it is approved.
+```
+Six poses of ONE hand for a fantasy tavern card game of orks and goblins, one sheet, a 3x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached sheets: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. The hand is an ORK's right hand seen flat from the front and a little from above, coming in from the BOTTOM LEFT of each tile and reaching up and to the right, as if the player's own hand lay at the bottom left corner of the screen beside a row of cards. It wears the SAME fingerless glove in every tile: worn brown leather with a riveted bronze plate over the back of the hand and a bronze cuff at the wrist, no party colour; only the ends of the fingers show: thick green ork fingers with short dark claws and one knobbly knuckle. From the cuff hangs a small leather drawstring pouch with three round tokens peeking out of it, the SAME pouch in every tile. Same size and the same wrist position in every tile, the hand filling about two thirds of its tile, readable at 96 pixels.
+1 resting, palm up and slightly cupped, EMPTY (a small stack of cards is laid on the palm later).
+2 open, palm up, fingers spread wide, offering: "your move".
+3 lying flat, fingertips drumming on the table, two short motion ticks above two fingers: "waiting".
+4 pointing with the index finger to the RIGHT, the other fingers curled.
+5 thumbs up, the other fingers curled.
+6 cupped and reaching up to catch, as if a card is falling back into it from above (the card itself is not drawn).
+A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No cards, no people beyond the hand, no text, letters or numbers.
+```
+
 ## Every set the final build needs (12 November 2026)
 
 One prompt a set, each written whole above: copy it as it is, attach what it names. *Made* is in orkUI; *to take* waits for a take
@@ -635,5 +652,6 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
 | C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | all taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`) |
+| H2 | the person's hand, an ork's, six poses (the other races after it) | to take |
 | H1 | the hand's pocket | taken (14 November 2026), `docs/mockups/mat-scenes/props/hand-pocket.png` |
 | F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | F1–F4 taken (14 November 2026), in `docs/mockups/mat-scenes/surfaces/`: F1 came grey (tinted warm by code, or taken again *warm dark brown*), F2 blotchy and not tiling top to bottom (to take again: *one even tone, two or three faint stains*), F3 as asked, F4 a leather inlay between two bands of oak (laid as a frame: the oak at the field's edges, the leather stretched); F5 taken |
