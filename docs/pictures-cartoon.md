@@ -629,6 +629,46 @@ Six poses of ONE hand for a fantasy tavern card game of orks and goblins, one sh
 A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No cards, no people beyond the hand, no text, letters or numbers.
 ```
 
+## The mats' frame (round 8 of the mats' mockups, 14 November 2026; not decided yet)
+
+Taken sheets and cuts: `docs/mockups/mat-scenes/sheets/g*.jpg`, cut by `docs/mockups/mat-scenes/cut_grid.py` into
+`docs/mockups/mat-scenes/props/` (`header-bar.png`, `signs/`, `crafts/`, `chips/`). Attach to each the tavern board and C1.
+
+### G1. The header plate — taken (`header-bar.png`; the sheet's lower third holds stray ghosts, cropped away)
+```
+One long header plate for a fantasy tavern card game of orks and goblins, one 2:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached sheets: thick even dark outlines, flat colours with one shade each, chunky crooked shapes; no texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM THE FRONT, flat. A long horizontal board of dark wood bound in worn bronze, lying across the whole width of the image, about one fifth of its height, centred: its LEFT END a rounded bronze cap with two rivets and a small notch, its RIGHT END a bronze cap with a round EMPTY socket (a small sign goes there later), its MIDDLE plain dark wood with a thin bronze rim along the top and bottom edges and NOTHING else, so it can be stretched. Dark and quiet: words in light gold will be laid on it. A flat mid-grey background (#3a3a3a) around it. Nothing else in the image. No text, letters or numbers.
+```
+
+### G2. The mats' signs, for the header's socket — taken (`signs/`)
+```
+Eight small signs for a fantasy tavern card game, one sheet, a 4x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached sheets: thick even dark outlines, flat colours with one shade each, chunky crooked shapes; no texture, no gradients, no blurred shadows, no glow. Each sign is a ROUND BRONZE MEDALLION with a thick rim, its object embossed in warm bronze and brass on a dark middle, bold and simple, readable at 40 pixels, all eight the same size, centred. Left to right, top to bottom: 1 two tankards clinking (a discussion); 2 a signpost with three arrows (a choice); 3 two crossed swords over a small round shield (a battle); 4 a portcullis under an arch (the gate); 5 a wooden case of nine square cells (slots); 6 a pair of map dividers over a dotted path (a scheme); 7 three stacks of cards (piles); 8 a buckled leather backpack (the backpack). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### G3. The crafts' marks, for the tokens — taken (`crafts/`, white masks)
+```
+Six small craft marks for a card-game interface on one sheet, a 3x2 grid of square tiles, each ONE flat pure WHITE chunky silhouette, its details cut out as WIDE gaps, no outline in another colour, no shading, no texture, no glow, readable at 14 pixels: one bold simple shape each, at most two parts, no thin lines. Things of a fantasy tavern realm, never a face, never letters. Each centred at the same size with a clear margin. Left to right, top to bottom: 1 a cog with a short wrench across it (engineering); 2 a paint brush crossed with a short bow (the look); 3 a folded map with an X (the product); 4 a miner's pick (running what is live); 5 a hand bell (marketing); 6 an hourglass (release). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+### G4. The undo chip — taken (`chips/undo.png`; the sheet's chips for Play, Ask and New are replaced by G6)
+```
+Four round buttons for a fantasy tavern card game, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached sheets: thick even dark outlines, flat colours with one shade each, chunky crooked shapes; no texture, no gradients, no blurred shadows, no glow. Each is a ROUND chip with a thick notched brass rim and a dark middle, the same size in every tile, seen straight from above, its object in the middle bold and readable at 48 pixels: 1 a small bone-white die tilted, its top face showing a plain right-pointing triangle (play); 2 a round game token on its face a big question mark carved in (ask); 3 a small blank playing card, a glowing lightbulb drawn on it and a small plus (a new idea); 4 a curled arrow turning back to the left (undo). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No letters or numbers except the question mark.
+```
+
+### G5. The person's hand, four poses — taken but NOT used: its style is lighter than H2's (thin lines, a paper ground) and its 4th pose is two fingers sideways, not one finger up; H2's rest, open, waiting and point poses are used instead.
+```
+Four poses of ONE hand for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the style of the attached hand sheet (same glove: worn brown leather, riveted bronze plate, bronze cuff, green ork fingers with short dark claws, the small pouch at the wrist), thick even dark outlines, flat colours with one shade each; no texture, no gradients, no blurred shadows, no glow. The hand comes in from the BOTTOM RIGHT corner of each tile, the cuff at the tile's edge, same size and wrist position in every tile.
+1 lying relaxed flat on a table, fingers loose, seen from above.
+2 a loose FIST, knuckles up, as if holding something small inside for you.
+3 OPEN, palm up and cupped, fingers spread a little, EMPTY, as if offering what it holds.
+4 only the INDEX FINGER and knuckles rising from the BOTTOM edge of the tile, pointing straight UP, the rest of the hand below the edge.
+A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No cards, no text, letters or numbers.
+```
+
+### G6. The hand's three things, bare (no rim: each known by its shape) — to take
+```
+Three objects for a fantasy tavern card game, one sheet, a 3x1 row of square tiles (the whole image 3:1 or narrower, never wider), in EXACTLY the humorous flat cartoon style and muted palette of the attached sheets: thick even dark outlines, flat colours with one shade each, chunky crooked shapes; no texture, no gradients, no blurred shadows, no glow. Each object ALONE, NO round rim, NO chip, NO frame around it, seen from above at a slight angle, bold and readable at 48 pixels, the same visual size, centred, a light rim of shade so it reads on a very dark background: 1 a chunky bone-white six-sided DIE, tilted so three faces show, its top face showing a plain right-pointing triangle (play) instead of pips, the other faces with dark pips; 2 a thick round GAME TOKEN in worn bronze, standing a little tilted, a big question mark embossed on its face; 3 a small PLAYING CARD lying a little tilted, cream face, a glowing yellow lightbulb drawn on it and a small plus in its corner. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No letters or numbers except the question mark.
+```
+
 ## Every set the final build needs (12 November 2026)
 
 One prompt a set, each written whole above: copy it as it is, attach what it names. *Made* is in orkUI; *to take* waits for a take
@@ -655,5 +695,6 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
 | C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | all taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`) |
 | H2 | the person's hand, an ork's, six poses (the other races after it) | taken (14 November 2026): drawn from the bottom left, mirrored by code to come from the bottom right; cut in `docs/mockups/mat-scenes/props/hand-ork-*.png` (rest, open, waiting, point, done, catch) |
+| G1–G6 | the mats' frame: the header plate, the mats' signs, the crafts' marks, the undo chip, the hand's poses, the hand's three things | G1–G4 taken (14 November 2026), G5 taken and not used, G6 to take |
 | H1 | the hand's pocket | taken (14 November 2026), `docs/mockups/mat-scenes/props/hand-pocket.png` |
 | F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | F1–F4 taken (14 November 2026), in `docs/mockups/mat-scenes/surfaces/`: F1 came grey (tinted warm by code, or taken again *warm dark brown*), F2 blotchy and not tiling top to bottom (to take again: *one even tone, two or three faint stains*), F3 as asked, F4 a leather inlay between two bands of oak (laid as a frame: the oak at the field's edges, the leather stretched); F5 taken |
