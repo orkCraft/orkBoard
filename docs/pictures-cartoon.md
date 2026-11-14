@@ -601,6 +601,15 @@ The backpack's mats (C8); the same leather as C8's patches and O3a's backpack.
 One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. The inside of a worn leather backpack: dark brown leather panels sewn together, a few stitched seams crossing it in long straight lines, a patch sewn over one worn spot, a few scuffs; the same leather as the attached backpack, never green. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
 ```
 
+### H1. The hand's pocket (attach the tavern board, C1 and O3a)
+The hand lies in a pocket at the foot of every mat but the battle's (§309.2), and at the table's foot when no mat is open: the cards
+stand in it, their lower part tucked behind its front; under them, on the pocket's front, a plate says what the hand holds
+(*Waiting for you*, *Answers to Design*, *Personas*), laid by code as orkUI's plate (`.ork-plate`), never drawn. The pocket is cut
+by code in three: its two ends kept, its middle stretched to the hand's width.
+```
+One wide leather pocket for the hand of cards of a fantasy tavern card game of orks and goblins, one image, 2:1, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. The SAME worn brown leather, stitching and brass as the attached backpack. Seen STRAIGHT FROM THE FRONT and a little from above, flat: the FRONT of a long open pocket lying across the whole image, its top edge a thick rolled lip with a stitched seam just under it, EMPTY behind (cards are put in it later), its two ends rounded and held by a brass rivet each, a small patch sewn near the left end, one scuff near the right. The MIDDLE of the pocket, between the two ends, is plain leather with the same seam all along it and NOTHING else, so it can be stretched. In the lower half of the front, in the middle, a plain flat rectangle of slightly darker leather left EMPTY (a plate with words goes there later). Dark and quiet: the cards standing in it must be the brightest thing. A flat mid-grey background (#3a3a3a) around it. No cards, no people, no text, letters or numbers.
+```
+
 ## Every set the final build needs (12 November 2026)
 
 One prompt a set, each written whole above: copy it as it is, attach what it names. *Made* is in orkUI; *to take* waits for a take
@@ -626,4 +635,5 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
 | C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1–C7 taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`); C8 to take |
+| H1 | the hand's pocket | to take |
 | F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | F1–F4 taken (14 November 2026), in `docs/mockups/mat-scenes/surfaces/`: F1 came grey (tinted warm by code, or taken again *warm dark brown*), F2 blotchy and not tiling top to bottom (to take again: *one even tone, two or three faint stains*), F3 as asked, F4 a leather inlay between two bands of oak (laid as a frame: the oak at the field's edges, the leather stretched); F5 to take |
