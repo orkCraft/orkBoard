@@ -267,7 +267,7 @@ body[data-face="phone"] .undo .uw { font-size: 10.5px; padding: 0 5px; } body[da
 .drum { position: relative; width: 104px; display: flex; flex-direction: column; align-items: center; }
 .strip { width: calc(104px * var(--k)); height: 22px; clip-path: inset(-10px -10px 0 -10px); border-bottom: 2px solid var(--ork-card-frame); flex: none; filter: brightness(var(--b)); }
 .strip .card { width: 100%; box-shadow: none; border-bottom: 0; }
-.strip .card b.t { min-height: 0; top: 2px; height: 16px; left: 10px; right: 10px; font-size: 9.5px; line-height: 16px; white-space: nowrap; display: block; }
+.strip .card b.t { min-height: 0; top: 2px; height: 16px; left: 13px; right: 13px; font-size: 9.5px; line-height: 16px; white-space: nowrap; display: block; }
 .fc { position: relative; flex: none; isolation: isolate; }
 .eg { position: absolute; top: 8px; height: 130px; width: calc(var(--n) * 2px); z-index: -1; background: repeating-linear-gradient(90deg, var(--ork-card-frame) 0 1px, var(--ork-card) 1px 2px); }
 .eg.eL { right: calc(100% - 2px); } .eg.eR { left: calc(100% - 2px); }
@@ -277,6 +277,7 @@ body[data-face="phone"] .undo .uw { font-size: 10.5px; padding: 0 5px; } body[da
 .dplate kbd { font-size: 9.5px; line-height: 12px; padding: 0 3px; }
 body[data-state="pick"] .fc.focus .card { outline: 3px solid var(--ork-ink); outline-offset: 1px; translate: 0 -30px; }
 body[data-state="pick"] .drum { translate: 0 -30px; }
+body[data-state="pick"] .drum .dplate { display: none; }
 body[data-state="pick"] .drum .fc.focus .card { translate: none; }
 body[data-state="pick"] .fc.focus { z-index: 6; }
 .finger { display: none; position: absolute; left: -35px; top: 127px; width: 200px; z-index: 12; rotate: -60deg; pointer-events: none; }
@@ -329,7 +330,7 @@ body[data-state="fab"][data-face="phone"] .handbtn img { transform: scaleX(-1); 
 body[data-face="phone"] .fab { right: 4px; bottom: 96px; width: 190px; height: 124px; }
 body[data-face="phone"] .fo { width: 48px; } body[data-face="phone"] .fo img { height: 46px; } body[data-face="phone"] .fo .fl { top: 52px; font-size: 10px; padding: 0 5px; }
 body[data-face="phone"] .fo.o1 { left: 0; top: 36px; } body[data-face="phone"] .fo.o2 { left: 70px; top: 0; } body[data-face="phone"] .fo.o3 { left: 140px; top: 36px; }
-body[data-face="phone"] .poseline { left: auto; right: 6px; bottom: 58px; font-size: 12px; padding: 2px 8px 3px; }
+body[data-face="phone"] .poseline { left: auto; right: 6px; bottom: 46px; font-size: 12px; padding: 2px 8px 3px; }
 body[data-state="fab"][data-face="phone"] .poseline { bottom: 24px; left: auto; right: 74px; }
 body[data-face="phone"] .poseline small { display: none; }
 body[data-face="phone"] .keytab { display: none; }
