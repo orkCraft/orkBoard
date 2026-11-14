@@ -8,12 +8,12 @@
 <link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
 <link rel="stylesheet" href="../../../design-system/orkui/components.css">
 <style>
-:root { --ps: 107px; --ph: 180px; --pw: 720px; --cw: 108px; --ch: 140px; --tk: 64px; --em: 40px; --prop: 160px; --g: 28px; --nw: 168px; --nh: 236px; }
+:root { --ps: 48px; --ph: 80px; --pw: 720px; --cw: 112px; --ch: 150px; --tk: 64px; --em: 40px; --prop: 160px; --g: 28px; --nw: 168px; --nh: 236px; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body { background: var(--ork-room); color: var(--ork-ink); font: var(--ork-type-body); overflow: hidden; }
 body[data-face="desk"] { width: 1440px; height: 900px; }
-body[data-face="phone"] { width: 390px; height: 844px; --ps: 76px; --ph: 128px; --pw: 372px; --cw: 76px; --ch: 104px; --tk: 40px; --em: 32px; --prop: 90px; --g: 20px; --nw: 100px; --nh: 134px; }
+body[data-face="phone"] { width: 390px; height: 844px; --ps: 36px; --ph: 60px; --pw: 372px; --cw: 78px; --ch: 108px; --tk: 40px; --em: 32px; --prop: 90px; --g: 20px; --nw: 100px; --nh: 134px; }
 .stage { position: absolute; inset: 2.5%; }
 .field { position: absolute; inset: 0; border: 4px solid var(--ork-bronze); border-radius: var(--ork-radius-card); box-shadow: 0 4px 0 var(--ork-plate); overflow: hidden; background: var(--ork-room); }
 .field::before { content: ""; position: absolute; inset: 0; z-index: 0; background-image: var(--surface); background-size: var(--tile); background-repeat: var(--rep, repeat); filter: var(--tint); }
@@ -22,7 +22,7 @@ body[data-face="phone"] { width: 390px; height: 844px; --ps: 76px; --ph: 128px; 
 .prop { position: absolute; z-index: 20; pointer-events: none; filter: brightness(.47) saturate(.9); }
 .prop img { display: block; max-width: var(--prop); max-height: var(--prop); width: auto; height: auto; }
 .prop.tl { left: -4px; top: -4px; } .prop.tr { right: -4px; top: -4px; } .prop.bl { left: -4px; bottom: -4px; } .prop.br { right: -4px; bottom: -4px; }
-body[data-face="phone"] .prop.bl, body[data-face="phone"] .prop.br { bottom: calc(var(--foot) + 8px); }
+body[data-face="phone"] .prop.bl, body[data-face="phone"] .prop.br { display: none; }
 /* title */
 .top { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; z-index: 5; }
 .back { position: absolute; left: 190px; top: 22px; display: flex; gap: 8px; align-items: center; padding: 6px 10px; font: var(--ork-type-button); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: var(--ork-radius-control); color: var(--ork-ink); white-space: nowrap; }
@@ -51,7 +51,7 @@ body[data-face="phone"] .tk { border-width: 3px; }
 .pouchbar .row { display: flex; gap: 6px; align-items: center; }
 .pouch { width: 56px; height: 56px; background: var(--ork-bronze-hi); flex: none; -webkit-mask: url(../battle-field/emblems/pouch.png) center / contain no-repeat; mask: url(../battle-field/emblems/pouch.png) center / contain no-repeat; }
 .pouchbar .tk { --tk: 34px; border-width: 3px; }
-body[data-face="phone"] .pouchbar { left: 10px; bottom: calc(var(--ph) + var(--ch) * .65 + 26px); flex-direction: row-reverse; align-items: center; gap: 8px; }
+body[data-face="phone"] .pouchbar { left: 10px; bottom: calc(var(--ph) + var(--ch) * .7 + 26px); flex-direction: row-reverse; align-items: center; gap: 8px; }
 body[data-face="phone"] .pouchbar .cap { font-size: 12px; }
 body[data-face="phone"] .pouchbar .row { gap: 4px; }
 body[data-face="phone"] .pouch { width: 34px; height: 34px; }
@@ -74,28 +74,28 @@ body[data-face="phone"] .pouchbar .tk { --tk: 30px; border-width: 2px; }
 .card .when { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; font: 500 11px/14px var(--ork-font-text); color: var(--ork-ink-muted); background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; }
 .card.big { --g: 34px; width: var(--nw); height: var(--nh); padding: 10px 10px 34px; gap: 5px; border-color: var(--ork-ink); box-shadow: 0 0 0 2px var(--ork-ink), 0 5px 0 2px var(--ork-room); }
 .card.big .hd { width: 66px; height: 66px; } .card.big b.t { font-size: 17px; } .card.big .ln { font-size: 13px; }
-.card .key { position: absolute; left: 50%; top: 9px; translate: -50% 0; }
+.card .key { position: absolute; left: 50%; top: -12px; translate: -50% 0; z-index: 3; background: var(--ork-plate); border-radius: 4px 4px 0 0; border-bottom: 0; }
 .card.blank { border-style: dashed; border-color: var(--ork-bronze-hi); background: color-mix(in srgb, var(--ork-card) 80%, var(--ork-room)); }
 .card.blank .pl { width: 34px; height: 34px; background: var(--ork-bronze-hi); -webkit-mask: url(../../../design-system/orkui/icons/src/plus.svg) center / contain no-repeat; mask: url(../../../design-system/orkui/icons/src/plus.svg) center / contain no-repeat; flex: none; }
 /* the hand in its pocket */
-.hand { position: absolute; z-index: 8; left: 460px; bottom: 8px; width: var(--pw); height: calc(var(--ph) + var(--ch) * .65); }
-.hand .cards { position: absolute; z-index: 1; left: 0; right: 0; bottom: calc(var(--ph) - var(--ch) * .35); display: flex; justify-content: center; gap: 8px; }
+.hand { position: absolute; z-index: 8; left: 460px; bottom: 8px; width: var(--pw); height: calc(var(--ph) + var(--ch) * .7); }
+.hand .cards { position: absolute; z-index: 1; left: 0; right: 0; bottom: calc(var(--ph) - var(--ch) * .3); display: flex; justify-content: center; gap: 8px; }
 .hand .cards .card { flex: none; }
 .hand .cards .card.lift { translate: 0 -16px; }
 .hand .card b.t { font-size: 13px; margin-top: 26px; }
 .pocket { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; height: var(--ph); border-style: solid; border-width: 0 var(--ps); border-image-source: url(props/hand-pocket.png); border-image-slice: 0 427 0 427 fill; border-image-repeat: stretch; pointer-events: none; }
-.pplate { position: absolute; z-index: 3; bottom: calc(var(--ph) * .05); height: calc(var(--ph) * .22); left: calc(var(--ps) + (var(--pw) - 2 * var(--ps)) * .22); width: calc((var(--pw) - 2 * var(--ps)) * .56); display: grid; place-items: center; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: var(--ork-type-label); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ork-gilt); white-space: nowrap; }
-.waitpile { position: absolute; z-index: 9; left: -30px; bottom: 22px; width: 12px; height: calc(var(--ch) * .6); background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: 3px; box-shadow: 4px 0 0 var(--ork-card-frame), 8px 0 0 var(--ork-card), 12px 0 0 var(--ork-card-frame); }
-.waitlab { position: absolute; z-index: 9; left: -50px; bottom: calc(22px + var(--ch) * .6 + 8px); display: flex; gap: 4px; align-items: center; white-space: nowrap; font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 5px; border-radius: 4px; }
+.pplate { position: absolute; z-index: 3; bottom: calc(var(--ph) * .04); height: calc(var(--ph) * .24); left: calc(var(--ps) + (var(--pw) - 2 * var(--ps)) * .22); width: calc((var(--pw) - 2 * var(--ps)) * .56); display: grid; place-items: center; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: var(--ork-type-label); font-size: 10px; line-height: 1; letter-spacing: .08em; text-transform: uppercase; color: var(--ork-gilt); white-space: nowrap; }
+.waitpile { position: absolute; z-index: 9; left: -30px; bottom: 8px; width: 12px; height: calc(var(--ch) * .5); background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: 3px; box-shadow: 4px 0 0 var(--ork-card-frame), 8px 0 0 var(--ork-card), 12px 0 0 var(--ork-card-frame); }
+.waitlab { position: absolute; z-index: 9; left: -50px; bottom: calc(8px + var(--ch) * .5 + 6px); display: flex; gap: 4px; align-items: center; white-space: nowrap; font: 600 12px/15px var(--ork-font-text); background: var(--ork-plate); padding: 1px 5px; border-radius: 4px; }
 body[data-face="phone"] .hand { left: 0; bottom: 0; }
 body[data-face="phone"] .hand .cards { gap: 5px; padding-left: 30px; justify-content: flex-start; }
-body[data-face="phone"] .waitpile { left: 10px; bottom: 20px; width: 9px; box-shadow: 3px 0 0 var(--ork-card-frame), 6px 0 0 var(--ork-card); }
-body[data-face="phone"] .waitlab { left: 4px; bottom: calc(20px + var(--ch) * .6 + 4px); font-size: 10px; line-height: 12px; }
-body[data-face="phone"] .pplate { font-size: 10px; letter-spacing: .06em; }
+body[data-face="phone"] .waitpile { left: 10px; bottom: 6px; width: 9px; box-shadow: 3px 0 0 var(--ork-card-frame), 6px 0 0 var(--ork-card); }
+body[data-face="phone"] .waitlab { left: 4px; bottom: calc(6px + var(--ch) * .5 + 4px); font-size: 10px; line-height: 12px; }
+body[data-face="phone"] .pplate { font-size: 8px; letter-spacing: .04em; }
 body[data-face="phone"] .card .when { display: none; }
 body[data-face="phone"] .hand .card { padding: 5px 4px 20px; --g: 20px; }
 body[data-face="phone"] .hand .card b.t { font-size: 11px; margin-top: 19px; line-height: 1.15; }
-body[data-face="phone"] .hand .card .key { top: 7px; }
+body[data-face="phone"] .hand .card .key { top: -11px; }
 body[data-face="phone"] .hand .card .key { font-size: 10px; padding: 0 3px; }
 body[data-face="phone"] .hand .card.blank .pl { width: 22px; height: 22px; }
 .desk-only { display: block; } body[data-face="phone"] .desk-only { display: none; }
@@ -104,7 +104,7 @@ body { --rep: round; --surface: url(surfaces/f2-parchment.jpg); --tile: 420px 42
 body[data-face="phone"] { --tile: 280px 280px; }
 
 body { --foot: 262px; }
-body[data-face="phone"] { --prop: 72px; }
+
 .view { position: absolute; left: 50%; top: 104px; translate: -50% 0; width: 600px; padding: 8px 14px 10px; background: var(--ork-plate); border: 2px solid var(--ork-bronze); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); text-align: center; z-index: 3; }
 .view .lab { display: block; font: var(--ork-type-label); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ork-ink-muted); margin-bottom: 6px; }
 .view .lab b { color: var(--ork-gilt); font-weight: 700; }
@@ -114,8 +114,8 @@ body[data-face="phone"] { --prop: 72px; }
 .arr { position: relative; width: 36px; height: 2px; background: var(--ork-bronze-hi); flex: none; }
 .arr::after { content: ""; position: absolute; right: -2px; top: -4px; width: 8px; height: 10px; background: var(--ork-bronze-hi); clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .view .cost { display: block; margin-top: 6px; font: 600 13px/16px var(--ork-font-text); color: var(--ork-mana); }
-.grid { position: absolute; left: 50%; top: 226px; translate: -50% 0; width: 604px; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 44px 20px; }
-.grid .card { width: 188px; height: 156px; padding: 8px 8px 34px; }
+.grid { position: absolute; left: 50%; top: 226px; translate: -50% 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 44px 20px; }
+.grid .card { width: 188px; height: 176px; padding: 8px 8px 34px; }
 .grid .card .ln { font-size: 12px; }
 .grid .card.focus { border-color: var(--ork-ink); box-shadow: 0 0 0 3px var(--ork-ink), 0 6px 0 3px var(--ork-room); }
 .pick { position: absolute; left: 50%; top: calc(100% + 8px); translate: -50% 0; display: flex; gap: 8px; align-items: center; white-space: nowrap; padding: 4px 10px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); font: var(--ork-type-button); color: var(--ork-ink); box-shadow: 0 3px 0 var(--ork-room); z-index: 4; }
@@ -132,10 +132,10 @@ body[data-face="phone"] .view .lab { font-size: 10px; margin-bottom: 4px; }
 body[data-face="phone"] .box { padding: 2px 5px; font-size: 11px; line-height: 15px; }
 body[data-face="phone"] .arr { width: 14px; }
 body[data-face="phone"] .view .cost { font-size: 12px; margin-top: 4px; }
-body[data-face="phone"] .grid { top: 222px; width: 356px; gap: 28px 10px; }
-body[data-face="phone"] .grid .card { width: 173px; height: 100px; padding: 6px 6px 30px; --g: 24px; }
+body[data-face="phone"] .grid { top: 222px; width: 356px !important; gap: 30px 10px; }
+body[data-face="phone"] .grid .card { width: 173px; height: 140px; padding: 6px 6px 30px; --g: 24px; }
 body[data-face="phone"] .grid .card b.t { font-size: 13px; margin-top: 18px; padding: 0 14px; }
-body[data-face="phone"] .grid .card .ln { display: none; }
+body[data-face="phone"] .grid .card .ln { display: block; font-size: 11px; line-height: 1.25; }
 body[data-face="phone"] .grid .card .when { display: block; font-size: 9px; padding: 0 3px; }
 body[data-face="phone"] .grid .card .by { width: 22px; height: 22px; }
 body[data-face="phone"] .pick { font-size: 12px; padding: 3px 8px; }
@@ -152,7 +152,7 @@ body[data-face="phone"] .hand .card.way { }
 <div class="view" aria-label="What the way in focus would make"><span class="lab">If you pick <b>Six-digit code</b></span>
 <div class="scheme"><span class="box">Phone</span><i class="arr"></i><span class="box hit">Relay</span><i class="arr"></i><span class="box hit">Desktop</span><i class="arr"></i><span class="box">Board</span></div>
 <span class="cost">≈ 3 mana · touches 2 parts</span></div>
-<div class="grid">
+<div class="grid" style="width:396px">
 <div class="card way" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><b class="t">QR code over the local network</b><span class="ln">Scan on the desktop; both find each other on the Wi-Fi.</span><span class="when">starts now</span><span class="by tech"><img src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by tech's leader"></span></div>
 <div class="card way focus" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><b class="t">Six-digit code</b><span class="ln">Type the code shown on the desktop into the phone.</span><span class="when">starts now</span><span class="by tech"><img src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by tech's leader"></span><span class="pick">Pick <kbd>Enter</kbd></span></div>
 <div class="card way" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">4</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><b class="t">Link by e-mail</b><span class="ln">Mail a link; tap it on the phone.</span><span class="when">needs a mail host</span><span class="by tech"><img src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by tech's leader"></span></div>
@@ -160,7 +160,7 @@ body[data-face="phone"] .hand .card.way { }
 </div>
 <div class="pouchbar"><span class="cap">Ask a leader <kbd>Q</kbd></span><div class="row"><i class="pouch" aria-hidden="true"></i>
 <span class="tk product"><img src="../../../design-system/orkui/races/unicorn-elder@3x.png" alt="Product"></span><span class="tk design"><img src="../../../design-system/orkui/races/dryad-elder@3x.png" alt="Design"></span><span class="tk tech"><img src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Tech"></span><span class="tk add" title="Ask another…">+</span></div></div><div class="hand"><span class="waitlab">Waiting <kbd>H</kbd></span><i class="waitpile" aria-hidden="true"></i>
-<div class="cards"><div class="card blank" data-kind="goal"><span class="gw tl"><span class="gem circle"><i class="in">0</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><kbd class=key>N</kbd><b class="t">Your own way</b></div><div class="card blank" data-kind="goal"><span class="gw tl"><span class="gem circle"><i class="in">2</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/question.svg)"></i></i></span></span><kbd class="key">M</kbd><b class="t">Ask for more ways</b></div></div><div class="pocket" aria-hidden="true"></div><div class="pplate">Your ways</div></div>
+<div class="cards"><div class="card blank" data-kind="goal"><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><kbd class=key>N</kbd><b class="t">Your own way</b></div><div class="card blank" data-kind="goal"><span class="gw tl"><span class="gem circle"><i class="in">2</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/question.svg)"></i></i></span></span><kbd class="key">M</kbd><b class="t">Ask for more ways</b></div></div><div class="pocket" aria-hidden="true"></div><div class="pplate">Your ways</div></div>
 </div>
 </div>
 <div class="prop tl" aria-hidden="true"><img src="props/choice-tl.png" alt=""></div><div class="prop tr" aria-hidden="true"><img src="props/choice-tr.png" alt=""></div><div class="prop bl" aria-hidden="true"><img src="props/choice-bl.png" alt=""></div><div class="prop br" aria-hidden="true"><img src="props/choice-br.png" alt=""></div>
