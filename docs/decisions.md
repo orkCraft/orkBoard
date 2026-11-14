@@ -7939,3 +7939,57 @@ the kind of mat, swords and knives in the corners*; *if corners are short, the r
    discussion next.
 
 The owner's call.
+
+## 310. A mat's props are two; a card is only S, M or L; a token is a live talk and a seal a closed word, its note kraft paper sealed by it; a slot is a pocket; the hand's cards stand on a rail; the person's hand is a button at the bottom right, its pose whose move it is (14 November 2026, the owner)
+
+Changes: 309.3 (four props in four corners), 309.2 and 302.1 (the hand's look, the moves that wait), 309.6 (the pouch at a mat's
+bottom left), 298.3 and 298.4 (a token's look and its slip), 296.5 and 302.3 (the blank card at the hand's edge), 292 (the
+phone's round button holding the die, the backpack and the book), 145 and 283 (the places to the right of the hand). Kept: 296.1
+(one ratio, three sizes), 298 but its points 3 and 4's look, 302 but its point 3's place, 309 but its points 2's look, 3's four
+props and 6's place.
+
+Why: the talk of 14 November 2026 on the mockups `docs/mockups/mat-scenes/` and `docs/mockups/battle-field/` (rounds 3 to 6,
+the person's Gemini takes in `docs/mockups/mat-scenes/sheets/`, `surfaces/`, `props/`). The person: *keep two props, top right
+and bottom left: Back holds the top, a new card the bottom*; *keep the cards always at the sizes we agreed, use more tokens and
+notes*; *the generated pocket for the slots, all slots as pockets, and something more minimal for the hand*; *the hand as a
+real hand*; *how to make the hand useful, not decoration*; *the hand at the right as a FAB, with the die, the cards, the tokens*;
+*the same on both*; *the hand less out of the corner*; *the notes as paper*; *the token is the live talk you can argue or close a
+risk, the seal when the risk is accepted*. So:
+1. **Two props**, the kind's own (§309.3): top right and bottom left on a desktop; top right only on a phone (the foot is the
+   hand's). Top left holds Back, bottom right the person's hand.
+2. **A card is only S, M or L** (§296.1 kept, now without exception): S 104 × 146 upright, the same on a desktop and a phone, for
+   every goal, decision, part, job, release, seat, way, a deck's top and a hand's card; M on its side for a leader's word only;
+   L read over the dimmed field. No wide, short, larger or cropped card; what is not a card (a row's name) is a plate.
+3. **A token is a live talk; a seal is a closed word.** A token is its craft's tool in its party's ring with its checks as
+   squares under it (§298.3's look of the checks kept, the tool replacing the head): the card is rated, talked, specced,
+   accepted, or its question or risk is still open, and the person may reply, argue or close the risk. When the talk is closed
+   (the answer taken, the card decided, played, done or in the book) the token is pressed into a **wax seal** on the card's
+   bottom edge: wax in its party's colour, the tool pressed in it, no squares; **a seal over an accepted risk keeps a red notch on
+   its rim**, so the risks taken stay found. A card disputed or changed **cracks** its seal (*out of date*) and a live token lies
+   beside it again. So the word *seal* means one thing, what is final: a leader's closed word, or the person's move that cannot
+   be undone (§302.4).
+4. **A note is kraft paper sealed by its token** (this replaces §298.4's slip): a dark warm paper (a step over the plaque, no new
+   colour), cream ink, a torn edge, a slight tilt, a folded corner; at its top left the wax seal that is its token's imprint (the
+   same tool, the same colour); its thread from the token is short and never crosses a card. The seal's state is the answer's:
+   pressed, answered; a soft blob without an imprint, asked and waiting (*Asked · waiting*); cracked, out of date. A token or its
+   note in focus lights both. The Orkmaster's voice stays a balloon.
+5. **A slot is a pocket** (§300.1's slots): every cell of a Slots mat and of a backpack's team is a leather pocket
+   (`docs/mockups/mat-scenes/props/hand-pocket.png`, its ends kept, its middle stretched), its S cards standing in it; an empty
+   pocket a faint *+*; the one in focus lit.
+6. **The hand's cards stand whole on a thin bronze rail** at the mat's foot (§302 kept: the cards that can be played on it now);
+   at its left the pile of the moves that wait (its thickness, H) and a plate saying what the hand holds. No blank card at its
+   edge (point 7); the battle and the gate show no hand's row.
+7. **The person's hand is a button at the field's bottom right**, the same on a desktop and a phone, on every mat: a hand in a
+   neutral glove peeking from the corner (its cuff on the field's edge), rising a little on focus. **Its pose says whose move it
+   is**, always with a line of words: a fist, nothing waits on you; pointing at the hand's cards, your move; drumming, the
+   leaders are thinking; a thumb, done (Z undoes); catching, a card dragged back to it (undo). **Pressed (Space) it opens a
+   column** up the field's right edge, each a chip with its word and key on a dark panel, the field dimmed: the blank *New
+   <kind>* card (N, its kind the zone in focus), the leaders' tokens' pouch (Q, §309.6's question), the die (D), the backpack
+   (B), the book (K), Undo (Z). This holds what §292's round button and §283's places held.
+8. **The person's race is a look only**, never a craft: the hand's glove is neutral bronze and leather, only the fingers show a
+   race; chosen at the start or later in the backpack, an ork's by default. The sheets are `docs/pictures-cartoon.md` H2 (the
+   other races after the ork's).
+9. **Built next on the page** from these mockups; the words it adds (*seal* in its widened sense, *note*, *pocket*, *the
+   person's hand*) enter `realm/lexicon.py` `TERMS` with the code that draws them.
+
+The owner's call.
