@@ -8047,3 +8047,18 @@ Why: the person, on the mockups of decision §311: *Back can be an icon, embosse
 2. **The mat's word and its line stand in the bar's middle**; the same cap is Back on a phone's note screen (§311.6).
 
 The owner's call.
+
+## 313. The drum is the whole row: the cards past it dealt over every slot, turned row by row (14 November 2026, the owner)
+
+Changes: 311.3 (past the row, its last slot a rolodex). Kept: 311 but this.
+
+Why: the person, on the mockups of §311: *again the drum appears only at the last card*; asked before for a balanced drum, not
+everything over one card. So:
+1. **The hand's row is the drum's front face**: its whole S cards as when nothing is past it.
+2. **The cards past the row are dealt round over every slot** (slot *i* holds cards *i*, *i + N*, …): over each card of the row
+   stand the strips of those that come to it next, three at most, each a little narrower, the rest a thickness; every slot carries
+   as many as the others, give or take one.
+3. **↑↓ turn the whole drum**, the row going back and the next coming forward; Enter plays the card in focus. With nothing past the
+   row there are no strips.
+
+The owner's call.
