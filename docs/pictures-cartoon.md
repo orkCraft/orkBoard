@@ -437,11 +437,25 @@ The top right corner of a part's card and of a decision's and a release's (§300
 Twelve small signs for a card-game interface on one sheet, a 4x3 grid of square tiles, the same family as the attached sheets: each ONE flat pure WHITE chunky silhouette, its details cut out as gaps, no outline in another colour, no shading, no texture, no glow, readable at 16 pixels: bold simple shapes, no thin lines. Each is a THING of a fantasy realm, never a being and never a face. Each centred at the same size with a clear margin. Left to right, top to bottom: 1 a cameo brooch, an oval frame with a plain hooded bust in profile cut out as a gap (a persona); 2 a thick leather work glove, its fingers a little curled (a job); 3 a round boulder lying across a short path (a struggle); 4 an old patched boot, a patch sewn on its toe (what people use instead); 5 an empty picture frame, upright, a thick moulding (a screen); 6 a single brick, its mortar lines cut out as gaps (a part of the code); 7 a rolled measuring tape, its end pulled out a little (a measure); 8 a painter's palette with three paint blobs cut out as gaps and a brush across it (an asset); 9 a clay pot with a jagged crack down its side (an error); 10 a three-legged stool (a seat); 11 a rolled decree tied with a cord, a round seal hanging from it (a decision); 12 a small ship with one square sail, seen from the side (a release). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
-### E1. The mats' emblems (attach R1)
-The large quiet picture under a mat's zones (§300.15): tinted by code one step lighter than its felt, so it must read as a shape alone.
+### E1. The mats' emblems (attach R1 and `docs/mockups/battle-field/phone-scene-ref.jpg`)
+A mat's sign (§309.4): large in its title plate, in its M with its material, carved into the battle's table; a white silhouette
+tinted by code. Taken (14 November 2026): `docs/mockups/battle-field/emblems-sheet.jpg`; tile 1 (a table seen from above) reads
+as a face with ears and is to be taken again (the fix under the prompt).
 ```
-Twelve emblems for a card-game interface on one sheet, a 4x3 grid of square tiles, each ONE flat pure WHITE silhouette, large and simple, filling most of its tile, its inner details cut out as wide gaps, no outline in another colour, no shading, no texture, no glow, so it reads both at 300 pixels as a faint watermark and at 48 pixels: bold shapes, few parts, no thin lines. They are emblems of a tavern's card game, never letters, never a real logo. Left to right, top to bottom: 1 a fan of five playing cards held upright (the hand); 2 a round table seen from straight above with four round stools round it (a discussion); 3 three playing cards side by side, the middle one raised a little above the others (a compare); 4 two short swords crossed in an X, points up (a battle); 5 a castle gate's portcullis, its bars cut out as gaps, under a round arch (the gate); 6 a winding path of four round stepping stones from the bottom left to the top right (a flow); 7 five round knots joined by straight lines like a star map, one in the middle and four round it (a scheme); 8 a wooden type case seen from the front, three rows of three square cells cut out as gaps (slots); 9 three short stacks of cards side by side on a flat tray (the discard); 10 a road from the bottom to the top with three milestones beside it (a story map); 11 a long bench seen from the front with four stools standing behind it in a row (a team); 12 a half-unrolled scroll with evenly spaced short tick marks along its edge (the time axis). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+Eight emblems for a fantasy tavern card game of orks and goblins, one sheet, a 4x2 grid of square tiles. Each emblem is ONE flat pure WHITE silhouette, large, filling most of its tile, centred, all eight the same visual size. Drawn in the humorous flat cartoon spirit of the attached board: chunky, a little crooked and lopsided, with small comic flaws (a nick, a dent, a patch, a bent nail), but as a SILHOUETTE: its inner details and outlines are cut out as WIDE gaps showing the background, no outline in another colour, no shading, no texture, no gradients, no glow. Bold simple shapes, few parts, no thin lines, so it reads both at 400 pixels and at 48 pixels as a small sign. Never letters, never a real logo.
+Left to right, top to bottom:
+1 a round tavern table seen from straight above, four round stools around it, a mug ring stain on the table top (a discussion).
+2 a crooked wooden signpost at a crossroads with three arrow boards pointing different ways, one arrow cracked (a choice).
+3 two short swords crossed in an X over a round dented shield, one blade nicked, EXACTLY the crest of the attached board (a battle).
+4 a castle portcullis under a round stone arch, one bar bent (the gate).
+5 a wooden type case seen from the front, three rows of three square cells, one cell's wall broken off (slots).
+6 a treasure map with curled corners, five round marks joined by dotted paths, an X on one mark (a scheme).
+7 three stacks of cards of different heights side by side, the tallest one leaning (piles).
+8 a small drawstring pouch, tied at the top, three round tokens spilling out of it (the leaders' tokens).
+A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
+Tile 1 again (attach the taken sheet): *Only tile 1: two tankards clinking over a small round table, seen from the side, foam
+splashing; the same white silhouette family as the attached sheet's other seven.*
 
 ### E2. The seal of a mat's move (attach K1 and O3a)
 A mat's one move (§300.15), its words laid on its plate by code; four states of one seal.
@@ -449,10 +463,123 @@ A mat's one move (§300.15), its words laid on its plate by code; four states of
 A seal button for a card-game interface on one sheet, a 2x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, a little chunky, the same warm bronze and brass as the attached backpack's buckles. The seal is a thick round bronze disc seen straight from above, its rim raised and notched like a coin's edge, a plain FLAT dark-brown round plate in its middle with NOTHING on it (words are laid there later), the same size in every tile. 1 the seal at rest, its rim warm bronze. 2 the same seal ready to be pressed: its rim a brighter gold, a thin bright ring just outside it (no glow, a hard flat ring). 3 the same seal pressed: drawn a little lower, its rim's top edge darker, as if pushed into the table. 4 the same seal that cannot be pressed yet: its rim a dull matte grey-bronze, flatter, no notches' highlights. Each centred with a light rim so it reads on a very dark background. A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
 ```
 
-### E3. The mats' props and the project's deck (attach K1, O3a and W1)
-The thing that stands in a mat's corner (§300.15), its owner's; and the box the project's deck lies in (§300.12).
+### E3. The project's deck's box, and the props of a mat's owner (attach K1, O3a and W1)
+Tile 6 is the box the project's deck lies in (§300.12). Tiles 1 to 5, a thing in a mat's corner by its owner (§300.15), are
+replaced by the scenes' corner props by the mat's kind (§309.3, C1 to C7): only tile 6 is still needed.
 ```
 Six objects for a card-game interface on one sheet, a 3x2 grid of square tiles, in the humorous flat cartoon style of the attached sheets: thick even dark outlines, flat colours with one shade each, no texture, no gradients, comic proportions, a little chunky, the warm wood and brass of a tavern as in the attached backpack. Each centred, the same scale, front-on or a slight three-quarter view, with a light rim so it reads on a very dark background. Left to right, top to bottom: 1 a small wooden abacus with brass rods and round wooden beads, some pushed to one side (the dealer counts); 2 a goblin miner's lantern, a squat iron frame, a warm flame inside behind glass (live things watched); 3 a parchment map rolled up and tied with a red ribbon, a corner unrolled showing a dotted path (the product's road); 4 a large iron spanner lying across two hex nuts (the engineers); 5 a small paint pot with a brush standing in it, a drip running down its side (the look); 6 a wooden card box with brass corners and a brass clasp, its lid open a little, the backs of plain cards seen inside (the project's deck). A flat mid-grey background (#3a3a3a), a thin grey-brown frame around each tile. No text, letters or numbers.
+```
+
+## The mats' scenes (decision §309): their corner props and their surfaces
+
+A mat opened is a scene of the tavern (§309.3): its surface the kind's material, four props in its four corners, its emblem (E1)
+in its title plate. The cards are the brightest thing: the props are darkened to the surface by code and never lie under a card,
+a token or a button. Attach to every sheet the tavern board (`docs/mockups/battle-field/phone-scene-ref.jpg`) for the style and
+the battle's taken props (`docs/mockups/battle-field/props-battle-sheet.jpg`) for the scale. Which mat lies on which surface:
+the battle, the gate and the discussion on F1; the choice and the scheme on F2; slots on F3; piles on F4. The cut (a prop and
+its patch, the grey made clear by a flood fill from the open grey, so the steel stays opaque) is the one of
+`docs/mockups/battle-field/props/`. A surface that does not tile cleanly is mirrored by code; the battle's planks are CSS until F1
+is taken.
+
+### C1. The battle's corners (attach the tavern board)
+Taken (14 November 2026): `docs/mockups/battle-field/props-battle-sheet.jpg`, cut in `docs/mockups/battle-field/props/`.
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into a dark wooden tavern table, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a short dagger stabbed into the table at an angle, a few carved notches beside it.
+2 (TOP RIGHT corner of its tile): two short swords lying crossed, one blade nicked, a dented round buckler under them.
+3 (BOTTOM LEFT corner of its tile): a tipped-over ale mug, a small puddle of ale, a gnawed bone.
+4 (BOTTOM RIGHT corner of its tile): a hand axe lying with its blade over the edge, a loose coin and one die.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C2. The gate's corners (attach the tavern board and C1)
+The gate is a battle against the tests (§309.7): a guard's things, on the same table.
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into a dark wooden tavern table, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a heavy iron ring with four big old keys hanging from it, one key bent.
+2 (TOP RIGHT corner of its tile): a big iron padlock lying open, its shackle sprung, a small scratch mark beside it.
+3 (BOTTOM LEFT corner of its tile): a short iron chain coiled loosely, one link broken open.
+4 (BOTTOM RIGHT corner of its tile): a guard's dented iron helmet lying upturned, two rolled scrolls with wax seals sticking out of it.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C3. The discussion's corners (attach the tavern board and C1)
+Leaders talk at a table over drinks (§309.1).
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into a dark wooden tavern table, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): two wooden tankards side by side, foam spilling over one rim, a wet ring beside them.
+2 (TOP RIGHT corner of its tile): a fat candle stub in an iron holder, wax dripped down its side, a flat flame.
+3 (BOTTOM LEFT corner of its tile): a long clay pipe lying on the table, a small leather tobacco pouch beside it, a curl of flat smoke.
+4 (BOTTOM RIGHT corner of its tile): a wooden plate with a half-eaten loaf and a wedge of cheese, a few crumbs, a knife across the plate.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C4. The choice's corners (attach the tavern board and C1)
+Ways at a crossroads, laid on parchment (§309.1).
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into an old dark parchment spread on a table, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a brass compass with its lid open, its needle a plain arrow.
+2 (TOP RIGHT corner of its tile): a broken wooden arrow board from a signpost, a rusty nail still in it.
+3 (BOTTOM LEFT corner of its tile): a small iron lantern with a low warm flame behind its glass.
+4 (BOTTOM RIGHT corner of its tile): three dice and one coin caught mid-flip, lying where they fell.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C5. The slots' corners (attach the tavern board and C1)
+Cells filled at a workbench (§309.1).
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into a rough wooden workbench, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a small glass jar half full of nails, a few nails spilled beside it.
+2 (TOP RIGHT corner of its tile): a hammer and a pair of pliers lying crossed.
+3 (BOTTOM LEFT corner of its tile): a coil of rough rope and a few wooden pegs.
+4 (BOTTOM RIGHT corner of its tile): a chisel lying in a small heap of curly wood shavings.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C6. The scheme's corners (attach the tavern board and C1)
+Paths drawn at a cartographer's table (§309.1).
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into an old dark parchment spread on a table, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a squat inkwell with a feather quill standing in it, one ink blot beside it.
+2 (TOP RIGHT corner of its tile): a brass pair of map dividers lying open over a short plain wooden ruler with no marks.
+3 (BOTTOM LEFT corner of its tile): three rolled maps tied with string, one partly unrolled with a dotted path.
+4 (BOTTOM RIGHT corner of its tile): a round magnifying glass with a wooden handle, a short candle stub beside it.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### C7. The piles' corners (attach the tavern board and C1)
+Decks kept on a scribe's desk (§309.1).
+```
+Four corner props for a fantasy tavern card game of orks and goblins, one sheet, a 2x2 grid of square tiles, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no texture, no gradients, no blurred shadows, no glow. Each prop is seen STRAIGHT FROM ABOVE, lying on or stuck into a scribe's dark oak desk with a worn brown leather top, drawn as if in a CORNER: it lies on a small patch of that surface in the corner of its tile named below and leaves the rest of the tile empty. Muted dark tones; nothing bright or saturated.
+1 (TOP LEFT corner of its tile): a short stack of three old leather books, a ribbon bookmark hanging out.
+2 (TOP RIGHT corner of its tile): two rolled scrolls tied with cord, a round wax seal hanging from one.
+3 (BOTTOM LEFT corner of its tile): a brass seal stamp standing beside two sticks of red sealing wax.
+4 (BOTTOM RIGHT corner of its tile): a small brass hourglass with sand running, a feather quill lying beside it.
+A flat mid-grey background (#3a3a3a) everywhere else, a thin grey-brown frame around each tile. No people, no faces, no text, letters or numbers.
+```
+
+### F1. The tavern's table (attach the tavern board and C1)
+The battle, the gate and the discussion (§309.3); the same wood as C1's patches.
+```
+One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. A dark wooden tavern table top: wide horizontal planks, thin dark seams between them, a few short grain lines, a knot or two, one old knife scratch. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
+```
+
+### F2. The parchment (attach the tavern board and C4)
+The choice and the scheme (§309.3); the same parchment as C4's and C6's patches.
+```
+One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. An old dark parchment, aged and candlelit, deep ochre-brown: a few faint creases from folding, one faint old stain; no drawing, no map, no writing on it. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
+```
+
+### F3. The workbench (attach the tavern board and C5)
+Slots (§309.3); the same wood as C5's patches.
+```
+One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. A rough dark workbench top: narrow planks, a few saw marks and old nail holes, one small burn mark, no tools. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
+```
+
+### F4. The scribe's desk (attach the tavern board and C7)
+Piles (§309.3); the same top as C7's patches.
+```
+One seamless tileable square texture for the background of a card game's field, a 1:1 image, in EXACTLY the humorous flat cartoon style and muted palette of the attached tavern board: thick even dark outlines, flat colours with one shade each, chunky crooked shapes, comic details; no noisy photographic texture, no gradients, no blurred shadows, no glow. Seen STRAIGHT FROM ABOVE, perfectly flat, no perspective. A scribe's desk top of worn dark brown leather inlaid in dark oak: a stitched seam along the leather's edge where it meets the wood, a few scuffs, one faint ink stain; never green. DARK and LOW in contrast: its lightest parts are still darker than a charcoal playing card's face, so the cards laid on it are the brightest thing; its lines few and quiet. It TILES: the left edge continues exactly into the right edge and the top into the bottom, with no seam. No objects, no props, no people, no text, letters or numbers.
 ```
 
 ## Every set the final build needs (12 November 2026)
@@ -478,4 +605,6 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | M1 | the moons | made (taken again whole; in orkUI 0.42.0) |
 | W1–W3 | the races' tools; the tiers' marks | made (orkUI 0.42.0) |
 | N1 | the kinds of a card of the project's deck | to take |
-| E1, E2, E3 | the mats' emblems; the seal; the props and the deck's box | taken |
+| E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
+| C1–C7 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles | C1 taken (14 November 2026); C2–C7 to take |
+| F1–F4 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk | to take |

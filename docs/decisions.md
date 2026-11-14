@@ -7870,3 +7870,72 @@ the face. The aim: what is new is added fast. So:
    VS Code frame is `tests/test_extension.py` and `vscode`'s own tests.
 
 The owner's call.
+
+## 309. Six mats, each known by its layout and its scene; the hand the foot of every mat but the battle; a card's corners its price, its kind with its rune, when and its act; the person throws a leader's token to ask; a battle's move two tokens on its sides (14 November 2026, the owner)
+
+Changes: 300.1 (ten layouts), 300.13 and 300.14 (the backpack's and the team's layouts), 300.15 (a mat laid as felt in a
+bronze frame, its emblem under its zones), 299.5 and 300.1 (a closed mat's slots in its M), 302.1 and 302.4 (a mat's ways
+in the hand), 296.3 and 300.12 (a card's and a part's corners), 303.2 (what rests on an old card, counted under it), 298.5
+and 300.5 (the person puts no token), 299.6 and 303.4 (the battle's middle and its three ways in the hand). Kept: 296 but
+its point 3, 298 but its point 5, 299.6's upright battle (the decided above, the line, the new card below), 300 but its
+points 1, 5, 13 to 15, 301, 302 but its points 1 and 4 for the battle and the gate, 303 but its points 2 and 4's place.
+
+Why: the talk of 13 and 14 November 2026 on the mats' UX one by one before the app is put together, on the mockup
+`docs/mockups/battle-field/` (`?face=desk|phone`, `?state=preview-new|preview-old|inspect`) and the person's Gemini takes
+in it (the emblems' sheet, the tavern scene, the battle's corner props). The person: *can some be joined?*; *battle and the
+gate compare your decision with the tests or with your earlier decisions, a choice is about the AI offering two to six
+ways*; *history and the discard are piles: a mat whose job is viewing a set of decks*; *every mat known at once, even in M,
+and opened it should look like a card game's field*; *in the funny style of Disenchantment*; *the back and the decoration
+must not take the cards' attention or their place*; *the hero is not needed, only throwing question tokens*; *the battle
+needs no hand: two tokens, the old decisions won or the new*; *less casino, more a fantasy card game: wood, a background by
+the kind of mat, swords and knives in the corners*; *if corners are short, the rune and the kind can share one*. So:
+1. **Six mats**, each known by its layout and its one move, never by whose (300.1 kept):
+   **Discussion** (a card and its route's tokens on a ring: *Rating*, *Spec*, *Accept*, *The deal*);
+   **Choice** (two to six ways the AI offers for one problem, a view above of what the one in focus would make, pick one or
+   write your own: what each card costs, weigh two, sort the new goals, a hero, a fork);
+   **Battle** (your card against what is already decided: the decisions it goes against, or the gate's tests);
+   **Slots** (cells the mat fixes, the person puts a card from the hand into one; a cell holds one card or many: a
+   framework's fields, how a seat is set, the story map, the team);
+   **Scheme** (cards or decks joined by arrows: a flow, the architecture);
+   **Piles** (decks laid along one axis, the fact decides where a card lies and the person views; a move on a whole pile:
+   the discard by branch, the history book by day, the project's deck by kind, a leader's cards by whose).
+   A choice and a battle stay two mats: one looks ahead at ways offered, the other back at what holds; a way picked in a
+   choice that goes against a decision opens a battle. Run's chart (300.11) is later, piles by day with a measure's line.
+2. **The hand is the foot of every mat** (302 kept), its UX one for all; **the battle and the gate show none**.
+3. **A mat opened is a scene of the tavern, its cards the brightest thing**: the field fills the screen; its surface is the
+   kind's material (the tavern's table for the battle, the gate and the discussion; parchment for the choice and the
+   scheme; a workbench for slots; a scribe's desk for piles), dark, two steps under the cards; **four props in its four
+   corners**, the kind's own (the battle: a dagger, crossed swords on a buckler, a tipped mug, an axe), darkened to the
+   surface, never under a card, a token or a button, `aria-hidden`; a thin bronze frame. **No hero's portrait, no seal on
+   a battle, no felt.** The pictures are the cartoon (§289), each set one prompt in `docs/pictures-cartoon.md` (§301.5),
+   made in orkUI and copied.
+4. **The mat's emblem** is large in its title plate; in its M with its material (the M's layout slots of 299.5 go); and in
+   the battle carved into the table at the middle of its line, a groove a step darker with a hard cut edge, no disc. The
+   emblems are the person's sheet of eight (`docs/mockups/battle-field/emblems-sheet.jpg`): discussion, choice, battle,
+   the gate, slots, scheme, piles, the tokens' pouch. A mat's party is its words and its cards, not its surface.
+5. **A card's corners** (this replaces 296.3's corners; its picture, title and line in the middle kept), each a gem in a
+   bronze socket: **top left its price** (a goal's cost in mana; a decision's cost to undo, what rests on it, a number in a
+   shield, its list in the card's L: 303.2); **top right its kind and its rune in one gem**, the gem's shape the kind
+   (round a goal, a scroll a decision, a hexagon a part), the rune inside, a signal's colour on its rim only; **on S the
+   kind wins and the rune shows from M**; **bottom left when** (decided, put off, starts by itself, at work since);
+   **bottom right its act** (*Start*, no figure; a decision none). A part's keeper's tool moves to its bottom left (300.12).
+   Corners never repeat one another; a shield and a mana gem are never laid side by side at one height.
+6. **The person asks by throwing a leader's token** (this replaces 298.5 and 300.5's *the person puts none*): a pouch of
+   the route's leaders' tokens and *Ask another…* at a mat's bottom left (*Ask a leader*, Q); a token thrown on a card lies
+   dashed, the question is written in the hand's place (§286), the pass's cost is said first (§301.2), filled when the
+   leader answers, its slip the answer. It is always a leader's token and a question to it, never the person's own verdict.
+7. **The battle** (299.6's upright kept): above, the decided cards (three face up at most, the rest a pile), the clashing
+   line of each underlined; across the middle the line, the carved emblem and from it **the clash in one sentence** (the
+   conflict `keeper.decide` names, §303.1; what it does not say, the Orkmaster says in a line; never made up); on the line
+   **the leaders as squads**, a column a craft, its token on the side it backs lit and leaning to it, dashed where it has
+   not said; below, the new card. **Its move is two tokens on the line's sides**: *Old wins* (1) on the decided side, *New
+   wins* (2) on the new card's; *Your words* (3) a quill on the new card (*Rewrite*). A token that begins a leader's pass
+   arms first with its cost and what it pays for (*2 mana · Tech rewrites §274*) and is pressed again; one that does not is
+   one press with its Undo (302.4). **Focus on a token previews it**: *New wins* cracks the decided cards and says what must
+   be re-checked; *Old wins* fades the new card, *must be rewritten*. A card pressed is read whole (L) over the dimmed field.
+   **The gate** the same: *The test is out of date* on the tests' side, *Fix it* on the stack's, all green one token on the
+   line, *Send to <branch>*.
+8. **The other five are laid this way one by one**, each on its own mockup (its scene, its layout, its hand), the
+   discussion next.
+
+The owner's call.
