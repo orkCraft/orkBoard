@@ -90,7 +90,7 @@ body[data-face="phone"] .pouchbar .tk { --tk: 30px; border-width: 2px; }
 body[data-face="phone"] .hand { left: 0; bottom: 0; }
 body[data-face="phone"] .hand .cards { gap: 5px; padding-left: 30px; justify-content: flex-start; }
 body[data-face="phone"] .waitpile { left: 10px; bottom: 6px; width: 9px; box-shadow: 3px 0 0 var(--ork-card-frame), 6px 0 0 var(--ork-card); }
-body[data-face="phone"] .waitlab { left: 4px; bottom: calc(6px + var(--ch) * .5 + 4px); font-size: 10px; line-height: 12px; }
+body[data-face="phone"] .waitlab { left: 24px; bottom: 6px; font-size: 9px; line-height: 11px; padding: 1px 4px; }
 body[data-face="phone"] .pplate { font-size: 8px; letter-spacing: .04em; }
 body[data-face="phone"] .card .when { display: none; }
 body[data-face="phone"] .hand .card { padding: 5px 4px 20px; --g: 20px; }
@@ -103,7 +103,7 @@ body[data-face="phone"] .hand .card.blank .pl { width: 22px; height: 22px; }
 body { --rep: repeat; --surface: url(surfaces/f1-tavern.jpg); --tile: 420px 420px; --tint: sepia(.75) saturate(1.5) brightness(.55); --emblem: url(../battle-field/emblems/discussion.png); }
 body[data-face="phone"] { --tile: 280px 280px; }
 
-.ring { position: absolute; left: 50%; top: 150px; width: 1000px; height: 380px; translate: -50% 0; }
+.ring { position: absolute; left: 50%; top: 200px; width: 1000px; height: 380px; translate: -50% 0; }
 body[data-face="phone"] .ring { left: 0; translate: none; width: 372px; height: 440px; top: 100px; }
 body[data-face="phone"][data-state="differ"] .ring { top: 156px; height: 400px; }
 .ring svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -146,7 +146,7 @@ body[data-face="phone"] .s-product .slip { width: 180px; }
 body[data-face="phone"] .s-chair .nm { display: block; top: calc(var(--tk) / -2 - 18px); right: auto; left: 50%; translate: -50% 0; font-size: 11px; padding: 0 4px; }
 body[data-face="phone"] .centre { top: 245px; }
 /* the differ state */
-.balloon { display: none; position: absolute; left: 50%; top: 104px; translate: -50% 0; z-index: 6; align-items: center; gap: 14px; }
+.balloon { display: none; position: absolute; left: 50%; top: 110px; translate: -50% 0; z-index: 6; align-items: center; gap: 14px; }
 .balloon .tk { --tk: 46px; border-color: var(--ork-party-orkmaster); }
 .balloon .say { position: relative; padding: 8px 16px; background: var(--ork-plate); border: 2px solid var(--ork-bronze); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: 700 17px/22px var(--ork-font-text); color: var(--ork-ink); white-space: nowrap; }
 .balloon .say::before { content: ""; position: absolute; left: -8px; top: 50%; width: 12px; height: 12px; margin-top: -6px; rotate: 45deg; background: var(--ork-plate); border-left: 2px solid var(--ork-bronze); border-bottom: 2px solid var(--ork-bronze); }
@@ -154,7 +154,7 @@ body[data-face="phone"] .centre { top: 245px; }
 body[data-state="differ"] .balloon { display: flex; }
 body[data-state="differ"] .ell { display: none; } body[data-state="differ"] .ring .tie { display: block; }
 body[data-state="differ"] .s-tech { --x: 150px; --y: 150px; } body[data-state="differ"] .s-design { --x: 850px; --y: 150px; }
-body[data-state="differ"] .s-product { --x: 500px; --y: 342px; } body[data-state="differ"] .s-chair { --x: 760px; --y: 342px; }
+body[data-state="differ"] .s-product { --x: 500px; --y: 356px; } body[data-state="differ"] .s-chair { --x: 760px; --y: 342px; }
 body[data-state="differ"] .s-tech .nm, body[data-state="differ"] .s-design .nm { display: none; }
 body[data-state="differ"] .s-tech.sl-l .slip, body[data-state="differ"] .s-tech .slip { left: calc(var(--tk) / -2); right: auto; top: calc(var(--tk) / 2 + 10px); text-align: left; }
 body[data-state="differ"] .s-design .slip { right: calc(var(--tk) / -2); left: auto; top: calc(var(--tk) / 2 + 10px); text-align: right; }
@@ -185,8 +185,8 @@ body[data-face="phone"] .ring { display: none; }
 .rows, .phonecard { display: none; }
 body[data-face="phone"] .phonecard { display: block; position: absolute; left: 50%; top: 98px; translate: -50% 0; z-index: 3; }
 body[data-face="phone"] .rows { display: flex; flex-direction: column; gap: 8px; position: absolute; left: 10px; right: 10px; top: 252px; z-index: 3; }
-body[data-face="phone"][data-state="differ"] .rows { top: 312px; }
-.rows .row { position: relative; display: flex; gap: 10px; align-items: flex-start; height: 76px; padding-left: 16px; }
+body[data-face="phone"][data-state="differ"] .rows { top: 308px; }
+.rows .row { position: relative; display: flex; gap: 10px; align-items: flex-start; height: 62px; padding-left: 16px; }
 .rows .row .tk { margin-top: 0; }
 .rows .row .slip { position: static; width: auto; flex: 1; min-width: 0; text-align: left; font-size: 12px; line-height: 15px; padding: 3px 7px 5px; }
 .rows .row .slip small { font-size: 10px; line-height: 12px; }
@@ -194,9 +194,9 @@ body[data-face="phone"][data-state="differ"] .rows { top: 312px; }
 .rows .row.chair { height: 44px; align-items: center; }
 .rows .row.chair .nm { position: static; translate: none; display: block; font: 600 13px/16px var(--ork-font-text); background: var(--ork-plate); padding: 4px 10px; border-radius: 4px; color: var(--ork-ink-read); }
 .rows .pair { position: relative; display: flex; flex-direction: column; gap: 8px; }
-body[data-state="differ"] .rows .pair::before { content: ""; position: absolute; left: 4px; top: 20px; width: 20px; height: 84px; border: 2px solid var(--ork-danger); border-right: 0; }
+body[data-state="differ"] .rows .pair::before { content: ""; position: absolute; left: 4px; top: 20px; width: 20px; height: 70px; border: 2px solid var(--ork-danger); border-right: 0; }
 .rows .swords { display: none; }
-body[data-face="phone"][data-state="differ"] .rows .swords { display: block; left: 4px; top: 62px; width: 26px; height: 26px; translate: -50% -50%; }
+body[data-face="phone"][data-state="differ"] .rows .swords { display: block; left: 4px; top: 55px; width: 26px; height: 26px; translate: -50% -50%; }
 body[data-face="phone"][data-state="differ"] .rows .swords i { inset: 4px; }
 body[data-face="phone"] .phonecard .card.big { --g: 26px; --nw: 104px; --nh: 140px; padding: 8px 6px 28px; }
 body[data-face="phone"] .phonecard .card.big .hd { width: 44px; height: 44px; } body[data-face="phone"] .phonecard .card.big b.t { font-size: 13px; } body[data-face="phone"] .phonecard .card.big .ln { display: none; }
