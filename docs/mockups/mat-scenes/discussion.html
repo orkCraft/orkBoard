@@ -27,7 +27,7 @@ kbd { font: 500 11px/14px var(--ork-font-code); padding: 1px 5px; border: 1px so
 .undo .uc svg { width: 28px; height: 28px; fill: none; stroke: var(--ork-gilt-hi); stroke-width: 3; stroke-linejoin: miter; }
 .undo .uc svg path.h { fill: var(--ork-gilt-hi); stroke: none; }
 .undo .uw { padding: 0 6px; background: var(--ork-plate); border-radius: 4px; }
-.uplate { display: none; position: absolute; z-index: 16; left: 82px; bottom: 4px; padding: 5px 12px 6px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap; }
+.uplate { display: none; position: absolute; z-index: 16; left: 14px; bottom: 96px; padding: 5px 12px 6px; background: var(--ork-plate); border: 2px solid var(--ork-gilt-hi); border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); font: var(--ork-type-button); color: var(--ork-ink); white-space: nowrap; }
 .uplate small { display: block; font: 500 12px/15px var(--ork-font-text); color: var(--ork-ink-read); }
 body[data-state="undo"] .undo { opacity: 1; }
 body[data-state="undo"] .undo .uc { outline: 3px solid var(--ork-gilt-hi); outline-offset: 2px; border-color: var(--ork-gilt-hi); }
@@ -132,7 +132,7 @@ body[data-face="phone"] .note .lg { display: none; } body[data-face="phone"] .no
 /* the hand's cards: whole S cards in a row from the waiting pile to the person's hand; the last slot becomes a drum when more than fit */
 .hand { position: absolute; z-index: 8; left: 90px; right: 130px; bottom: 10px; height: 200px; }
 .rail { position: absolute; left: 0; right: 0; bottom: 20px; height: 2px; background: var(--ork-bronze); }
-.row4 { position: absolute; left: 44px; right: 0; bottom: 24px; display: flex; gap: 8px; justify-content: flex-start; align-items: flex-end; padding-top: 18px; }
+.row4 { position: absolute; left: 44px; right: 0; bottom: 24px; display: flex; gap: 20px; justify-content: flex-start; align-items: flex-end; padding-top: 18px; }
 .row4 .card { transform-origin: 50% 100%; }
 .row4 .card:nth-child(odd) { rotate: -1deg; } .row4 .card:nth-child(even) { rotate: 1deg; }
 .row4 .card.focus { translate: 0 -8px; rotate: 0deg; }
@@ -151,6 +151,8 @@ body[data-face="phone"] .note .lg { display: none; } body[data-face="phone"] .no
 body[data-state="pick"] .row4 .card.focus { translate: 0 -36px; }
 body[data-face="phone"] .hand { left: 21px; right: 21px; bottom: 0; height: 200px; }
 body[data-face="phone"] .row4 { left: 0; gap: 8px; padding-top: 14px; }
+body[data-face="phone"] .row4 .gw.tl { left: -3px; } body[data-face="phone"] .row4 .gw.tr { right: -3px; }
+body[data-face="phone"] .row4 .drum .strip .gw.tl { left: -3px; } body[data-face="phone"] .row4 .drum .strip .gw.tr { right: -3px; }
 body[data-face="phone"] .foot { display: none; }
 body[data-face="phone"] .pilebox { left: 52px; bottom: 190px; }
 body[data-face="phone"] .rail { bottom: 20px; left: -12px; right: -12px; }

@@ -182,7 +182,7 @@ body[data-face="phone"] .fpanel .btns { flex-direction: row; gap: 6px; margin-to
 .sl.cracked > i { opacity: .55; }
 .sl svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 body[data-face="phone"] .sl { width: 16px; height: 16px; } body[data-face="phone"] .sl > i { width: 10px; height: 10px; }
-.pocket { isolation: isolate; height: 148px; }
+.pocket { isolation: isolate; height: 148px; z-index: 2; }
 .pocket .cards { gap: 22px; }
 .pocket .front { height: 52px; }
 .pocket .plus { top: 36px; }
@@ -276,6 +276,8 @@ body[data-face="phone"] .undo .uw { font-size: 10.5px; padding: 0 5px; } body[da
 .dplate { padding: 3px 6px; font: 700 11px/14px var(--ork-font-text); color: var(--ork-gilt); background: var(--ork-plate); border: 1px solid var(--ork-bronze); border-radius: 4px; box-shadow: 0 2px 0 var(--ork-room); }
 .dplate kbd { font-size: 9.5px; line-height: 12px; padding: 0 3px; }
 body[data-state="pick"] .fc.focus .card { outline: 3px solid var(--ork-ink); outline-offset: 1px; translate: 0 -30px; }
+body[data-state="pick"] .drum { translate: 0 -30px; }
+body[data-state="pick"] .drum .fc.focus .card { translate: none; }
 body[data-state="pick"] .fc.focus { z-index: 6; }
 .finger { display: none; position: absolute; left: -35px; top: 127px; width: 200px; z-index: 12; rotate: -60deg; pointer-events: none; }
 body[data-state="pick"] .fc.focus .finger { display: block; }
