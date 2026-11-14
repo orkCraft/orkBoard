@@ -15,7 +15,7 @@ not `file://`, or Chrome drops the CSS masks (the crafts' marks, the signs).
 | `../battle-field/index.html` | Battle, and the Gate | `preview-new`, `preview-old`, `inspect`, `undo`, `fab`, `note` (phone), `gate`, `gate-green` |
 
 Every page takes `?face=desk` (1440 × 900) or `?face=phone` (390 × 844). Shots in `shots/` (and `../battle-field/shots/`);
-`all-desk.png`, `all-phone.png` and `all-notes-phone.png` are the contact sheets.
+`all-desk.png`, `all-phone.png`, `all-notes-phone.png`, `all-fab-desk.png` and `all-pick-undo-desk.png` are the contact sheets.
 
 **Pictures** (prompts in `docs/pictures-cartoon.md`; the final cuts are orkUI's, these are the mockups'):
 - `sheets/` the taken sheets: C1–C8 (the scenes' corner props, now unused on the mats: §311.1), G1–G5, H2's ork's hand;
