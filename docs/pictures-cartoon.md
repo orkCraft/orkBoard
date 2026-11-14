@@ -625,5 +625,5 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | W1–W3 | the races' tools; the tiers' marks | made (orkUI 0.42.0) |
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
-| C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1–C4, C6, C7 taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`); C5, C8 to take |
-| F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | to take |
+| C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1–C7 taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`); C8 to take |
+| F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | F1–F4 taken (14 November 2026), in `docs/mockups/mat-scenes/surfaces/`: F1 came grey (tinted warm by code, or taken again *warm dark brown*), F2 blotchy and not tiling top to bottom (to take again: *one even tone, two or three faint stains*), F3 as asked, F4 a leather inlay between two bands of oak (laid as a frame: the oak at the field's edges, the leather stretched); F5 to take |
