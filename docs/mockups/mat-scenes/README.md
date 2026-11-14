@@ -16,15 +16,17 @@ not `file://`, or Chrome drops the CSS masks (the crafts' marks, the signs).
 
 Every page takes `?face=desk` (1440 × 900) or `?face=phone` (390 × 844). Shots in `shots/` (and `../battle-field/shots/`);
 `all-desk.png`, `all-phone.png`, `all-notes-phone.png`, `all-fab-desk.png` and `all-pick-undo-desk.png` are the contact sheets.
+The hand's cards past the row are dealt over every slot as strips (the drum, §313; Slots on a desktop, Choice, Slots and Piles
+on a phone), a strip showing its price gem only.
 
 **Pictures** (prompts in `docs/pictures-cartoon.md`; the final cuts are orkUI's, these are the mockups'):
 - `sheets/` the taken sheets: C1–C8 (the scenes' corner props, now unused on the mats: §311.1), G1–G5, H2's ork's hand;
 - `surfaces/` F1–F5 and H1 (the tavern table, the parchment, the workbench, the scribe's desk, the backpack's leather, the pocket);
-- the hand's cards past the row are dealt over every slot as strips (the drum, §313), a strip showing its price gem only;
 - `props/header-bar.png` (G1), `props/signs/` (G2), `props/crafts/` (G3, white masks), `props/chips/undo.png` (G4) and
   `props/chips/obj-{die,token,card}.png` (the hand's three things, cut bare from G4 until G6 is taken), `props/hand-ork-*.png`
   (H2), `props/hand-pocket.png` (H1, the slots' pockets);
 - `cut.py` cuts a 2 × 2 sheet of corner props; `cut_grid.py` any grid of framed tiles (`--white` for a mask).
 
-**Left for the page's build** (seen in the last review, small): a phone's lifted rolodex card and its strips; a battle note's
-edge on the phone; the mockups' words are placeholders (the Board's own data lays them, §301).
+**Left for the page's build** (seen in the last review, small): a long strip title on a phone can lose its last letter ("Ask
+Tech about dev"); the phone's story map is cut short so the undo stands on bare table; the mockups' words are placeholders (the
+Board's own data lays them, §301).
