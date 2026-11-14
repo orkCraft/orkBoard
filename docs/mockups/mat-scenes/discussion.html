@@ -111,7 +111,7 @@ body { --rep: repeat; --surface: url(surfaces/f1-tavern.jpg); --tile: 420px 420p
 body[data-face="phone"] { --tile: 280px 280px; }
 
 .prop.tr img { }
-.ring { position: absolute; left: 50%; top: 190px; width: 1000px; height: 380px; translate: -50% 0; }
+.ring { position: absolute; left: 50%; top: 215px; width: 1000px; height: 380px; translate: -50% 0; }
 .ring svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .ring .tie { fill: none; stroke: var(--ork-danger); stroke-width: 2; display: none; }
 .ell { position: absolute; left: 200px; top: 50px; width: 600px; height: 280px; border: 2px dashed var(--ork-bronze); border-radius: 50%; opacity: .7; }
@@ -154,20 +154,22 @@ body[data-face="phone"] .ring, body[data-face="phone"] .balloon.d-only { display
 body[data-face="phone"] .ring { display: none; }
 body[data-face="phone"] .phonecard { display: block; position: absolute; left: 50%; top: 136px; translate: -50% 0; z-index: 3; }
 body[data-face="phone"] .rows { display: flex; flex-direction: column; gap: 6px; position: absolute; left: 8px; right: 8px; top: 292px; z-index: 3; }
-body[data-face="phone"][data-state="differ"] .rows { top: 350px; }
-.rows .row { position: relative; display: flex; gap: 14px; align-items: flex-start; height: 74px; padding-left: 14px; }
+body[data-face="phone"][data-state="differ"] .rows { top: 342px; }
+.rows .row { position: relative; display: flex; gap: 14px; align-items: flex-start; height: 70px; padding-left: 14px; }
+.rows .row .slip { position: relative; }
+.rows .slip .fold { position: absolute; right: 8px; top: 5px; margin: 0; padding: 0; border: 0; }
 .rows .row .slip { position: relative; width: auto; flex: 1; min-width: 0; }
 .rows .row .slip::after { right: 100%; top: 19px; width: 14px; height: 2px; }
 .rows .row.chair { height: 36px; align-items: center; }
 .rows .row.chair .ttk .tt { --tk: 34px; }
 .rows .row.chair .nm { font: 600 13px/16px var(--ork-font-text); background: var(--ork-plate); padding: 4px 10px; border-radius: 4px; color: var(--ork-ink-read); }
 .rows .pair { position: relative; display: flex; flex-direction: column; gap: 6px; }
-body[data-state="differ"] .rows .pair::before { content: ""; position: absolute; left: 2px; top: 20px; width: 14px; height: 80px; border: 2px solid var(--ork-danger); border-right: 0; }
-body[data-face="phone"][data-state="differ"] .rows .swords { display: block; left: 2px; top: 60px; width: 26px; height: 26px; }
+body[data-state="differ"] .rows .pair::before { content: ""; position: absolute; left: 2px; top: 20px; width: 14px; height: 76px; border: 2px solid var(--ork-danger); border-right: 0; }
+body[data-face="phone"][data-state="differ"] .rows .swords { display: block; left: 2px; top: 58px; width: 26px; height: 26px; }
 body[data-face="phone"][data-state="differ"] .rows .swords i { inset: 4px; }
-body[data-face="phone"][data-state="differ"] .balloon { top: 288px; left: 8px; right: 8px; translate: none; gap: 8px; }
+body[data-face="phone"][data-state="differ"] .balloon { top: 286px; left: 8px; right: 8px; translate: none; gap: 8px; }
 body[data-face="phone"] .balloon .tt { --tk: 34px; }
-body[data-face="phone"] .balloon .say { white-space: normal; font-size: 13px; line-height: 17px; padding: 4px 8px; }
+body[data-face="phone"] .balloon .say { white-space: normal; font-size: 12px; line-height: 15px; padding: 3px 8px; }
 body[data-face="phone"] .balloon .say small { font-size: 10px; line-height: 12px; }
 
 </style>

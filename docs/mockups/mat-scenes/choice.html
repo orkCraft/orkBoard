@@ -129,14 +129,16 @@ body[data-face="phone"] { --tile: 280px 280px; }
 .openslip .rep { display: flex; gap: 8px; align-items: center; margin-top: 4px; padding: 2px 8px; background: var(--ork-plate); border: 1px solid var(--ork-bronze-lo); border-radius: 4px; font: 600 12px/16px var(--ork-font-text); width: fit-content; }
 body[data-face="desk"] .openslip { left: calc(50% + 142px); top: 290px; }
 body[data-face="phone"] .view { top: 136px; left: 8px; right: 8px; width: auto; translate: none; padding: 6px 8px 8px; }
-body[data-face="phone"] .view .lab { font-size: 10px; margin-bottom: 4px; }
+body[data-face="phone"] .view .lab { display: none; }
 body[data-face="phone"] .box { padding: 2px 5px; font-size: 11px; line-height: 15px; }
 body[data-face="phone"] .arr { width: 14px; }
 body[data-face="phone"] .view .cost { font-size: 12px; margin-top: 4px; }
-body[data-face="phone"] .grid { top: 226px; gap: 32px 12px; }
-body[data-face="phone"] .openslip { left: 8px; right: 8px; top: 556px; }
+body[data-face="phone"] .grid { top: 206px; gap: 40px 12px; width: 220px !important; }
+body[data-face="phone"] .openslip { left: 8px; right: 8px; top: 546px; }
+body[data-face="phone"] .openslip .slip .fold { display: none; }
+body[data-face="phone"] .openslip .rep { position: absolute; right: 8px; top: 4px; margin: 0; z-index: 2; }
 body[data-face="phone"] .openslip .slip { width: auto; }
-body[data-face="phone"] .openslip .slip::after { right: auto; left: 150px; top: auto; bottom: 100%; width: 2px; height: 10px; }
+body[data-face="phone"] .openslip .slip::after { display: none; }
 
 </style>
 </head>
@@ -149,7 +151,7 @@ body[data-face="phone"] .openslip .slip::after { right: auto; left: 150px; top: 
 <div class="view"><span class="lab">If you pick <b>Six-digit code</b></span>
 <div class="scheme"><span class="box">Phone</span><i class="arr"></i><span class="box hit">Relay</span><i class="arr"></i><span class="box hit">Desktop</span><i class="arr"></i><span class="box">Board</span></div>
 <span class="cost">≈ 3 mana · touches 2 parts</span></div>
-<div class="grid">
+<div class="grid" style="width:248px">
 <div class="card way" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by Tech"><b class="t">QR code over the local network</b><span class="tks"><span class="ttk product"><span class="tt"><img src="../../../design-system/orkui/tools/map-cross@2x.png" alt="Product: ok"></span><span class="chk"><i class="ok"></i></span></span><span class="ttk design"><span class="tt"><img src="../../../design-system/orkui/tools/bow-drip@2x.png" alt="Design: ok"></span><span class="chk"><i class="ok"></i></span></span><span class="ttk tech"><span class="tt"><img src="../../../design-system/orkui/tools/drum-gear@2x.png" alt="Tech: rk"></span><span class="chk"><i class="rk"></i></span></span></span></div>
 <div class="card way focus" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">3</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by Tech"><b class="t">Six-digit code</b><span class="tks"><span class="ttk design"><span class="tt"><img src="../../../design-system/orkui/tools/bow-drip@2x.png" alt="Design: q"></span><span class="chk"><i class="q"></i></span></span><span class="ttk tech"><span class="tt"><img src="../../../design-system/orkui/tools/drum-gear@2x.png" alt="Tech: ok"></span><span class="chk"><i class="ok"></i></span></span></span><span class=pick>Pick <kbd>Enter</kbd></span></div>
 <div class="card way" data-kind="goal"><span class="gw tl"><span class="gem circle mana"><i class="in">4</i></span></span><span class="gw tr"><span class="gem circle"><i class="in"><i class="ks" style="--k:url(../../../design-system/orkui/signs/target.svg)"></i></i></span></span><img class="hd" src="../../../design-system/orkui/races/shaman-elder@3x.png" alt="Offered by Tech"><b class="t">Link by e-mail</b><span class="tks"><span class="ttk product"><span class="tt"><img src="../../../design-system/orkui/tools/map-cross@2x.png" alt="Product: q"></span><span class="chk"><i class="q"></i></span></span><span class="ttk tech"><span class="tt"><img src="../../../design-system/orkui/tools/drum-gear@2x.png" alt="Tech: rk"></span><span class="chk"><i class="rk"></i></span></span></span></div>
