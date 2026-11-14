@@ -7993,3 +7993,46 @@ risk, the seal when the risk is accepted*. So:
    person's hand*) enter `realm/lexicon.py` `TERMS` with the code that draws them.
 
 The owner's call.
+
+## 311. A mat's frame: one header bar with its sign; one undo; the hand's cards fill the row, a rolodex only past it; the person's hand a fist on your move, opened into Play, Ask and New; verdicts as + ? !; a phone's note opens on its own screen (14 November 2026, the owner)
+
+Changes: 310.1 (two props in the corners), 310.3's checks as squares (298.3), 310.6 (the hand's row), 310.7 (the person's hand,
+its poses and its column), 309.4 (the emblem in the title plate), 302.4 (a move's Undo in the history only). Kept: 310 but these,
+309 but its point 4's place, 296.1, 302.
+
+Why: the talk of 14 November 2026, rounds 7 to 10 of the mockups `docs/mockups/mat-scenes/` and `docs/mockups/battle-field/`
+(the person's Gemini takes in `docs/mockups/mat-scenes/sheets/g*.jpg`, prompts G1 to G6 in `docs/pictures-cartoon.md`). The
+person: *the bottom like Safari: at the left back, in the middle the address, at the right more actions*; *one undo icon for all
+mats*; *the hand's cards first across the width, then a drum*; *the hand comes out of the corner minimally*; *the header back,
+name, decoration on one plate*; *backpack, book and undo only in the tables' menu, not on the mats*; *Play, Ask, New only when the
+hand is pressed; on your move it lies as a fist*; *the strengths and weaknesses as + ? ! of different shapes, the crafts' marks
+smaller*; *the die, the token and the card without a rim, known by their shape*; *the hand over the cards, small on a phone*; *a
+balanced drum*; *a note on a phone opens on its own screen, the mat shows its header only*. So:
+1. **The header is one bar** (G1, `docs/mockups/mat-scenes/props/header-bar.png`, its caps kept, its middle stretched): *‹ Back*
+   (Esc) at its left, the mat's word and its line in the middle, **the mat's sign** in its right cap's socket (G2, eight signs).
+   The title plate's emblem and the corner props go: no prop lies in a corner of a mat. A mat closed (M) keeps its sign.
+2. **One undo for every mat**, the same chip at the bottom left (G4): dim while nothing can be undone, lit after an undoable move
+   with *Undo · Z* and the move named. A move that begins a leader's pass or goes into main stays a seal and lights nothing. The
+   history's undo, the backpack and the book are in **the table's menu** (a header's bar on a desktop, a burger on a phone), not
+   on a mat; B and K from a mat close it and open them.
+3. **The bottom of a mat is my move**: at its left the undo, in its middle the hand's cards (the moves that wait as a pile, H, at
+   their left), at its right the person's hand. **The hand's cards fill the row first** (whole S cards, desktop about eight, a phone
+   three, the undo and the waiting pile above the phone's row); **past it the last slot is a rolodex**: its front card whole, above
+   it at most three strips each a little narrower, the rest a thickness of edges on both its sides; ↑↓ turn it, Enter plays. An S
+   card's price and kind gems sit half outside its top corners and its title has the card's whole width (two lines; a strip's one).
+4. **The person's hand lies over the cards**, small (a phone: about 56 px over the third card's lower corner, never its title):
+   lying, nothing waits on you; tapping, the leaders are thinking; **a fist, your move** (*Your move · Space*). **Pressed it opens**:
+   over its palm the three things, each known by its shape and with its word and key: **the die** showing Play (D), **the token**
+   with a question (Q: ask a leader), **the blank card** with a bulb (N: new <kind>, the zone in focus); the field dims; Esc closes.
+   Choosing a hand's card, the hand leaves, the blank card stands in its place, the card lifts and a finger rises from below it.
+5. **A verdict is + ? !** (this replaces §298.3's squares): under a token and before a note's line, drawn by code: a green **+**
+   approved, a yellow **?** a question, a red **!** in a triangle a risk, a filled red triangle a risk that blocks; at most five on
+   an S. **A token's mark is its craft's** (G3: a cog with a wrench, a brush with a bow, a map with an X, a pick, a bell, an
+   hourglass) tinted in its party's colour, about half its ring; the same mark is pressed in its wax seal.
+6. **On a phone a note is its header** beside its token or seal (its seal, its leader, its first mark and one word, *›*); pressed,
+   **it opens on its own screen**: the bar with *‹ Back*, the card it is about small at its top, the note whole with its earlier
+   ones, *Reply to <leader>…* (R) at its foot. A desktop shows notes whole.
+7. **The person's race stays a look** (§310.8); the hand's pictures are H2's, its three things G6 (cut from G4's chips until G6 is
+   taken).
+
+The owner's call.
