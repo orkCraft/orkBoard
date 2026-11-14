@@ -214,8 +214,8 @@ body[data-state="note"][data-face="phone"] .notescreen { display: block; }
 .ns-card { position: absolute; left: 20px; top: 90px; }
 .ns-about { position: absolute; left: 140px; top: 104px; right: 16px; font: 500 13px/17px var(--ork-font-text); color: var(--ork-ink-read); }
 .ns-about b { display: block; font: 700 16px/20px var(--ork-font-text); color: var(--ork-gilt); }
-.ns-body { position: absolute; left: 18px; right: 14px; top: 262px; bottom: 76px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
-.ns-body .slip { position: relative !important; left: auto !important; top: auto !important; width: auto !important; rotate: 0deg !important; }
+.ns-body { position: absolute; left: 30px; right: 16px; top: 262px; bottom: 76px; display: flex; flex-direction: column; gap: 14px; }
+.ns-body .slip { align-self: stretch; position: relative !important; left: auto !important; top: auto !important; width: auto !important; rotate: 0deg !important; }
 .ns-body .slip .nl { display: block !important; font: 500 14px/19px var(--ork-font-text); }
 .ns-body .slip .nl .vm { width: 13px; height: 13px; }
 .ns-body .slip .nh .nm { display: inline !important; font-size: 15px; }
@@ -224,7 +224,9 @@ body[data-state="note"][data-face="phone"] .notescreen { display: block; }
 .ns-body .slip.old .paper { opacity: .82; }
 .ns-body .slip .wax { width: 32px; height: 32px; left: -10px; top: -10px; }
 .ns-body .slip .wax i { width: 19px; height: 19px; }
-.ns-lab { font: 700 12px/14px var(--ork-font-text); color: var(--ork-ink-read); margin: 4px 0 -4px 22px; }
+body[data-face="phone"] .field .ns-body .slip { width: auto !important; }
+.ns-lab { font: 700 12px/14px var(--ork-font-text); color: var(--ork-ink-read); margin: 4px 0 -4px 6px; }
+.ns-body .slip .paper { white-space: normal; }
 .ns-foot { position: absolute; left: 18px; right: 14px; bottom: 14px; display: flex; justify-content: center; gap: 8px; align-items: center; padding: 10px 12px; font: 700 16px/20px var(--ork-font-text); color: var(--ork-on-ink); background: var(--ork-action); border: 0; border-radius: var(--ork-radius-control); box-shadow: 0 3px 0 var(--ork-room); }
 /* header bar */
 .top { display: none; }
@@ -256,7 +258,7 @@ body[data-state="undo"] .undo .uw small { display: block; }
 body[data-face="phone"] .undo { left: 4px; } body[data-face="phone"] .undo .uc { height: 44px; margin-left: 0; }
 body[data-face="phone"] .undo .uw { font-size: 10.5px; padding: 0 5px; } body[data-face="phone"] .undo .uw small { font-size: 9.5px; line-height: 12px; }
 /* the hand's row */
-.hrow { position: absolute; z-index: 8; left: 230px; bottom: 26px; display: flex; align-items: flex-end; gap: 20px; }
+.hrow { position: absolute; z-index: 8; left: 230px; bottom: 32px; display: flex; align-items: flex-end; gap: 20px; }
 .hrow.nokey .keytab { display: none; }
 .wpile { flex: none; width: 20px; height: 128px; margin: 0 0 4px 0; background: var(--ork-card); border: 2px solid var(--ork-card-frame); border-radius: 3px;
   box-shadow: 4px 0 0 var(--ork-card-frame), 8px 0 0 var(--ork-card), 12px 0 0 var(--ork-card-frame), 12px 3px 0 0 var(--ork-plate); }
@@ -265,11 +267,11 @@ body[data-face="phone"] .undo .uw { font-size: 10.5px; padding: 0 5px; } body[da
 .drum { position: relative; width: 104px; display: flex; flex-direction: column; align-items: center; }
 .strip { width: calc(104px * var(--k)); height: 22px; clip-path: inset(-10px -10px 0 -10px); border-bottom: 2px solid var(--ork-card-frame); flex: none; filter: brightness(var(--b)); }
 .strip .card { width: 100%; box-shadow: none; border-bottom: 0; }
-.strip .card b.t { min-height: 0; top: 2px; height: 16px; left: 7px; right: 7px; font-size: 10px; line-height: 16px; white-space: nowrap; display: block; }
+.strip .card b.t { min-height: 0; top: 2px; height: 16px; left: 10px; right: 10px; font-size: 9.5px; line-height: 16px; white-space: nowrap; display: block; }
 .fc { position: relative; flex: none; isolation: isolate; }
 .eg { position: absolute; top: 8px; height: 130px; width: calc(var(--n) * 2px); z-index: -1; background: repeating-linear-gradient(90deg, var(--ork-card-frame) 0 1px, var(--ork-card) 1px 2px); }
 .eg.eL { right: calc(100% - 2px); } .eg.eR { left: calc(100% - 2px); }
-.drum .dplate { position: absolute; left: 0; top: calc(100% + 5px); width: 104px; white-space: normal; text-align: center; }
+.drum .dplate { position: absolute; left: 0; top: calc(100% + 4px); width: auto; white-space: nowrap; text-align: center; }
 .strip .card { box-shadow: none; border-bottom: 0; }
 .dplate { padding: 3px 6px; font: 700 11px/14px var(--ork-font-text); color: var(--ork-gilt); background: var(--ork-plate); border: 1px solid var(--ork-bronze); border-radius: 4px; box-shadow: 0 2px 0 var(--ork-room); }
 .dplate kbd { font-size: 9.5px; line-height: 12px; padding: 0 3px; }
