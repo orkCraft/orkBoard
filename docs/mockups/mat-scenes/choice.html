@@ -63,7 +63,7 @@ body[data-face="phone"] .plate b { font-size: 17px; line-height: 22px; }
 .tt:hover, .tt:focus { outline: 2px solid var(--ork-ink); }
 
 /* notes: dark kraft paper, sealed by the token's wax, a short thread */
-.note { position: absolute; width: 232px; filter: drop-shadow(0 3px 0 var(--ork-room)); z-index: 6; font: 500 12px/15px var(--ork-font-text); }
+.note { text-align: left; position: absolute; width: 232px; filter: drop-shadow(0 3px 0 var(--ork-room)); z-index: 6; font: 500 12px/15px var(--ork-font-text); }
 .note.t1 { rotate: -1.5deg; } .note.t2 { rotate: 1.5deg; }
 .note .paper { position: relative; padding: 8px 10px 14px 18px; background: color-mix(in srgb, var(--ork-plaque) 82%, var(--ork-gilt) 18%); color: var(--ork-gilt-hi);
   clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 93% 94%, 85% 100%, 75% 93%, 65% 100%, 53% 94%, 43% 100%, 31% 93%, 19% 100%, 8% 94%, 0 100%); }
@@ -210,8 +210,8 @@ body[data-face="phone"] { --tile: 280px 280px; }
 .grid { position: absolute; left: 540px; top: 210px; width: 252px; display: grid; grid-template-columns: 104px 104px; gap: 28px 44px; z-index: 3; }
 .grid .card { overflow: visible; }
 .grid .note { left: calc(100% + 26px); top: 116px; --thl: 26px; }
-.way .hd { width: 24px; height: 24px; margin-top: 1px; }
-.way b.t { font-size: 11px; line-height: 12px; margin-top: 2px; }
+.grid .card .hd { width: 24px; height: 24px; margin-top: 1px; }
+.grid .card b.t { font-size: 11px; line-height: 12px; margin-top: 2px; }
 body[data-face="phone"] .view { top: 76px; left: 6px; right: 8px; width: auto; translate: none; padding: 5px 8px 6px; }
 body[data-face="phone"] .view .lab { display: none; }
 body[data-face="phone"] .box { padding: 2px 6px; font-size: 11px; line-height: 15px; }
@@ -219,7 +219,7 @@ body[data-face="phone"] .arr { width: 14px; }
 body[data-face="phone"] .view .cost { font-size: 12px; margin-top: 3px; }
 body[data-face="phone"] .grid { left: 4px; top: 150px; gap: 22px 10px; width: auto; }
 body[data-face="phone"] .grid .note { left: calc(100% + 24px); width: 112px; --thl: 24px; }
-body[data-face="phone"] .grid .card:nth-child(odd) .note { display: none; }
+body[data-face="phone"] .grid .note .nl.dim { display: none; }
 body[data-state="pick"][data-face="desk"] .finger { left: 590px; top: 560px; }
 body[data-state="pick"][data-face="phone"] .finger { left: 50px; top: 540px; }
 
