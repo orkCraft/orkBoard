@@ -478,7 +478,7 @@ a token or a button. Attach to every sheet the tavern board (`docs/mockups/battl
 the battle's taken props (`docs/mockups/battle-field/props-battle-sheet.jpg`) for the scale. Which mat lies on which surface:
 the battle, the gate and the discussion on F1; the choice and the scheme on F2; slots on F3; piles on F4. The cut (a prop and
 its patch, the grey made clear by a flood fill from the open grey, so the steel stays opaque) is the one of
-`docs/mockups/battle-field/props/`. A surface that does not tile cleanly is mirrored by code; the battle's planks are CSS until F1
+`docs/mockups/mat-scenes/cut.py` (the sheets in `sheets/`, the cuts in `props/`). A surface that does not tile cleanly is mirrored by code; the battle's planks are CSS until F1
 is taken.
 
 ### C1. The battle's corners (attach the tavern board)
@@ -625,5 +625,5 @@ in Gemini; *fix* is taken but one tile is drawn again (its section says how).
 | W1–W3 | the races' tools; the tiers' marks | made (orkUI 0.42.0) |
 | N1 | the kinds of a card of the project's deck | to take |
 | E1, E2, E3 | the mats' emblems; the seal; the deck's box | E1 taken again as eight (§309.4), its tile 1 to take again; E2 taken; E3 taken, only its tile 6 used |
-| C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1 taken (14 November 2026); C2–C8 to take |
+| C1–C8 | the mats' corner props: the battle, the gate, the discussion, the choice, slots, the scheme, piles, the backpack | C1–C4, C6, C7 taken (14 November 2026), sheets and cuts in `docs/mockups/mat-scenes/` (`cut.py`); C5, C8 to take |
 | F1–F5 | the mats' surfaces: the tavern's table, the parchment, the workbench, the scribe's desk, the inside of the backpack | to take |
